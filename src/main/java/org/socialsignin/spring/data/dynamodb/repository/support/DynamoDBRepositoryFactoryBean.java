@@ -19,7 +19,7 @@ import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext;
 import org.socialsignin.spring.data.dynamodb.repository.util.DynamoDBMappingContextProcessor;
 import org.socialsignin.spring.data.dynamodb.repository.util.Entity2DynamoDBTableSynchronizer;
-import org.springframework.beans.factory.annotation.Required;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
@@ -59,23 +59,23 @@ public class DynamoDBRepositoryFactoryBean<T extends Repository<S, ID>, S, ID ex
 		return dynamoDBRepositoryFactory;
 	}
 
-	@Required
+	@Autowired
 	public void setDynamoDBMappingContextProcessor(
 			DynamoDBMappingContextProcessor<S, ID> dynamoDBMappingContextProcessor) {
 		this.dynamoDBMappingContextProcessor = dynamoDBMappingContextProcessor;
 	}
 
-	@Required
+	@Autowired
 	public void setEntity2DynamoDBTableSynchronizer(Entity2DynamoDBTableSynchronizer<S, ID> tableSynchronizer) {
 		this.tableSynchronizer = tableSynchronizer;
 	}
 
-	@Required
+	@Autowired
 	public void setDynamoDBOperations(DynamoDBOperations dynamoDBOperations) {
 		this.dynamoDBOperations = dynamoDBOperations;
 	}
 
-	@Required
+	@Autowired
 	public void setDynamoDBMappingContext(DynamoDBMappingContext dynamoDBMappingContext) {
 		setMappingContext(dynamoDBMappingContext);
 	}

@@ -29,9 +29,9 @@ import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.socialsignin.spring.data.dynamodb.domain.sample.User;
 import org.springframework.data.repository.Repository;
 
-import javax.enterprise.context.spi.CreationalContext;
-import javax.enterprise.inject.spi.Bean;
-import javax.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.context.spi.CreationalContext;
+import jakarta.enterprise.inject.spi.Bean;
+import jakarta.enterprise.inject.spi.BeanManager;
 import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.Optional;
@@ -59,7 +59,7 @@ public class DynamoDBRepositoryBeanTest {
 	@Mock
 	private AmazonDynamoDB amazonDynamoDB;
 	@Mock
-	private javax.enterprise.inject.spi.Bean<DynamoDBMapperConfig> dynamoDBMapperConfigBean;
+	private jakarta.enterprise.inject.spi.Bean<DynamoDBMapperConfig> dynamoDBMapperConfigBean;
 	@Mock
 	private Bean<DynamoDBOperations> dynamoDBOperationsBean;
 
@@ -121,8 +121,7 @@ public class DynamoDBRepositoryBeanTest {
 		DynamoDBRepositoryBean<SampleRepository> underTest = new DynamoDBRepositoryBean<>(beanManager,
 				amazonDynamoDBBean, dynamoDBMapperConfigBean, null, dynamoDBMapperBean, qualifiers, repositoryType);
 
-		SampleRepository actual = underTest.create(repoCreationalContext, SampleRepository.class,
-				Optional.<Object>empty());
+		SampleRepository actual = underTest.create(repoCreationalContext, SampleRepository.class);
 		assertNotNull(actual);
 	}
 }

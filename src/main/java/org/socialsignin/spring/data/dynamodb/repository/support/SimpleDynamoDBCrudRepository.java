@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 /**
@@ -102,7 +101,7 @@ public class SimpleDynamoDBCrudRepository<T, ID>
 			} else {
 				return new KeyPair().withHashKey(id);
 			}
-		}).collect(Collectors.toList());
+		}).toList();
 
 		Map<Class<?>, List<KeyPair>> keyPairsMap = Collections.<Class<?>, List<KeyPair>>singletonMap(domainType,
 				keyPairs);
@@ -187,6 +186,13 @@ public class SimpleDynamoDBCrudRepository<T, ID>
 	public void delete(T entity) {
 		Assert.notNull(entity, "The entity must not be null!");
 		dynamoDBOperations.delete(entity);
+	}
+
+	@Override
+	public void deleteAllById(Iterable<? extends ID> ids) {
+		Assert.notNull(ids, "The given ids must not be null!");
+		List<ID> idsList = StreamSupport.stream(ids.spliterator(), false).map(id -> (ID)id).toList();
+		deleteAll(findAllById(idsList));
 	}
 
 	@Override

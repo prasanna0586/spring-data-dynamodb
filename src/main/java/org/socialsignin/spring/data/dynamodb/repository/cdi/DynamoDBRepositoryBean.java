@@ -24,11 +24,10 @@ import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBReposito
 import org.springframework.data.repository.cdi.CdiRepositoryBean;
 import org.springframework.util.Assert;
 
-import javax.enterprise.context.spi.CreationalContext;
-import javax.enterprise.inject.spi.Bean;
-import javax.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.context.spi.CreationalContext;
+import jakarta.enterprise.inject.spi.Bean;
+import jakarta.enterprise.inject.spi.BeanManager;
 import java.lang.annotation.Annotation;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -85,12 +84,11 @@ class DynamoDBRepositoryBean<T> extends CdiRepositoryBean<T> {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see javax.enterprise.context.spi.Contextual#create(javax.enterprise
+	 * @see jakarta.enterprise.context.spi.Contextual#create(javax.enterprise
 	 * .context.spi.CreationalContext, Class<T>, Optional<Object>)
 	 */
 	@Override
-	protected T create(CreationalContext<T> creationalContext, Class<T> repositoryType,
-			Optional<Object> customImplementation) {
+	protected T create(CreationalContext<T> creationalContext, Class<T> repositoryType) {
 
 		// Get an instance from the associated AmazonDynamoDB bean.
 		AmazonDynamoDB amazonDynamoDB = getDependencyInstance(amazonDynamoDBBean, AmazonDynamoDB.class);
