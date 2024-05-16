@@ -16,7 +16,6 @@
 package org.socialsignin.spring.data.dynamodb.config;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
-import org.joda.time.DateTime;
 import org.junit.Test;
 import org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext;
 import org.socialsignin.spring.data.dynamodb.mapping.event.BeforeSaveEvent;
@@ -26,9 +25,9 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.CoreMatchers.notNullValue;
+import java.time.LocalDateTime;
+
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -69,11 +68,11 @@ public class AuditingIntegrationTests {
 		@Id
 		Long id;
 		@CreatedDate
-		DateTime created;
-		DateTime modified;
+		LocalDateTime created;
+		LocalDateTime modified;
 
 		@LastModifiedDate
-		public DateTime getModified() {
+		public LocalDateTime getModified() {
 			return modified;
 		}
 	}

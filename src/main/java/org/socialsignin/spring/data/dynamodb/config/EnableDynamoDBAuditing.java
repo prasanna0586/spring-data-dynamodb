@@ -17,12 +17,7 @@ package org.socialsignin.spring.data.dynamodb.config;
 
 import org.springframework.context.annotation.Import;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * Annotation to enable auditing in DynamoDB via annotation configuration.
@@ -57,7 +52,7 @@ public @interface EnableDynamoDBAuditing {
 	/**
 	 * @return Configures a
 	 *         {@link org.springframework.data.auditing.DateTimeProvider} bean name
-	 *         that allows customizing the {@link org.joda.time.DateTime} to be used
+	 *         that allows customizing the {@link java.time.LocalDateTime} to be used
 	 *         for setting creation and modification dates.
 	 */
 	String dateTimeProviderRef() default "";

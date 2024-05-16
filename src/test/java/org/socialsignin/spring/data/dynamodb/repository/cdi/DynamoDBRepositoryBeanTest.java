@@ -18,6 +18,9 @@ package org.socialsignin.spring.data.dynamodb.repository.cdi;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
+import jakarta.enterprise.context.spi.CreationalContext;
+import jakarta.enterprise.inject.spi.Bean;
+import jakarta.enterprise.inject.spi.BeanManager;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -29,12 +32,8 @@ import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.socialsignin.spring.data.dynamodb.domain.sample.User;
 import org.springframework.data.repository.Repository;
 
-import jakarta.enterprise.context.spi.CreationalContext;
-import jakarta.enterprise.inject.spi.Bean;
-import jakarta.enterprise.inject.spi.BeanManager;
 import java.lang.annotation.Annotation;
 import java.util.Collections;
-import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.Assert.assertNotNull;

@@ -28,12 +28,14 @@ import org.springframework.data.auditing.IsNewAwareAuditingHandler;
 import org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport;
 import org.springframework.data.auditing.config.AuditingConfiguration;
 import org.springframework.data.config.ParsingUtils;
+import org.springframework.data.repository.config.PersistentEntitiesFactoryBean;
 import org.springframework.util.Assert;
 
 import java.lang.annotation.Annotation;
 
 import static org.socialsignin.spring.data.dynamodb.config.BeanNames.MAPPING_CONTEXT_BEAN_NAME;
 import static org.springframework.beans.factory.config.BeanDefinition.ROLE_INFRASTRUCTURE;
+import static org.springframework.beans.factory.support.BeanDefinitionBuilder.rootBeanDefinition;
 
 /**
  * {@link org.springframework.context.annotation.ImportBeanDefinitionRegistrar}
@@ -97,8 +99,11 @@ class DynamoDBAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 		LOGGER.trace("getAuditHandlerBeanDefinitionBuilder");
 		Assert.notNull(configuration, "AuditingConfiguration must not be null!");
 
+		BeanDefinitionBuilder persistentEntities = rootBeanDefinition(PersistentEntitiesFactoryBean.class);
+		persistentEntities.addConstructorArgReference(MAPPING_CONTEXT_BEAN_NAME);
+
 		BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(IsNewAwareAuditingHandler.class);
-		builder.addConstructorArgReference(MAPPING_CONTEXT_BEAN_NAME);
+		builder.addConstructorArgValue(persistentEntities.getBeanDefinition());
 		return configureDefaultAuditHandlerAttributes(configuration, builder);
 	}
 

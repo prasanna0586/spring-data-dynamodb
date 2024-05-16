@@ -15,17 +15,12 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.config;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
 import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBRepositoryFactoryBean;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
+
+import java.lang.annotation.*;
 
 /**
  * Annotation to enable DynamoDB repositories. Will scan the package of the
@@ -159,7 +154,7 @@ public @interface EnableDynamoDBRepositories {
 	String dynamoDBMapperRef() default "";
 
 	/**
-	 * Returns the {@link javax.validation.Validator } reference to be used for to
+	 * Returns the {@link jakarta.validation.Validator } reference to be used for to
 	 * validate DynamoDB entities
 	 *
 	 * @return The

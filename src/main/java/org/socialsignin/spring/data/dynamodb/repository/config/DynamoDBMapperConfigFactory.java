@@ -15,14 +15,13 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.config;
 
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.lang.Nullable;
-
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
 
 public class DynamoDBMapperConfigFactory implements FactoryBean<DynamoDBMapperConfig>, BeanPostProcessor {
 	private static final Logger LOGGER = LoggerFactory.getLogger(DynamoDBMapperConfigFactory.class);

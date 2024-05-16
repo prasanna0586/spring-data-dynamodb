@@ -30,20 +30,20 @@ package org.socialsignin.spring.data.dynamodb.mapping.event;
  * limitations under the License.
  */
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.Validator;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 /**
- * javax.validation dependant entities validator. When it is registered as
+ * jakarta.validation dependant entities validator. When it is registered as
  * Spring component its automatically invoked before entities are saved in
  * database.
  * 

@@ -15,12 +15,10 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import org.socialsignin.spring.data.dynamodb.repository.QueryConstants.ConsistentReadMode;
+
+import java.lang.annotation.*;
+
 import static org.socialsignin.spring.data.dynamodb.repository.QueryConstants.QUERY_LIMIT_UNLIMITED;
 
 @Retention(RetentionPolicy.RUNTIME)

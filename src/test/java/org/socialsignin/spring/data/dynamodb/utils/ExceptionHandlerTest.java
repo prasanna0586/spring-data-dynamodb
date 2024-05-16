@@ -23,8 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class ExceptionHandlerTest {
 
@@ -50,8 +49,11 @@ public class ExceptionHandlerTest {
 
 		BatchWriteException actual = underTest.repackageToException(failedBatches, BatchWriteException.class);
 
-		assertEquals("Processing of entities failed!; nested exception is java.lang.Exception: Test Exception",
-				actual.getMessage());
+		assertEquals("Processing of entities failed!", actual.getMessage());
+
+		assertNotNull(actual.getCause());
+		assertEquals("Test Exception", actual.getCause().getMessage());
+		assertNull(actual.getCause().getCause());
 
 		assertEquals(1, actual.getSuppressed().length);
 		assertEquals("Followup Exception", actual.getSuppressed()[0].getMessage());

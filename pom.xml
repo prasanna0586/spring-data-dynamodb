@@ -50,8 +50,8 @@
         <findbugs.version>3.0.5</findbugs.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <spring-boot-starter-validation.version>3.1.5</spring-boot-starter-validation.version>
     </properties>
 
@@ -138,8 +138,8 @@
             <artifactId>spring-tx</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-validation</artifactId>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-validation</artifactId>
             <version>${spring-boot-starter-validation.version}</version>
         </dependency>
         <!-- SPRING DATA -->
@@ -179,7 +179,7 @@
             <groupId>com.amazonaws</groupId>
             <artifactId>DynamoDBLocal</artifactId>
             <scope>test</scope>
-        </dependency>
+       </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-to-slf4j</artifactId>
@@ -346,30 +346,30 @@
                     </execution>
                     <execution>
                         <id>default-check</id>
-                        <phase>test</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                        <configuration>
-                            <rules>
-                                <rule>
-                                    <element>BUNDLE</element>
-                                    <limits>
-                                        <limit>
-                                            <counter>BRANCH</counter>
-                                            <value>COVEREDRATIO</value>
-                                            <minimum>0.47</minimum>
-                                        </limit>
-                                        <limit>
-                                            <counter>LINE</counter>
-                                            <value>COVEREDRATIO</value>
-                                            <minimum>0.55</minimum>
-                                        </limit>
-                                    </limits>
-                                </rule>
-                            </rules>
-                        </configuration>
-                    </execution>
+                            <phase>test</phase>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                            <configuration>
+                                <rules>
+                                    <rule>
+                                        <element>BUNDLE</element>
+                                        <limits>
+                                            <limit>
+                                                <counter>BRANCH</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>0.47</minimum>
+                                            </limit>
+                                            <limit>
+                                                <counter>LINE</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>0.55</minimum>
+                                            </limit>
+                                        </limits>
+                                    </rule>
+                                </rules>
+                            </configuration>
+                        </execution>
                 </executions>
             </plugin>
 
@@ -498,7 +498,7 @@
         <connection>scm:git:ssh://github.com/boostchicken/spring-data-dynamodb.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/boostchicken/spring-data-dynamodb.git</developerConnection>
         <tag>HEAD</tag>
-    </scm>
+  </scm>
 
     <repositories>
         <repository>
@@ -640,7 +640,7 @@
                         <artifactId>maven-site-plugin</artifactId>
                         <version>3.7</version>
                         <configuration>
-                            <!-- Deactivate as Github plugin controls the upload -->
+                        <!-- Deactivate as Github plugin controls the upload -->
                             <skipDeploy>true</skipDeploy>
                         </configuration>
                     </plugin>

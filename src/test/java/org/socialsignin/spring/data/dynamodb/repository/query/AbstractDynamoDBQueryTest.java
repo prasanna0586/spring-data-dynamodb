@@ -15,21 +15,6 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.query;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -46,6 +31,18 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.util.TypeInformation;
+
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AbstractDynamoDBQueryTest {
@@ -120,6 +117,7 @@ public class AbstractDynamoDBQueryTest {
 		doReturn(Page.class).when(typeInformation).getType();
 		doReturn(typeInformation).when(metadata)
 			.getReturnType(ArgumentMatchers.argThat(argument -> "findByName".equals(argument.getName())));
+		doReturn(TypeInformation.of(Page.class)).when(metadata).getDomainTypeInformation();
 		doReturn(UserRepository.class).when(metadata).getRepositoryInterface();
 		doReturn(User.class).when(metadata).getReturnedDomainClass(any());
 	}

@@ -190,9 +190,8 @@ public class SimpleDynamoDBCrudRepository<T, ID>
 
 	@Override
 	public void deleteAllById(Iterable<? extends ID> ids) {
-		Assert.notNull(ids, "The given ids must not be null!");
-		List<ID> idsList = StreamSupport.stream(ids.spliterator(), false).map(id -> (ID)id).toList();
-		deleteAll(findAllById(idsList));
+		var bla = StreamSupport.stream(ids.spliterator(), false).map(id -> (ID)id).toList();
+		deleteAll(findAllById(bla));
 	}
 
 	@Override
