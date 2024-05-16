@@ -37,8 +37,8 @@
     </licenses>
 
     <properties>
-        <spring.version>6.0.13</spring.version>
-        <spring-data.version>3.1.5</spring-data.version>
+        <spring.version>6.1.6</spring.version>
+        <spring-data.version>3.2.5</spring-data.version>
 
         <aws-java-sdk.version>1.12.583</aws-java-sdk.version>
         <junit.version>4.13.2</junit.version>
@@ -52,7 +52,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
-        <spring-boot-starter-validation.version>3.1.5</spring-boot-starter-validation.version>
+        <spring-boot-starter-validation.version>3.2.5</spring-boot-starter-validation.version>
     </properties>
 
     <dependencyManagement>
@@ -225,7 +225,7 @@
                             <configuration>
                                 <rules>
                                     <requireJavaVersion>
-                                        <version>1.8.0</version>
+                                        <version>21</version>
                                     </requireJavaVersion>
                                 </rules>
                             </configuration>
