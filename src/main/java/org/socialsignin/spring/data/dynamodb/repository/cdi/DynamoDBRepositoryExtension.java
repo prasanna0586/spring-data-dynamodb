@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,17 +19,17 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
-import org.springframework.data.repository.cdi.CdiRepositoryExtensionSupport;
-
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.UnsatisfiedResolutionException;
 import jakarta.enterprise.inject.spi.AfterBeanDiscovery;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.inject.spi.ProcessBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
+import org.springframework.data.repository.cdi.CdiRepositoryExtensionSupport;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.HashMap;

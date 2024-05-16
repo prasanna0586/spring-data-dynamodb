@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,34 +18,16 @@ package org.socialsignin.spring.data.dynamodb.repository.query;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperTableModel;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
-import com.amazonaws.services.dynamodbv2.model.Condition;
-import com.amazonaws.services.dynamodbv2.model.QueryRequest;
-import com.amazonaws.services.dynamodbv2.model.Select;
+import com.amazonaws.services.dynamodbv2.model.*;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
-import org.socialsignin.spring.data.dynamodb.query.CountByHashAndRangeKeyQuery;
-import org.socialsignin.spring.data.dynamodb.query.MultipleEntityQueryExpressionQuery;
-import org.socialsignin.spring.data.dynamodb.query.MultipleEntityQueryRequestQuery;
-import org.socialsignin.spring.data.dynamodb.query.MultipleEntityScanExpressionQuery;
-import org.socialsignin.spring.data.dynamodb.query.Query;
-import org.socialsignin.spring.data.dynamodb.query.QueryExpressionCountQuery;
-import org.socialsignin.spring.data.dynamodb.query.QueryRequestCountQuery;
-import org.socialsignin.spring.data.dynamodb.query.ScanExpressionCountQuery;
-import org.socialsignin.spring.data.dynamodb.query.SingleEntityLoadByHashAndRangeKeyQuery;
+import org.socialsignin.spring.data.dynamodb.query.*;
 import org.socialsignin.spring.data.dynamodb.repository.ExpressionAttribute;
 import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBIdIsHashAndRangeKeyEntityInformation;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
 /**
  * @author Michael Lavelle

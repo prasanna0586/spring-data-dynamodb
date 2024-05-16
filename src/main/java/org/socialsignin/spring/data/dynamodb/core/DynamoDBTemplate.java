@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,26 +16,12 @@
 package org.socialsignin.spring.data.dynamodb.core;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
+import com.amazonaws.services.dynamodbv2.datamodeling.*;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper.FailedBatch;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperTableModel;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
-import com.amazonaws.services.dynamodbv2.datamodeling.KeyPair;
-import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedQueryList;
-import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedScanList;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.QueryResult;
 import com.amazonaws.services.dynamodbv2.model.Select;
-import org.socialsignin.spring.data.dynamodb.mapping.event.AfterDeleteEvent;
-import org.socialsignin.spring.data.dynamodb.mapping.event.AfterLoadEvent;
-import org.socialsignin.spring.data.dynamodb.mapping.event.AfterQueryEvent;
-import org.socialsignin.spring.data.dynamodb.mapping.event.AfterSaveEvent;
-import org.socialsignin.spring.data.dynamodb.mapping.event.AfterScanEvent;
-import org.socialsignin.spring.data.dynamodb.mapping.event.BeforeDeleteEvent;
-import org.socialsignin.spring.data.dynamodb.mapping.event.BeforeSaveEvent;
-import org.socialsignin.spring.data.dynamodb.mapping.event.DynamoDBMappingEvent;
+import org.socialsignin.spring.data.dynamodb.mapping.event.*;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;

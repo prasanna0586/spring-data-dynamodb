@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+    Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>io.github.boostchicken</groupId>
+    <groupId>com.prasanna.spring.data</groupId>
     <artifactId>spring-data-dynamodb</artifactId>
     <version>6.0.0-SNAPSHOT</version>
     <name>Spring Data DynamoDB</name>
@@ -27,7 +27,7 @@
     <description>The primary goal of the Spring® Data project is to make it easier to build Spring-powered applications
         that use data access technologies.
         This module deals with enhanced support for a data access layer built on AWS DynamoDB.</description>
-    <url>https://github.com/boostchicken/spring-data-dynamodb</url>
+    <url>https://github.com/prasanna0586/spring-data-dynamodb</url>
 
     <licenses>
         <license>
@@ -50,8 +50,8 @@
         <findbugs.version>3.0.5</findbugs.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <spring-boot-starter-validation.version>3.1.5</spring-boot-starter-validation.version>
     </properties>
 
@@ -494,9 +494,9 @@
     </build>
 
     <scm>
-        <url>https://github.com/boostchicken/spring-data-dynamodb</url>
-        <connection>scm:git:ssh://github.com/boostchicken/spring-data-dynamodb.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/boostchicken/spring-data-dynamodb.git</developerConnection>
+        <url>https://github.com/prasanna0586/spring-data-dynamodb</url>
+        <connection>scm:git:ssh://github.com/prasanna0586/spring-data-dynamodb.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/prasanna0586/spring-data-dynamodb.git</developerConnection>
         <tag>HEAD</tag>
   </scm>
 
@@ -676,6 +676,13 @@
 
     <developers>
         <developer>
+            <id>prasanna0586</id>
+            <name>Prasanna Kumar Ramachandran</name>
+            <email>prasanna0586@gmail.com</email>
+            <url>https://www.github.com/prasanna0586</url>
+            <timezone>America/Los_Angeles</timezone>
+        </developer>
+        <developer>
             <id>boostchicken</id>
             <name>John Dorman</name>
             <email>dorman@ataxia.cloud</email>
@@ -745,7 +752,7 @@
     <distributionManagement>
         <site>
             <id>website</id>
-            <url>https://github.com/boostchicken/spring-data-dynamodb</url>
+            <url>https://github.com/prasanna0586/spring-data-dynamodb</url>
         </site>
         <snapshotRepository>
             <id>ossrh</id>
@@ -760,12 +767,12 @@
 
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/boostchicken/spring-data-dynamodb/issues</url>
+        <url>https://github.com/prasanna0586/spring-data-dynamodb/issues</url>
     </issueManagement>
 
     <ciManagement>
         <system>Travis CI</system>
-        <url>https://travis-ci.org/boostchicken/spring-data-dynamodb</url>
+        <url>https://travis-ci.org/prasanna0586/spring-data-dynamodb</url>
     </ciManagement>
 
 

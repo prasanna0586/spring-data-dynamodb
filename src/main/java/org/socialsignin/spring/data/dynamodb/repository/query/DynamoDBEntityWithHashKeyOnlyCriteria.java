@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,13 +22,7 @@ import com.amazonaws.services.dynamodbv2.model.Condition;
 import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.model.Select;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
-import org.socialsignin.spring.data.dynamodb.query.CountByHashKeyQuery;
-import org.socialsignin.spring.data.dynamodb.query.MultipleEntityQueryRequestQuery;
-import org.socialsignin.spring.data.dynamodb.query.MultipleEntityScanExpressionQuery;
-import org.socialsignin.spring.data.dynamodb.query.Query;
-import org.socialsignin.spring.data.dynamodb.query.QueryRequestCountQuery;
-import org.socialsignin.spring.data.dynamodb.query.ScanExpressionCountQuery;
-import org.socialsignin.spring.data.dynamodb.query.SingleEntityLoadByHashKeyQuery;
+import org.socialsignin.spring.data.dynamodb.query.*;
 import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBEntityInformation;
 
 import java.util.List;
