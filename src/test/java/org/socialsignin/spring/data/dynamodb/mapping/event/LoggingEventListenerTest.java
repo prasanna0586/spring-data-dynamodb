@@ -23,10 +23,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.slf4j.event.Level;
 import org.socialsignin.spring.data.dynamodb.domain.sample.User;
-import uk.org.lidalia.slf4jext.Level;
-import uk.org.lidalia.slf4jtest.TestLogger;
-import uk.org.lidalia.slf4jtest.TestLoggerFactory;
+import com.github.valfirst.slf4jtest.TestLogger;
+import com.github.valfirst.slf4jtest.TestLoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +35,7 @@ import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.when;
-import static uk.org.lidalia.slf4jtest.LoggingEvent.trace;
+import static com.github.valfirst.slf4jtest.LoggingEvent.trace;
 
 @RunWith(MockitoJUnitRunner.class)
 public class LoggingEventListenerTest {
