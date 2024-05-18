@@ -16,7 +16,8 @@
     limitations under the License.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.prasanna.spring.data</groupId>
     <artifactId>spring-data-dynamodb</artifactId>
@@ -26,7 +27,8 @@
 
     <description>The primary goal of the Spring® Data project is to make it easier to build Spring-powered applications
         that use data access technologies.
-        This module deals with enhanced support for a data access layer built on AWS DynamoDB.</description>
+        This module deals with enhanced support for a data access layer built on AWS DynamoDB.
+    </description>
     <url>https://github.com/prasanna0586/spring-data-dynamodb</url>
 
     <licenses>
@@ -138,8 +140,8 @@
             <artifactId>spring-tx</artifactId>
         </dependency>
         <dependency>
-          <groupId>org.springframework.boot</groupId>
-          <artifactId>spring-boot-starter-validation</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
             <version>${spring-boot-starter-validation.version}</version>
         </dependency>
         <!-- SPRING DATA -->
@@ -179,7 +181,7 @@
             <groupId>com.amazonaws</groupId>
             <artifactId>DynamoDBLocal</artifactId>
             <scope>test</scope>
-       </dependency>
+        </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-to-slf4j</artifactId>
@@ -225,7 +227,7 @@
                             <configuration>
                                 <rules>
                                     <requireJavaVersion>
-                                        <version>21</version>
+                                        <version>17</version>
                                     </requireJavaVersion>
                                 </rules>
                             </configuration>
@@ -346,30 +348,30 @@
                     </execution>
                     <execution>
                         <id>default-check</id>
-                            <phase>test</phase>
-                            <goals>
-                                <goal>check</goal>
-                            </goals>
-                            <configuration>
-                                <rules>
-                                    <rule>
-                                        <element>BUNDLE</element>
-                                        <limits>
-                                            <limit>
-                                                <counter>BRANCH</counter>
-                                                <value>COVEREDRATIO</value>
-                                                <minimum>0.47</minimum>
-                                            </limit>
-                                            <limit>
-                                                <counter>LINE</counter>
-                                                <value>COVEREDRATIO</value>
-                                                <minimum>0.55</minimum>
-                                            </limit>
-                                        </limits>
-                                    </rule>
-                                </rules>
-                            </configuration>
-                        </execution>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.47</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.55</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
 
@@ -498,29 +500,7 @@
         <connection>scm:git:ssh://github.com/prasanna0586/spring-data-dynamodb.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/prasanna0586/spring-data-dynamodb.git</developerConnection>
         <tag>HEAD</tag>
-  </scm>
-
-    <repositories>
-        <repository>
-            <id>spring-libs-snapshot</id>
-            <url>https://repo.springsource.org/libs-snapshot</url>
-        </repository>
-        <repository>
-            <id>dynamodb-local-oregon</id>
-            <name>DynamoDB Local Release Repository</name>
-            <url>https://s3-us-west-2.amazonaws.com/dynamodb-local/release</url>
-        </repository>
-    </repositories>
-
-    <pluginRepositories>
-        <pluginRepository>
-            <id>com.springsource.repository.bundles.release</id>
-            <url>https://repository.springsource.com/maven/bundles/release</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </pluginRepository>
-    </pluginRepositories>
+    </scm>
 
     <profiles>
         <profile>
@@ -533,6 +513,7 @@
             <properties>
                 <sqlite4java.artifactId>libsqlite4java-osx</sqlite4java.artifactId>
                 <sqlite4java.type>dylib</sqlite4java.type>
+                <dynamodblocal.port>8000</dynamodblocal.port>
             </properties>
         </profile>
         <profile>
@@ -546,6 +527,7 @@
             <properties>
                 <sqlite4java.artifactId>libsqlite4java-linux-i386</sqlite4java.artifactId>
                 <sqlite4java.type>so</sqlite4java.type>
+                <dynamodblocal.port>8000</dynamodblocal.port>
             </properties>
         </profile>
         <profile>
@@ -559,6 +541,7 @@
             <properties>
                 <sqlite4java.artifactId>libsqlite4java-linux-amd64</sqlite4java.artifactId>
                 <sqlite4java.type>so</sqlite4java.type>
+                <dynamodblocal.port>8000</dynamodblocal.port>
             </properties>
         </profile>
         <profile>
@@ -572,6 +555,7 @@
             <properties>
                 <sqlite4java.artifactId>libsqlite4java-win32-x86</sqlite4java.artifactId>
                 <sqlite4java.type>dll</sqlite4java.type>
+                <dynamodblocal.port>8000</dynamodblocal.port>
             </properties>
         </profile>
         <profile>
@@ -585,20 +569,22 @@
             <properties>
                 <sqlite4java.artifactId>sqlite4java-win32-x64</sqlite4java.artifactId>
                 <sqlite4java.type>dll</sqlite4java.type>
+                <dynamodblocal.port>8000</dynamodblocal.port>
             </properties>
         </profile>
         <profile>
             <id>release</id>
             <properties>
-                <sqlite4java.artifactId>sqlite4java-win32-x64</sqlite4java.artifactId>
-                <sqlite4java.type>dll</sqlite4java.type>
+                <sqlite4java.artifactId>libsqlite4java-osx</sqlite4java.artifactId>
+                <sqlite4java.type>dylib</sqlite4java.type>
+                <dynamodblocal.port>8000</dynamodblocal.port>
             </properties>
             <build>
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
-                        <version>3.2.1</version>
+                        <version>3.3.1</version>
                         <executions>
                             <execution>
                                 <id>attach-sources</id>
@@ -611,7 +597,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.2.0</version>
+                        <version>3.6.3</version>
                         <executions>
                             <execution>
                                 <id>attach-javadocs</id>
@@ -638,9 +624,9 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-site-plugin</artifactId>
-                        <version>3.7</version>
+                        <version>3.12.1</version>
                         <configuration>
-                        <!-- Deactivate as Github plugin controls the upload -->
+                            <!-- Deactivate as Github plugin controls the upload -->
                             <skipDeploy>true</skipDeploy>
                         </configuration>
                     </plugin>
