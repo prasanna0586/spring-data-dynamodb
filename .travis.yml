@@ -18,6 +18,6 @@ deploy:
   # deploy develop to Maven Central
   - provider: script
     skip_cleanup: true
-    script: "cp .travis.settings.xml $HOME/.m2/settings.xml && mvn deploy"
+    script: "cp .travis.settings.xml $HOME/.m2/settings.xml && mvn release:prepare && mvn release:perform && mvn deploy"
     on:
       branch: develop
