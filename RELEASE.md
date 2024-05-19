@@ -28,4 +28,4 @@ Then execute
 which will tag, build, test and upload the artifacts to Sonatype's OSS staging area & closes the staging repository.
 Maven Central synchronization usually takes ~15 minutes.
 
-Finally create a new section in `src/changes/changes.xml`.
+Finally, create a new section in `src/changes/changes.xml`.
