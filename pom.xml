@@ -24,7 +24,7 @@
         <version>3.2.5</version>
         <relativePath /> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.prasanna.spring.data</groupId>
+    <groupId>io.github.prasanna0586</groupId>
     <artifactId>spring-data-dynamodb</artifactId>
     <version>6.0.2-SNAPSHOT</version>
     <name>Spring Data DynamoDB</name>
@@ -276,6 +276,16 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>0.4.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
+                    <tokenAuth>true</tokenAuth>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -633,14 +643,6 @@
             <id>website</id>
             <url>https://github.com/prasanna0586/spring-data-dynamodb</url>
         </site>
-        <snapshotRepository>
-            <id>local-snapshot-repository</id>
-            <url>file://${user.home}/.m2/repository</url>
-        </snapshotRepository>
-        <repository>
-            <id>maven-central</id>
-            <url>https://repo1.maven.org/maven2</url>
-        </repository>
     </distributionManagement>
 
     <issueManagement>
