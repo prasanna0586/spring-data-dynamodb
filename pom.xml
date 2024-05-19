@@ -298,7 +298,7 @@
                     <releaseProfiles>release</releaseProfiles>
                     <goals>deploy site-deploy</goals>
                     <pushChanges>true</pushChanges>
-                    <localCheckout>true</localCheckout>
+                    <!--<localCheckout>true</localCheckout>-->
                 </configuration>
                 <!--<dependencies>
                     <dependency>
