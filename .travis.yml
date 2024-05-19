@@ -17,7 +17,6 @@ script:
 deploy:
   # deploy develop to Maven Central
   - provider: script
-    skip_cleanup: true
     script: "cp .travis.settings.xml $HOME/.m2/settings.xml && mvn --batch-mode release:prepare && mvn --batch-mode release:perform && mvn deploy"
     on:
       branch: develop
