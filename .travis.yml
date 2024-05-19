@@ -7,7 +7,7 @@ jdk:
   - openjdk17
 
 before_script:
-  - pip install --user codecov
+  - pip install codecov-cli
 
 script:
   - mvn --batch-mode clean verify
