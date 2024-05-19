@@ -30,22 +30,22 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {FeedUserIT.TestAppConfig.class, DynamoDBLocalResource.class})
-@TestPropertySource(properties = {"spring.data.dynamodb.entity2ddl.auto=create"})
+@ContextConfiguration(classes = { FeedUserIT.TestAppConfig.class, DynamoDBLocalResource.class })
+@TestPropertySource(properties = { "spring.data.dynamodb.entity2ddl.auto=create" })
 public class FeedUserIT {
 
-	@Configuration
-	@EnableDynamoDBRepositories(basePackages = "org.socialsignin.spring.data.dynamodb.domain.sample")
-	public static class TestAppConfig {
-	}
+    @Configuration
+    @EnableDynamoDBRepositories(basePackages = "org.socialsignin.spring.data.dynamodb.domain.sample")
+    public static class TestAppConfig {
+    }
 
-	@Autowired
-	FeedUserRepository feedUserRepository;
+    @Autowired
+    FeedUserRepository feedUserRepository;
 
-	@Test
-	public void feed_test() {
-		PageRequest pageRequest = PageRequest.of(1, 10, Sort.by(Direction.DESC, "usrNo"));
-		feedUserRepository.findByUsrNo(2, pageRequest); // runnable
-		feedUserRepository.findByUsrNoAndFeedOpenYn(2, true, pageRequest); // not runnable
-	}
+    @Test
+    public void feed_test() {
+        PageRequest pageRequest = PageRequest.of(1, 10, Sort.by(Direction.DESC, "usrNo"));
+        feedUserRepository.findByUsrNo(2, pageRequest); // runnable
+        feedUserRepository.findByUsrNoAndFeedOpenYn(2, true, pageRequest); // not runnable
+    }
 }

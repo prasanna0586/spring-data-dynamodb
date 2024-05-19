@@ -21,10 +21,10 @@ package org.socialsignin.spring.data.dynamodb.mapping.event;
  */
 public class AfterSaveEvent<T> extends DynamoDBMappingEvent<T> {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public AfterSaveEvent(T source) {
-		super(source);
-	}
+    public AfterSaveEvent(T source) {
+        super(source);
+    }
 
 }

@@ -25,19 +25,19 @@ import org.socialsignin.spring.data.dynamodb.domain.sample.User;
 @RunWith(MockitoJUnitRunner.class)
 public class DynamoDBEntityMetadataSupportUnitTest {
 
-	@Test
-	public void testGetMarshallerForProperty_WhenAnnotationIsOnField_AndReturnsDynamoDBMarshaller() {
-		DynamoDBEntityMetadataSupport<User, ?> support = new DynamoDBEntityMetadataSupport<>(User.class);
-		@SuppressWarnings("deprecation")
-		DynamoDBMarshaller<?> fieldAnnotation = support.getMarshallerForProperty("joinYear");
-		Assert.assertNotNull(fieldAnnotation);
-	}
+    @Test
+    public void testGetMarshallerForProperty_WhenAnnotationIsOnField_AndReturnsDynamoDBMarshaller() {
+        DynamoDBEntityMetadataSupport<User, ?> support = new DynamoDBEntityMetadataSupport<>(User.class);
+        @SuppressWarnings("deprecation")
+        DynamoDBMarshaller<?> fieldAnnotation = support.getMarshallerForProperty("joinYear");
+        Assert.assertNotNull(fieldAnnotation);
+    }
 
-	@Test
-	public void testGetMarshallerForProperty_WhenAnnotationIsOnMethod_AndReturnsDynamoDBMarshaller() {
-		DynamoDBEntityMetadataSupport<User, ?> support = new DynamoDBEntityMetadataSupport<>(User.class);
-		@SuppressWarnings("deprecation")
-		DynamoDBMarshaller<?> methodAnnotation = support.getMarshallerForProperty("leaveDate");
-		Assert.assertNotNull(methodAnnotation);
-	}
+    @Test
+    public void testGetMarshallerForProperty_WhenAnnotationIsOnMethod_AndReturnsDynamoDBMarshaller() {
+        DynamoDBEntityMetadataSupport<User, ?> support = new DynamoDBEntityMetadataSupport<>(User.class);
+        @SuppressWarnings("deprecation")
+        DynamoDBMarshaller<?> methodAnnotation = support.getMarshallerForProperty("leaveDate");
+        Assert.assertNotNull(methodAnnotation);
+    }
 }

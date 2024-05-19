@@ -21,29 +21,29 @@ import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import java.util.List;
 
 /**
- * 
+ *
  * @author Michael Lavelle
  * @author Sebastian Just
  */
 public abstract class AbstractMultipleEntityQuery<T> extends AbstractDynamicQuery<T> implements Query<T> {
 
-	public AbstractMultipleEntityQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz) {
-		super(dynamoDBOperations, clazz);
-	}
+    public AbstractMultipleEntityQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz) {
+        super(dynamoDBOperations, clazz);
+    }
 
-	@Override
-	public T getSingleResult() {
-		List<T> results = getResultList();
-		if (results.size() > 1) {
-			throw new IncorrectResultSizeDataAccessException("result returns more than one elements", 1,
-					results.size());
-		}
-		if (results.size() == 0) {
-			// return null here as Spring will convert that to Optional if nessassary
-			// https://jira.spring.io/browse/DATACMNS-483
-			return null;
-		} else {
-			return results.get(0);
-		}
-	}
+    @Override
+    public T getSingleResult() {
+        List<T> results = getResultList();
+        if (results.size() > 1) {
+            throw new IncorrectResultSizeDataAccessException("result returns more than one elements", 1,
+                    results.size());
+        }
+        if (results.size() == 0) {
+            // return null here as Spring will convert that to Optional if nessassary
+            // https://jira.spring.io/browse/DATACMNS-483
+            return null;
+        } else {
+            return results.get(0);
+        }
+    }
 }

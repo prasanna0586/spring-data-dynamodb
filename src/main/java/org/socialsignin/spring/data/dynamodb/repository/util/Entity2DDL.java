@@ -16,65 +16,63 @@
 package org.socialsignin.spring.data.dynamodb.repository.util;
 
 /**
- * Configuration key is {@code spring.data.dynamodb.entity2ddl.auto} Inspired by
- * Hibernate's hbm2ddl
- * 
+ * Configuration key is {@code spring.data.dynamodb.entity2ddl.auto} Inspired by Hibernate's hbm2ddl
+ *
  * @see <a href=
  *      "https://docs.jboss.org/hibernate/orm/5.2/userguide/html_single/Hibernate_User_Guide.html#configurations-hbmddl">Hibernate
  *      User Guide</a>
  */
 public enum Entity2DDL {
-	/** No action will be performed. */
-	NONE("none"),
+    /** No action will be performed. */
+    NONE("none"),
 
-	/** Database creation will be generated on ApplicationContext startup. */
-	CREATE_ONLY("create-only"),
+    /** Database creation will be generated on ApplicationContext startup. */
+    CREATE_ONLY("create-only"),
 
-	/** Database dropping will be generated on ApplicationContext shutdown. */
-	DROP("drop"),
+    /** Database dropping will be generated on ApplicationContext shutdown. */
+    DROP("drop"),
 
-	/**
-	 * Database dropping will be generated followed by database creation on
-	 * ApplicationContext startup.
-	 */
-	CREATE("create"),
+    /**
+     * Database dropping will be generated followed by database creation on ApplicationContext startup.
+     */
+    CREATE("create"),
 
-	/**
-	 * Drop the schema and recreate it on ApplicationContext startup. Additionally,
-	 * drop the schema on ApplicationContext shutdown.
-	 */
-	CREATE_DROP("create-drop"),
+    /**
+     * Drop the schema and recreate it on ApplicationContext startup. Additionally, drop the schema on
+     * ApplicationContext shutdown.
+     */
+    CREATE_DROP("create-drop"),
 
-	/** Validate the database schema */
-	VALIDATE("validate");
+    /** Validate the database schema */
+    VALIDATE("validate");
 
-	private final String configurationValue;
+    private final String configurationValue;
 
-	Entity2DDL(String configurationValue) {
-		this.configurationValue = configurationValue;
-	}
+    Entity2DDL(String configurationValue) {
+        this.configurationValue = configurationValue;
+    }
 
-	public String getConfigurationValue() {
-		return this.configurationValue;
-	}
+    public String getConfigurationValue() {
+        return this.configurationValue;
+    }
 
-	/**
-	 * Use this in place of valueOf.
-	 *
-	 * @param value
-	 *            real value
-	 * @return Entity2DDL corresponding to the value
-	 *
-	 * @throws IllegalArgumentException
-	 *             If the specified value does not map to one of the known values in
-	 *             this enum.
-	 */
-	public static Entity2DDL fromValue(String value) {
-		for (Entity2DDL resolvedConfig : Entity2DDL.values()) {
-			if (resolvedConfig.configurationValue.equals(value)) {
-				return resolvedConfig;
-			}
-		}
-		throw new IllegalArgumentException(value + " is not a valid configuration value!");
-	}
+    /**
+     * Use this in place of valueOf.
+     *
+     * @param value
+     *            real value
+     *
+     * @return Entity2DDL corresponding to the value
+     *
+     * @throws IllegalArgumentException
+     *             If the specified value does not map to one of the known values in this enum.
+     */
+    public static Entity2DDL fromValue(String value) {
+        for (Entity2DDL resolvedConfig : Entity2DDL.values()) {
+            if (resolvedConfig.configurationValue.equals(value)) {
+                return resolvedConfig;
+            }
+        }
+        throw new IllegalArgumentException(value + " is not a valid configuration value!");
+    }
 }

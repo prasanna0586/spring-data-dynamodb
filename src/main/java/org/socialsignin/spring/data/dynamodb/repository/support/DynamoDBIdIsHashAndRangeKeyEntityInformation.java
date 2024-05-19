@@ -20,8 +20,6 @@ package org.socialsignin.spring.data.dynamodb.repository.support;
  * @author Sebastian Just
  */
 public interface DynamoDBIdIsHashAndRangeKeyEntityInformation<T, ID>
-		extends
-			DynamoDBHashAndRangeKeyExtractingEntityMetadata<T, ID>,
-			DynamoDBEntityInformation<T, ID> {
+        extends DynamoDBHashAndRangeKeyExtractingEntityMetadata<T, ID>, DynamoDBEntityInformation<T, ID> {
 
 }

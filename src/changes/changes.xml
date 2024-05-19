@@ -20,9 +20,15 @@
           xsi:schemaLocation="http://maven.apache.org/changes/1.0.0 http://maven.apache.org/xsd/changes-1.0.0.xsd">
   <properties>
     <title>spring-data-dynamodb Changes</title>
-    <author>boostchicken</author>
+    <author>prasanna0586</author>
   </properties>
   <body>
+    <release version="6.0.0" description="Spring Boot 3 and Java 17 upgrades">
+      <action dev="prasanna0586" type="update" date="2024-05-18">
+        Forked the project https://github.com/boostchicken/spring-data-dynamodb and upgraded it to support
+        spring boot 3.2.5 and Java 17
+      </action>
+    </release>
     <release version="5.2.5" description="Feature Release">
       <action dev="hannes-angst" type="add" issue="33" date="2020-06-16">
         Allow single object as parameter to query a set/list

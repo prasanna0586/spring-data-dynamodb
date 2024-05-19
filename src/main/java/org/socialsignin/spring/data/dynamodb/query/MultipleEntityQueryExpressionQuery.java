@@ -26,17 +26,17 @@ import java.util.List;
  */
 public class MultipleEntityQueryExpressionQuery<T> extends AbstractMultipleEntityQuery<T> {
 
-	private DynamoDBQueryExpression<T> queryExpression;
+    private DynamoDBQueryExpression<T> queryExpression;
 
-	public MultipleEntityQueryExpressionQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz,
-			DynamoDBQueryExpression<T> queryExpression) {
-		super(dynamoDBOperations, clazz);
-		this.queryExpression = queryExpression;
-	}
+    public MultipleEntityQueryExpressionQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz,
+            DynamoDBQueryExpression<T> queryExpression) {
+        super(dynamoDBOperations, clazz);
+        this.queryExpression = queryExpression;
+    }
 
-	@Override
-	public List<T> getResultList() {
-		return dynamoDBOperations.query(clazz, queryExpression);
-	}
+    @Override
+    public List<T> getResultList() {
+        return dynamoDBOperations.query(clazz, queryExpression);
+    }
 
 }

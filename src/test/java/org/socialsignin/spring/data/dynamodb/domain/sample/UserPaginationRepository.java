@@ -24,18 +24,19 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.util.List;
 
-public interface UserPaginationRepository extends PagingAndSortingRepository<User, String>, CrudRepository<User, String> {
+public interface UserPaginationRepository
+        extends PagingAndSortingRepository<User, String>, CrudRepository<User, String> {
 
-	@EnableScan
-	@EnableScanCount
-	Page<User> findAllByName(String name, Pageable pageable);
+    @EnableScan
+    @EnableScanCount
+    Page<User> findAllByName(String name, Pageable pageable);
 
-	@EnableScan
-	List<User> findAllByName(String name);
+    @EnableScan
+    List<User> findAllByName(String name);
 
-	@EnableScan
-	List<User> findAll();
+    @EnableScan
+    List<User> findAll();
 
-	@EnableScan
-	void deleteAll();
+    @EnableScan
+    void deleteAll();
 }

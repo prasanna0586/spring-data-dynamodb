@@ -34,89 +34,89 @@ import static org.junit.Assert.assertThat;
 
 /**
  * Unit tests for {@link DynamoDBMappingContext}.
- * 
+ *
  * @author Michael Lavelle
  * @author Sebastian Just
  */
 @RunWith(MockitoJUnitRunner.class)
 public class DynamoDBMappingContextTest {
-	@DynamoDBTable(tableName = "a")
-	static class DynamoDBMappingContextTestFieldEntity {
+    @DynamoDBTable(tableName = "a")
+    static class DynamoDBMappingContextTestFieldEntity {
 
-		@DynamoDBHashKey
-		private String hashKey;
+        @DynamoDBHashKey
+        private String hashKey;
 
-		@DynamoDBRangeKey
-		private String rangeKey;
+        @DynamoDBRangeKey
+        private String rangeKey;
 
-		@SuppressWarnings("unused")
-		private String someProperty;
-	}
+        @SuppressWarnings("unused")
+        private String someProperty;
+    }
 
-	@DynamoDBTable(tableName = "b")
-	static class DynamoDBMappingContextTestMethodEntity {
+    @DynamoDBTable(tableName = "b")
+    static class DynamoDBMappingContextTestMethodEntity {
 
-		@DynamoDBHashKey
-		public String getHashKey() {
-			return null;
-		}
+        @DynamoDBHashKey
+        public String getHashKey() {
+            return null;
+        }
 
-		@DynamoDBRangeKey
-		public String getRangeKey() {
-			return null;
-		}
+        @DynamoDBRangeKey
+        public String getRangeKey() {
+            return null;
+        }
 
-		public String getSomeProperty() {
-			return null;
-		}
-	}
+        public String getSomeProperty() {
+            return null;
+        }
+    }
 
-	@DynamoDBTable(tableName = "c")
-	static class DynamoDBMappingContextTestIdEntity {
-		@Id
-		private DynamoDBHashAndRangeKey hashRangeKey;
+    @DynamoDBTable(tableName = "c")
+    static class DynamoDBMappingContextTestIdEntity {
+        @Id
+        private DynamoDBHashAndRangeKey hashRangeKey;
 
-		@DynamoDBIgnore
-		public String getSomething() {
-			return null;
-		}
-	}
+        @DynamoDBIgnore
+        public String getSomething() {
+            return null;
+        }
+    }
 
-	private DynamoDBMappingContext underTest;
+    private DynamoDBMappingContext underTest;
 
-	@Before
-	public void setUp() {
-		underTest = new DynamoDBMappingContext();
-	}
+    @Before
+    public void setUp() {
+        underTest = new DynamoDBMappingContext();
+    }
 
-	@Test
-	public void detectsPropertyAnnotation() {
+    @Test
+    public void detectsPropertyAnnotation() {
 
-		DynamoDBPersistentEntityImpl<?> entity = underTest
-				.getPersistentEntity(DynamoDBMappingContextTestFieldEntity.class);
+        DynamoDBPersistentEntityImpl<?> entity = underTest
+                .getPersistentEntity(DynamoDBMappingContextTestFieldEntity.class);
 
-		assertNotNull(entity);
-		assertThat(entity.getIdProperty(), is(notNullValue()));
-	}
+        assertNotNull(entity);
+        assertThat(entity.getIdProperty(), is(notNullValue()));
+    }
 
-	@Test
-	@Ignore
-	public void detectdMethodsAnnotation() {
-		DynamoDBPersistentEntityImpl<?> entity = underTest
-				.getPersistentEntity(DynamoDBMappingContextTestMethodEntity.class);
+    @Test
+    @Ignore
+    public void detectdMethodsAnnotation() {
+        DynamoDBPersistentEntityImpl<?> entity = underTest
+                .getPersistentEntity(DynamoDBMappingContextTestMethodEntity.class);
 
-		assertNotNull(entity);
-		assertThat(entity.getIdProperty(), is(notNullValue()));
+        assertNotNull(entity);
+        assertThat(entity.getIdProperty(), is(notNullValue()));
 
-	}
+    }
 
-	@Test
-	public void detectdMethodsId() {
-		DynamoDBPersistentEntityImpl<?> entity = underTest
-				.getPersistentEntity(DynamoDBMappingContextTestIdEntity.class);
+    @Test
+    public void detectdMethodsId() {
+        DynamoDBPersistentEntityImpl<?> entity = underTest
+                .getPersistentEntity(DynamoDBMappingContextTestIdEntity.class);
 
-		assertNotNull(entity);
-		assertThat(entity.getIdProperty(), is(notNullValue()));
+        assertNotNull(entity);
+        assertThat(entity.getIdProperty(), is(notNullValue()));
 
-	}
+    }
 }

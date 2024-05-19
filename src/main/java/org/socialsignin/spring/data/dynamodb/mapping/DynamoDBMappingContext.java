@@ -27,76 +27,69 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 /**
- * Default implementation of a
- * {@link org.springframework.data.mapping.context.MappingContext} for DynamoDB
- * using {@link DynamoDBPersistentEntityImpl} and
- * {@link DynamoDBPersistentProperty} as primary abstractions.
+ * Default implementation of a {@link org.springframework.data.mapping.context.MappingContext} for DynamoDB using
+ * {@link DynamoDBPersistentEntityImpl} and {@link DynamoDBPersistentProperty} as primary abstractions.
  *
  * @author Michael Lavelle
  * @author Sebastian Just
  */
 public class DynamoDBMappingContext
-		extends
-			AbstractMappingContext<DynamoDBPersistentEntityImpl<?>, DynamoDBPersistentProperty> {
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.springframework.data.mapping.context.AbstractMappingContext#
-	 * shouldCreatePersistentEntityFor
-	 * (org.springframework.data.util.TypeInformation)
-	 */
-	@Override
-	protected <T> DynamoDBPersistentEntityImpl<?> createPersistentEntity(TypeInformation<T> typeInformation) {
-		return new DynamoDBPersistentEntityImpl<>(typeInformation, null);
+        extends AbstractMappingContext<DynamoDBPersistentEntityImpl<?>, DynamoDBPersistentProperty> {
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.springframework.data.mapping.context.AbstractMappingContext# shouldCreatePersistentEntityFor
+     * (org.springframework.data.util.TypeInformation)
+     */
+    @Override
+    protected <T> DynamoDBPersistentEntityImpl<?> createPersistentEntity(TypeInformation<T> typeInformation) {
+        return new DynamoDBPersistentEntityImpl<>(typeInformation, null);
 
-	}
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.springframework.data.mapping.AbstractMappingContext#
-	 * createPersistentProperty(java.lang.reflect.Field,
-	 * java.beans.PropertyDescriptor,
-	 * org.springframework.data.mapping.MutablePersistentEntity,
-	 * org.springframework.data.mapping.SimpleTypeHolder)
-	 */
-	@Override
-	protected DynamoDBPersistentProperty createPersistentProperty(Property property,
-			DynamoDBPersistentEntityImpl<?> owner, SimpleTypeHolder simpleTypeHolder) {
-		return new DynamoDBPersistentPropertyImpl(property, owner, simpleTypeHolder);
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.springframework.data.mapping.AbstractMappingContext# createPersistentProperty(java.lang.reflect.Field,
+     * java.beans.PropertyDescriptor, org.springframework.data.mapping.MutablePersistentEntity,
+     * org.springframework.data.mapping.SimpleTypeHolder)
+     */
+    @Override
+    protected DynamoDBPersistentProperty createPersistentProperty(Property property,
+            DynamoDBPersistentEntityImpl<?> owner, SimpleTypeHolder simpleTypeHolder) {
+        return new DynamoDBPersistentPropertyImpl(property, owner, simpleTypeHolder);
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.springframework.data.mapping.context.AbstractMappingContext#
-	 * shouldCreatePersistentEntityFor
-	 * (org.springframework.data.util.TypeInformation)
-	 */
-	@Override
-	protected boolean shouldCreatePersistentEntityFor(TypeInformation<?> type) {
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.springframework.data.mapping.context.AbstractMappingContext# shouldCreatePersistentEntityFor
+     * (org.springframework.data.util.TypeInformation)
+     */
+    @Override
+    protected boolean shouldCreatePersistentEntityFor(TypeInformation<?> type) {
 
-		boolean hasHashKey = false;
-		boolean hasRangeKey = false;
-		for (Method method : type.getType().getMethods()) {
-			if (method.isAnnotationPresent(DynamoDBHashKey.class)) {
-				hasHashKey = true;
-			}
-			if (method.isAnnotationPresent(DynamoDBRangeKey.class)) {
-				hasRangeKey = true;
-			}
+        boolean hasHashKey = false;
+        boolean hasRangeKey = false;
+        for (Method method : type.getType().getMethods()) {
+            if (method.isAnnotationPresent(DynamoDBHashKey.class)) {
+                hasHashKey = true;
+            }
+            if (method.isAnnotationPresent(DynamoDBRangeKey.class)) {
+                hasRangeKey = true;
+            }
 
-		}
-		for (Field field : type.getType().getFields()) {
-			if (field.isAnnotationPresent(DynamoDBHashKey.class)) {
-				hasHashKey = true;
-			}
-			if (field.isAnnotationPresent(DynamoDBRangeKey.class)) {
-				hasRangeKey = true;
-			}
+        }
+        for (Field field : type.getType().getFields()) {
+            if (field.isAnnotationPresent(DynamoDBHashKey.class)) {
+                hasHashKey = true;
+            }
+            if (field.isAnnotationPresent(DynamoDBRangeKey.class)) {
+                hasRangeKey = true;
+            }
 
-		}
-		return type.getType().isAnnotationPresent(DynamoDBTable.class) || (hasHashKey && hasRangeKey);
-	}
+        }
+        return type.getType().isAnnotationPresent(DynamoDBTable.class) || (hasHashKey && hasRangeKey);
+    }
 
 }

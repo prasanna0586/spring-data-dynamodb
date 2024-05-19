@@ -23,116 +23,116 @@ import org.springframework.util.ReflectionUtils;
 import java.lang.reflect.Method;
 
 /**
- * 
+ *
  * @author Michael Lavelle
  * @author Sebastian Just
- * 
+ *
  */
 public class EnableScanAnnotationPermissions implements EnableScanPermissions {
 
-	private boolean findAllUnpaginatedScanEnabled = false;
-	private boolean findAllPaginatedScanEnabled = false;
+    private boolean findAllUnpaginatedScanEnabled = false;
+    private boolean findAllPaginatedScanEnabled = false;
 
-	private boolean findAllUnpaginatedScanCountEnabled = false;
+    private boolean findAllUnpaginatedScanCountEnabled = false;
 
-	private boolean countUnpaginatedScanEnabled = false;
-	private boolean deleteAllUnpaginatedScanEnabled = false;
+    private boolean countUnpaginatedScanEnabled = false;
+    private boolean deleteAllUnpaginatedScanEnabled = false;
 
-	public EnableScanAnnotationPermissions(Class<?> repositoryInterface) {
-		// Check to see if global EnableScan is declared at interface level
-		if (repositoryInterface.isAnnotationPresent(EnableScan.class)) {
-			this.findAllUnpaginatedScanEnabled = true;
-			this.countUnpaginatedScanEnabled = true;
-			this.deleteAllUnpaginatedScanEnabled = true;
-			this.findAllPaginatedScanEnabled = true;
-		} else {
-			// Check declared methods for EnableScan annotation
-			Method[] methods = ReflectionUtils.getAllDeclaredMethods(repositoryInterface);
-			for (Method method : methods) {
+    public EnableScanAnnotationPermissions(Class<?> repositoryInterface) {
+        // Check to see if global EnableScan is declared at interface level
+        if (repositoryInterface.isAnnotationPresent(EnableScan.class)) {
+            this.findAllUnpaginatedScanEnabled = true;
+            this.countUnpaginatedScanEnabled = true;
+            this.deleteAllUnpaginatedScanEnabled = true;
+            this.findAllPaginatedScanEnabled = true;
+        } else {
+            // Check declared methods for EnableScan annotation
+            Method[] methods = ReflectionUtils.getAllDeclaredMethods(repositoryInterface);
+            for (Method method : methods) {
 
-				if (!method.isAnnotationPresent(EnableScan.class) || method.getParameterTypes().length > 0) {
-					// Only consider methods which have the EnableScan
-					// annotation and which accept no parameters
-					continue;
-				}
+                if (!method.isAnnotationPresent(EnableScan.class) || method.getParameterTypes().length > 0) {
+                    // Only consider methods which have the EnableScan
+                    // annotation and which accept no parameters
+                    continue;
+                }
 
-				if (method.getName().equals("findAll")) {
-					findAllUnpaginatedScanEnabled = true;
-					continue;
-				}
+                if (method.getName().equals("findAll")) {
+                    findAllUnpaginatedScanEnabled = true;
+                    continue;
+                }
 
-				if (method.getName().equals("deleteAll")) {
-					deleteAllUnpaginatedScanEnabled = true;
-					continue;
-				}
+                if (method.getName().equals("deleteAll")) {
+                    deleteAllUnpaginatedScanEnabled = true;
+                    continue;
+                }
 
-				if (method.getName().equals("count")) {
-					countUnpaginatedScanEnabled = true;
-					continue;
-				}
+                if (method.getName().equals("count")) {
+                    countUnpaginatedScanEnabled = true;
+                    continue;
+                }
 
-			}
-			for (Method method : methods) {
+            }
+            for (Method method : methods) {
 
-				if (!method.isAnnotationPresent(EnableScanCount.class) || method.getParameterTypes().length != 1) {
-					// Only consider methods which have the EnableScanCount
-					// annotation and which have a single pageable parameter
-					continue;
-				}
+                if (!method.isAnnotationPresent(EnableScanCount.class) || method.getParameterTypes().length != 1) {
+                    // Only consider methods which have the EnableScanCount
+                    // annotation and which have a single pageable parameter
+                    continue;
+                }
 
-				if (method.getName().equals("findAll")
-						&& Pageable.class.isAssignableFrom(method.getParameterTypes()[0])) {
-					findAllUnpaginatedScanCountEnabled = true;
-					continue;
-				}
+                if (method.getName().equals("findAll")
+                        && Pageable.class.isAssignableFrom(method.getParameterTypes()[0])) {
+                    findAllUnpaginatedScanCountEnabled = true;
+                    continue;
+                }
 
-			}
-			for (Method method : methods) {
+            }
+            for (Method method : methods) {
 
-				if (!method.isAnnotationPresent(EnableScan.class) || method.getParameterTypes().length != 1) {
-					// Only consider methods which have the EnableScan
-					// annotation and which have a single pageable parameter
-					continue;
-				}
+                if (!method.isAnnotationPresent(EnableScan.class) || method.getParameterTypes().length != 1) {
+                    // Only consider methods which have the EnableScan
+                    // annotation and which have a single pageable parameter
+                    continue;
+                }
 
-				if (method.getName().equals("findAll")
-						&& Pageable.class.isAssignableFrom(method.getParameterTypes()[0])) {
-					findAllPaginatedScanEnabled = true;
-					continue;
-				}
+                if (method.getName().equals("findAll")
+                        && Pageable.class.isAssignableFrom(method.getParameterTypes()[0])) {
+                    findAllPaginatedScanEnabled = true;
+                    continue;
+                }
 
-			}
-		}
-		if (!findAllUnpaginatedScanCountEnabled && repositoryInterface.isAnnotationPresent(EnableScanCount.class)) {
-			findAllUnpaginatedScanCountEnabled = true;
-		}
+            }
+        }
+        if (!findAllUnpaginatedScanCountEnabled && repositoryInterface.isAnnotationPresent(EnableScanCount.class)) {
+            findAllUnpaginatedScanCountEnabled = true;
+        }
 
-	}
+    }
 
-	@Override
-	public boolean isFindAllUnpaginatedScanEnabled() {
-		return findAllUnpaginatedScanEnabled;
+    @Override
+    public boolean isFindAllUnpaginatedScanEnabled() {
+        return findAllUnpaginatedScanEnabled;
 
-	}
+    }
 
-	@Override
-	public boolean isDeleteAllUnpaginatedScanEnabled() {
-		return deleteAllUnpaginatedScanEnabled;
-	}
+    @Override
+    public boolean isDeleteAllUnpaginatedScanEnabled() {
+        return deleteAllUnpaginatedScanEnabled;
+    }
 
-	@Override
-	public boolean isCountUnpaginatedScanEnabled() {
-		return countUnpaginatedScanEnabled;
-	}
+    @Override
+    public boolean isCountUnpaginatedScanEnabled() {
+        return countUnpaginatedScanEnabled;
+    }
 
-	@Override
-	public boolean isFindAllUnpaginatedScanCountEnabled() {
-		return findAllUnpaginatedScanCountEnabled;
-	}
+    @Override
+    public boolean isFindAllUnpaginatedScanCountEnabled() {
+        return findAllUnpaginatedScanCountEnabled;
+    }
 
-	@Override
-	public boolean isFindAllPaginatedScanEnabled() {
-		return findAllPaginatedScanEnabled;
-	}
+    @Override
+    public boolean isFindAllPaginatedScanEnabled() {
+        return findAllPaginatedScanEnabled;
+    }
 
 }

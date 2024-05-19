@@ -24,6 +24,7 @@ import org.springframework.data.repository.CrudRepository;
 
 @EnableScan
 @EnableScanCount
-public interface FeedPagingRepository extends DynamoDBPagingAndSortingRepository<Feed, String>, CrudRepository<Feed, String> {
-	Page<Feed> findAllByMessageOrderByRegDateDesc(String message, Pageable pageable);
+public interface FeedPagingRepository
+        extends DynamoDBPagingAndSortingRepository<Feed, String>, CrudRepository<Feed, String> {
+    Page<Feed> findAllByMessageOrderByRegDateDesc(String message, Pageable pageable);
 }

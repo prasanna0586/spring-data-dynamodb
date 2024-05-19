@@ -31,11 +31,21 @@ public class NestedRepostioryDocument {
     public NestedRepostioryDocument() {
     }
 
-    public String getHashKey() { return hashKey; }
-    public void setHashKey(String hashKey) {this.hashKey = hashKey; }
+    public String getHashKey() {
+        return hashKey;
+    }
 
-    public String getSomeData() {return someData; }
-    public void setSomeData(String someData) { this.someData = someData; }
+    public void setHashKey(String hashKey) {
+        this.hashKey = hashKey;
+    }
+
+    public String getSomeData() {
+        return someData;
+    }
+
+    public void setSomeData(String someData) {
+        this.someData = someData;
+    }
 
     public interface Repository extends CrudRepository<NestedRepostioryDocument, String> {
     }

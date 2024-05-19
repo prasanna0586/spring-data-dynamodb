@@ -27,24 +27,24 @@ import java.util.stream.Collectors;
 
 public interface ExceptionHandler {
 
-	default <T extends DataAccessException> T repackageToException(List<DynamoDBMapper.FailedBatch> failedBatches,
-			Class<T> targetType) {
-		// Error handling:
-		Queue<Exception> allExceptions = failedBatches.stream().map(it -> it.getException())
-				.collect(Collectors.toCollection(LinkedList::new));
+    default <T extends DataAccessException> T repackageToException(List<DynamoDBMapper.FailedBatch> failedBatches,
+            Class<T> targetType) {
+        // Error handling:
+        Queue<Exception> allExceptions = failedBatches.stream().map(it -> it.getException())
+                .collect(Collectors.toCollection(LinkedList::new));
 
-		// The first exception is hopefully the cause
-		Exception cause = allExceptions.poll();
-		try {
-			Constructor<T> ctor = targetType.getConstructor(String.class, Throwable.class);
-			T e = ctor.newInstance("Processing of entities failed!", cause);
-			// and all other exceptions are 'just' follow-up exceptions
-			allExceptions.stream().forEach(e::addSuppressed);
-			return e;
-		} catch (NoSuchMethodException | InstantiationException | IllegalAccessException
-				| InvocationTargetException e) {
-			assert false; // we should never end up here
-			throw new RuntimeException("Could not repackage '" + failedBatches + "' to " + targetType, e);
-		}
-	}
+        // The first exception is hopefully the cause
+        Exception cause = allExceptions.poll();
+        try {
+            Constructor<T> ctor = targetType.getConstructor(String.class, Throwable.class);
+            T e = ctor.newInstance("Processing of entities failed!", cause);
+            // and all other exceptions are 'just' follow-up exceptions
+            allExceptions.stream().forEach(e::addSuppressed);
+            return e;
+        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException
+                | InvocationTargetException e) {
+            assert false; // we should never end up here
+            throw new RuntimeException("Could not repackage '" + failedBatches + "' to " + targetType, e);
+        }
+    }
 }

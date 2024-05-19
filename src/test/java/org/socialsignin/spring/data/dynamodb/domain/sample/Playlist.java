@@ -24,47 +24,47 @@ import org.springframework.data.annotation.Id;
 @DynamoDBTable(tableName = "playlist")
 public class Playlist {
 
-	@Id
-	private PlaylistId playlistId;
-	private String displayName;
+    @Id
+    private PlaylistId playlistId;
+    private String displayName;
 
-	public Playlist() {
-	}
+    public Playlist() {
+    }
 
-	public Playlist(PlaylistId playlistId) {
-		this.playlistId = playlistId;
-	}
+    public Playlist(PlaylistId playlistId) {
+        this.playlistId = playlistId;
+    }
 
-	@DynamoDBAttribute(attributeName = "DisplayName")
-	public String getDisplayName() {
-		return displayName;
-	}
+    @DynamoDBAttribute(attributeName = "DisplayName")
+    public String getDisplayName() {
+        return displayName;
+    }
 
-	public void setDisplayName(String displayName) {
-		this.displayName = displayName;
-	}
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
 
-	@DynamoDBHashKey(attributeName = "UserName")
-	public String getUserName() {
-		return playlistId != null ? playlistId.getUserName() : null;
-	}
+    @DynamoDBHashKey(attributeName = "UserName")
+    public String getUserName() {
+        return playlistId != null ? playlistId.getUserName() : null;
+    }
 
-	public void setUserName(String userName) {
-		if (playlistId == null) {
-			playlistId = new PlaylistId();
-		}
-		playlistId.setUserName(userName);
-	}
+    public void setUserName(String userName) {
+        if (playlistId == null) {
+            playlistId = new PlaylistId();
+        }
+        playlistId.setUserName(userName);
+    }
 
-	@DynamoDBRangeKey(attributeName = "PlaylistName")
-	public String getPlaylistName() {
-		return playlistId != null ? playlistId.getPlaylistName() : null;
-	}
+    @DynamoDBRangeKey(attributeName = "PlaylistName")
+    public String getPlaylistName() {
+        return playlistId != null ? playlistId.getPlaylistName() : null;
+    }
 
-	public void setPlaylistName(String playlistName) {
-		if (playlistId == null) {
-			playlistId = new PlaylistId();
-		}
-		playlistId.setPlaylistName(playlistName);
-	}
+    public void setPlaylistName(String playlistName) {
+        if (playlistId == null) {
+            playlistId = new PlaylistId();
+        }
+        playlistId.setPlaylistName(playlistName);
+    }
 }

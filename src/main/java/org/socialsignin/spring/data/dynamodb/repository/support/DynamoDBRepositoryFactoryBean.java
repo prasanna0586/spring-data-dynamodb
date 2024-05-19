@@ -27,56 +27,55 @@ import org.springframework.data.repository.core.support.RepositoryFactorySupport
 import java.io.Serializable;
 
 /**
- * Special adapter for Springs
- * {@link org.springframework.beans.factory.FactoryBean} interface to allow easy
- * setup of repository factories via Spring configuration.
- * 
+ * Special adapter for Springs {@link org.springframework.beans.factory.FactoryBean} interface to allow easy setup of
+ * repository factories via Spring configuration.
+ *
  * @author Michael Lavelle
  * @author Sebastian Just
+ *
  * @param <T>
  *            the type of the repository
  */
 public class DynamoDBRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable>
-		extends
-			RepositoryFactoryBeanSupport<T, S, ID> {
+        extends RepositoryFactoryBeanSupport<T, S, ID> {
 
-	private DynamoDBOperations dynamoDBOperations;
-	private Entity2DynamoDBTableSynchronizer<S, ID> tableSynchronizer;
-	private DynamoDBMappingContextProcessor<S, ID> dynamoDBMappingContextProcessor;
+    private DynamoDBOperations dynamoDBOperations;
+    private Entity2DynamoDBTableSynchronizer<S, ID> tableSynchronizer;
+    private DynamoDBMappingContextProcessor<S, ID> dynamoDBMappingContextProcessor;
 
-	public DynamoDBRepositoryFactoryBean(Class<? extends T> repositoryInterface) {
-		super(repositoryInterface);
-	}
+    public DynamoDBRepositoryFactoryBean(Class<? extends T> repositoryInterface) {
+        super(repositoryInterface);
+    }
 
-	@Override
-	protected RepositoryFactorySupport createRepositoryFactory() {
-		assert dynamoDBOperations != null;
-		assert tableSynchronizer != null;
-		assert dynamoDBMappingContextProcessor != null;
-		DynamoDBRepositoryFactory dynamoDBRepositoryFactory = new DynamoDBRepositoryFactory(dynamoDBOperations);
-		dynamoDBRepositoryFactory.addRepositoryProxyPostProcessor(tableSynchronizer);
-		dynamoDBRepositoryFactory.addRepositoryProxyPostProcessor(dynamoDBMappingContextProcessor);
-		return dynamoDBRepositoryFactory;
-	}
+    @Override
+    protected RepositoryFactorySupport createRepositoryFactory() {
+        assert dynamoDBOperations != null;
+        assert tableSynchronizer != null;
+        assert dynamoDBMappingContextProcessor != null;
+        DynamoDBRepositoryFactory dynamoDBRepositoryFactory = new DynamoDBRepositoryFactory(dynamoDBOperations);
+        dynamoDBRepositoryFactory.addRepositoryProxyPostProcessor(tableSynchronizer);
+        dynamoDBRepositoryFactory.addRepositoryProxyPostProcessor(dynamoDBMappingContextProcessor);
+        return dynamoDBRepositoryFactory;
+    }
 
-	@Autowired
-	public void setDynamoDBMappingContextProcessor(
-			DynamoDBMappingContextProcessor<S, ID> dynamoDBMappingContextProcessor) {
-		this.dynamoDBMappingContextProcessor = dynamoDBMappingContextProcessor;
-	}
+    @Autowired
+    public void setDynamoDBMappingContextProcessor(
+            DynamoDBMappingContextProcessor<S, ID> dynamoDBMappingContextProcessor) {
+        this.dynamoDBMappingContextProcessor = dynamoDBMappingContextProcessor;
+    }
 
-	@Autowired
-	public void setEntity2DynamoDBTableSynchronizer(Entity2DynamoDBTableSynchronizer<S, ID> tableSynchronizer) {
-		this.tableSynchronizer = tableSynchronizer;
-	}
+    @Autowired
+    public void setEntity2DynamoDBTableSynchronizer(Entity2DynamoDBTableSynchronizer<S, ID> tableSynchronizer) {
+        this.tableSynchronizer = tableSynchronizer;
+    }
 
-	@Autowired
-	public void setDynamoDBOperations(DynamoDBOperations dynamoDBOperations) {
-		this.dynamoDBOperations = dynamoDBOperations;
-	}
+    @Autowired
+    public void setDynamoDBOperations(DynamoDBOperations dynamoDBOperations) {
+        this.dynamoDBOperations = dynamoDBOperations;
+    }
 
-	@Autowired
-	public void setDynamoDBMappingContext(DynamoDBMappingContext dynamoDBMappingContext) {
-		setMappingContext(dynamoDBMappingContext);
-	}
+    @Autowired
+    public void setDynamoDBMappingContext(DynamoDBMappingContext dynamoDBMappingContext) {
+        setMappingContext(dynamoDBMappingContext);
+    }
 }

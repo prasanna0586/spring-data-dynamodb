@@ -17,6 +17,8 @@ package org.socialsignin.spring.data.dynamodb.repository;
 
 public @interface ExpressionAttribute {
     String key() default "";
+
     String value() default "";
+
     String parameterName() default "";
 }

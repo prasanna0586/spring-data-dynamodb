@@ -39,107 +39,106 @@ import static org.junit.Assert.*;
 
 /**
  * Tests JDK8 features of spring-data
- * 
- * @see <a href=
- *      "https://github.com/spring-projects/spring-data-examples/tree/master/jpa/java8">
+ *
+ * @see <a href= "https://github.com/spring-projects/spring-data-examples/tree/master/jpa/java8">
  *      github.com/spring-projects/spring-data-examples/master/jpa/java8</a>
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {DynamoDBLocalResource.class, Jdk8IT.TestAppConfig.class})
-@TestPropertySource(properties = {"spring.data.dynamodb.entity2ddl.auto=create"})
+@ContextConfiguration(classes = { DynamoDBLocalResource.class, Jdk8IT.TestAppConfig.class })
+@TestPropertySource(properties = { "spring.data.dynamodb.entity2ddl.auto=create" })
 public class Jdk8IT {
 
-	@Configuration
-	@EnableDynamoDBRepositories(basePackages = "org.socialsignin.spring.data.dynamodb.domain.sample")
-	public static class TestAppConfig {
-	}
+    @Configuration
+    @EnableDynamoDBRepositories(basePackages = "org.socialsignin.spring.data.dynamodb.domain.sample")
+    public static class TestAppConfig {
+    }
 
-	@Autowired
-	UserRepository userRepository;
+    @Autowired
+    UserRepository userRepository;
 
-	@Test
-	public void testOptionalKey() {
-		final Date joinDate = new Date(1000);
-		final String id = "testOptionalKey";
-		Optional<User> result = userRepository.findById(id);
+    @Test
+    public void testOptionalKey() {
+        final Date joinDate = new Date(1000);
+        final String id = "testOptionalKey";
+        Optional<User> result = userRepository.findById(id);
 
-		assertNotNull(result);
-		assertEquals(result, Optional.empty());
+        assertNotNull(result);
+        assertEquals(result, Optional.empty());
 
-		User newUser = new User();
-		newUser.setId(id);
-		newUser.setName(UUID.randomUUID().toString());
-		newUser.setJoinDate(joinDate);
+        User newUser = new User();
+        newUser.setId(id);
+        newUser.setName(UUID.randomUUID().toString());
+        newUser.setJoinDate(joinDate);
 
-		User savedEntity = userRepository.save(newUser);
+        User savedEntity = userRepository.save(newUser);
 
-		result = userRepository.findById(id);
-		assertNotNull(result);
-		assertEquals(savedEntity, result.get());
-		assertEquals(joinDate, result.get().getJoinDate());
-	}
+        result = userRepository.findById(id);
+        assertNotNull(result);
+        assertEquals(savedEntity, result.get());
+        assertEquals(joinDate, result.get().getJoinDate());
+    }
 
-	@Test
-	public void testFuture() throws InterruptedException, ExecutionException, TimeoutException {
-		User user = new User();
-		user.setName("testFuture");
-		user.setPostCode("postCode");
-		user = userRepository.save(user);
+    @Test
+    public void testFuture() throws InterruptedException, ExecutionException, TimeoutException {
+        User user = new User();
+        user.setName("testFuture");
+        user.setPostCode("postCode");
+        user = userRepository.save(user);
 
-		Consumer<User> validate = (actual) -> {
-			assertNotNull(actual);
-			assertNotNull(actual.getId());
-			assertEquals("postCode", actual.getPostCode());
-		};
+        Consumer<User> validate = (actual) -> {
+            assertNotNull(actual);
+            assertNotNull(actual.getId());
+            assertEquals("postCode", actual.getPostCode());
+        };
 
-		Optional<User> actual1 = userRepository.findByName("testFuture");
-		assertNotNull(actual1);
-		assertTrue(actual1.isPresent());
-		validate.accept(actual1.get());
+        Optional<User> actual1 = userRepository.findByName("testFuture");
+        assertNotNull(actual1);
+        assertTrue(actual1.isPresent());
+        validate.accept(actual1.get());
 
-		Future<User> actual2 = userRepository.findByNameAndPostCode("testFuture", "postCode");
-		assertNotNull(actual1);
-		assertTrue(actual2.isDone());
-		validate.accept(actual2.get());
-	}
+        Future<User> actual2 = userRepository.findByNameAndPostCode("testFuture", "postCode");
+        assertNotNull(actual1);
+        assertTrue(actual2.isDone());
+        validate.accept(actual2.get());
+    }
 
-	@Test
-	public void testOptionalFilter() {
-		final Date joinDate = new Date(2000);
-		final String id = "testOptionalFilter";
-		final String name = UUID.randomUUID().toString();
-		Optional<User> result = userRepository.findByName(name);
+    @Test
+    public void testOptionalFilter() {
+        final Date joinDate = new Date(2000);
+        final String id = "testOptionalFilter";
+        final String name = UUID.randomUUID().toString();
+        Optional<User> result = userRepository.findByName(name);
 
-		assertNotNull(result);
-		assertEquals(result, Optional.empty());
+        assertNotNull(result);
+        assertEquals(result, Optional.empty());
 
-		User newUser = new User();
-		newUser.setId(id);
-		newUser.setName(name);
-		newUser.setJoinDate(joinDate);
+        User newUser = new User();
+        newUser.setId(id);
+        newUser.setName(name);
+        newUser.setJoinDate(joinDate);
 
-		User savedEntity = userRepository.save(newUser);
+        User savedEntity = userRepository.save(newUser);
 
-		result = userRepository.findByName(name);
-		assertNotNull(result);
-		assertEquals(savedEntity, result.get());
-		assertEquals(joinDate, result.get().getJoinDate());
-	}
+        result = userRepository.findByName(name);
+        assertNotNull(result);
+        assertEquals(savedEntity, result.get());
+        assertEquals(joinDate, result.get().getJoinDate());
+    }
 
-	@Test
-	public void testInstantQuery() {
-		final Instant leaveDate = Instant.ofEpochMilli(2000);
+    @Test
+    public void testInstantQuery() {
+        final Instant leaveDate = Instant.ofEpochMilli(2000);
 
-		User newUser = new User();
-		newUser.setId(UUID.randomUUID().toString());
-		newUser.setLeaveDate(leaveDate);
-		userRepository.save(newUser);
+        User newUser = new User();
+        newUser.setId(UUID.randomUUID().toString());
+        newUser.setLeaveDate(leaveDate);
+        userRepository.save(newUser);
 
-		List<User> results = userRepository.findByLeaveDate(leaveDate);
-		assertEquals(1, results.size());
+        List<User> results = userRepository.findByLeaveDate(leaveDate);
+        assertEquals(1, results.size());
 
-		User result = results.get(0);
-		assertNotNull(result.getId());
-		assertEquals(leaveDate, result.getLeaveDate());
-	}
+        User result = results.get(0);
+        assertNotNull(result.getId());
+        assertEquals(leaveDate, result.getLeaveDate());
+    }
 }

@@ -26,14 +26,14 @@ import java.lang.annotation.Annotation;
  */
 public class DynamoDBRepositoriesRegistrar extends RepositoryBeanDefinitionRegistrarSupport {
 
-	@Override
-	protected Class<? extends Annotation> getAnnotation() {
-		return EnableDynamoDBRepositories.class;
-	}
+    @Override
+    protected Class<? extends Annotation> getAnnotation() {
+        return EnableDynamoDBRepositories.class;
+    }
 
-	@Override
-	protected RepositoryConfigurationExtension getExtension() {
-		return new DynamoDBRepositoryConfigExtension();
-	}
+    @Override
+    protected RepositoryConfigurationExtension getExtension() {
+        return new DynamoDBRepositoryConfigExtension();
+    }
 
 }

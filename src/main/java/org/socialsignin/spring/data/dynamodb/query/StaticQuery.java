@@ -20,21 +20,21 @@ import java.util.List;
 
 public class StaticQuery<T> extends AbstractQuery<T> {
 
-	private final T result;
-	private final List<T> resultList;
+    private final T result;
+    private final List<T> resultList;
 
-	public StaticQuery(T result) {
-		this.result = result;
-		this.resultList = Collections.singletonList(result);
-	}
+    public StaticQuery(T result) {
+        this.result = result;
+        this.resultList = Collections.singletonList(result);
+    }
 
-	@Override
-	public List<T> getResultList() {
-		return resultList;
-	}
+    @Override
+    public List<T> getResultList() {
+        return resultList;
+    }
 
-	@Override
-	public T getSingleResult() {
-		return result;
-	}
+    @Override
+    public T getSingleResult() {
+        return result;
+    }
 }

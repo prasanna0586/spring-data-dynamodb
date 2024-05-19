@@ -21,26 +21,26 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey;
 import java.io.Serializable;
 
 public class CustomerHistoryId implements Serializable {
-	private static final long serialVersionUID = 2310511711421469613L;
+    private static final long serialVersionUID = 2310511711421469613L;
 
-	private String customerId;
-	private String createDt;
+    private String customerId;
+    private String createDt;
 
-	@DynamoDBHashKey(attributeName = "customerId")
-	public String getCustomerId() {
-		return customerId;
-	}
+    @DynamoDBHashKey(attributeName = "customerId")
+    public String getCustomerId() {
+        return customerId;
+    }
 
-	public void setCustomerId(String customerId) {
-		this.customerId = customerId;
-	}
+    public void setCustomerId(String customerId) {
+        this.customerId = customerId;
+    }
 
-	@DynamoDBRangeKey(attributeName = "createDt")
-	public String getCreateDt() {
-		return createDt;
-	}
+    @DynamoDBRangeKey(attributeName = "createDt")
+    public String getCreateDt() {
+        return createDt;
+    }
 
-	public void setCreateDt(String createDt) {
-		this.createDt = createDt;
-	}
+    public void setCreateDt(String createDt) {
+        this.createDt = createDt;
+    }
 }

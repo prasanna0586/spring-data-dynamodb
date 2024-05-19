@@ -25,23 +25,23 @@ import org.springframework.beans.factory.FactoryBean;
 
 public class DynamoDBMapperFactory implements FactoryBean<DynamoDBMapper>, BeanFactoryAware {
 
-	private BeanFactory beanFactory;
-    
-	@Override
-	public DynamoDBMapper getObject() throws Exception {
-		AmazonDynamoDB amazonDynamoDB = beanFactory.getBean(AmazonDynamoDB.class);
-		DynamoDBMapperConfig dynamoDBMapperConfig = beanFactory.getBean(DynamoDBMapperConfig.class);
-		return new DynamoDBMapper(amazonDynamoDB, dynamoDBMapperConfig);
-	}
+    private BeanFactory beanFactory;
 
-	@Override
-	public Class<?> getObjectType() {
-		return DynamoDBMapper.class;
-	}
+    @Override
+    public DynamoDBMapper getObject() throws Exception {
+        AmazonDynamoDB amazonDynamoDB = beanFactory.getBean(AmazonDynamoDB.class);
+        DynamoDBMapperConfig dynamoDBMapperConfig = beanFactory.getBean(DynamoDBMapperConfig.class);
+        return new DynamoDBMapper(amazonDynamoDB, dynamoDBMapperConfig);
+    }
 
-	@Override
-	public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
-		this.beanFactory = beanFactory;
-	}
+    @Override
+    public Class<?> getObjectType() {
+        return DynamoDBMapper.class;
+    }
+
+    @Override
+    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+        this.beanFactory = beanFactory;
+    }
 
 }

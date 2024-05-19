@@ -30,20 +30,20 @@ import org.springframework.core.type.AnnotationMetadata;
 @RunWith(MockitoJUnitRunner.class)
 public class DynamoDBAuditingRegistrarUnitTests {
 
-	DynamoDBAuditingRegistrar registrar = new DynamoDBAuditingRegistrar();
+    DynamoDBAuditingRegistrar registrar = new DynamoDBAuditingRegistrar();
 
-	@Mock
-	AnnotationMetadata metadata;
-	@Mock
-	BeanDefinitionRegistry registry;
+    @Mock
+    AnnotationMetadata metadata;
+    @Mock
+    BeanDefinitionRegistry registry;
 
-	@Test(expected = IllegalArgumentException.class)
-	public void rejectsNullAnnotationMetadata() {
-		registrar.registerBeanDefinitions(null, registry);
-	}
+    @Test(expected = IllegalArgumentException.class)
+    public void rejectsNullAnnotationMetadata() {
+        registrar.registerBeanDefinitions(null, registry);
+    }
 
-	@Test(expected = IllegalArgumentException.class)
-	public void rejectsNullBeanDefinitionRegistry() {
-		registrar.registerBeanDefinitions(metadata, null);
-	}
+    @Test(expected = IllegalArgumentException.class)
+    public void rejectsNullBeanDefinitionRegistry() {
+        registrar.registerBeanDefinitions(metadata, null);
+    }
 }

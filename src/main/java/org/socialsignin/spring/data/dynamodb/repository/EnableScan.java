@@ -22,7 +22,7 @@ import java.lang.annotation.*;
  * @author Sebastian Just
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.METHOD, ElementType.ANNOTATION_TYPE})
+@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 @Documented
 public @interface EnableScan {
 

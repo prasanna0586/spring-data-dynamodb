@@ -22,10 +22,10 @@ import java.text.SimpleDateFormat;
 
 public class DynamoDBYearMarshaller extends DateDynamoDBMarshaller {
 
-	private static final String PATTERN = "yyyy";
+    private static final String PATTERN = "yyyy";
 
-	@Override
-	public DateFormat getDateFormat() {
-		return new SimpleDateFormat(PATTERN);
-	}
+    @Override
+    public DateFormat getDateFormat() {
+        return new SimpleDateFormat(PATTERN);
+    }
 }

@@ -24,59 +24,60 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.lang.Nullable;
 
 public class DynamoDBMapperConfigFactory implements FactoryBean<DynamoDBMapperConfig>, BeanPostProcessor {
-	private static final Logger LOGGER = LoggerFactory.getLogger(DynamoDBMapperConfigFactory.class);
-	@Override
-	public DynamoDBMapperConfig getObject() throws Exception {
-		return DynamoDBMapperConfig.DEFAULT;
-	}
+    private static final Logger LOGGER = LoggerFactory.getLogger(DynamoDBMapperConfigFactory.class);
 
-	@Override
-	public Class<?> getObjectType() {
-		return DynamoDBMapperConfig.class;
-	}
+    @Override
+    public DynamoDBMapperConfig getObject() throws Exception {
+        return DynamoDBMapperConfig.DEFAULT;
+    }
 
-	@Nullable
-	public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-		if (bean instanceof DynamoDBMapperConfig) {
-			DynamoDBMapperConfig dynamoDBMapperConfig = (DynamoDBMapperConfig) bean;
-			if (dynamoDBMapperConfig == DynamoDBMapperConfig.DEFAULT) {
-				return bean;
-			}
-			// #146, #81 #157
-			// Trying to fix half-initialized DynamoDBMapperConfigs here.
-			// The old documentation advised to start with an empty builder. Therefore we
-			// try here to set required fields to their defaults -
-			// As the documentation at
-			// https://github.com/derjust/spring-data-dynamodb/wiki/Alter-table-name-during-runtime
-			// (same as https://git.io/DynamoDBMapperConfig)
-			// now does: Start with #DEFAULT and add what's required
-			DynamoDBMapperConfig.Builder emptyBuilder = DynamoDBMapperConfig.builder(); // empty (!) builder
+    @Override
+    public Class<?> getObjectType() {
+        return DynamoDBMapperConfig.class;
+    }
 
-			if (dynamoDBMapperConfig.getConversionSchema() == null) {
-				LOGGER.warn(
-						"No ConversionSchema set in the provided dynamoDBMapperConfig! Merging with DynamoDBMapperConfig.DEFAULT - Please see https://git.io/DynamoDBMapperConfig");
-				// DynamoDBMapperConfig#DEFAULT comes with a ConversionSchema
-				emptyBuilder.withConversionSchema(DynamoDBMapperConfig.DEFAULT.getConversionSchema());
-			}
+    @Nullable
+    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+        if (bean instanceof DynamoDBMapperConfig) {
+            DynamoDBMapperConfig dynamoDBMapperConfig = (DynamoDBMapperConfig) bean;
+            if (dynamoDBMapperConfig == DynamoDBMapperConfig.DEFAULT) {
+                return bean;
+            }
+            // #146, #81 #157
+            // Trying to fix half-initialized DynamoDBMapperConfigs here.
+            // The old documentation advised to start with an empty builder. Therefore we
+            // try here to set required fields to their defaults -
+            // As the documentation at
+            // https://github.com/derjust/spring-data-dynamodb/wiki/Alter-table-name-during-runtime
+            // (same as https://git.io/DynamoDBMapperConfig)
+            // now does: Start with #DEFAULT and add what's required
+            DynamoDBMapperConfig.Builder emptyBuilder = DynamoDBMapperConfig.builder(); // empty (!) builder
 
-			if (dynamoDBMapperConfig.getTypeConverterFactory() == null) {
-				LOGGER.warn(
-						"No TypeConverterFactory set in the provided dynamoDBMapperConfig! Merging with DynamoDBMapperConfig.DEFAULT - Please see https://git.io/DynamoDBMapperConfig");
-				// DynamoDBMapperConfig#DEFAULT comes with a TypeConverterFactory
-				emptyBuilder.withTypeConverterFactory(DynamoDBMapperConfig.DEFAULT.getTypeConverterFactory());
-			}
+            if (dynamoDBMapperConfig.getConversionSchema() == null) {
+                LOGGER.warn(
+                        "No ConversionSchema set in the provided dynamoDBMapperConfig! Merging with DynamoDBMapperConfig.DEFAULT - Please see https://git.io/DynamoDBMapperConfig");
+                // DynamoDBMapperConfig#DEFAULT comes with a ConversionSchema
+                emptyBuilder.withConversionSchema(DynamoDBMapperConfig.DEFAULT.getConversionSchema());
+            }
 
-			return createDynamoDBMapperConfig(dynamoDBMapperConfig, emptyBuilder);
+            if (dynamoDBMapperConfig.getTypeConverterFactory() == null) {
+                LOGGER.warn(
+                        "No TypeConverterFactory set in the provided dynamoDBMapperConfig! Merging with DynamoDBMapperConfig.DEFAULT - Please see https://git.io/DynamoDBMapperConfig");
+                // DynamoDBMapperConfig#DEFAULT comes with a TypeConverterFactory
+                emptyBuilder.withTypeConverterFactory(DynamoDBMapperConfig.DEFAULT.getTypeConverterFactory());
+            }
 
-		} else {
-			return bean;
-		}
-	}
+            return createDynamoDBMapperConfig(dynamoDBMapperConfig, emptyBuilder);
 
-	@SuppressWarnings("deprecation")
-	private DynamoDBMapperConfig createDynamoDBMapperConfig(DynamoDBMapperConfig dynamoDBMapperConfig,
-			DynamoDBMapperConfig.Builder emptyBuilder) {
-		// Deprecated but the only way how DynamoDBMapperConfig#merge is exposed
-		return new DynamoDBMapperConfig(dynamoDBMapperConfig, emptyBuilder.build());
-	}
+        } else {
+            return bean;
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private DynamoDBMapperConfig createDynamoDBMapperConfig(DynamoDBMapperConfig dynamoDBMapperConfig,
+            DynamoDBMapperConfig.Builder emptyBuilder) {
+        // Deprecated but the only way how DynamoDBMapperConfig#merge is exposed
+        return new DynamoDBMapperConfig(dynamoDBMapperConfig, emptyBuilder.build());
+    }
 }

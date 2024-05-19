@@ -24,35 +24,35 @@ import java.io.Serializable;
  * Composite Key to support a HASH+RANGE key of DynamoDB in Spring-Data
  */
 public class PlaylistId implements Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	private String userName;
-	private String playlistName;
+    private String userName;
+    private String playlistName;
 
-	public PlaylistId() {
-		this(null, null);
-	}
+    public PlaylistId() {
+        this(null, null);
+    }
 
-	public PlaylistId(String userName, String playlistName) {
-		this.userName = userName;
-		this.playlistName = playlistName;
-	}
+    public PlaylistId(String userName, String playlistName) {
+        this.userName = userName;
+        this.playlistName = playlistName;
+    }
 
-	@DynamoDBHashKey
-	public String getUserName() {
-		return userName;
-	}
+    @DynamoDBHashKey
+    public String getUserName() {
+        return userName;
+    }
 
-	public void setUserName(String userName) {
-		this.userName = userName;
-	}
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
 
-	@DynamoDBRangeKey
-	public String getPlaylistName() {
-		return playlistName;
-	}
+    @DynamoDBRangeKey
+    public String getPlaylistName() {
+        return playlistName;
+    }
 
-	public void setPlaylistName(String playlistName) {
-		this.playlistName = playlistName;
-	}
+    public void setPlaylistName(String playlistName) {
+        this.playlistName = playlistName;
+    }
 }

@@ -21,5 +21,5 @@ package org.socialsignin.spring.data.dynamodb.repository.support;
  */
 public interface HashKeyExtractor<ID, H> {
 
-	H getHashKey(ID id);
+    H getHashKey(ID id);
 }

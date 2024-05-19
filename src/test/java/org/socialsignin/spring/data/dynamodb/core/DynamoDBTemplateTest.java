@@ -43,122 +43,122 @@ import static org.mockito.Mockito.verify;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DynamoDBTemplateTest {
-	@Rule
-	public ExpectedException expectedException = ExpectedException.none();
-	@Mock
-	private DynamoDBMapper dynamoDBMapper;
-	@Mock
-	private DynamoDBMapperConfig dynamoDBMapperConfig;
-	@Mock
-	private AmazonDynamoDB dynamoDB;
-	@Mock
-	private ApplicationContext applicationContext;
-	@Mock
-	private DynamoDBQueryExpression<User> countUserQuery;
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
+    @Mock
+    private DynamoDBMapper dynamoDBMapper;
+    @Mock
+    private DynamoDBMapperConfig dynamoDBMapperConfig;
+    @Mock
+    private AmazonDynamoDB dynamoDB;
+    @Mock
+    private ApplicationContext applicationContext;
+    @Mock
+    private DynamoDBQueryExpression<User> countUserQuery;
 
-	private DynamoDBTemplate dynamoDBTemplate;
+    private DynamoDBTemplate dynamoDBTemplate;
 
-	@Before
-	public void setUp() {
-		this.dynamoDBTemplate = new DynamoDBTemplate(dynamoDB, dynamoDBMapper, dynamoDBMapperConfig);
-		this.dynamoDBTemplate.setApplicationContext(applicationContext);
+    @Before
+    public void setUp() {
+        this.dynamoDBTemplate = new DynamoDBTemplate(dynamoDB, dynamoDBMapper, dynamoDBMapperConfig);
+        this.dynamoDBTemplate.setApplicationContext(applicationContext);
 
-		// check that the defaults are properly initialized - #108
-		String userTableName = dynamoDBTemplate.getOverriddenTableName(User.class, "UserTable");
-		assertEquals("UserTable", userTableName);
-	}
+        // check that the defaults are properly initialized - #108
+        String userTableName = dynamoDBTemplate.getOverriddenTableName(User.class, "UserTable");
+        assertEquals("UserTable", userTableName);
+    }
 
-	@Test
-	public void testConstructorAllNull() {
-		try {
-			dynamoDBTemplate = new DynamoDBTemplate(null, null, null);
-			fail("AmazonDynamoDB must not be null!");
-		} catch (IllegalArgumentException iae) {
-			// ignored
-		}
+    @Test
+    public void testConstructorAllNull() {
+        try {
+            dynamoDBTemplate = new DynamoDBTemplate(null, null, null);
+            fail("AmazonDynamoDB must not be null!");
+        } catch (IllegalArgumentException iae) {
+            // ignored
+        }
 
-		try {
-			dynamoDBTemplate = new DynamoDBTemplate(dynamoDB, null, null);
-			fail("DynamoDBMapper must not be null!");
-		} catch (IllegalArgumentException iae) {
-			// ignored
-		}
-		try {
-			dynamoDBTemplate = new DynamoDBTemplate(dynamoDB, dynamoDBMapper, null);
-			fail("DynamoDBMapperConfig must not be null!");
-		} catch (IllegalArgumentException iae) {
-			// ignored
-		}
-		assertTrue(true);
-	}
+        try {
+            dynamoDBTemplate = new DynamoDBTemplate(dynamoDB, null, null);
+            fail("DynamoDBMapper must not be null!");
+        } catch (IllegalArgumentException iae) {
+            // ignored
+        }
+        try {
+            dynamoDBTemplate = new DynamoDBTemplate(dynamoDB, dynamoDBMapper, null);
+            fail("DynamoDBMapperConfig must not be null!");
+        } catch (IllegalArgumentException iae) {
+            // ignored
+        }
+        assertTrue(true);
+    }
 
-	// TODO remove and replace with postprocessor test
-	@Test
-	public void testConstructorOptionalPreconfiguredDynamoDBMapper() {
-		// Introduced constructor via #91 should not fail its assert
-		this.dynamoDBTemplate = new DynamoDBTemplate(dynamoDB, dynamoDBMapper, dynamoDBMapperConfig);
+    // TODO remove and replace with postprocessor test
+    @Test
+    public void testConstructorOptionalPreconfiguredDynamoDBMapper() {
+        // Introduced constructor via #91 should not fail its assert
+        this.dynamoDBTemplate = new DynamoDBTemplate(dynamoDB, dynamoDBMapper, dynamoDBMapperConfig);
 
-		assertTrue("The constructor should not fail with an assert error", true);
-	}
+        assertTrue("The constructor should not fail with an assert error", true);
+    }
 
-	@Test
-	public void testDelete() {
-		User user = new User();
-		dynamoDBTemplate.delete(user);
+    @Test
+    public void testDelete() {
+        User user = new User();
+        dynamoDBTemplate.delete(user);
 
-		verify(dynamoDBMapper).delete(user);
-	}
+        verify(dynamoDBMapper).delete(user);
+    }
 
-	@Test
-	public void testBatchDelete_CallsCorrectDynamoDBMapperMethod() {
-		List<User> users = new ArrayList<>();
-		dynamoDBTemplate.batchDelete(users);
-		verify(dynamoDBMapper).batchDelete(anyList());
-	}
+    @Test
+    public void testBatchDelete_CallsCorrectDynamoDBMapperMethod() {
+        List<User> users = new ArrayList<>();
+        dynamoDBTemplate.batchDelete(users);
+        verify(dynamoDBMapper).batchDelete(anyList());
+    }
 
-	@Test
-	public void testSave() {
-		User user = new User();
-		dynamoDBTemplate.save(user);
+    @Test
+    public void testSave() {
+        User user = new User();
+        dynamoDBTemplate.save(user);
 
-		verify(dynamoDBMapper).save(user);
-	}
+        verify(dynamoDBMapper).save(user);
+    }
 
-	@Test
-	public void testBatchSave_CallsCorrectDynamoDBMapperMethod() {
-		List<User> users = new ArrayList<>();
-		dynamoDBTemplate.batchSave(users);
+    @Test
+    public void testBatchSave_CallsCorrectDynamoDBMapperMethod() {
+        List<User> users = new ArrayList<>();
+        dynamoDBTemplate.batchSave(users);
 
-		verify(dynamoDBMapper).batchSave(eq(users));
-	}
+        verify(dynamoDBMapper).batchSave(eq(users));
+    }
 
-	@Test
-	public void testCountQuery() {
-		DynamoDBQueryExpression<User> query = countUserQuery;
-		dynamoDBTemplate.count(User.class, query);
+    @Test
+    public void testCountQuery() {
+        DynamoDBQueryExpression<User> query = countUserQuery;
+        dynamoDBTemplate.count(User.class, query);
 
-		verify(dynamoDBMapper).count(User.class, query);
-	}
+        verify(dynamoDBMapper).count(User.class, query);
+    }
 
-	@Test
-	public void testCountScan() {
-		DynamoDBScanExpression scan = mock(DynamoDBScanExpression.class);
-		int actual = dynamoDBTemplate.count(User.class, scan);
+    @Test
+    public void testCountScan() {
+        DynamoDBScanExpression scan = mock(DynamoDBScanExpression.class);
+        int actual = dynamoDBTemplate.count(User.class, scan);
 
-		assertEquals(0, actual);
-		verify(dynamoDBMapper).count(User.class, scan);
-	}
+        assertEquals(0, actual);
+        verify(dynamoDBMapper).count(User.class, scan);
+    }
 
-	@Test
-	public void testLoadByHashKey_WhenDynamoDBMapperReturnsNull() {
-		User user = dynamoDBTemplate.load(User.class, "someHashKey");
-		Assert.assertNull(user);
-	}
+    @Test
+    public void testLoadByHashKey_WhenDynamoDBMapperReturnsNull() {
+        User user = dynamoDBTemplate.load(User.class, "someHashKey");
+        Assert.assertNull(user);
+    }
 
-	@Test
-	public void testLoadByHashKeyAndRangeKey_WhenDynamoDBMapperReturnsNull() {
-		Playlist playlist = dynamoDBTemplate.load(Playlist.class, "someHashKey", "someRangeKey");
-		Assert.assertNull(playlist);
-	}
+    @Test
+    public void testLoadByHashKeyAndRangeKey_WhenDynamoDBMapperReturnsNull() {
+        Playlist playlist = dynamoDBTemplate.load(Playlist.class, "someHashKey", "someRangeKey");
+        Assert.assertNull(playlist);
+    }
 
 }

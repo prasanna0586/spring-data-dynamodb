@@ -23,10 +23,10 @@ import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedScanList;
  */
 public class AfterScanEvent<T> extends DynamoDBMappingEvent<PaginatedScanList<T>> {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public AfterScanEvent(PaginatedScanList<T> source) {
-		super(source);
-	}
+    public AfterScanEvent(PaginatedScanList<T> source) {
+        super(source);
+    }
 
 }

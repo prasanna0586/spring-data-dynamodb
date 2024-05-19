@@ -24,26 +24,26 @@ import org.springframework.data.repository.core.support.RepositoryProxyPostProce
 
 public abstract class EntityInformationProxyPostProcessor<T, ID> implements RepositoryProxyPostProcessor {
 
-	protected abstract void registeredEntity(DynamoDBEntityInformation<T, ID> entityInformation);
+    protected abstract void registeredEntity(DynamoDBEntityInformation<T, ID> entityInformation);
 
-	@Override
-	public final void postProcess(ProxyFactory factory, RepositoryInformation repositoryInformation) {
-		try {
-			TargetSource targetSource = factory.getTargetSource();
-			// assert
-			// targetSource.getTargetClass().equals(SimpleDynamoDBCrudRepository.class);
+    @Override
+    public final void postProcess(ProxyFactory factory, RepositoryInformation repositoryInformation) {
+        try {
+            TargetSource targetSource = factory.getTargetSource();
+            // assert
+            // targetSource.getTargetClass().equals(SimpleDynamoDBCrudRepository.class);
 
-			@SuppressWarnings("unchecked")
-			SimpleDynamoDBCrudRepository<T, ID> target = SimpleDynamoDBCrudRepository.class
-					.cast(targetSource.getTarget());
+            @SuppressWarnings("unchecked")
+            SimpleDynamoDBCrudRepository<T, ID> target = SimpleDynamoDBCrudRepository.class
+                    .cast(targetSource.getTarget());
 
-			assert target != null;
-			DynamoDBEntityInformation<T, ID> entityInformation = target.getEntityInformation();
-			registeredEntity(entityInformation);
+            assert target != null;
+            DynamoDBEntityInformation<T, ID> entityInformation = target.getEntityInformation();
+            registeredEntity(entityInformation);
 
-		} catch (Exception e) {
-			throw new RuntimeException("Could not extract SimpleDynamoDBCrudRepository from " + factory, e);
-		}
-	}
+        } catch (Exception e) {
+            throw new RuntimeException("Could not extract SimpleDynamoDBCrudRepository from " + factory, e);
+        }
+    }
 
 }

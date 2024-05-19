@@ -36,45 +36,45 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {SortPageableIT.TestAppConfig.class, DynamoDBLocalResource.class})
-@TestPropertySource(properties = {"spring.data.dynamodb.entity2ddl.auto=create"})
+@ContextConfiguration(classes = { SortPageableIT.TestAppConfig.class, DynamoDBLocalResource.class })
+@TestPropertySource(properties = { "spring.data.dynamodb.entity2ddl.auto=create" })
 public class SortPageableIT {
-	private final Random r = new Random();
+    private final Random r = new Random();
 
-	@Configuration
-	@EnableDynamoDBRepositories(basePackages = "org.socialsignin.spring.data.dynamodb.domain.sample")
-	public static class TestAppConfig {
-	}
+    @Configuration
+    @EnableDynamoDBRepositories(basePackages = "org.socialsignin.spring.data.dynamodb.domain.sample")
+    public static class TestAppConfig {
+    }
 
-	@Autowired
-	FeedPagingRepository feedPagingRepository;
+    @Autowired
+    FeedPagingRepository feedPagingRepository;
 
-	private Feed createFeed(String message) {
-		Feed retValue = new Feed();
-		retValue.setUserIdx(r.nextInt());
-		retValue.setPaymentType(r.nextInt());
-		retValue.setMessage(message);
-		retValue.setRegDate(LocalDateTime.now());
-		return retValue;
-	}
+    private Feed createFeed(String message) {
+        Feed retValue = new Feed();
+        retValue.setUserIdx(r.nextInt());
+        retValue.setPaymentType(r.nextInt());
+        retValue.setMessage(message);
+        retValue.setRegDate(LocalDateTime.now());
+        return retValue;
+    }
 
-	@Test
-	public void feed_test() {
-		feedPagingRepository.save(createFeed("not yet me"));
-		feedPagingRepository.save(createFeed("me"));
-		feedPagingRepository.save(createFeed("not me"));
-		feedPagingRepository.save(createFeed("me"));
-		feedPagingRepository.save(createFeed("also not me"));
+    @Test
+    public void feed_test() {
+        feedPagingRepository.save(createFeed("not yet me"));
+        feedPagingRepository.save(createFeed("me"));
+        feedPagingRepository.save(createFeed("not me"));
+        feedPagingRepository.save(createFeed("me"));
+        feedPagingRepository.save(createFeed("also not me"));
 
-		PageRequest pageable = PageRequest.of(0, 10);
+        PageRequest pageable = PageRequest.of(0, 10);
 
-		Page<Feed> actuals = feedPagingRepository.findAllByMessageOrderByRegDateDesc("me", pageable);
-		assertEquals(2, actuals.getTotalElements());
+        Page<Feed> actuals = feedPagingRepository.findAllByMessageOrderByRegDateDesc("me", pageable);
+        assertEquals(2, actuals.getTotalElements());
 
-		for (Feed actual : actuals) {
-			assertNotEquals(0, actual.getPaymentType());
-			assertNotEquals(0, actual.getUserIdx());
-		}
+        for (Feed actual : actuals) {
+            assertNotEquals(0, actual.getPaymentType());
+            assertNotEquals(0, actual.getUserIdx());
+        }
 
-	}
+    }
 }

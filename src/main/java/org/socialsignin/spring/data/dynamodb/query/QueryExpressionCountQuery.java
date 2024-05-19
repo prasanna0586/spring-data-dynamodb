@@ -24,19 +24,19 @@ import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
  */
 public class QueryExpressionCountQuery<T> extends AbstractSingleEntityQuery<Long> {
 
-	private final DynamoDBQueryExpression<T> queryExpression;
-	private final Class<T> domainClass;
+    private final DynamoDBQueryExpression<T> queryExpression;
+    private final Class<T> domainClass;
 
-	public QueryExpressionCountQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz,
-			DynamoDBQueryExpression<T> queryExpression) {
-		super(dynamoDBOperations, Long.class);
-		this.queryExpression = queryExpression;
-		this.domainClass = clazz;
-	}
+    public QueryExpressionCountQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz,
+            DynamoDBQueryExpression<T> queryExpression) {
+        super(dynamoDBOperations, Long.class);
+        this.queryExpression = queryExpression;
+        this.domainClass = clazz;
+    }
 
-	@Override
-	public Long getSingleResult() {
-		return Long.valueOf(dynamoDBOperations.count(domainClass, queryExpression));
-	}
+    @Override
+    public Long getSingleResult() {
+        return Long.valueOf(dynamoDBOperations.count(domainClass, queryExpression));
+    }
 
 }

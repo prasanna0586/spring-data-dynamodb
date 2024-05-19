@@ -34,118 +34,117 @@ import static org.socialsignin.spring.data.dynamodb.repository.QueryConstants.QU
  */
 public class DynamoDBQueryMethod<T, ID> extends QueryMethod {
 
-	private final Method method;
-	private final boolean scanEnabledForRepository;
-	private final boolean scanCountEnabledForRepository;
-	private final Optional<String> projectionExpression;
-	private final Optional<Integer> limitResults;
-	private final Optional<String> filterExpression;
-	private final ExpressionAttribute[] expressionAttributeNames;
-	private final ExpressionAttribute[] expressionAttributeValues;
-	private final QueryConstants.ConsistentReadMode consistentReadMode;
+    private final Method method;
+    private final boolean scanEnabledForRepository;
+    private final boolean scanCountEnabledForRepository;
+    private final Optional<String> projectionExpression;
+    private final Optional<Integer> limitResults;
+    private final Optional<String> filterExpression;
+    private final ExpressionAttribute[] expressionAttributeNames;
+    private final ExpressionAttribute[] expressionAttributeValues;
+    private final QueryConstants.ConsistentReadMode consistentReadMode;
 
-	public DynamoDBQueryMethod(Method method, RepositoryMetadata metadata, ProjectionFactory factory) {
-		super(method, metadata, factory);
-		this.method = method;
-		this.scanEnabledForRepository = metadata.getRepositoryInterface().isAnnotationPresent(EnableScan.class);
-		this.scanCountEnabledForRepository = metadata.getRepositoryInterface()
-				.isAnnotationPresent(EnableScanCount.class);
+    public DynamoDBQueryMethod(Method method, RepositoryMetadata metadata, ProjectionFactory factory) {
+        super(method, metadata, factory);
+        this.method = method;
+        this.scanEnabledForRepository = metadata.getRepositoryInterface().isAnnotationPresent(EnableScan.class);
+        this.scanCountEnabledForRepository = metadata.getRepositoryInterface()
+                .isAnnotationPresent(EnableScanCount.class);
 
-		Query query = method.getAnnotation(Query.class);
-		if (query != null) {
-			String projections = query.fields();
-			if (!StringUtils.isEmpty(projections)) {
-				this.projectionExpression = Optional.of(query.fields());
-			} else {
-				this.projectionExpression = Optional.empty();
-			}
-			String filterExp = query.filterExpression();
-			if(!StringUtils.isEmpty(filterExp)) {
-				this.filterExpression = Optional.of(filterExp);
-			} else {
-				this.filterExpression = Optional.empty();
-			}
-			this.expressionAttributeValues = query.expressionMappingValues();
-			this.expressionAttributeNames = query.expressionMappingNames();
-			int limit = query.limit();
-			if (limit != QUERY_LIMIT_UNLIMITED) {
-				this.limitResults = Optional.of(query.limit());
-			} else {
-				this.limitResults = Optional.empty();
-			}
-			this.consistentReadMode = query.consistentReads();
-		} else {
-			this.projectionExpression = Optional.empty();
-			this.limitResults = Optional.empty();
-			this.consistentReadMode = QueryConstants.ConsistentReadMode.DEFAULT;
-			this.filterExpression = Optional.empty();
-			this.expressionAttributeNames = null;
-			this.expressionAttributeValues = null;
-		}
-	}
+        Query query = method.getAnnotation(Query.class);
+        if (query != null) {
+            String projections = query.fields();
+            if (!StringUtils.isEmpty(projections)) {
+                this.projectionExpression = Optional.of(query.fields());
+            } else {
+                this.projectionExpression = Optional.empty();
+            }
+            String filterExp = query.filterExpression();
+            if (!StringUtils.isEmpty(filterExp)) {
+                this.filterExpression = Optional.of(filterExp);
+            } else {
+                this.filterExpression = Optional.empty();
+            }
+            this.expressionAttributeValues = query.expressionMappingValues();
+            this.expressionAttributeNames = query.expressionMappingNames();
+            int limit = query.limit();
+            if (limit != QUERY_LIMIT_UNLIMITED) {
+                this.limitResults = Optional.of(query.limit());
+            } else {
+                this.limitResults = Optional.empty();
+            }
+            this.consistentReadMode = query.consistentReads();
+        } else {
+            this.projectionExpression = Optional.empty();
+            this.limitResults = Optional.empty();
+            this.consistentReadMode = QueryConstants.ConsistentReadMode.DEFAULT;
+            this.filterExpression = Optional.empty();
+            this.expressionAttributeNames = null;
+            this.expressionAttributeValues = null;
+        }
+    }
 
-	/**
-	 * Returns the actual return type of the method.
-	 * 
-	 * @return
-	 */
-	Class<?> getReturnType() {
+    /**
+     * Returns the actual return type of the method.
+     *
+     * @return
+     */
+    Class<?> getReturnType() {
 
-		return method.getReturnType();
-	}
+        return method.getReturnType();
+    }
 
-	public boolean isScanEnabled() {
-		return scanEnabledForRepository || method.isAnnotationPresent(EnableScan.class);
-	}
+    public boolean isScanEnabled() {
+        return scanEnabledForRepository || method.isAnnotationPresent(EnableScan.class);
+    }
 
-	public boolean isScanCountEnabled() {
-		return scanCountEnabledForRepository || method.isAnnotationPresent(EnableScanCount.class);
-	}
+    public boolean isScanCountEnabled() {
+        return scanCountEnabledForRepository || method.isAnnotationPresent(EnableScanCount.class);
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.springframework.data.repository.query.QueryMethod#getEntityInformation ()
-	 */
-	@Override
-	@SuppressWarnings({"rawtypes", "unchecked"})
-	public DynamoDBEntityInformation<T, ID> getEntityInformation() {
-		return new DynamoDBEntityMetadataSupport(getDomainClass()).getEntityInformation();
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.springframework.data.repository.query.QueryMethod#getEntityInformation ()
+     */
+    @Override
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public DynamoDBEntityInformation<T, ID> getEntityInformation() {
+        return new DynamoDBEntityMetadataSupport(getDomainClass()).getEntityInformation();
+    }
 
-	public Class<T> getEntityType() {
+    public Class<T> getEntityType() {
 
-		return getEntityInformation().getJavaType();
-	}
+        return getEntityInformation().getJavaType();
+    }
 
-	public Optional<String> getProjectionExpression() {
-		return this.projectionExpression;
-	}
+    public Optional<String> getProjectionExpression() {
+        return this.projectionExpression;
+    }
 
-	public Optional<Integer> getLimitResults() {
-		return this.limitResults;
-	}
+    public Optional<Integer> getLimitResults() {
+        return this.limitResults;
+    }
 
-	public QueryConstants.ConsistentReadMode getConsistentReadMode() {
-		return this.consistentReadMode;
-	}
+    public QueryConstants.ConsistentReadMode getConsistentReadMode() {
+        return this.consistentReadMode;
+    }
 
-	public Optional<String> getFilterExpression() {
-		return this.filterExpression;
-	}
+    public Optional<String> getFilterExpression() {
+        return this.filterExpression;
+    }
 
-	public ExpressionAttribute[] getExpressionAttributeNames() {
-		if(expressionAttributeNames != null) {
-			return expressionAttributeNames.clone();
-		}
-		return null;
-	}
+    public ExpressionAttribute[] getExpressionAttributeNames() {
+        if (expressionAttributeNames != null) {
+            return expressionAttributeNames.clone();
+        }
+        return null;
+    }
 
-	public ExpressionAttribute[] getExpressionAttributeValues() {
-		if(expressionAttributeValues != null) {
-			return expressionAttributeValues.clone();
-		}
-		return null;
-	}
+    public ExpressionAttribute[] getExpressionAttributeValues() {
+        if (expressionAttributeValues != null) {
+            return expressionAttributeValues.clone();
+        }
+        return null;
+    }
 }

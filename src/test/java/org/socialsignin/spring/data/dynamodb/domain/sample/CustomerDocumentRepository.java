@@ -21,10 +21,10 @@ import java.util.List;
 
 public interface CustomerDocumentRepository extends CrudRepository<CustomerDocument, CustomerDocumentId> {
 
-	List<CustomerDocument> findByCustomerDocumentKey(String customerDocumentKey);
+    List<CustomerDocument> findByCustomerDocumentKey(String customerDocumentKey);
 
-	default List<CustomerDocument> findByCustomerDocumentKey(String customerId, String downloadType) {
-		return findByCustomerDocumentKey(CustomerDocumentId.buildCustomerDocumentKey(customerId, downloadType));
-	}
+    default List<CustomerDocument> findByCustomerDocumentKey(String customerId, String downloadType) {
+        return findByCustomerDocumentKey(CustomerDocumentId.buildCustomerDocumentKey(customerId, downloadType));
+    }
 
 }

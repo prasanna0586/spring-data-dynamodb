@@ -23,13 +23,13 @@ import java.util.List;
 
 public abstract class AbstractSingleEntityQuery<T> extends AbstractDynamicQuery<T> implements Query<T> {
 
-	public AbstractSingleEntityQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz) {
-		super(dynamoDBOperations, clazz);
-	}
+    public AbstractSingleEntityQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz) {
+        super(dynamoDBOperations, clazz);
+    }
 
-	@Override
-	public List<T> getResultList() {
-		T result = getSingleResult();
-		return result != null ? Arrays.asList(result) : new ArrayList<>();
-	}
+    @Override
+    public List<T> getResultList() {
+        T result = getSingleResult();
+        return result != null ? Arrays.asList(result) : new ArrayList<>();
+    }
 }

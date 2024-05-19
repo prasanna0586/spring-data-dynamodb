@@ -28,73 +28,76 @@ import org.springframework.data.repository.query.parser.PartTree;
  */
 public class PartTreeDynamoDBQuery<T, ID> extends AbstractDynamoDBQuery<T, ID> implements RepositoryQuery {
 
-	private final Parameters<?, ?> parameters;
-	private final PartTree tree;
+    private final Parameters<?, ?> parameters;
+    private final PartTree tree;
 
-	public PartTreeDynamoDBQuery(DynamoDBOperations dynamoDBOperations, DynamoDBQueryMethod<T, ID> method) {
-		super(dynamoDBOperations, method);
-		this.parameters = method.getParameters();
-		this.tree = new PartTree(method.getName(), method.getEntityType());
-	}
+    public PartTreeDynamoDBQuery(DynamoDBOperations dynamoDBOperations, DynamoDBQueryMethod<T, ID> method) {
+        super(dynamoDBOperations, method);
+        this.parameters = method.getParameters();
+        this.tree = new PartTree(method.getName(), method.getEntityType());
+    }
 
-	protected DynamoDBQueryCreator<T, ID> createQueryCreator(ParametersParameterAccessor accessor) {
-		DynamoDBQueryMethod<T, ID> queryMethod = getQueryMethod();
-		return new DynamoDBQueryCreator<>(tree, accessor, queryMethod.getEntityInformation(),
-				queryMethod.getProjectionExpression(), queryMethod.getLimitResults(), queryMethod.getConsistentReadMode(), queryMethod.getFilterExpression(),
-				queryMethod.getExpressionAttributeNames(), queryMethod.getExpressionAttributeValues(), dynamoDBOperations);
-	}
+    protected DynamoDBQueryCreator<T, ID> createQueryCreator(ParametersParameterAccessor accessor) {
+        DynamoDBQueryMethod<T, ID> queryMethod = getQueryMethod();
+        return new DynamoDBQueryCreator<>(tree, accessor, queryMethod.getEntityInformation(),
+                queryMethod.getProjectionExpression(), queryMethod.getLimitResults(),
+                queryMethod.getConsistentReadMode(), queryMethod.getFilterExpression(),
+                queryMethod.getExpressionAttributeNames(), queryMethod.getExpressionAttributeValues(),
+                dynamoDBOperations);
+    }
 
-	protected DynamoDBCountQueryCreator<T, ID> createCountQueryCreator(ParametersParameterAccessor accessor,
-			boolean pageQuery) {
-		DynamoDBQueryMethod<T, ID> queryMethod = getQueryMethod();
-		return new DynamoDBCountQueryCreator<>(tree, accessor, queryMethod.getEntityInformation(), queryMethod.getFilterExpression(),
-				queryMethod.getExpressionAttributeNames(), queryMethod.getExpressionAttributeValues(), dynamoDBOperations, pageQuery);
-	}
+    protected DynamoDBCountQueryCreator<T, ID> createCountQueryCreator(ParametersParameterAccessor accessor,
+            boolean pageQuery) {
+        DynamoDBQueryMethod<T, ID> queryMethod = getQueryMethod();
+        return new DynamoDBCountQueryCreator<>(tree, accessor, queryMethod.getEntityInformation(),
+                queryMethod.getFilterExpression(), queryMethod.getExpressionAttributeNames(),
+                queryMethod.getExpressionAttributeValues(), dynamoDBOperations, pageQuery);
+    }
 
-	@Override
-	public Query<T> doCreateQuery(Object[] values) {
-		ParametersParameterAccessor accessor = new ParametersParameterAccessor(parameters, values);
-		DynamoDBQueryCreator<T, ID> queryCreator = createQueryCreator(accessor);
-		return queryCreator.createQuery();
+    @Override
+    public Query<T> doCreateQuery(Object[] values) {
+        ParametersParameterAccessor accessor = new ParametersParameterAccessor(parameters, values);
+        DynamoDBQueryCreator<T, ID> queryCreator = createQueryCreator(accessor);
+        return queryCreator.createQuery();
 
-	}
+    }
 
-	@Override
-	public Query<Long> doCreateCountQuery(Object[] values, boolean pageQuery) {
-		ParametersParameterAccessor accessor = new ParametersParameterAccessor(parameters, values);
-		DynamoDBCountQueryCreator<T, ID> queryCreator = createCountQueryCreator(accessor, pageQuery);
-		return queryCreator.createQuery();
+    @Override
+    public Query<Long> doCreateCountQuery(Object[] values, boolean pageQuery) {
+        ParametersParameterAccessor accessor = new ParametersParameterAccessor(parameters, values);
+        DynamoDBCountQueryCreator<T, ID> queryCreator = createCountQueryCreator(accessor, pageQuery);
+        return queryCreator.createQuery();
 
-	}
+    }
 
-	@Override
-	protected boolean isCountQuery() {
-		return tree.isCountProjection();
-	}
+    @Override
+    protected boolean isCountQuery() {
+        return tree.isCountProjection();
+    }
 
-	@Override
-	protected boolean isExistsQuery() {
-		return tree.isExistsProjection();
-	}
+    @Override
+    protected boolean isExistsQuery() {
+        return tree.isExistsProjection();
+    }
 
-	@Override
-	protected boolean isDeleteQuery() {
-		return tree.isDelete();
-	}
+    @Override
+    protected boolean isDeleteQuery() {
+        return tree.isDelete();
+    }
 
-	@Override
-	protected Integer getResultsRestrictionIfApplicable() {
+    @Override
+    protected Integer getResultsRestrictionIfApplicable() {
 
-		if (tree.isLimiting()) {
-			return tree.getMaxResults();
-		}
-		return null;
-	}
+        if (tree.isLimiting()) {
+            return tree.getMaxResults();
+        }
+        return null;
+    }
 
-	@Override
-	protected boolean isSingleEntityResultsRestriction() {
-		Integer resultsRestiction = getResultsRestrictionIfApplicable();
-		return resultsRestiction != null && resultsRestiction.intValue() == 1;
-	}
+    @Override
+    protected boolean isSingleEntityResultsRestriction() {
+        Integer resultsRestiction = getResultsRestrictionIfApplicable();
+        return resultsRestiction != null && resultsRestiction.intValue() == 1;
+    }
 
 }

@@ -23,10 +23,10 @@ import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedQueryList;
  */
 public class AfterQueryEvent<T> extends DynamoDBMappingEvent<PaginatedQueryList<T>> {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public AfterQueryEvent(PaginatedQueryList<T> source) {
-		super(source);
-	}
+    public AfterQueryEvent(PaginatedQueryList<T> source) {
+        super(source);
+    }
 
 }

@@ -20,8 +20,8 @@ import org.springframework.dao.DataAccessException;
 @SuppressWarnings("serial")
 public class BatchDeleteException extends DataAccessException {
 
-	public BatchDeleteException(String msg, Throwable cause) {
-		super(msg, cause);
-	}
+    public BatchDeleteException(String msg, Throwable cause) {
+        super(msg, cause);
+    }
 
 }

@@ -30,19 +30,19 @@ import java.util.concurrent.Future;
 
 public interface UserRepository extends CrudRepository<User, String> {
 
-	@EnableScan
-	@Override
-	List<User> findAll();
+    @EnableScan
+    @Override
+    List<User> findAll();
 
-	// CRUD method using Optional
-	@Query(consistentReads = QueryConstants.ConsistentReadMode.CONSISTENT)
-	Optional<User> findById(String id);
+    // CRUD method using Optional
+    @Query(consistentReads = QueryConstants.ConsistentReadMode.CONSISTENT)
+    Optional<User> findById(String id);
 
-	@EnableScan
-	List<User> findByLeaveDate(Instant leaveDate);
+    @EnableScan
+    List<User> findByLeaveDate(Instant leaveDate);
 
-	@EnableScan
-	Optional<User> findByName(String name);
+    @EnableScan
+    Optional<User> findByName(String name);
 
     @EnableScan
     List<User> findAllByTagsContains(String tag);
@@ -99,33 +99,34 @@ public interface UserRepository extends CrudRepository<User, String> {
     List<User> findAllByTagsIsNotContaining(List<String> tags);
 
     @EnableScan
-	Future<User> findByNameAndPostCode(String name, String postCode);
-	@EnableScan
-	User findFirstByPostCode(String postCode);
+    Future<User> findByNameAndPostCode(String name, String postCode);
 
-	<T extends User> T save(T entity);
+    @EnableScan
+    User findFirstByPostCode(String postCode);
 
-	@EnableScan
-	List<User> findByNameIn(List<String> names);
+    <T extends User> T save(T entity);
 
-	@EnableScan
-	void deleteByIdAndName(String id, String name);
+    @EnableScan
+    List<User> findByNameIn(List<String> names);
 
-	@Query(fields = "leaveDate", limit = 1, filterExpression = "contains(#field, :value)",
-			expressionMappingNames = {@ExpressionAttribute(key = "#field", value = "name")},
-			expressionMappingValues = {@ExpressionAttribute(key=":value", parameterName = "projection")})
-	List<User> findByPostCode(@Param("postCode") String postCode, @Param("projection") String projection);
+    @EnableScan
+    void deleteByIdAndName(String id, String name);
 
-	@Query(fields = "leaveDate", limit = 1, filterExpression = "contains(#field, :value)",
-			expressionMappingNames = {@ExpressionAttribute(key = "#field", value = "name")},
-			expressionMappingValues = {@ExpressionAttribute(key=":value", value = "projection")})
-	List<User> findByPostCode(String postCode);
+    @Query(fields = "leaveDate", limit = 1, filterExpression = "contains(#field, :value)", expressionMappingNames = {
+            @ExpressionAttribute(key = "#field", value = "name") }, expressionMappingValues = {
+                    @ExpressionAttribute(key = ":value", parameterName = "projection") })
+    List<User> findByPostCode(@Param("postCode") String postCode, @Param("projection") String projection);
 
-	@EnableScan
-	User findByNameAndLeaveDate(String name, Instant leaveDate);
+    @Query(fields = "leaveDate", limit = 1, filterExpression = "contains(#field, :value)", expressionMappingNames = {
+            @ExpressionAttribute(key = "#field", value = "name") }, expressionMappingValues = {
+                    @ExpressionAttribute(key = ":value", value = "projection") })
+    List<User> findByPostCode(String postCode);
 
-	void deleteByPostCodeAndNumberOfPlaylists(String postCode, Integer numberOfPlaylists);
+    @EnableScan
+    User findByNameAndLeaveDate(String name, Instant leaveDate);
 
-	@EnableScan
-	void deleteAll();
+    void deleteByPostCodeAndNumberOfPlaylists(String postCode, Integer numberOfPlaylists);
+
+    @EnableScan
+    void deleteAll();
 }

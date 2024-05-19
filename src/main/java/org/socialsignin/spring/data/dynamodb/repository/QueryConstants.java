@@ -17,35 +17,41 @@ package org.socialsignin.spring.data.dynamodb.repository;
 
 public class QueryConstants {
 
-	private QueryConstants() {
-	}
+    private QueryConstants() {
+    }
 
-	public static final int QUERY_LIMIT_UNLIMITED = Integer.MIN_VALUE;
+    public static final int QUERY_LIMIT_UNLIMITED = Integer.MIN_VALUE;
 
-	public enum ConsistentReadMode {
-		/**
-		 * Use the default configured in the DynamoDBMapper
-		 * @see com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
-		 * @see <a href=
-		 *      "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBMapper.OptionalConfig.html">DynamoDBMapper Configuration</a>
-		 *
-		 */
-		DEFAULT,
-		/**
-		 * Set consistent read mode to true
-		 * @see <a href=
-		 *      "https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/dynamodbv2/datamodeling/DynamoDBQueryExpression.html#setConsistentRead-boolean-">Consistent Reads</a>
-		 * @see com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression#setConsistentRead(boolean)
-		 */
-		CONSISTENT,
-		/**
-		 * Set consistent read mode to false
-		 * @see <a href=
-		 *      "https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/dynamodbv2/datamodeling/DynamoDBQueryExpression.html#setConsistentRead-boolean-">Consistent Reads</a>
-		 *
-		 * @see com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression#setConsistentRead(boolean)
-		 */
-		EVENTUAL
-	}
+    public enum ConsistentReadMode {
+        /**
+         * Use the default configured in the DynamoDBMapper
+         *
+         * @see com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
+         * @see <a href=
+         *      "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBMapper.OptionalConfig.html">DynamoDBMapper
+         *      Configuration</a>
+         *
+         */
+        DEFAULT,
+        /**
+         * Set consistent read mode to true
+         *
+         * @see <a href=
+         *      "https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/dynamodbv2/datamodeling/DynamoDBQueryExpression.html#setConsistentRead-boolean-">Consistent
+         *      Reads</a>
+         * @see com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression#setConsistentRead(boolean)
+         */
+        CONSISTENT,
+        /**
+         * Set consistent read mode to false
+         *
+         * @see <a href=
+         *      "https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/dynamodbv2/datamodeling/DynamoDBQueryExpression.html#setConsistentRead-boolean-">Consistent
+         *      Reads</a>
+         *
+         * @see com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression#setConsistentRead(boolean)
+         */
+        EVENTUAL
+    }
 
 }

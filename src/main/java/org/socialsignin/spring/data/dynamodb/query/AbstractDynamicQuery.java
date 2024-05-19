@@ -19,11 +19,11 @@ import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 
 public abstract class AbstractDynamicQuery<T> extends AbstractQuery<T> {
 
-	protected final DynamoDBOperations dynamoDBOperations;
-	protected final Class<T> clazz;
+    protected final DynamoDBOperations dynamoDBOperations;
+    protected final Class<T> clazz;
 
-	public AbstractDynamicQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz) {
-		this.dynamoDBOperations = dynamoDBOperations;
-		this.clazz = clazz;
-	}
+    public AbstractDynamicQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz) {
+        this.dynamoDBOperations = dynamoDBOperations;
+        this.clazz = clazz;
+    }
 }

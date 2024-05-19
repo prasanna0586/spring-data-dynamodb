@@ -26,12 +26,12 @@ import java.lang.reflect.Method;
  */
 public interface DynamoDBHashAndRangeKeyMethodExtractor<ID> extends EntityMetadata<ID> {
 
-	Method getHashKeyMethod();
+    Method getHashKeyMethod();
 
-	Method getRangeKeyMethod();
+    Method getRangeKeyMethod();
 
-	Field getHashKeyField();
+    Field getHashKeyField();
 
-	Field getRangeKeyField();
+    Field getRangeKeyField();
 
 }

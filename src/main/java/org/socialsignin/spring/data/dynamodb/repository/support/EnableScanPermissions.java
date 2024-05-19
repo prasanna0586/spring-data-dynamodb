@@ -21,14 +21,14 @@ package org.socialsignin.spring.data.dynamodb.repository.support;
  */
 public interface EnableScanPermissions {
 
-	boolean isFindAllUnpaginatedScanEnabled();
+    boolean isFindAllUnpaginatedScanEnabled();
 
-	boolean isFindAllPaginatedScanEnabled();
+    boolean isFindAllPaginatedScanEnabled();
 
-	boolean isFindAllUnpaginatedScanCountEnabled();
+    boolean isFindAllUnpaginatedScanCountEnabled();
 
-	boolean isDeleteAllUnpaginatedScanEnabled();
+    boolean isDeleteAllUnpaginatedScanEnabled();
 
-	boolean isCountUnpaginatedScanEnabled();
+    boolean isCountUnpaginatedScanEnabled();
 
 }

@@ -30,67 +30,67 @@ import static org.junit.Assert.*;
 @RunWith(MockitoJUnitRunner.class)
 public class DynamoDBMapperConfigFactoryTest {
 
-	@Mock
-	private DynamoDBMapper dynamoDBMapper;
-	@Mock
-	private DynamoDBMapperConfig dynamoDBMapperConfig;
-	@Mock
-	private AmazonDynamoDB dynamoDB;
+    @Mock
+    private DynamoDBMapper dynamoDBMapper;
+    @Mock
+    private DynamoDBMapperConfig dynamoDBMapperConfig;
+    @Mock
+    private AmazonDynamoDB dynamoDB;
 
-	DynamoDBMapperConfigFactory underTest;
+    DynamoDBMapperConfigFactory underTest;
 
-	@Before
-	public void setUp() throws Exception {
-		underTest = new DynamoDBMapperConfigFactory();
-	}
+    @Before
+    public void setUp() throws Exception {
+        underTest = new DynamoDBMapperConfigFactory();
+    }
 
-	@Test
-	public void testGetOverriddenTableName_WithTableNameResolver_defaultConfig() {
+    @Test
+    public void testGetOverriddenTableName_WithTableNameResolver_defaultConfig() {
 
-		DynamoDBMapperConfig actual = (DynamoDBMapperConfig) underTest
-				.postProcessAfterInitialization(DynamoDBMapperConfig.DEFAULT, null);
+        DynamoDBMapperConfig actual = (DynamoDBMapperConfig) underTest
+                .postProcessAfterInitialization(DynamoDBMapperConfig.DEFAULT, null);
 
-		assertSame(DynamoDBMapperConfig.DEFAULT, actual);
-	}
+        assertSame(DynamoDBMapperConfig.DEFAULT, actual);
+    }
 
-	@Test
-	public void testGetOverriddenTableName_WithTableNameResolver_defaultBuilder() {
-		final String overridenTableName = "someOtherTableName";
+    @Test
+    public void testGetOverriddenTableName_WithTableNameResolver_defaultBuilder() {
+        final String overridenTableName = "someOtherTableName";
 
-		DynamoDBMapperConfig.Builder builder = new DynamoDBMapperConfig.Builder();
-		// Inject the table name overrider bean
-		builder.setTableNameOverride(new TableNameOverride(overridenTableName));
+        DynamoDBMapperConfig.Builder builder = new DynamoDBMapperConfig.Builder();
+        // Inject the table name overrider bean
+        builder.setTableNameOverride(new TableNameOverride(overridenTableName));
 
-		DynamoDBMapperConfig actual = (DynamoDBMapperConfig) underTest.postProcessAfterInitialization(builder.build(),
-				null);
+        DynamoDBMapperConfig actual = (DynamoDBMapperConfig) underTest.postProcessAfterInitialization(builder.build(),
+                null);
 
-		String overriddenTableName = actual.getTableNameOverride().getTableName();
-		assertEquals(overridenTableName, overriddenTableName);
+        String overriddenTableName = actual.getTableNameOverride().getTableName();
+        assertEquals(overridenTableName, overriddenTableName);
 
-		assertDynamoDBMapperConfigCompletness(actual);
-	}
+        assertDynamoDBMapperConfigCompletness(actual);
+    }
 
-	@Test
-	public void testGetOverriddenTableName_WithTableNameResolver_emptyBuilder() {
-		final String overridenTableName = "someOtherTableName";
+    @Test
+    public void testGetOverriddenTableName_WithTableNameResolver_emptyBuilder() {
+        final String overridenTableName = "someOtherTableName";
 
-		DynamoDBMapperConfig.Builder builder = DynamoDBMapperConfig.builder();
-		// Inject the table name overrider bean
-		builder.setTableNameOverride(new TableNameOverride(overridenTableName));
+        DynamoDBMapperConfig.Builder builder = DynamoDBMapperConfig.builder();
+        // Inject the table name overrider bean
+        builder.setTableNameOverride(new TableNameOverride(overridenTableName));
 
-		DynamoDBMapperConfig actual = (DynamoDBMapperConfig) underTest.postProcessAfterInitialization(builder.build(),
-				null);
+        DynamoDBMapperConfig actual = (DynamoDBMapperConfig) underTest.postProcessAfterInitialization(builder.build(),
+                null);
 
-		String overriddenTableName = actual.getTableNameOverride().getTableName();
-		assertEquals(overridenTableName, overriddenTableName);
+        String overriddenTableName = actual.getTableNameOverride().getTableName();
+        assertEquals(overridenTableName, overriddenTableName);
 
-		assertDynamoDBMapperConfigCompletness(actual);
-	}
+        assertDynamoDBMapperConfigCompletness(actual);
+    }
 
-	private void assertDynamoDBMapperConfigCompletness(DynamoDBMapperConfig effectiveConfig) {
-		assertNotNull(effectiveConfig);
-		assertNotNull(effectiveConfig.getConversionSchema());
-		assertNotNull(effectiveConfig.getTypeConverterFactory());
-	}
+    private void assertDynamoDBMapperConfigCompletness(DynamoDBMapperConfig effectiveConfig) {
+        assertNotNull(effectiveConfig);
+        assertNotNull(effectiveConfig.getConversionSchema());
+        assertNotNull(effectiveConfig.getTypeConverterFactory());
+    }
 
 }

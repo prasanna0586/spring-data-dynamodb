@@ -21,13 +21,13 @@ import java.util.TimeZone;
 
 public class Date2IsoDynamoDBMarshaller extends DateDynamoDBMarshaller {
 
-	private static final String PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
-	private static final TimeZone UTC = TimeZone.getTimeZone("UTC");
+    private static final String PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+    private static final TimeZone UTC = TimeZone.getTimeZone("UTC");
 
-	@Override
-	public DateFormat getDateFormat() {
-		SimpleDateFormat df = new SimpleDateFormat(PATTERN);
-		df.setTimeZone(UTC);
-		return df;
-	}
+    @Override
+    public DateFormat getDateFormat() {
+        SimpleDateFormat df = new SimpleDateFormat(PATTERN);
+        df.setTimeZone(UTC);
+        return df;
+    }
 }

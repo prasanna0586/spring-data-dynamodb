@@ -23,9 +23,9 @@ import java.util.List;
 
 public interface InstallationRepository extends CrudRepository<Installation, String> {
 
-	@Query(filterExpression = "contains(#field, :value)",
-			expressionMappingNames = {@ExpressionAttribute(key = "#field", value = "id")},
-			expressionMappingValues = {@ExpressionAttribute(key=":value", value = "-")})
-	public List<Installation> findBySystemIdOrderByUpdatedAtDesc(String systemId);
+    @Query(filterExpression = "contains(#field, :value)", expressionMappingNames = {
+            @ExpressionAttribute(key = "#field", value = "id") }, expressionMappingValues = {
+                    @ExpressionAttribute(key = ":value", value = "-") })
+    public List<Installation> findBySystemIdOrderByUpdatedAtDesc(String systemId);
 
 }

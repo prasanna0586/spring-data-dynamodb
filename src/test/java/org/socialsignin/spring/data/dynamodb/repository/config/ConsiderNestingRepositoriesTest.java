@@ -30,8 +30,8 @@ import java.util.Optional;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {DynamoDBLocalResource.class, ConsiderNestingRepositoriesTest.TestAppConfig.class})
-@TestPropertySource(properties = {"spring.data.dynamodb.entity2ddl.auto=create"})
+@ContextConfiguration(classes = { DynamoDBLocalResource.class, ConsiderNestingRepositoriesTest.TestAppConfig.class })
+@TestPropertySource(properties = { "spring.data.dynamodb.entity2ddl.auto=create" })
 public class ConsiderNestingRepositoriesTest {
 
     @Configuration

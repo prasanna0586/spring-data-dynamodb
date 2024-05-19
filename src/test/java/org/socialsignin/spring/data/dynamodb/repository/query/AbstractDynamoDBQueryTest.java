@@ -47,141 +47,142 @@ import static org.mockito.Mockito.*;
 @RunWith(MockitoJUnitRunner.class)
 public class AbstractDynamoDBQueryTest {
 
-	public interface UserRepository extends CrudRepository<User, String> {
-		Page<User> findByName(String name, Pageable pageable);
-	}
-	@Mock
-	private Query<User> query;
-	@Mock
-	private Query<Long> countQuery;
-	private boolean isSingleEntityResultsRestriction = false;
-	private Integer resultsRestrictionIfApplicable = 0;
-	private boolean isDeleteQuery = false;
-	private boolean isExistsQuery = false;
-	private boolean isCountQuery = false;
+    public interface UserRepository extends CrudRepository<User, String> {
+        Page<User> findByName(String name, Pageable pageable);
+    }
 
-	public class TestAbstractDynamoDBQuery extends AbstractDynamoDBQuery<User, String> {
-		public TestAbstractDynamoDBQuery(DynamoDBOperations dynamoDBOperations,
-				DynamoDBQueryMethod<User, String> method) {
-			super(dynamoDBOperations, method);
-		}
+    @Mock
+    private Query<User> query;
+    @Mock
+    private Query<Long> countQuery;
+    private boolean isSingleEntityResultsRestriction = false;
+    private Integer resultsRestrictionIfApplicable = 0;
+    private boolean isDeleteQuery = false;
+    private boolean isExistsQuery = false;
+    private boolean isCountQuery = false;
 
-		@Override
-		protected Query<User> doCreateQuery(Object[] values) {
-			return query;
-		}
+    public class TestAbstractDynamoDBQuery extends AbstractDynamoDBQuery<User, String> {
+        public TestAbstractDynamoDBQuery(DynamoDBOperations dynamoDBOperations,
+                DynamoDBQueryMethod<User, String> method) {
+            super(dynamoDBOperations, method);
+        }
 
-		@Override
-		protected Query<Long> doCreateCountQuery(Object[] values, boolean pageQuery) {
-			return countQuery;
-		}
+        @Override
+        protected Query<User> doCreateQuery(Object[] values) {
+            return query;
+        }
 
-		@Override
-		protected boolean isCountQuery() {
-			return isCountQuery;
-		}
+        @Override
+        protected Query<Long> doCreateCountQuery(Object[] values, boolean pageQuery) {
+            return countQuery;
+        }
 
-		@Override
-		protected boolean isExistsQuery() {
-			return isExistsQuery;
-		}
+        @Override
+        protected boolean isCountQuery() {
+            return isCountQuery;
+        }
 
-		@Override
-		protected boolean isDeleteQuery() {
-			return isDeleteQuery;
-		}
+        @Override
+        protected boolean isExistsQuery() {
+            return isExistsQuery;
+        }
 
-		@Override
-		protected Integer getResultsRestrictionIfApplicable() {
-			return resultsRestrictionIfApplicable;
-		}
+        @Override
+        protected boolean isDeleteQuery() {
+            return isDeleteQuery;
+        }
 
-		@Override
-		protected boolean isSingleEntityResultsRestriction() {
-			return isSingleEntityResultsRestriction;
-		}
+        @Override
+        protected Integer getResultsRestrictionIfApplicable() {
+            return resultsRestrictionIfApplicable;
+        }
 
-	}
+        @Override
+        protected boolean isSingleEntityResultsRestriction() {
+            return isSingleEntityResultsRestriction;
+        }
 
-	@Mock
-	private DynamoDBOperations dynamoDBOperations;
-	@Mock
-	private RepositoryMetadata metadata;
-	@Mock
-	private TypeInformation typeInformation;
-	@Mock
-	private ProjectionFactory factory;
+    }
 
-	@Before
-	public void setUp() {
-		doReturn(Page.class).when(typeInformation).getType();
-		doReturn(typeInformation).when(metadata)
-			.getReturnType(ArgumentMatchers.argThat(argument -> "findByName".equals(argument.getName())));
-		doReturn(TypeInformation.of(Page.class)).when(metadata).getDomainTypeInformation();
-		doReturn(UserRepository.class).when(metadata).getRepositoryInterface();
-		doReturn(User.class).when(metadata).getReturnedDomainClass(any());
-	}
+    @Mock
+    private DynamoDBOperations dynamoDBOperations;
+    @Mock
+    private RepositoryMetadata metadata;
+    @Mock
+    private TypeInformation typeInformation;
+    @Mock
+    private ProjectionFactory factory;
 
-	private List<User> generateContent(long count) {
-		List<User> retValue = new ArrayList<>();
-		for (long i = 0; i < count; i++) {
-			User u = new User();
-			u.setId("id");
-			retValue.add(u);
-		}
-		return retValue;
-	}
+    @Before
+    public void setUp() {
+        doReturn(Page.class).when(typeInformation).getType();
+        doReturn(typeInformation).when(metadata)
+                .getReturnType(ArgumentMatchers.argThat(argument -> "findByName".equals(argument.getName())));
+        doReturn(TypeInformation.of(Page.class)).when(metadata).getDomainTypeInformation();
+        doReturn(UserRepository.class).when(metadata).getRepositoryInterface();
+        doReturn(User.class).when(metadata).getReturnedDomainClass(any());
+    }
 
-	@Test
-	public void testPaged() throws NoSuchMethodException, SecurityException {
-		long total = 1;
-		resultsRestrictionIfApplicable = 1;
-		List<User> content = generateContent(total);
+    private List<User> generateContent(long count) {
+        List<User> retValue = new ArrayList<>();
+        for (long i = 0; i < count; i++) {
+            User u = new User();
+            u.setId("id");
+            retValue.add(u);
+        }
+        return retValue;
+    }
 
-		Method method = UserRepository.class.getMethod("findByName", String.class, Pageable.class);
-		DynamoDBQueryMethod<User, String> dynamoDBQueryMethod = new DynamoDBQueryMethod<User, String>(method, metadata,
-				factory);
+    @Test
+    public void testPaged() throws NoSuchMethodException, SecurityException {
+        long total = 1;
+        resultsRestrictionIfApplicable = 1;
+        List<User> content = generateContent(total);
 
-		when(countQuery.getSingleResult()).thenReturn(total);
-		when(query.getResultList()).thenReturn(content);
+        Method method = UserRepository.class.getMethod("findByName", String.class, Pageable.class);
+        DynamoDBQueryMethod<User, String> dynamoDBQueryMethod = new DynamoDBQueryMethod<User, String>(method, metadata,
+                factory);
 
-		TestAbstractDynamoDBQuery underTest = new TestAbstractDynamoDBQuery(dynamoDBOperations, dynamoDBQueryMethod);
+        when(countQuery.getSingleResult()).thenReturn(total);
+        when(query.getResultList()).thenReturn(content);
 
-		Object actual = underTest.execute(new Object[]{"testName", PageRequest.of(0, 10)});
+        TestAbstractDynamoDBQuery underTest = new TestAbstractDynamoDBQuery(dynamoDBOperations, dynamoDBQueryMethod);
 
-		assertThat(actual, instanceOf(Page.class));
-		Page<User> actualPage = (Page<User>) actual;
+        Object actual = underTest.execute(new Object[] { "testName", PageRequest.of(0, 10) });
 
-		assertEquals(1, actualPage.getTotalElements());
-		assertThat(content, is(actualPage.getContent()));
-	}
+        assertThat(actual, instanceOf(Page.class));
+        Page<User> actualPage = (Page<User>) actual;
 
-	@Test
-	public void testUnpaged() throws NoSuchMethodException, SecurityException {
-		long total = 1;
-		List<User> content = spy(generateContent(total));
+        assertEquals(1, actualPage.getTotalElements());
+        assertThat(content, is(actualPage.getContent()));
+    }
 
-		Method method = UserRepository.class.getMethod("findByName", String.class, Pageable.class);
-		DynamoDBQueryMethod<User, String> dynamoDBQueryMethod = new DynamoDBQueryMethod<User, String>(method, metadata,
-				factory);
+    @Test
+    public void testUnpaged() throws NoSuchMethodException, SecurityException {
+        long total = 1;
+        List<User> content = spy(generateContent(total));
 
-		when(countQuery.getSingleResult()).thenReturn(total);
-		when(query.getResultList()).thenReturn(content);
+        Method method = UserRepository.class.getMethod("findByName", String.class, Pageable.class);
+        DynamoDBQueryMethod<User, String> dynamoDBQueryMethod = new DynamoDBQueryMethod<User, String>(method, metadata,
+                factory);
 
-		TestAbstractDynamoDBQuery underTest = new TestAbstractDynamoDBQuery(dynamoDBOperations, dynamoDBQueryMethod);
+        when(countQuery.getSingleResult()).thenReturn(total);
+        when(query.getResultList()).thenReturn(content);
 
-		Object actual = underTest.execute(new Object[]{"testName", Pageable.unpaged()});
+        TestAbstractDynamoDBQuery underTest = new TestAbstractDynamoDBQuery(dynamoDBOperations, dynamoDBQueryMethod);
 
-		assertThat(actual, instanceOf(Page.class));
-		Page<User> actualPage = (Page<User>) actual;
+        Object actual = underTest.execute(new Object[] { "testName", Pageable.unpaged() });
 
-		assertEquals(1, actualPage.getTotalElements());
-		assertThat(content, is(actualPage.getContent()));
-		// There should be never an index access to the list - just iterator access to
-		// ensure that lazy loading behavior of the AWS list implementation is kept
-		// intact
-		verify(content, never()).get(anyInt());
-		verify(content).iterator();
-	}
+        assertThat(actual, instanceOf(Page.class));
+        Page<User> actualPage = (Page<User>) actual;
+
+        assertEquals(1, actualPage.getTotalElements());
+        assertThat(content, is(actualPage.getContent()));
+        // There should be never an index access to the list - just iterator access to
+        // ensure that lazy loading behavior of the AWS list implementation is kept
+        // intact
+        verify(content, never()).get(anyInt());
+        verify(content).iterator();
+    }
 
 }

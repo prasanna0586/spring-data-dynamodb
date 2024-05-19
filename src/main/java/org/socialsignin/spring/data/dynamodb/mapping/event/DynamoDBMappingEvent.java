@@ -23,15 +23,15 @@ import org.springframework.context.ApplicationEvent;
  */
 public class DynamoDBMappingEvent<T> extends ApplicationEvent {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public DynamoDBMappingEvent(T source) {
-		super(source);
-	}
+    public DynamoDBMappingEvent(T source) {
+        super(source);
+    }
 
-	@SuppressWarnings({"unchecked"})
-	@Override
-	public T getSource() {
-		return (T) super.getSource();
-	}
+    @SuppressWarnings({ "unchecked" })
+    @Override
+    public T getSource() {
+        return (T) super.getSource();
+    }
 }
