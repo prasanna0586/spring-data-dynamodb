@@ -26,7 +26,7 @@
     </parent>
     <groupId>com.prasanna.spring.data</groupId>
     <artifactId>spring-data-dynamodb</artifactId>
-    <version>6.0.0-SNAPSHOT</version>
+    <version>6.0.0</version>
     <name>Spring Data DynamoDB</name>
     <inceptionYear>2018</inceptionYear>
 
@@ -392,7 +392,7 @@
         <url>https://github.com/prasanna0586/spring-data-dynamodb</url>
         <connection>scm:git:ssh://github.com/prasanna0586/spring-data-dynamodb.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/prasanna0586/spring-data-dynamodb.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>v6.0.0</tag>
     </scm>
 
     <profiles>
