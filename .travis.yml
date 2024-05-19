@@ -14,9 +14,6 @@ before_script:
 script:
   - mvn --settings .travis.settings.xml --batch-mode clean verify
 
-after_success:
-  - codecovcli upload-process -t $CODECOV_TOKEN -f target/site/jacoco/jacoco.xml
-
 deploy:
   # deploy develop to Maven Central
   - provider: script
