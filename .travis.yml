@@ -15,11 +15,12 @@ script:
   - mvn --settings .travis.settings.xml --batch-mode clean verify
 
 after_success:
-  - codecov
+  - codecovcli upload-process -t ${{ env.CODECOV_TOKEN }} -f target/site/jacoco/jacoco.xml
 
 deploy:
   # deploy develop to Maven Central
   - provider: script
+    skip_cleanup: true
     script: "cp .travis.settings.xml $HOME/.m2/settings.xml && $ mvn release:prepare && mvn release:perform && mvn deploy"
     on:
       branch: develop
