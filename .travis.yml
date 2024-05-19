@@ -6,6 +6,8 @@ language: java
 jdk:
   - openjdk17
 
+install: mvn --settings .travis.settings.xml clean install -DskipTests=true -Dmaven.javadoc.skip=true --batch-mode --show-version
+
 before_script:
   - pip install codecov-cli
 
