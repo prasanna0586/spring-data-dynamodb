@@ -400,9 +400,8 @@
 
     <scm>
         <url>https://github.com/prasanna0586/spring-data-dynamodb</url>
-        <connection>scm:git:ssh://github.com/prasanna0586/spring-data-dynamodb.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/prasanna0586/spring-data-dynamodb.git</developerConnection>
-        <tag>HEAD</tag>
+        <connection>scm:git:git://github.com/prasanna0586/spring-data-dynamodb.git</connection>
+        <developerConnection>scm:git:git@github.com:prasanna0586/spring-data-dynamodb.git</developerConnection>
     </scm>
 
     <profiles>
