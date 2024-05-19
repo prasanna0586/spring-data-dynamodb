@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.org/boostchicken/spring-data-dynamodb.svg?branch=master)](https://travis-ci.org/boostchicken/spring-data-dynamodb) 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.boostchicken/spring-data-dynamodb/badge.svg)](https://search.maven.org/search?q=g:io.github.boostchicken)
+[![Build Status](https://travis-ci.org/boostchicken/spring-data-dynamodb.svg?branch=master)](https://travis-ci.org/prasanna0586/spring-data-dynamodb) 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.boostchicken/spring-data-dynamodb/badge.svg)](https://search.maven.org/search?q=g:com.prasanna.spring.data)
 
 # Spring  Data DynamoDB #
 
