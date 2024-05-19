@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,179 +32,180 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 /**
- * Default implementation of the
- * {@link org.springframework.data.repository.CrudRepository} interface.
- * 
+ * Default implementation of the {@link org.springframework.data.repository.CrudRepository} interface.
+ *
  * @param <T>
  *            the type of the entity to handle
  * @param <ID>
  *            the type of the entity's identifier
  */
 public class SimpleDynamoDBCrudRepository<T, ID>
-		implements
-			DynamoDBCrudRepository<T, ID>,
-			SortHandler,
-			ExceptionHandler {
+        implements DynamoDBCrudRepository<T, ID>, SortHandler, ExceptionHandler {
 
-	protected DynamoDBEntityInformation<T, ID> entityInformation;
+    protected DynamoDBEntityInformation<T, ID> entityInformation;
 
-	protected Class<T> domainType;
+    protected Class<T> domainType;
 
-	protected EnableScanPermissions enableScanPermissions;
+    protected EnableScanPermissions enableScanPermissions;
 
-	protected DynamoDBOperations dynamoDBOperations;
+    protected DynamoDBOperations dynamoDBOperations;
 
-	public SimpleDynamoDBCrudRepository(DynamoDBEntityInformation<T, ID> entityInformation,
-			DynamoDBOperations dynamoDBOperations, EnableScanPermissions enableScanPermissions) {
-		Assert.notNull(entityInformation, "entityInformation must not be null");
-		Assert.notNull(dynamoDBOperations, "dynamoDBOperations must not be null");
+    public SimpleDynamoDBCrudRepository(DynamoDBEntityInformation<T, ID> entityInformation,
+            DynamoDBOperations dynamoDBOperations, EnableScanPermissions enableScanPermissions) {
+        Assert.notNull(entityInformation, "entityInformation must not be null");
+        Assert.notNull(dynamoDBOperations, "dynamoDBOperations must not be null");
 
-		this.entityInformation = entityInformation;
-		this.dynamoDBOperations = dynamoDBOperations;
-		this.domainType = entityInformation.getJavaType();
-		this.enableScanPermissions = enableScanPermissions;
-	}
+        this.entityInformation = entityInformation;
+        this.dynamoDBOperations = dynamoDBOperations;
+        this.domainType = entityInformation.getJavaType();
+        this.enableScanPermissions = enableScanPermissions;
+    }
 
-	@Override
-	public Optional<T> findById(ID id) {
+    @Override
+    public Optional<T> findById(ID id) {
 
-		Assert.notNull(id, "The given id must not be null!");
+        Assert.notNull(id, "The given id must not be null!");
 
-		T result;
-		if (entityInformation.isRangeKeyAware()) {
-			result = dynamoDBOperations.load(domainType, entityInformation.getHashKey(id),
-					entityInformation.getRangeKey(id));
-		} else {
-			result = dynamoDBOperations.load(domainType, entityInformation.getHashKey(id));
-		}
+        T result;
+        if (entityInformation.isRangeKeyAware()) {
+            result = dynamoDBOperations.load(domainType, entityInformation.getHashKey(id),
+                    entityInformation.getRangeKey(id));
+        } else {
+            result = dynamoDBOperations.load(domainType, entityInformation.getHashKey(id));
+        }
 
-		return Optional.ofNullable(result);
-	}
+        return Optional.ofNullable(result);
+    }
 
-	@Override
-	public List<T> findAllById(Iterable<ID> ids) {
+    @Override
+    public List<T> findAllById(Iterable<ID> ids) {
 
-		Assert.notNull(ids, "The given ids must not be null!");
+        Assert.notNull(ids, "The given ids must not be null!");
 
-		// Works only with non-parallel streams!
-		AtomicInteger idx = new AtomicInteger();
-		List<KeyPair> keyPairs = StreamSupport.stream(ids.spliterator(), false).map(id -> {
+        // Works only with non-parallel streams!
+        AtomicInteger idx = new AtomicInteger();
+        List<KeyPair> keyPairs = StreamSupport.stream(ids.spliterator(), false).map(id -> {
 
-			Assert.notNull(id, "The given id at position " + idx.getAndIncrement() + " must not be null!");
+            Assert.notNull(id, "The given id at position " + idx.getAndIncrement() + " must not be null!");
 
-			if (entityInformation.isRangeKeyAware()) {
-				return new KeyPair().withHashKey(entityInformation.getHashKey(id))
-						.withRangeKey(entityInformation.getRangeKey(id));
-			} else {
-				return new KeyPair().withHashKey(id);
-			}
-		}).collect(Collectors.toList());
+            if (entityInformation.isRangeKeyAware()) {
+                return new KeyPair().withHashKey(entityInformation.getHashKey(id))
+                        .withRangeKey(entityInformation.getRangeKey(id));
+            } else {
+                return new KeyPair().withHashKey(id);
+            }
+        }).toList();
 
-		Map<Class<?>, List<KeyPair>> keyPairsMap = Collections.<Class<?>, List<KeyPair>>singletonMap(domainType,
-				keyPairs);
-		return dynamoDBOperations.batchLoad(keyPairsMap);
-	}
+        Map<Class<?>, List<KeyPair>> keyPairsMap = Collections.<Class<?>, List<KeyPair>> singletonMap(domainType,
+                keyPairs);
+        return dynamoDBOperations.batchLoad(keyPairsMap);
+    }
 
-	@Override
-	public <S extends T> S save(S entity) {
+    @Override
+    public <S extends T> S save(S entity) {
 
-		dynamoDBOperations.save(entity);
-		return entity;
-	}
+        dynamoDBOperations.save(entity);
+        return entity;
+    }
 
-	/**
-	 * {@inheritDoc}
-	 * 
-	 * @throws BatchWriteException
-	 *             in case of an error during saving
-	 */
-	@Override
-	public <S extends T> Iterable<S> saveAll(Iterable<S> entities)
-			throws BatchWriteException, IllegalArgumentException {
+    /**
+     * {@inheritDoc}
+     *
+     * @throws BatchWriteException
+     *             in case of an error during saving
+     */
+    @Override
+    public <S extends T> Iterable<S> saveAll(Iterable<S> entities)
+            throws BatchWriteException, IllegalArgumentException {
 
-		Assert.notNull(entities, "The given Iterable of entities not be null!");
-		List<FailedBatch> failedBatches = dynamoDBOperations.batchSave(entities);
+        Assert.notNull(entities, "The given Iterable of entities not be null!");
+        List<FailedBatch> failedBatches = dynamoDBOperations.batchSave(entities);
 
-		if (failedBatches.isEmpty()) {
-			// Happy path
-			return entities;
-		} else {
-			// Error handling:
-			throw repackageToException(failedBatches, BatchWriteException.class);
-		}
-	}
+        if (failedBatches.isEmpty()) {
+            // Happy path
+            return entities;
+        } else {
+            // Error handling:
+            throw repackageToException(failedBatches, BatchWriteException.class);
+        }
+    }
 
-	@Override
-	public boolean existsById(ID id) {
+    @Override
+    public boolean existsById(ID id) {
 
-		Assert.notNull(id, "The given id must not be null!");
-		return findById(id).isPresent();
-	}
+        Assert.notNull(id, "The given id must not be null!");
+        return findById(id).isPresent();
+    }
 
-	void assertScanEnabled(boolean scanEnabled, String methodName) {
-		Assert.isTrue(scanEnabled, "Scanning for unpaginated " + methodName + "() queries is not enabled.  "
-				+ "To enable, re-implement the " + methodName
-				+ "() method in your repository interface and annotate with @EnableScan, or "
-				+ "enable scanning for all repository methods by annotating your repository interface with @EnableScan");
-	}
+    void assertScanEnabled(boolean scanEnabled, String methodName) {
+        Assert.isTrue(scanEnabled, "Scanning for unpaginated " + methodName + "() queries is not enabled.  "
+                + "To enable, re-implement the " + methodName
+                + "() method in your repository interface and annotate with @EnableScan, or "
+                + "enable scanning for all repository methods by annotating your repository interface with @EnableScan");
+    }
 
-	@Override
-	public List<T> findAll() {
+    @Override
+    public List<T> findAll() {
 
-		assertScanEnabled(enableScanPermissions.isFindAllUnpaginatedScanEnabled(), "findAll");
-		DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
-		return dynamoDBOperations.scan(domainType, scanExpression);
-	}
+        assertScanEnabled(enableScanPermissions.isFindAllUnpaginatedScanEnabled(), "findAll");
+        DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
+        return dynamoDBOperations.scan(domainType, scanExpression);
+    }
 
-	@Override
-	public long count() {
-		assertScanEnabled(enableScanPermissions.isCountUnpaginatedScanEnabled(), "count");
-		final DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
-		return dynamoDBOperations.count(domainType, scanExpression);
-	}
+    @Override
+    public long count() {
+        assertScanEnabled(enableScanPermissions.isCountUnpaginatedScanEnabled(), "count");
+        final DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
+        return dynamoDBOperations.count(domainType, scanExpression);
+    }
 
-	@Override
-	public void deleteById(ID id) {
+    @Override
+    public void deleteById(ID id) {
 
-		Assert.notNull(id, "The given id must not be null!");
+        Assert.notNull(id, "The given id must not be null!");
 
-		Optional<T> entity = findById(id);
+        Optional<T> entity = findById(id);
 
-		if (entity.isPresent()) {
-			dynamoDBOperations.delete(entity.get());
+        if (entity.isPresent()) {
+            dynamoDBOperations.delete(entity.get());
 
-		} else {
-			throw new EmptyResultDataAccessException(String.format("No %s entity with id %s exists!", domainType, id),
-					1);
-		}
-	}
+        } else {
+            throw new EmptyResultDataAccessException(String.format("No %s entity with id %s exists!", domainType, id),
+                    1);
+        }
+    }
 
-	@Override
-	public void delete(T entity) {
-		Assert.notNull(entity, "The entity must not be null!");
-		dynamoDBOperations.delete(entity);
-	}
+    @Override
+    public void delete(T entity) {
+        Assert.notNull(entity, "The entity must not be null!");
+        dynamoDBOperations.delete(entity);
+    }
 
-	@Override
-	public void deleteAll(Iterable<? extends T> entities) {
+    @Override
+    public void deleteAllById(Iterable<? extends ID> ids) {
+        var bla = StreamSupport.stream(ids.spliterator(), false).map(id -> (ID) id).toList();
+        deleteAll(findAllById(bla));
+    }
 
-		Assert.notNull(entities, "The given Iterable of entities not be null!");
-		dynamoDBOperations.batchDelete(entities);
-	}
+    @Override
+    public void deleteAll(Iterable<? extends T> entities) {
 
-	@Override
-	public void deleteAll() {
+        Assert.notNull(entities, "The given Iterable of entities not be null!");
+        dynamoDBOperations.batchDelete(entities);
+    }
 
-		assertScanEnabled(enableScanPermissions.isDeleteAllUnpaginatedScanEnabled(), "deleteAll");
-		dynamoDBOperations.batchDelete(findAll());
-	}
+    @Override
+    public void deleteAll() {
 
-	@NonNull
-	public DynamoDBEntityInformation<T, ID> getEntityInformation() {
-		return this.entityInformation;
-	}
+        assertScanEnabled(enableScanPermissions.isDeleteAllUnpaginatedScanEnabled(), "deleteAll");
+        dynamoDBOperations.batchDelete(findAll());
+    }
+
+    @NonNull
+    public DynamoDBEntityInformation<T, ID> getEntityInformation() {
+        return this.entityInformation;
+    }
 }

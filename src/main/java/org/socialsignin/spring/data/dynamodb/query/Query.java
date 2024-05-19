@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,26 +19,29 @@ import java.util.List;
 
 public interface Query<T> {
 
-	/**
-	 * Execute a SELECT query and return the query results as a List.
-	 * 
-	 * @return a list of the results
-	 * @throws IllegalStateException
-	 *             if called for a Java Persistence query language UPDATE or DELETE
-	 *             statement
-	 */
-	List<T> getResultList();
+    /**
+     * Execute a SELECT query and return the query results as a List.
+     *
+     * @return a list of the results
+     *
+     * @throws IllegalStateException
+     *             if called for a Java Persistence query language UPDATE or DELETE statement
+     */
+    List<T> getResultList();
 
-	/**
-	 * Execute a SELECT query that returns a single result.
-	 * 
-	 * @return the result
-	 */
-	T getSingleResult();
+    /**
+     * Execute a SELECT query that returns a single result.
+     *
+     * @return the result
+     */
+    T getSingleResult();
 
-	void setScanEnabled(boolean scanEnabled);
-	void setScanCountEnabled(boolean scanCountEnabled);
-	boolean isScanCountEnabled();
-	boolean isScanEnabled();
+    void setScanEnabled(boolean scanEnabled);
+
+    void setScanCountEnabled(boolean scanCountEnabled);
+
+    boolean isScanCountEnabled();
+
+    boolean isScanEnabled();
 
 }

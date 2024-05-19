@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,37 +21,37 @@ import org.springframework.util.Assert;
 
 public class ScanExpressionCountQuery<T> extends AbstractSingleEntityQuery<Long> implements Query<Long> {
 
-	private DynamoDBScanExpression scanExpression;
+    private DynamoDBScanExpression scanExpression;
 
-	private Class<T> domainClass;
+    private Class<T> domainClass;
 
-	private boolean pageQuery;
+    private boolean pageQuery;
 
-	public ScanExpressionCountQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz,
-			DynamoDBScanExpression scanExpression, boolean pageQuery) {
-		super(dynamoDBOperations, Long.class);
-		this.scanExpression = scanExpression;
-		this.domainClass = clazz;
-		this.pageQuery = pageQuery;
-	}
+    public ScanExpressionCountQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz,
+            DynamoDBScanExpression scanExpression, boolean pageQuery) {
+        super(dynamoDBOperations, Long.class);
+        this.scanExpression = scanExpression;
+        this.domainClass = clazz;
+        this.pageQuery = pageQuery;
+    }
 
-	@Override
-	public Long getSingleResult() {
-		assertScanCountEnabled(isScanCountEnabled());
-		return Long.valueOf(dynamoDBOperations.count(domainClass, scanExpression));
-	}
+    @Override
+    public Long getSingleResult() {
+        assertScanCountEnabled(isScanCountEnabled());
+        return Long.valueOf(dynamoDBOperations.count(domainClass, scanExpression));
+    }
 
-	public void assertScanCountEnabled(boolean scanCountEnabled) {
-		if (pageQuery) {
-			Assert.isTrue(scanCountEnabled, "Scanning for the total counts for this query is not enabled.  "
-					+ "To enable annotate your repository method with @EnableScanCount, or "
-					+ "enable scanning for all repository methods by annotating your repository interface with @EnableScanCount.  This total count is required to serve this Page query - if total counts are not desired an alternative approach could be to replace the Page query with a Slice query ");
+    public void assertScanCountEnabled(boolean scanCountEnabled) {
+        if (pageQuery) {
+            Assert.isTrue(scanCountEnabled, "Scanning for the total counts for this query is not enabled.  "
+                    + "To enable annotate your repository method with @EnableScanCount, or "
+                    + "enable scanning for all repository methods by annotating your repository interface with @EnableScanCount.  This total count is required to serve this Page query - if total counts are not desired an alternative approach could be to replace the Page query with a Slice query ");
 
-		} else {
-			Assert.isTrue(scanCountEnabled, "Scanning for counts for this query is not enabled.  "
-					+ "To enable annotate your repository method with @EnableScanCount, or "
-					+ "enable scanning for all repository methods by annotating your repository interface with @EnableScanCount");
-		}
-	}
+        } else {
+            Assert.isTrue(scanCountEnabled, "Scanning for counts for this query is not enabled.  "
+                    + "To enable annotate your repository method with @EnableScanCount, or "
+                    + "enable scanning for all repository methods by annotating your repository interface with @EnableScanCount");
+        }
+    }
 
 }

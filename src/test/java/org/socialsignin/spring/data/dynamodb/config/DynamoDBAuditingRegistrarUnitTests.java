@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,20 +30,20 @@ import org.springframework.core.type.AnnotationMetadata;
 @RunWith(MockitoJUnitRunner.class)
 public class DynamoDBAuditingRegistrarUnitTests {
 
-	DynamoDBAuditingRegistrar registrar = new DynamoDBAuditingRegistrar();
+    DynamoDBAuditingRegistrar registrar = new DynamoDBAuditingRegistrar();
 
-	@Mock
-	AnnotationMetadata metadata;
-	@Mock
-	BeanDefinitionRegistry registry;
+    @Mock
+    AnnotationMetadata metadata;
+    @Mock
+    BeanDefinitionRegistry registry;
 
-	@Test(expected = IllegalArgumentException.class)
-	public void rejectsNullAnnotationMetadata() {
-		registrar.registerBeanDefinitions(null, registry);
-	}
+    @Test(expected = IllegalArgumentException.class)
+    public void rejectsNullAnnotationMetadata() {
+        registrar.registerBeanDefinitions(null, registry);
+    }
 
-	@Test(expected = IllegalArgumentException.class)
-	public void rejectsNullBeanDefinitionRegistry() {
-		registrar.registerBeanDefinitions(metadata, null);
-	}
+    @Test(expected = IllegalArgumentException.class)
+    public void rejectsNullBeanDefinitionRegistry() {
+        registrar.registerBeanDefinitions(metadata, null);
+    }
 }

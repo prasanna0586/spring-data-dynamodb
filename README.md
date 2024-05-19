@@ -1,9 +1,9 @@
-[![Build Status](https://travis-ci.org/boostchicken/spring-data-dynamodb.svg?branch=master)](https://travis-ci.org/boostchicken/spring-data-dynamodb) 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.boostchicken/spring-data-dynamodb/badge.svg)](https://search.maven.org/search?q=g:io.github.boostchicken)
+[![Build Status](https://travis-ci.org/boostchicken/spring-data-dynamodb.svg?branch=master)](https://travis-ci.org/prasanna0586/spring-data-dynamodb) 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.boostchicken/spring-data-dynamodb/badge.svg)](https://search.maven.org/search?q=g:com.prasanna.spring.data)
 
 # Spring  Data DynamoDB #
 
-<img align="left" src="https://derjust.github.io/spring-data-dynamodb/banner/spring-data-dynamodb.png" />
+<img style="float:left; margin: 0px 15px 15px 0px;" src="/assets/images/dynamodb.svg" />
 
 The primary goal of the [Spring® Data](https://projects.spring.io/spring-data/) project is to make it easier to build Spring-powered applications that use data access technologies.
 
@@ -27,13 +27,13 @@ please see [spring-data-dynamodb-examples](https://github.com/derjust/spring-dat
 
 ## Quick Start ##
 
-Download the JAR though [Maven Central](http://mvnrepository.com/artifact/io.github.boostchicken/spring-data-dynamodb) ([`SNAPSHOT` builds](https://oss.sonatype.org/content/repositories/snapshots/io/github/boostchicken/spring-data-dynamodb/) are available via the [OSSRH snapshot repository](https://github.com/derjust/spring-data-dynamodb/wiki/Access-to-releases) ):
+Download the JAR though [Maven Central](https://mvnrepository.com/artifact/com.prasanna.spring.data/spring-data-dynamodb)
 
 ```xml
 <dependency>
-  <groupId>io.github.boostchicken</groupId>
+  <groupId>com.prasanna.spring.data</groupId>
   <artifactId>spring-data-dynamodb</artifactId>
-  <version>5.2.5</version>
+  <version>6.0.0</version>
 </dependency>
 ```
 
@@ -155,21 +155,21 @@ Advanced topics can be found in the [wiki](https://github.com/derjust/spring-dat
 
 The major and minor number of this library refers to the compatible Spring framework version. The build number is used as specified by SEMVER.
 
-API changes will follow SEMVER and loosly the Spring Framework releases.
+API changes will follow SEMVER and loosely the Spring Framework releases.
 
-| `spring-data-dynamodb` version  | Spring Boot compatibility      |Spring Framework compatibility  | Spring Data compatibility |
-| ------------------------------- | ------------------------------ | ------------------------------ | ------------------------- |
-| 1.0.x                           |                                | >= 3.1 && < 4.2                |                           |
-| 4.2.x                           | >= 1.3.0 && < 1.4.0            | >= 4.2 && < 4.3                | Gosling-SR1               |
-| 4.3.x                           | >= 1.4.0 && < 2.0              | >= 4.3 && < 5.0                | Gosling-SR1               |
-| 4.4.x                           | >= 1.4.0 && < 2.0              | >= 4.3 && < 5.0                | Hopper-SR2                |
-| 4.5.x                           | >= 1.4.0 && < 2.0              | >= 4.3 && < 5.0                | Ingalls                   |
-| 5.0.x                           | >= 2.0 && < 2.1                | >= 5.0 && < 5.1                | Kay-SR1                   |
-| 5.1.x                           | == 2.1                         | >= 5.1                         | Lovelace-SR1              |
-| 5.2.x                           | >= 2.2                         | >= 5.2                         | Moore-RELEASE, Nuemann-RELASE              |
+| `spring-data-dynamodb` version | Spring Boot compatibility | Spring Framework compatibility | Spring Data compatibility     |
+|--------------------------------|---------------------------|--------------------------------|-------------------------------|
+| 1.0.x                          |                           | \>= 3.1 && \< 4.2              |                               |
+| 4.2.x                          | \>= 1.3.0 && < 1.4.0      | \>= 4.2 && \< 4.3              | Gosling-SR1                   |
+| 4.3.x                          | \>= 1.4.0 && < 2.0        | \>= 4.3 && \< 5.0              | Gosling-SR1                   |
+| 4.4.x                          | \>= 1.4.0 && < 2.0        | \>= 4.3 && \< 5.0              | Hopper-SR2                    |
+| 4.5.x                          | \>= 1.4.0 && < 2.0        | \>= 4.3 && \< 5.0              | Ingalls                       |
+| 5.0.x                          | \>= 2.0 && < 2.1          | \>= 5.0 && \< 5.1              | Kay-SR1                       |
+| 5.1.x                          | == 2.1                    | \>= 5.1                        | Lovelace-SR1                  |
+| 5.2.x                          | \>= 2.2                   | \>= 5.2                        | Moore-RELEASE, Nuemann-RELASE |
+| 6.0.x                          | \>= 3.2.5                 | \>=6.1.6                       | 2023.1.5                      |
 
-
-`spring-data-dynamodb` depends directly on `spring-data` as also `spring-context`, `spring-data` and `spring-tx`.
+`spring-data-dynamodb` depends directly on `spring-data` as also `spring-tx`.
 
 `compile` and `runtime` dependencies are kept to a minimum to allow easy integration, for example into 
 Spring-Boot projects.

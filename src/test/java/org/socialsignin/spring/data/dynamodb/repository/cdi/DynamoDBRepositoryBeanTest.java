@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,9 @@ package org.socialsignin.spring.data.dynamodb.repository.cdi;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
+import jakarta.enterprise.context.spi.CreationalContext;
+import jakarta.enterprise.inject.spi.Bean;
+import jakarta.enterprise.inject.spi.BeanManager;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -29,12 +32,8 @@ import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.socialsignin.spring.data.dynamodb.domain.sample.User;
 import org.springframework.data.repository.Repository;
 
-import javax.enterprise.context.spi.CreationalContext;
-import javax.enterprise.inject.spi.Bean;
-import javax.enterprise.inject.spi.BeanManager;
 import java.lang.annotation.Annotation;
 import java.util.Collections;
-import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.Assert.assertNotNull;
@@ -42,87 +41,87 @@ import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DynamoDBRepositoryBeanTest {
-	interface SampleRepository extends Repository<User, String> {
-	}
+    interface SampleRepository extends Repository<User, String> {
+    }
 
-	@Rule
-	public ExpectedException expectedException = ExpectedException.none();
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
 
-	@Mock
-	private CreationalContext<AmazonDynamoDB> creationalContext;
-	@Mock
-	private CreationalContext<SampleRepository> repoCreationalContext;
-	@Mock
-	private BeanManager beanManager;
-	@Mock
-	private Bean<AmazonDynamoDB> amazonDynamoDBBean;
-	@Mock
-	private AmazonDynamoDB amazonDynamoDB;
-	@Mock
-	private javax.enterprise.inject.spi.Bean<DynamoDBMapperConfig> dynamoDBMapperConfigBean;
-	@Mock
-	private Bean<DynamoDBOperations> dynamoDBOperationsBean;
+    @Mock
+    private CreationalContext<AmazonDynamoDB> creationalContext;
+    @Mock
+    private CreationalContext<SampleRepository> repoCreationalContext;
+    @Mock
+    private BeanManager beanManager;
+    @Mock
+    private Bean<AmazonDynamoDB> amazonDynamoDBBean;
+    @Mock
+    private AmazonDynamoDB amazonDynamoDB;
+    @Mock
+    private jakarta.enterprise.inject.spi.Bean<DynamoDBMapperConfig> dynamoDBMapperConfigBean;
+    @Mock
+    private Bean<DynamoDBOperations> dynamoDBOperationsBean;
 
-	@Mock
-	private Bean<DynamoDBMapper> dynamoDBMapperBean;
-	private Set<Annotation> qualifiers = Collections.emptySet();
-	private Class<SampleRepository> repositoryType = SampleRepository.class;
+    @Mock
+    private Bean<DynamoDBMapper> dynamoDBMapperBean;
+    private Set<Annotation> qualifiers = Collections.emptySet();
+    private Class<SampleRepository> repositoryType = SampleRepository.class;
 
-	@Before
+    @Before
 	public void setUp() {
 		when(beanManager.createCreationalContext(amazonDynamoDBBean)).thenReturn(creationalContext);
 		when(beanManager.getReference(amazonDynamoDBBean, AmazonDynamoDB.class, creationalContext))
 				.thenReturn(amazonDynamoDB);
 	}
 
-	@Test
-	public void testNullOperationsOk() {
-		DynamoDBRepositoryBean<SampleRepository> underTest = new DynamoDBRepositoryBean<>(beanManager,
-				amazonDynamoDBBean, dynamoDBMapperConfigBean, null, dynamoDBMapperBean, qualifiers, repositoryType);
+    @Test
+    public void testNullOperationsOk() {
+        DynamoDBRepositoryBean<SampleRepository> underTest = new DynamoDBRepositoryBean<>(beanManager,
+                amazonDynamoDBBean, dynamoDBMapperConfigBean, null, dynamoDBMapperBean, qualifiers, repositoryType);
 
-		assertNotNull(underTest);
-	}
+        assertNotNull(underTest);
+    }
 
-	@Test
-	public void testNullOperationFail() {
-		expectedException.expectMessage("amazonDynamoDBBean must not be null!");
+    @Test
+    public void testNullOperationFail() {
+        expectedException.expectMessage("amazonDynamoDBBean must not be null!");
 
-		new DynamoDBRepositoryBean<>(beanManager, null, dynamoDBMapperConfigBean, null, null, qualifiers, repositoryType);
-	}
+        new DynamoDBRepositoryBean<>(beanManager, null, dynamoDBMapperConfigBean, null, null, qualifiers,
+                repositoryType);
+    }
 
-	@Test
-	public void testSetOperationOk1() {
-		DynamoDBRepositoryBean<SampleRepository> underTest = new DynamoDBRepositoryBean<>(beanManager, null, null,
-				dynamoDBOperationsBean, dynamoDBMapperBean, qualifiers, repositoryType);
+    @Test
+    public void testSetOperationOk1() {
+        DynamoDBRepositoryBean<SampleRepository> underTest = new DynamoDBRepositoryBean<>(beanManager, null, null,
+                dynamoDBOperationsBean, dynamoDBMapperBean, qualifiers, repositoryType);
 
-		assertNotNull(underTest);
-	}
+        assertNotNull(underTest);
+    }
 
-	@Test
-	public void testSetOperationFail1() {
-		expectedException.expectMessage(
-				"Cannot specify both dynamoDBMapperConfigBean bean and dynamoDBOperationsBean in repository configuration");
+    @Test
+    public void testSetOperationFail1() {
+        expectedException.expectMessage(
+                "Cannot specify both dynamoDBMapperConfigBean bean and dynamoDBOperationsBean in repository configuration");
 
-		new DynamoDBRepositoryBean<>(beanManager, null, dynamoDBMapperConfigBean, dynamoDBOperationsBean, dynamoDBMapperBean, qualifiers,
-				repositoryType);
-	}
+        new DynamoDBRepositoryBean<>(beanManager, null, dynamoDBMapperConfigBean, dynamoDBOperationsBean,
+                dynamoDBMapperBean, qualifiers, repositoryType);
+    }
 
-	@Test
-	public void testSetOperationFail2() {
-		expectedException.expectMessage(
-				"Cannot specify both amazonDynamoDB bean and dynamoDBOperationsBean in repository configuration");
+    @Test
+    public void testSetOperationFail2() {
+        expectedException.expectMessage(
+                "Cannot specify both amazonDynamoDB bean and dynamoDBOperationsBean in repository configuration");
 
-		new DynamoDBRepositoryBean<>(beanManager, amazonDynamoDBBean, null, dynamoDBOperationsBean, dynamoDBMapperBean, qualifiers,
-				repositoryType);
-	}
+        new DynamoDBRepositoryBean<>(beanManager, amazonDynamoDBBean, null, dynamoDBOperationsBean, dynamoDBMapperBean,
+                qualifiers, repositoryType);
+    }
 
-	@Test
-	public void testCreateRepostiory() {
-		DynamoDBRepositoryBean<SampleRepository> underTest = new DynamoDBRepositoryBean<>(beanManager,
-				amazonDynamoDBBean, dynamoDBMapperConfigBean, null, dynamoDBMapperBean, qualifiers, repositoryType);
+    @Test
+    public void testCreateRepostiory() {
+        DynamoDBRepositoryBean<SampleRepository> underTest = new DynamoDBRepositoryBean<>(beanManager,
+                amazonDynamoDBBean, dynamoDBMapperConfigBean, null, dynamoDBMapperBean, qualifiers, repositoryType);
 
-		SampleRepository actual = underTest.create(repoCreationalContext, SampleRepository.class,
-				Optional.<Object>empty());
-		assertNotNull(actual);
-	}
+        SampleRepository actual = underTest.create(repoCreationalContext, SampleRepository.class);
+        assertNotNull(actual);
+    }
 }

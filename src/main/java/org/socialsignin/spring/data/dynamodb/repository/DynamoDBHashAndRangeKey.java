@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,46 +21,45 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey;
 import java.io.Serializable;
 
 /**
- * Default implementation of a DynamoDB composite key, comprising of both a hash
- * and a range key.
- * 
+ * Default implementation of a DynamoDB composite key, comprising of both a hash and a range key.
+ *
  * @author Michael Lavelle
  * @author Sebastian Just
  */
 public class DynamoDBHashAndRangeKey implements Serializable {
 
-	public DynamoDBHashAndRangeKey() {
-	}
+    public DynamoDBHashAndRangeKey() {
+    }
 
-	public DynamoDBHashAndRangeKey(Object hash, Object range) {
-		this.rangeKey = range;
-		this.hashKey = hash;
-	}
+    public DynamoDBHashAndRangeKey(Object hash, Object range) {
+        this.rangeKey = range;
+        this.hashKey = hash;
+    }
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
+    /**
+     *
+     */
+    private static final long serialVersionUID = 1L;
 
-	private Object hashKey;
-	private Object rangeKey;
+    private Object hashKey;
+    private Object rangeKey;
 
-	@DynamoDBHashKey
-	public Object getHashKey() {
-		return hashKey;
-	}
+    @DynamoDBHashKey
+    public Object getHashKey() {
+        return hashKey;
+    }
 
-	public void setHashKey(Object hashKey) {
-		this.hashKey = hashKey;
-	}
+    public void setHashKey(Object hashKey) {
+        this.hashKey = hashKey;
+    }
 
-	@DynamoDBRangeKey
-	public Object getRangeKey() {
-		return rangeKey;
-	}
+    @DynamoDBRangeKey
+    public Object getRangeKey() {
+        return rangeKey;
+    }
 
-	public void setRangeKey(Object rangeKey) {
-		this.rangeKey = rangeKey;
-	}
+    public void setRangeKey(Object rangeKey) {
+        this.rangeKey = rangeKey;
+    }
 
 }

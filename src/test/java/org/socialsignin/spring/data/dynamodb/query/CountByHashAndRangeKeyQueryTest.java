@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,23 +30,23 @@ import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CountByHashAndRangeKeyQueryTest {
-	private static final Class<User> DOMAIN_CLASS = User.class;
-	@Mock
-	private DynamoDBOperations dynamoDBOperations;
-	@Mock
-	private User sampleEntity;
-	private Object hashKey;
-	private Object rangeKey;
-	private CountByHashAndRangeKeyQuery<User> underTest;
+    private static final Class<User> DOMAIN_CLASS = User.class;
+    @Mock
+    private DynamoDBOperations dynamoDBOperations;
+    @Mock
+    private User sampleEntity;
+    private Object hashKey;
+    private Object rangeKey;
+    private CountByHashAndRangeKeyQuery<User> underTest;
 
-	@Before
-	public void setUp() {
-		hashKey = ThreadLocalRandom.current().nextLong();
-		rangeKey = ThreadLocalRandom.current().nextLong();
-		underTest = new CountByHashAndRangeKeyQuery<User>(dynamoDBOperations, DOMAIN_CLASS, hashKey, rangeKey);
-	}
+    @Before
+    public void setUp() {
+        hashKey = ThreadLocalRandom.current().nextLong();
+        rangeKey = ThreadLocalRandom.current().nextLong();
+        underTest = new CountByHashAndRangeKeyQuery<User>(dynamoDBOperations, DOMAIN_CLASS, hashKey, rangeKey);
+    }
 
-	@Test
+    @Test
 	public void testGetSingleResultExists() {
 		when(dynamoDBOperations.load(DOMAIN_CLASS, hashKey, rangeKey)).thenReturn(sampleEntity);
 		Long actual = underTest.getSingleResult();
@@ -54,7 +54,7 @@ public class CountByHashAndRangeKeyQueryTest {
 		assertEquals(Long.valueOf(1), actual);
 	}
 
-	@Test
+    @Test
 	public void testGetSingleResultDoesntExist() {
 		when(dynamoDBOperations.load(DOMAIN_CLASS, hashKey, rangeKey)).thenReturn(null);
 		Long actual = underTest.getSingleResult();

@@ -15,3 +15,5 @@ release.properties
 .settings
 .classpath
 .checkstyle
+
+.DS_Store

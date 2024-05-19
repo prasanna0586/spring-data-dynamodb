@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class ConfigurationTI {
 
-	@Bean
-	public AmazonDynamoDB amazonDynamoDB() {
-		AmazonDynamoDB ddb = DynamoDBEmbedded.create().amazonDynamoDB();
-		return ddb;
-	}
+    @Bean
+    public AmazonDynamoDB amazonDynamoDB() {
+        AmazonDynamoDB ddb = DynamoDBEmbedded.create().amazonDynamoDB();
+        return ddb;
+    }
 }

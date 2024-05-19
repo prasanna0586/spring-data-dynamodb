@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,38 +26,40 @@ import static org.junit.Assert.assertEquals;
 
 public class AbstractSingleEntityQueryTest {
 
-	@Mock
-	private DynamoDBOperations dynamoDBOperations;
+    @Mock
+    private DynamoDBOperations dynamoDBOperations;
 
-	private final User entity = new User();
+    private final User entity = new User();
 
-	private AbstractSingleEntityQuery<User> underTest;
+    private AbstractSingleEntityQuery<User> underTest;
 
-	@Test
-	public void testGetResultList() {
-		underTest = new AbstractSingleEntityQuery<User>(dynamoDBOperations, User.class) {
-			@Override
-			public User getSingleResult() {
-				return entity;
-			}
-		};
+    @Test
+    public void testGetResultList() {
+        underTest = new AbstractSingleEntityQuery<User>(dynamoDBOperations, User.class) {
+            @Override
+            public User getSingleResult() {
+                return entity;
+            }
+        };
 
-		List<User> actual = underTest.getResultList();
+        List<User> actual = underTest.getResultList();
 
-		assertEquals(1, actual.size());
-		assertEquals(entity, actual.get(0));
-	}
+        assertEquals(1, actual.size());
+        assertEquals(entity, actual.get(0));
+    }
 
-	@Test
-	public void testGetResultListEmpty() {
-		underTest = new AbstractSingleEntityQuery<User>(dynamoDBOperations, User.class) {
-			@Override
-			public User getSingleResult() { return null; }
-		};
+    @Test
+    public void testGetResultListEmpty() {
+        underTest = new AbstractSingleEntityQuery<User>(dynamoDBOperations, User.class) {
+            @Override
+            public User getSingleResult() {
+                return null;
+            }
+        };
 
-		List<User> actual = underTest.getResultList();
+        List<User> actual = underTest.getResultList();
 
-		assertEquals(0, actual.size());
-	}
+        assertEquals(0, actual.size());
+    }
 
 }

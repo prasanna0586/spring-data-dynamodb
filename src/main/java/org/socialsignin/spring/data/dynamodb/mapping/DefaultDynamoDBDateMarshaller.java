@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,26 +21,27 @@ import java.util.TimeZone;
 /**
  * @author Michael Lavelle
  * @author Sebastian Just
- * @deprecated Consider using
- *             {@link org.socialsignin.spring.data.dynamodb.marshaller.Date2IsoDynamoDBMarshaller}
+ *
+ * @deprecated Consider using {@link org.socialsignin.spring.data.dynamodb.marshaller.Date2IsoDynamoDBMarshaller}
  */
 @Deprecated
 public class DefaultDynamoDBDateMarshaller extends AbstractDynamoDBDateMarshaller {
 
-	private static final class UTCSimpleDateFormat extends SimpleDateFormat {
-		private static final long serialVersionUID = 1L;
-		private UTCSimpleDateFormat() {
-			super("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-			setTimeZone(TimeZone.getTimeZone("UTC"));
-		}
+    private static final class UTCSimpleDateFormat extends SimpleDateFormat {
+        private static final long serialVersionUID = 1L;
 
-		@Override
-		public String toString() {
-			return toPattern();
-		}
-	}
+        private UTCSimpleDateFormat() {
+            super("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+            setTimeZone(TimeZone.getTimeZone("UTC"));
+        }
 
-	public DefaultDynamoDBDateMarshaller() {
-		super(new UTCSimpleDateFormat());
-	}
+        @Override
+        public String toString() {
+            return toPattern();
+        }
+    }
+
+    public DefaultDynamoDBDateMarshaller() {
+        super(new UTCSimpleDateFormat());
+    }
 }

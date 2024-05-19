@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,51 +23,49 @@ import java.util.Comparator;
 
 /**
  * DynamoDB specific {@link DynamoDBPersistentEntity} implementation
- * 
+ *
  * @author Michael Lavelle
  * @author Sebastian Just
  */
 public class DynamoDBPersistentEntityImpl<T> extends BasicPersistentEntity<T, DynamoDBPersistentProperty>
-		implements
-			DynamoDBPersistentEntity<T> {
-	public DynamoDBPersistentEntityImpl(TypeInformation<T> information,
-			Comparator<DynamoDBPersistentProperty> comparator) {
-		super(information, comparator);
-	}
+        implements DynamoDBPersistentEntity<T> {
+    public DynamoDBPersistentEntityImpl(TypeInformation<T> information,
+            Comparator<DynamoDBPersistentProperty> comparator) {
+        super(information, comparator);
+    }
 
-	/**
-	 * Returns the given property if it is a better candidate for the id property
-	 * than the current id property.
-	 * 
-	 * @param property
-	 *            the new id property candidate, will never be {@literal null}.
-	 * @return the given id property or {@literal null} if the given property is not
-	 *         an id property.
-	 */
-	protected DynamoDBPersistentProperty returnPropertyIfBetterIdPropertyCandidateOrNull(
-			DynamoDBPersistentProperty property) {
+    /**
+     * Returns the given property if it is a better candidate for the id property than the current id property.
+     *
+     * @param property
+     *            the new id property candidate, will never be {@literal null}.
+     *
+     * @return the given id property or {@literal null} if the given property is not an id property.
+     */
+    protected DynamoDBPersistentProperty returnPropertyIfBetterIdPropertyCandidateOrNull(
+            DynamoDBPersistentProperty property) {
 
-		if (!property.isIdProperty()) {
-			return null;
-		}
+        if (!property.isIdProperty()) {
+            return null;
+        }
 
-		DynamoDBPersistentProperty idProperty = getIdProperty();
-		if (idProperty != null) {
+        DynamoDBPersistentProperty idProperty = getIdProperty();
+        if (idProperty != null) {
 
-			if (idProperty.isCompositeIdProperty() && property.isHashKeyProperty()) {
-				// Do nothing - favour id annotated properties over hashkey
-				return null;
-			} else if (idProperty.isHashKeyProperty() && property.isCompositeIdProperty()) {
-				return property;
-			} else {
-				throw new MappingException(String.format(
-						"Attempt to add id property %s but already have property %s registered "
-								+ "as id. Check your mapping configuration!",
-						property.getField(), idProperty.getField()));
-			}
-		}
+            if (idProperty.isCompositeIdProperty() && property.isHashKeyProperty()) {
+                // Do nothing - favour id annotated properties over hashkey
+                return null;
+            } else if (idProperty.isHashKeyProperty() && property.isCompositeIdProperty()) {
+                return property;
+            } else {
+                throw new MappingException(String.format(
+                        "Attempt to add id property %s but already have property %s registered "
+                                + "as id. Check your mapping configuration!",
+                        property.getField(), idProperty.getField()));
+            }
+        }
 
-		return property;
-	}
+        return property;
+    }
 
 }

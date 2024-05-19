@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,9 +24,9 @@ import org.springframework.test.context.TestExecutionListener;
 @Configuration
 public class DynamoDBLocalResource implements TestExecutionListener {
 
-	@Bean
-	public AmazonDynamoDB amazonDynamoDB() {
-		return DynamoDBEmbedded.create().amazonDynamoDB();
-	}
+    @Bean
+    public AmazonDynamoDB amazonDynamoDB() {
+        return DynamoDBEmbedded.create().amazonDynamoDB();
+    }
 
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,96 +34,96 @@ import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for {@link DynamoDBSimpleIdRepository}.
- * 
+ *
  * @author Michael Lavelle
  * @author Sebastian Just
  */
 @RunWith(MockitoJUnitRunner.class)
 public class SimpleDynamoDBPagingAndSortingRepositoryUnitTest {
 
-	SimpleDynamoDBPagingAndSortingRepository<User, Long> repoForEntityWithOnlyHashKey;
+    SimpleDynamoDBPagingAndSortingRepository<User, Long> repoForEntityWithOnlyHashKey;
 
-	SimpleDynamoDBPagingAndSortingRepository<Playlist, PlaylistId> repoForEntityWithHashAndRangeKey;
+    SimpleDynamoDBPagingAndSortingRepository<Playlist, PlaylistId> repoForEntityWithHashAndRangeKey;
 
-	@Mock
-	DynamoDBOperations dynamoDBOperations;
+    @Mock
+    DynamoDBOperations dynamoDBOperations;
 
-	private User testUser;
+    private User testUser;
 
-	private Playlist testPlaylist;
+    private Playlist testPlaylist;
 
-	private PlaylistId testPlaylistId;
+    private PlaylistId testPlaylistId;
 
-	@Mock
-	EnableScanPermissions mockEnableScanPermissions;
+    @Mock
+    EnableScanPermissions mockEnableScanPermissions;
 
-	@Mock
-	DynamoDBEntityInformation<User, Long> entityWithOnlyHashKeyInformation;
+    @Mock
+    DynamoDBEntityInformation<User, Long> entityWithOnlyHashKeyInformation;
 
-	@Mock
-	DynamoDBEntityInformation<Playlist, PlaylistId> entityWithHashAndRangeKeyInformation;
+    @Mock
+    DynamoDBEntityInformation<Playlist, PlaylistId> entityWithHashAndRangeKeyInformation;
 
-	@Before
-	public void setUp() {
+    @Before
+    public void setUp() {
 
-		testUser = new User();
+        testUser = new User();
 
-		testPlaylistId = new PlaylistId();
-		testPlaylistId.setUserName("michael");
-		testPlaylistId.setPlaylistName("playlist1");
+        testPlaylistId = new PlaylistId();
+        testPlaylistId.setUserName("michael");
+        testPlaylistId.setPlaylistName("playlist1");
 
-		testPlaylist = new Playlist(testPlaylistId);
+        testPlaylist = new Playlist(testPlaylistId);
 
-		when(entityWithOnlyHashKeyInformation.getJavaType()).thenReturn(User.class);
-		when(entityWithOnlyHashKeyInformation.getHashKey(1l)).thenReturn(1l);
+        when(entityWithOnlyHashKeyInformation.getJavaType()).thenReturn(User.class);
+        when(entityWithOnlyHashKeyInformation.getHashKey(1l)).thenReturn(1l);
 
-		when(entityWithHashAndRangeKeyInformation.getJavaType()).thenReturn(Playlist.class);
-		when(entityWithHashAndRangeKeyInformation.getHashKey(testPlaylistId)).thenReturn("michael");
-		when(entityWithHashAndRangeKeyInformation.getRangeKey(testPlaylistId)).thenReturn("playlist1");
-		when(entityWithHashAndRangeKeyInformation.isRangeKeyAware()).thenReturn(true);
+        when(entityWithHashAndRangeKeyInformation.getJavaType()).thenReturn(Playlist.class);
+        when(entityWithHashAndRangeKeyInformation.getHashKey(testPlaylistId)).thenReturn("michael");
+        when(entityWithHashAndRangeKeyInformation.getRangeKey(testPlaylistId)).thenReturn("playlist1");
+        when(entityWithHashAndRangeKeyInformation.isRangeKeyAware()).thenReturn(true);
 
-		repoForEntityWithOnlyHashKey = new SimpleDynamoDBPagingAndSortingRepository<>(entityWithOnlyHashKeyInformation,
-				dynamoDBOperations, mockEnableScanPermissions);
-		repoForEntityWithHashAndRangeKey = new SimpleDynamoDBPagingAndSortingRepository<>(
-				entityWithHashAndRangeKeyInformation, dynamoDBOperations, mockEnableScanPermissions);
+        repoForEntityWithOnlyHashKey = new SimpleDynamoDBPagingAndSortingRepository<>(entityWithOnlyHashKeyInformation,
+                dynamoDBOperations, mockEnableScanPermissions);
+        repoForEntityWithHashAndRangeKey = new SimpleDynamoDBPagingAndSortingRepository<>(
+                entityWithHashAndRangeKeyInformation, dynamoDBOperations, mockEnableScanPermissions);
 
-		when(dynamoDBOperations.load(User.class, 1l)).thenReturn(testUser);
-		when(dynamoDBOperations.load(Playlist.class, "michael", "playlist1")).thenReturn(testPlaylist);
+        when(dynamoDBOperations.load(User.class, 1l)).thenReturn(testUser);
+        when(dynamoDBOperations.load(Playlist.class, "michael", "playlist1")).thenReturn(testPlaylist);
 
-	}
+    }
 
-	/**
-	 * @see DATAJPA-177
-	 */
-	@Test(expected = EmptyResultDataAccessException.class)
-	public void throwsExceptionIfEntityWithOnlyHashKeyToDeleteDoesNotExist() {
+    /**
+     * @see DATAJPA-177
+     */
+    @Test(expected = EmptyResultDataAccessException.class)
+    public void throwsExceptionIfEntityWithOnlyHashKeyToDeleteDoesNotExist() {
 
-		repoForEntityWithOnlyHashKey.deleteById(4711L);
-	}
+        repoForEntityWithOnlyHashKey.deleteById(4711L);
+    }
 
-	@Test
-	public void findOneEntityWithOnlyHashKey() {
-		Optional<User> user = repoForEntityWithOnlyHashKey.findById(1l);
-		Mockito.verify(dynamoDBOperations).load(User.class, 1l);
-		assertEquals(testUser, user.get());
-	}
+    @Test
+    public void findOneEntityWithOnlyHashKey() {
+        Optional<User> user = repoForEntityWithOnlyHashKey.findById(1l);
+        Mockito.verify(dynamoDBOperations).load(User.class, 1l);
+        assertEquals(testUser, user.get());
+    }
 
-	@Test
-	public void findOneEntityWithHashAndRangeKey() {
-		Optional<Playlist> playlist = repoForEntityWithHashAndRangeKey.findById(testPlaylistId);
-		assertEquals(testPlaylist, playlist.get());
-	}
+    @Test
+    public void findOneEntityWithHashAndRangeKey() {
+        Optional<Playlist> playlist = repoForEntityWithHashAndRangeKey.findById(testPlaylistId);
+        assertEquals(testPlaylist, playlist.get());
+    }
 
-	/**
-	 * @see DATAJPA-177
-	 */
-	@Test(expected = EmptyResultDataAccessException.class)
-	public void throwsExceptionIfEntityWithHashAndRangeKeyToDeleteDoesNotExist() {
+    /**
+     * @see DATAJPA-177
+     */
+    @Test(expected = EmptyResultDataAccessException.class)
+    public void throwsExceptionIfEntityWithHashAndRangeKeyToDeleteDoesNotExist() {
 
-		PlaylistId playlistId = new PlaylistId();
-		playlistId.setUserName("someUser");
-		playlistId.setPlaylistName("somePlaylistName");
+        PlaylistId playlistId = new PlaylistId();
+        playlistId.setUserName("someUser");
+        playlistId.setPlaylistName("somePlaylistName");
 
-		repoForEntityWithHashAndRangeKey.deleteById(playlistId);
-	}
+        repoForEntityWithHashAndRangeKey.deleteById(playlistId);
+    }
 }

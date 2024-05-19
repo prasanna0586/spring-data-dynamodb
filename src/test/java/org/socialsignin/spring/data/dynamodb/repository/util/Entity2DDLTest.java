@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,25 +18,26 @@ package org.socialsignin.spring.data.dynamodb.repository.util;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
 import static org.junit.Assert.assertEquals;
 
 public class Entity2DDLTest {
 
-	@Rule
-	public ExpectedException expectedException = ExpectedException.none();
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
 
-	@Test
-	public void testFromExistingValue() {
-		Entity2DDL actual = Entity2DDL.fromValue(Entity2DDL.NONE.getConfigurationValue());
+    @Test
+    public void testFromExistingValue() {
+        Entity2DDL actual = Entity2DDL.fromValue(Entity2DDL.NONE.getConfigurationValue());
 
-		assertEquals(Entity2DDL.NONE, actual);
-	}
+        assertEquals(Entity2DDL.NONE, actual);
+    }
 
-	@Test
-	public void testFromNotExistingValue() {
-		expectedException.expect(IllegalArgumentException.class);
+    @Test
+    public void testFromNotExistingValue() {
+        expectedException.expect(IllegalArgumentException.class);
 
-		Entity2DDL.fromValue("doesnt exist");
-	}
+        Entity2DDL.fromValue("doesnt exist");
+    }
 
 }

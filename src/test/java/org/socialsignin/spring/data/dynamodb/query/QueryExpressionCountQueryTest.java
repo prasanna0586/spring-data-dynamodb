@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,26 +31,26 @@ import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class QueryExpressionCountQueryTest {
-	@Mock
-	private DynamoDBOperations dynamoDBOperations;
-	@Mock
-	private DynamoDBQueryExpression<User> queryExpression;
+    @Mock
+    private DynamoDBOperations dynamoDBOperations;
+    @Mock
+    private DynamoDBQueryExpression<User> queryExpression;
 
-	private QueryExpressionCountQuery<User> underTest;
+    private QueryExpressionCountQuery<User> underTest;
 
-	@Before
-	public void setUp() {
-		underTest = new QueryExpressionCountQuery<>(dynamoDBOperations, User.class, queryExpression);
-	}
+    @Before
+    public void setUp() {
+        underTest = new QueryExpressionCountQuery<>(dynamoDBOperations, User.class, queryExpression);
+    }
 
-	@Test
-	public void testGetSingleResult() {
-		int expected = ThreadLocalRandom.current().nextInt();
-		when(dynamoDBOperations.count(User.class, queryExpression)).thenReturn(expected);
+    @Test
+    public void testGetSingleResult() {
+        int expected = ThreadLocalRandom.current().nextInt();
+        when(dynamoDBOperations.count(User.class, queryExpression)).thenReturn(expected);
 
-		Long actual = underTest.getSingleResult();
+        Long actual = underTest.getSingleResult();
 
-		assertEquals(Long.valueOf(expected), actual);
-	}
+        assertEquals(Long.valueOf(expected), actual);
+    }
 
 }
