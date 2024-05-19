@@ -10,7 +10,7 @@ before_script:
   - pip install codecov-cli
 
 script:
-  - mvn --batch-mode clean verify
+  - mvn --settings .travis.settings.xml --batch-mode clean verify
 
 after_success:
   - codecov
