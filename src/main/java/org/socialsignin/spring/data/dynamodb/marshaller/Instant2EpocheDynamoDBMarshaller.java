@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,36 +23,34 @@ import java.time.Instant;
 
 @SuppressWarnings("deprecation")
 public class Instant2EpocheDynamoDBMarshaller
-		implements
-			DynamoDBTypeConverter<String, Instant>,
-			DynamoDBMarshaller<Instant> {
+        implements DynamoDBTypeConverter<String, Instant>, DynamoDBMarshaller<Instant> {
 
-	@Override
-	public String convert(Instant object) {
-		return marshall(object);
-	}
+    @Override
+    public String convert(Instant object) {
+        return marshall(object);
+    }
 
-	@Override
-	public String marshall(Instant getterReturnResult) {
-		if (getterReturnResult == null) {
-			return null;
-		} else {
-			return Long.toString(getterReturnResult.toEpochMilli());
-		}
-	}
+    @Override
+    public String marshall(Instant getterReturnResult) {
+        if (getterReturnResult == null) {
+            return null;
+        } else {
+            return Long.toString(getterReturnResult.toEpochMilli());
+        }
+    }
 
-	@Override
-	public Instant unconvert(String object) {
-		return unmarshall(Instant.class, object);
-	}
+    @Override
+    public Instant unconvert(String object) {
+        return unmarshall(Instant.class, object);
+    }
 
-	@Override
-	public Instant unmarshall(Class<Instant> clazz, String obj) {
-		if (StringUtils.isEmpty(obj)) {
-			return null;
-		} else {
-			return Instant.ofEpochMilli(Long.parseLong(obj));
-		}
-	}
+    @Override
+    public Instant unmarshall(Class<Instant> clazz, String obj) {
+        if (StringUtils.isEmpty(obj)) {
+            return null;
+        } else {
+            return Instant.ofEpochMilli(Long.parseLong(obj));
+        }
+    }
 
 }

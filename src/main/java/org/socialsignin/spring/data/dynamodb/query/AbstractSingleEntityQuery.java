@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,13 +23,13 @@ import java.util.List;
 
 public abstract class AbstractSingleEntityQuery<T> extends AbstractDynamicQuery<T> implements Query<T> {
 
-	public AbstractSingleEntityQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz) {
-		super(dynamoDBOperations, clazz);
-	}
+    public AbstractSingleEntityQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz) {
+        super(dynamoDBOperations, clazz);
+    }
 
-	@Override
-	public List<T> getResultList() {
-		T result = getSingleResult();
-		return result != null ? Arrays.asList(result) : new ArrayList<>();
-	}
+    @Override
+    public List<T> getResultList() {
+        T result = getSingleResult();
+        return result != null ? Arrays.asList(result) : new ArrayList<>();
+    }
 }

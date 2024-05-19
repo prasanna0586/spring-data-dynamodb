@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,27 +30,29 @@ import java.util.Optional;
 
 public class DynamoDBQueryCreator<T, ID> extends AbstractDynamoDBQueryCreator<T, ID, T> {
 
-	public DynamoDBQueryCreator(PartTree tree, ParameterAccessor parameterAccessor,
-								DynamoDBEntityInformation<T, ID> entityMetadata, Optional<String> projection, Optional<Integer> limit, QueryConstants.ConsistentReadMode consistentReads,
-								Optional<String> filterExpression, ExpressionAttribute[] names, ExpressionAttribute[] values, DynamoDBOperations dynamoDBOperations) {
-		super(tree, parameterAccessor, entityMetadata, projection, limit, consistentReads, filterExpression, names, values, dynamoDBOperations);
-	}
+    public DynamoDBQueryCreator(PartTree tree, ParameterAccessor parameterAccessor,
+            DynamoDBEntityInformation<T, ID> entityMetadata, Optional<String> projection, Optional<Integer> limit,
+            QueryConstants.ConsistentReadMode consistentReads, Optional<String> filterExpression,
+            ExpressionAttribute[] names, ExpressionAttribute[] values, DynamoDBOperations dynamoDBOperations) {
+        super(tree, parameterAccessor, entityMetadata, projection, limit, consistentReads, filterExpression, names,
+                values, dynamoDBOperations);
+    }
 
-	@Override
-	protected Query<T> complete(@Nullable DynamoDBQueryCriteria<T, ID> criteria, Sort sort) {
-		if (criteria == null) {
-			return new StaticQuery<>(null);
-		} else {
-			criteria.withSort(sort);
-			criteria.withProjection(projection);
-			criteria.withLimit(limit);
-			criteria.withConsistentReads(consistentReads);
-			criteria.withFilterExpression(filterExpression);
-			criteria.withExpressionAttributeNames(expressionAttributeNames);
-			criteria.withExpressionAttributeValues(expressionAttributeValues);
-			criteria.withMappedExpressionValues(mappedExpressionValues);
-			return criteria.buildQuery(dynamoDBOperations);
-		}
-	}
+    @Override
+    protected Query<T> complete(@Nullable DynamoDBQueryCriteria<T, ID> criteria, Sort sort) {
+        if (criteria == null) {
+            return new StaticQuery<>(null);
+        } else {
+            criteria.withSort(sort);
+            criteria.withProjection(projection);
+            criteria.withLimit(limit);
+            criteria.withConsistentReads(consistentReads);
+            criteria.withFilterExpression(filterExpression);
+            criteria.withExpressionAttributeNames(expressionAttributeNames);
+            criteria.withExpressionAttributeValues(expressionAttributeValues);
+            criteria.withMappedExpressionValues(mappedExpressionValues);
+            return criteria.buildQuery(dynamoDBOperations);
+        }
+    }
 
 }

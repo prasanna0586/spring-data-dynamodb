@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import java.util.List;
-
 import org.socialsignin.spring.data.dynamodb.repository.EnableScan;
 import org.socialsignin.spring.data.dynamodb.repository.EnableScanCount;
 import org.springframework.data.domain.Page;
@@ -24,18 +22,21 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
-public interface UserPaginationRepository extends PagingAndSortingRepository<User, String>, CrudRepository<User, String> {
+import java.util.List;
 
-	@EnableScan
-	@EnableScanCount
-	Page<User> findAllByName(String name, Pageable pageable);
+public interface UserPaginationRepository
+        extends PagingAndSortingRepository<User, String>, CrudRepository<User, String> {
 
-	@EnableScan
-	List<User> findAllByName(String name);
+    @EnableScan
+    @EnableScanCount
+    Page<User> findAllByName(String name, Pageable pageable);
 
-	@EnableScan
-	List<User> findAll();
+    @EnableScan
+    List<User> findAllByName(String name);
 
-	@EnableScan
-	void deleteAll();
+    @EnableScan
+    List<User> findAll();
+
+    @EnableScan
+    void deleteAll();
 }

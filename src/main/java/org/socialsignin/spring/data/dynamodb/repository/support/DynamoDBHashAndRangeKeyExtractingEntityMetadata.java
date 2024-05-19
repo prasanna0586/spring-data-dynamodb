@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,22 +19,21 @@ import java.util.Set;
 
 /**
  * Obtains basic hash-and-range-key-related metadata about a DynamoDBEntity
- * 
+ *
  * @author Michael Lavelle
  * @author Sebastian Just
  */
 public interface DynamoDBHashAndRangeKeyExtractingEntityMetadata<T, ID>
-		extends
-			DynamoDBHashKeyExtractingEntityMetadata<T> {
+        extends DynamoDBHashKeyExtractingEntityMetadata<T> {
 
-	<H> HashAndRangeKeyExtractor<ID, H> getHashAndRangeKeyExtractor(Class<ID> idClass);
+    <H> HashAndRangeKeyExtractor<ID, H> getHashAndRangeKeyExtractor(Class<ID> idClass);
 
-	String getRangeKeyPropertyName();
+    String getRangeKeyPropertyName();
 
-	Set<String> getIndexRangeKeyPropertyNames();
+    Set<String> getIndexRangeKeyPropertyNames();
 
-	boolean isCompositeHashAndRangeKeyProperty(String propertyName);
+    boolean isCompositeHashAndRangeKeyProperty(String propertyName);
 
-	<H> T getHashKeyPropotypeEntityForHashKey(H hashKey);
+    <H> T getHashKeyPropotypeEntityForHashKey(H hashKey);
 
 }

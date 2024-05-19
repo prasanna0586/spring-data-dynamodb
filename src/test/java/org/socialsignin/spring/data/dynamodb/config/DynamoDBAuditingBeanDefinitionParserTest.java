@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,6 @@
  */
 package org.socialsignin.spring.data.dynamodb.config;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,133 +29,128 @@ import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.BeanNameGenerator;
 import org.springframework.beans.factory.support.RootBeanDefinition;
-import org.springframework.beans.factory.xml.BeanDefinitionParserDelegate;
-import org.springframework.beans.factory.xml.DocumentDefaultsDefinition;
-import org.springframework.beans.factory.xml.NamespaceHandlerResolver;
-import org.springframework.beans.factory.xml.ParserContext;
-import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
-import org.springframework.beans.factory.xml.XmlReaderContext;
+import org.springframework.beans.factory.xml.*;
 import org.springframework.core.io.Resource;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 import static org.socialsignin.spring.data.dynamodb.config.BeanNames.MAPPING_CONTEXT_BEAN_NAME;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DynamoDBAuditingBeanDefinitionParserTest {
 
-	private DynamoDBAuditingBeanDefinitionParser underTest;
-	private Document configXmlDoc;
+    private DynamoDBAuditingBeanDefinitionParser underTest;
+    private Document configXmlDoc;
 
-	private XmlBeanDefinitionReader reader;
-	private XmlReaderContext readerContext;
+    private XmlBeanDefinitionReader reader;
+    private XmlReaderContext readerContext;
 
-	@Mock
-	private BeanDefinitionParserDelegate beanDefinitionParserDelegate;
-	private ParserContext parserContext;
-	@Mock
-	private BeanDefinitionRegistry registry;
+    @Mock
+    private BeanDefinitionParserDelegate beanDefinitionParserDelegate;
+    private ParserContext parserContext;
+    @Mock
+    private BeanDefinitionRegistry registry;
 
-	@Mock
-	private BeanDefinitionBuilder builder;
+    @Mock
+    private BeanDefinitionBuilder builder;
 
-	@Mock
-	private BeanNameGenerator beanNameGenerator;
-	@Mock
-	private Resource resource;
-	@Mock
-	private ProblemReporter problemReporter;
-	@Mock
-	private ReaderEventListener eventListener;
-	@Mock
-	private SourceExtractor sourceExtractor;
-	@Mock
-	private NamespaceHandlerResolver namespaceHandlerResolver;
-	private DocumentDefaultsDefinition documentDefaultsDefinition;
+    @Mock
+    private BeanNameGenerator beanNameGenerator;
+    @Mock
+    private Resource resource;
+    @Mock
+    private ProblemReporter problemReporter;
+    @Mock
+    private ReaderEventListener eventListener;
+    @Mock
+    private SourceExtractor sourceExtractor;
+    @Mock
+    private NamespaceHandlerResolver namespaceHandlerResolver;
+    private DocumentDefaultsDefinition documentDefaultsDefinition;
 
-	@Before
-	public void setUp() throws Exception {
-		underTest = new DynamoDBAuditingBeanDefinitionParser();
+    @Before
+    public void setUp() throws Exception {
+        underTest = new DynamoDBAuditingBeanDefinitionParser();
 
-		DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-		configXmlDoc = documentBuilder.newDocument();
+        DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        configXmlDoc = documentBuilder.newDocument();
 
-		reader = new XmlBeanDefinitionReader(registry);
-		reader.setBeanNameGenerator(beanNameGenerator);
-		documentDefaultsDefinition = new DocumentDefaultsDefinition();
+        reader = new XmlBeanDefinitionReader(registry);
+        reader.setBeanNameGenerator(beanNameGenerator);
+        documentDefaultsDefinition = new DocumentDefaultsDefinition();
 
-		readerContext = new XmlReaderContext(resource, problemReporter, eventListener, sourceExtractor, reader,
-				namespaceHandlerResolver);
-		parserContext = new ParserContext(readerContext, beanDefinitionParserDelegate);
+        readerContext = new XmlReaderContext(resource, problemReporter, eventListener, sourceExtractor, reader,
+                namespaceHandlerResolver);
+        parserContext = new ParserContext(readerContext, beanDefinitionParserDelegate);
 
-		when(beanDefinitionParserDelegate.getDefaults()).thenReturn(documentDefaultsDefinition);
-		when(beanNameGenerator.generateBeanName(any(), eq(registry))).thenReturn("dynamoDBMappingContext");
-	}
+        when(beanDefinitionParserDelegate.getDefaults()).thenReturn(documentDefaultsDefinition);
+        when(beanNameGenerator.generateBeanName(any(), eq(registry))).thenReturn("dynamoDBMappingContext");
+    }
 
-	@Test
-	public void testGetBeanClass() {
-		Element element = null;
-		Class<?> actual = underTest.getBeanClass(element);
+    @Test
+    public void testGetBeanClass() {
+        Element element = null;
+        Class<?> actual = underTest.getBeanClass(element);
 
-		assertEquals(AuditingEventListener.class, actual);
-	}
+        assertEquals(AuditingEventListener.class, actual);
+    }
 
-	@Test
-	public void testShouldGenerateId() {
+    @Test
+    public void testShouldGenerateId() {
 
-		assertTrue(underTest.shouldGenerateId());
-	}
+        assertTrue(underTest.shouldGenerateId());
+    }
 
-	@Test
-	public void testDoParseWithMappingContext() {
+    @Test
+    public void testDoParseWithMappingContext() {
 
-		String mappingContextRef = MAPPING_CONTEXT_BEAN_NAME;
-		Element configElement = configXmlDoc.createElement("config");
-		configElement.setAttribute("mapping-context-ref", mappingContextRef);
+        String mappingContextRef = MAPPING_CONTEXT_BEAN_NAME;
+        Element configElement = configXmlDoc.createElement("config");
+        configElement.setAttribute("mapping-context-ref", mappingContextRef);
 
-		underTest.doParse(configElement, parserContext, builder);
+        underTest.doParse(configElement, parserContext, builder);
 
-		verify(builder).addConstructorArgValue(any());
-	}
+        verify(builder).addConstructorArgValue(any());
+    }
 
-	@Test
-	public void testDoParseWithoutMappingContextAutocreatingBean() {
-		// mappingContextRef not set
-		String mappingContextRef = null;
-		Element configElement = configXmlDoc.createElement("config");
-		configElement.setAttribute("mapping-context-ref", mappingContextRef);
+    @Test
+    public void testDoParseWithoutMappingContextAutocreatingBean() {
+        // mappingContextRef not set
+        String mappingContextRef = null;
+        Element configElement = configXmlDoc.createElement("config");
+        configElement.setAttribute("mapping-context-ref", mappingContextRef);
 
-		// Default bean not yet registered
-		when(registry.containsBeanDefinition(MAPPING_CONTEXT_BEAN_NAME)).thenReturn(false);
+        // Default bean not yet registered
+        when(registry.containsBeanDefinition(MAPPING_CONTEXT_BEAN_NAME)).thenReturn(false);
 
-		underTest.doParse(configElement, parserContext, builder);
+        underTest.doParse(configElement, parserContext, builder);
 
-		verify(registry).registerBeanDefinition(MAPPING_CONTEXT_BEAN_NAME,
-				new RootBeanDefinition(DynamoDBMappingContext.class));
+        verify(registry).registerBeanDefinition(MAPPING_CONTEXT_BEAN_NAME,
+                new RootBeanDefinition(DynamoDBMappingContext.class));
 
-		verify(builder).addConstructorArgValue(any());
-	}
+        verify(builder).addConstructorArgValue(any());
+    }
 
-	@Test
-	public void testDoParseWithoutMappingContextReusingBean() {
-		// mappingContextRef not set
-		String mappingContextRef = null;
-		Element configElement = configXmlDoc.createElement("config");
-		configElement.setAttribute("mapping-context-ref", mappingContextRef);
+    @Test
+    public void testDoParseWithoutMappingContextReusingBean() {
+        // mappingContextRef not set
+        String mappingContextRef = null;
+        Element configElement = configXmlDoc.createElement("config");
+        configElement.setAttribute("mapping-context-ref", mappingContextRef);
 
-		// Default bean not yet registered
-		when(registry.containsBeanDefinition(MAPPING_CONTEXT_BEAN_NAME)).thenReturn(true);
+        // Default bean not yet registered
+        when(registry.containsBeanDefinition(MAPPING_CONTEXT_BEAN_NAME)).thenReturn(true);
 
-		underTest.doParse(configElement, parserContext, builder);
+        underTest.doParse(configElement, parserContext, builder);
 
-		// verify(registry).registerBeanDefinition(eq(MAPPING_CONTEXT_BEAN_NAME),
-		// isA(GenericBeanDefinition.class));
-		verify(builder).addConstructorArgValue(any());
-	}
+        // verify(registry).registerBeanDefinition(eq(MAPPING_CONTEXT_BEAN_NAME),
+        // isA(GenericBeanDefinition.class));
+        verify(builder).addConstructorArgValue(any());
+    }
 }

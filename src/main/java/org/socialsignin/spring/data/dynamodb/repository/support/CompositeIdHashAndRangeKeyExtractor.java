@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,31 +25,31 @@ import java.lang.reflect.Method;
  */
 public class CompositeIdHashAndRangeKeyExtractor<ID, H> implements HashAndRangeKeyExtractor<ID, H> {
 
-	private DynamoDBHashAndRangeKeyMethodExtractor<ID> hashAndRangeKeyMethodExtractor;
+    private DynamoDBHashAndRangeKeyMethodExtractor<ID> hashAndRangeKeyMethodExtractor;
 
-	public CompositeIdHashAndRangeKeyExtractor(Class<ID> idClass) {
-		this.hashAndRangeKeyMethodExtractor = new DynamoDBHashAndRangeKeyMethodExtractorImpl<ID>(idClass);
-	}
+    public CompositeIdHashAndRangeKeyExtractor(Class<ID> idClass) {
+        this.hashAndRangeKeyMethodExtractor = new DynamoDBHashAndRangeKeyMethodExtractorImpl<ID>(idClass);
+    }
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public H getHashKey(ID id) {
-		Method method = hashAndRangeKeyMethodExtractor.getHashKeyMethod();
-		if (method != null) {
-			return (H) ReflectionUtils.invokeMethod(method, id);
-		} else {
-			return (H) ReflectionUtils.getField(hashAndRangeKeyMethodExtractor.getHashKeyField(), id);
-		}
-	}
+    @SuppressWarnings("unchecked")
+    @Override
+    public H getHashKey(ID id) {
+        Method method = hashAndRangeKeyMethodExtractor.getHashKeyMethod();
+        if (method != null) {
+            return (H) ReflectionUtils.invokeMethod(method, id);
+        } else {
+            return (H) ReflectionUtils.getField(hashAndRangeKeyMethodExtractor.getHashKeyField(), id);
+        }
+    }
 
-	@Override
-	public Object getRangeKey(ID id) {
-		Method method = hashAndRangeKeyMethodExtractor.getRangeKeyMethod();
-		if (method != null) {
-			return ReflectionUtils.invokeMethod(method, id);
-		} else {
-			return ReflectionUtils.getField(hashAndRangeKeyMethodExtractor.getRangeKeyField(), id);
-		}
-	}
+    @Override
+    public Object getRangeKey(ID id) {
+        Method method = hashAndRangeKeyMethodExtractor.getRangeKeyMethod();
+        if (method != null) {
+            return ReflectionUtils.invokeMethod(method, id);
+        } else {
+            return ReflectionUtils.getField(hashAndRangeKeyMethodExtractor.getRangeKeyField(), id);
+        }
+    }
 
 }

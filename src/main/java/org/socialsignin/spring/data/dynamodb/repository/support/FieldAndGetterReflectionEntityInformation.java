@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,88 +25,86 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 /**
- * {@link org.springframework.data.repository.core.EntityInformation}
- * implementation that inspects getters for an annotation and invokes this
- * getter's value to retrieve the id.
+ * {@link org.springframework.data.repository.core.EntityInformation} implementation that inspects getters for an
+ * annotation and invokes this getter's value to retrieve the id.
  *
  * @author Michael Lavelle
  * @author Sebastian Just
  */
 public class FieldAndGetterReflectionEntityInformation<T, ID> extends AbstractEntityInformation<T, ID> {
 
-	protected Method method;
-	private Field field;
+    protected Method method;
+    private Field field;
 
-	/**
-	 * Creates a new {@link FieldAndGetterReflectionEntityInformation} inspecting
-	 * the given domain class for a getter carrying the given annotation.
-	 *
-	 * @param domainClass
-	 *            must not be {@literal null}.
-	 * @param annotation
-	 *            must not be {@literal null}.
-	 */
-	public FieldAndGetterReflectionEntityInformation(@NonNull Class<T> domainClass,
-			@NonNull final Class<? extends Annotation> annotation) {
+    /**
+     * Creates a new {@link FieldAndGetterReflectionEntityInformation} inspecting the given domain class for a getter
+     * carrying the given annotation.
+     *
+     * @param domainClass
+     *            must not be {@literal null}.
+     * @param annotation
+     *            must not be {@literal null}.
+     */
+    public FieldAndGetterReflectionEntityInformation(@NonNull Class<T> domainClass,
+            @NonNull final Class<? extends Annotation> annotation) {
 
-		super(domainClass);
-		Assert.notNull(annotation, "annotation must not be null!");
+        super(domainClass);
+        Assert.notNull(annotation, "annotation must not be null!");
 
-		ReflectionUtils.doWithMethods(domainClass, (method) -> {
-			if (method.getAnnotation(annotation) != null) {
-				this.method = method;
-				return;
-			}
-		});
+        ReflectionUtils.doWithMethods(domainClass, (method) -> {
+            if (method.getAnnotation(annotation) != null) {
+                this.method = method;
+                return;
+            }
+        });
 
-		if (method == null) {
-			field = null;
-			ReflectionUtils.doWithFields(domainClass, (field) -> {
-				if (field.getAnnotation(annotation) != null) {
-					this.field = field;
-					return;
-				}
-			});
-		}
+        if (method == null) {
+            field = null;
+            ReflectionUtils.doWithFields(domainClass, (field) -> {
+                if (field.getAnnotation(annotation) != null) {
+                    this.field = field;
+                    return;
+                }
+            });
+        }
 
-		Assert.isTrue(this.method != null || this.field != null,
-				String.format("No field or method annotated with %s found!", annotation.toString()));
-		Assert.isTrue(this.method == null || this.field == null,
-				String.format("Both field and method annotated with %s found!", annotation.toString()));
+        Assert.isTrue(this.method != null || this.field != null,
+                String.format("No field or method annotated with %s found!", annotation.toString()));
+        Assert.isTrue(this.method == null || this.field == null,
+                String.format("Both field and method annotated with %s found!", annotation.toString()));
 
-		if (method != null) {
-			ReflectionUtils.makeAccessible(method);
-		}
-		if (field != null) {
-			ReflectionUtils.makeAccessible(field);
-		}
-	}
+        if (method != null) {
+            ReflectionUtils.makeAccessible(method);
+        }
+        if (field != null) {
+            ReflectionUtils.makeAccessible(field);
+        }
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.springframework.data.repository.core.EntityInformation#getId(java
-	 * .lang.Object)
-	 */
-	@Override
-	@SuppressWarnings("unchecked")
-	public ID getId(T entity) {
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.springframework.data.repository.core.EntityInformation#getId(java .lang.Object)
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public ID getId(T entity) {
 
-		if (method != null) {
-			return entity == null ? null : (ID) ReflectionUtils.invokeMethod(method, entity);
-		} else {
-			return entity == null ? null : (ID) ReflectionUtils.getField(field, entity);
-		}
-	}
+        if (method != null) {
+            return entity == null ? null : (ID) ReflectionUtils.invokeMethod(method, entity);
+        } else {
+            return entity == null ? null : (ID) ReflectionUtils.getField(field, entity);
+        }
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.springframework.data.repository.core.EntityInformation#getIdType()
-	 */
-	@Override
-	@SuppressWarnings("unchecked")
-	public Class<ID> getIdType() {
-		return (Class<ID>) (method != null ? method.getReturnType() : field.getType());
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.springframework.data.repository.core.EntityInformation#getIdType()
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public Class<ID> getIdType() {
+        return (Class<ID>) (method != null ? method.getReturnType() : field.getType());
+    }
 }

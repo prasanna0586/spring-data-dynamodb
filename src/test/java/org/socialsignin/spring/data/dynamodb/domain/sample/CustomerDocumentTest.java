@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,22 +28,22 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @DirtiesContext
-@ContextConfiguration(classes = {DynamoDBLocalResource.class, CustomerDocumentTest.TestAppConfig.class})
-@TestPropertySource(properties = {"spring.data.dynamodb.entity2ddl.auto=create"})
+@ContextConfiguration(classes = { DynamoDBLocalResource.class, CustomerDocumentTest.TestAppConfig.class })
+@TestPropertySource(properties = { "spring.data.dynamodb.entity2ddl.auto=create" })
 public class CustomerDocumentTest {
 
-	@Configuration
-	@EnableDynamoDBRepositories(basePackages = "org.socialsignin.spring.data.dynamodb.domain.sample")
-	public static class TestAppConfig {
-	}
+    @Configuration
+    @EnableDynamoDBRepositories(basePackages = "org.socialsignin.spring.data.dynamodb.domain.sample")
+    public static class TestAppConfig {
+    }
 
-	@Autowired
-	private CustomerDocumentRepository customerDocumentRepository;
+    @Autowired
+    private CustomerDocumentRepository customerDocumentRepository;
 
-	@Test
-	public void runTest() {
+    @Test
+    public void runTest() {
 
-		customerDocumentRepository.findByCustomerDocumentKey("a", "b");
-	}
+        customerDocumentRepository.findByCustomerDocumentKey("a", "b");
+    }
 
 }

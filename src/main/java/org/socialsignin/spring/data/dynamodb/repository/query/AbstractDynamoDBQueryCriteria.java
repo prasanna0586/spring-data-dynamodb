@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,8 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.query;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperFieldModel;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperTableModel;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMarshaller;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverter;
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
-import com.amazonaws.services.dynamodbv2.model.Condition;
-import com.amazonaws.services.dynamodbv2.model.QueryRequest;
-import com.amazonaws.services.dynamodbv2.model.Select;
+import com.amazonaws.services.dynamodbv2.datamodeling.*;
+import com.amazonaws.services.dynamodbv2.model.*;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.socialsignin.spring.data.dynamodb.marshaller.Date2IsoDynamoDBMarshaller;
 import org.socialsignin.spring.data.dynamodb.marshaller.Instant2IsoDynamoDBMarshaller;
@@ -37,24 +29,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.lang.Nullable;
-import org.springframework.util.Assert;
-import org.springframework.util.ClassUtils;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.util.StringUtils;
+import org.springframework.util.*;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
 
 /**
  * @author Michael Lavelle
@@ -62,500 +41,508 @@ import java.util.Optional;
  */
 public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQueryCriteria<T, ID>, SortHandler {
 
-	protected Class<T> clazz;
-	private final DynamoDBEntityInformation<T, ID> entityInformation;
-	private final Map<String, String> attributeNamesByPropertyName;
-	private final DynamoDBMapperTableModel<T> tableModel;
-	private final String hashKeyPropertyName;
+    protected Class<T> clazz;
+    private final DynamoDBEntityInformation<T, ID> entityInformation;
+    private final Map<String, String> attributeNamesByPropertyName;
+    private final DynamoDBMapperTableModel<T> tableModel;
+    private final String hashKeyPropertyName;
 
-	protected MultiValueMap<String, Condition> attributeConditions;
-	protected MultiValueMap<String, Condition> propertyConditions;
+    protected MultiValueMap<String, Condition> attributeConditions;
+    protected MultiValueMap<String, Condition> propertyConditions;
 
-	protected Object hashKeyAttributeValue;
-	protected Object hashKeyPropertyValue;
-	protected String globalSecondaryIndexName;
-	protected Sort sort = Sort.unsorted();
-	protected Optional<String> projection = Optional.empty();
-	protected Optional<Integer> limit = Optional.empty();
-	protected Optional<String> filterExpression = Optional.empty();
-	protected ExpressionAttribute[] expressionAttributeNames;
-	protected ExpressionAttribute[] expressionAttributeValues;
-	protected Map<String, String> mappedExpressionValues;
-	protected QueryConstants.ConsistentReadMode consistentReads = QueryConstants.ConsistentReadMode.DEFAULT;
+    protected Object hashKeyAttributeValue;
+    protected Object hashKeyPropertyValue;
+    protected String globalSecondaryIndexName;
+    protected Sort sort = Sort.unsorted();
+    protected Optional<String> projection = Optional.empty();
+    protected Optional<Integer> limit = Optional.empty();
+    protected Optional<String> filterExpression = Optional.empty();
+    protected ExpressionAttribute[] expressionAttributeNames;
+    protected ExpressionAttribute[] expressionAttributeValues;
+    protected Map<String, String> mappedExpressionValues;
+    protected QueryConstants.ConsistentReadMode consistentReads = QueryConstants.ConsistentReadMode.DEFAULT;
 
-	public abstract boolean isApplicableForLoad();
+    public abstract boolean isApplicableForLoad();
 
-	protected QueryRequest buildQueryRequest(String tableName, String theIndexName, String hashKeyAttributeName,
-			String rangeKeyAttributeName, String rangeKeyPropertyName, List<Condition> hashKeyConditions,
-			List<Condition> rangeKeyConditions) {
+    protected QueryRequest buildQueryRequest(String tableName, String theIndexName, String hashKeyAttributeName,
+            String rangeKeyAttributeName, String rangeKeyPropertyName, List<Condition> hashKeyConditions,
+            List<Condition> rangeKeyConditions) {
 
-		// TODO Set other query request properties based on config
-		QueryRequest queryRequest = new QueryRequest();
-		queryRequest.setTableName(tableName);
-		queryRequest.setIndexName(theIndexName);
+        // TODO Set other query request properties based on config
+        QueryRequest queryRequest = new QueryRequest();
+        queryRequest.setTableName(tableName);
+        queryRequest.setIndexName(theIndexName);
 
-		if (isApplicableForGlobalSecondaryIndex()) {
-			List<String> allowedSortProperties = new ArrayList<>();
+        if (isApplicableForGlobalSecondaryIndex()) {
+            List<String> allowedSortProperties = new ArrayList<>();
 
-			for (Entry<String, List<Condition>> singlePropertyCondition : propertyConditions.entrySet()) {
-				if (entityInformation.getGlobalSecondaryIndexNamesByPropertyName()
-						.containsKey(singlePropertyCondition.getKey())) {
-					allowedSortProperties.add(singlePropertyCondition.getKey());
-				}
-			}
+            for (Entry<String, List<Condition>> singlePropertyCondition : propertyConditions.entrySet()) {
+                if (entityInformation.getGlobalSecondaryIndexNamesByPropertyName()
+                        .containsKey(singlePropertyCondition.getKey())) {
+                    allowedSortProperties.add(singlePropertyCondition.getKey());
+                }
+            }
 
-			HashMap<String, Condition> keyConditions = new HashMap<>();
+            HashMap<String, Condition> keyConditions = new HashMap<>();
 
-			if (hashKeyConditions != null && hashKeyConditions.size() > 0) {
-				for (Condition hashKeyCondition : hashKeyConditions) {
-					keyConditions.put(hashKeyAttributeName, hashKeyCondition);
-					allowedSortProperties.add(hashKeyPropertyName);
-				}
-			}
-			if (rangeKeyConditions != null && rangeKeyConditions.size() > 0) {
-				for (Condition rangeKeyCondition : rangeKeyConditions) {
-					keyConditions.put(rangeKeyAttributeName, rangeKeyCondition);
-					allowedSortProperties.add(rangeKeyPropertyName);
-				}
-			}
+            if (hashKeyConditions != null && hashKeyConditions.size() > 0) {
+                for (Condition hashKeyCondition : hashKeyConditions) {
+                    keyConditions.put(hashKeyAttributeName, hashKeyCondition);
+                    allowedSortProperties.add(hashKeyPropertyName);
+                }
+            }
+            if (rangeKeyConditions != null && rangeKeyConditions.size() > 0) {
+                for (Condition rangeKeyCondition : rangeKeyConditions) {
+                    keyConditions.put(rangeKeyAttributeName, rangeKeyCondition);
+                    allowedSortProperties.add(rangeKeyPropertyName);
+                }
+            }
 
-			for (Entry<String, List<Condition>> singleAttributeConditions : attributeConditions.entrySet()) {
+            for (Entry<String, List<Condition>> singleAttributeConditions : attributeConditions.entrySet()) {
 
-				for (Condition condition : singleAttributeConditions.getValue()) {
-					keyConditions.put(singleAttributeConditions.getKey(), condition);
-				}
-			}
+                for (Condition condition : singleAttributeConditions.getValue()) {
+                    keyConditions.put(singleAttributeConditions.getKey(), condition);
+                }
+            }
 
-			for (Order order : sort) {
-				final String sortProperty = order.getProperty();
-				if (entityInformation.isGlobalIndexRangeKeyProperty(sortProperty)) {
-					allowedSortProperties.add(sortProperty);
-				}
-			}
+            for (Order order : sort) {
+                final String sortProperty = order.getProperty();
+                if (entityInformation.isGlobalIndexRangeKeyProperty(sortProperty)) {
+                    allowedSortProperties.add(sortProperty);
+                }
+            }
 
-			queryRequest.setKeyConditions(keyConditions);
-			// Might be overwritten in the actual Query classes
-			if (projection.isPresent()) {
-				queryRequest.setSelect(Select.SPECIFIC_ATTRIBUTES);
-				queryRequest.setProjectionExpression(projection.get());
-			} else {
-				queryRequest.setSelect(Select.ALL_PROJECTED_ATTRIBUTES);
-			}
+            queryRequest.setKeyConditions(keyConditions);
+            // Might be overwritten in the actual Query classes
+            if (projection.isPresent()) {
+                queryRequest.setSelect(Select.SPECIFIC_ATTRIBUTES);
+                queryRequest.setProjectionExpression(projection.get());
+            } else {
+                queryRequest.setSelect(Select.ALL_PROJECTED_ATTRIBUTES);
+            }
 
-			applySortIfSpecified(queryRequest, new ArrayList<>(new HashSet<>(allowedSortProperties)));
-		}
+            applySortIfSpecified(queryRequest, new ArrayList<>(new HashSet<>(allowedSortProperties)));
+        }
 
-		applyConsistentReads(queryRequest);
+        applyConsistentReads(queryRequest);
 
-		limit.ifPresent(queryRequest::setLimit);
+        limit.ifPresent(queryRequest::setLimit);
 
-		if(filterExpression.isPresent()) {
-			String filter = filterExpression.get();
-			if(!StringUtils.isEmpty(filter)) {
-				queryRequest.setFilterExpression(filter);
-				if (expressionAttributeNames != null && expressionAttributeNames.length > 0) {
-					for (ExpressionAttribute attribute : expressionAttributeNames) {
-						if(!StringUtils.isEmpty(attribute.key()))
-							queryRequest.addExpressionAttributeNamesEntry(attribute.key(), attribute.value());
-					}
-				}
-				if (expressionAttributeValues != null && expressionAttributeValues.length > 0) {
-					for (ExpressionAttribute value : expressionAttributeValues) {
-						if (!StringUtils.isEmpty(value.key())) {
-							if (mappedExpressionValues.containsKey(value.parameterName())) {
-								queryRequest.addExpressionAttributeValuesEntry(value.key(), new AttributeValue(mappedExpressionValues.get(value.parameterName())));
-							} else {
-								queryRequest.addExpressionAttributeValuesEntry(value.key(), new AttributeValue(value.value()));
-							}
-						}
-					}
-				}
-			}
-		}
-		return queryRequest;
-	}
+        if (filterExpression.isPresent()) {
+            String filter = filterExpression.get();
+            if (!StringUtils.isEmpty(filter)) {
+                queryRequest.setFilterExpression(filter);
+                if (expressionAttributeNames != null && expressionAttributeNames.length > 0) {
+                    for (ExpressionAttribute attribute : expressionAttributeNames) {
+                        if (!StringUtils.isEmpty(attribute.key()))
+                            queryRequest.addExpressionAttributeNamesEntry(attribute.key(), attribute.value());
+                    }
+                }
+                if (expressionAttributeValues != null && expressionAttributeValues.length > 0) {
+                    for (ExpressionAttribute value : expressionAttributeValues) {
+                        if (!StringUtils.isEmpty(value.key())) {
+                            if (mappedExpressionValues.containsKey(value.parameterName())) {
+                                queryRequest.addExpressionAttributeValuesEntry(value.key(),
+                                        new AttributeValue(mappedExpressionValues.get(value.parameterName())));
+                            } else {
+                                queryRequest.addExpressionAttributeValuesEntry(value.key(),
+                                        new AttributeValue(value.value()));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return queryRequest;
+    }
 
-	protected void applyConsistentReads(QueryRequest queryRequest) {
-		switch (consistentReads) {
-			case CONSISTENT:
-				queryRequest.setConsistentRead(true);
-				break;
-			case EVENTUAL:
-				queryRequest.setConsistentRead(false);
-				break;
-			default:
-				break;
-		}
-	}
+    protected void applyConsistentReads(QueryRequest queryRequest) {
+        switch (consistentReads) {
+        case CONSISTENT:
+            queryRequest.setConsistentRead(true);
+            break;
+        case EVENTUAL:
+            queryRequest.setConsistentRead(false);
+            break;
+        default:
+            break;
+        }
+    }
 
-	protected void applyConsistentReads(DynamoDBQueryExpression<T> queryExpression) {
-		switch (consistentReads) {
-			case CONSISTENT:
-				queryExpression.setConsistentRead(true);
-				break;
-			case EVENTUAL:
-				queryExpression.setConsistentRead(false);
-				break;
-			default:
-				break;
-		}
-	}
-	protected void applySortIfSpecified(DynamoDBQueryExpression<T> queryExpression,
-			List<String> permittedPropertyNames) {
-		if (permittedPropertyNames.size() > 1) {
-			throw new UnsupportedOperationException("Can only sort by at most a single range or index range key");
+    protected void applyConsistentReads(DynamoDBQueryExpression<T> queryExpression) {
+        switch (consistentReads) {
+        case CONSISTENT:
+            queryExpression.setConsistentRead(true);
+            break;
+        case EVENTUAL:
+            queryExpression.setConsistentRead(false);
+            break;
+        default:
+            break;
+        }
+    }
 
-		}
+    protected void applySortIfSpecified(DynamoDBQueryExpression<T> queryExpression,
+            List<String> permittedPropertyNames) {
+        if (permittedPropertyNames.size() > 1) {
+            throw new UnsupportedOperationException("Can only sort by at most a single range or index range key");
 
-		boolean sortAlreadySet = false;
-		for (Order order : sort) {
-			if (permittedPropertyNames.contains(order.getProperty())) {
-				if (sortAlreadySet) {
-					throw new UnsupportedOperationException("Sorting by multiple attributes not possible");
+        }
 
-				}
-				queryExpression.setScanIndexForward(order.getDirection().equals(Direction.ASC));
-				sortAlreadySet = true;
-			} else {
-				throw new UnsupportedOperationException(
-						"Sorting only possible by " + permittedPropertyNames + " for the criteria specified");
-			}
-		}
-	}
+        boolean sortAlreadySet = false;
+        for (Order order : sort) {
+            if (permittedPropertyNames.contains(order.getProperty())) {
+                if (sortAlreadySet) {
+                    throw new UnsupportedOperationException("Sorting by multiple attributes not possible");
 
-	protected void applySortIfSpecified(QueryRequest queryRequest, List<String> permittedPropertyNames) {
-		if (permittedPropertyNames.size() > 2) {
-			throw new UnsupportedOperationException("Can only sort by at most a single global hash and range key");
-		}
+                }
+                queryExpression.setScanIndexForward(order.getDirection().equals(Direction.ASC));
+                sortAlreadySet = true;
+            } else {
+                throw new UnsupportedOperationException(
+                        "Sorting only possible by " + permittedPropertyNames + " for the criteria specified");
+            }
+        }
+    }
 
-		boolean sortAlreadySet = false;
-		for (Order order : sort) {
-			if (permittedPropertyNames.contains(order.getProperty())) {
-				if (sortAlreadySet) {
-					throw new UnsupportedOperationException("Sorting by multiple attributes not possible");
+    protected void applySortIfSpecified(QueryRequest queryRequest, List<String> permittedPropertyNames) {
+        if (permittedPropertyNames.size() > 2) {
+            throw new UnsupportedOperationException("Can only sort by at most a single global hash and range key");
+        }
 
-				}
-				if (queryRequest.getKeyConditions().size() > 1 && !hasIndexHashKeyEqualCondition()) {
-					throw new UnsupportedOperationException(
-							"Sorting for global index queries with criteria on both hash and range not possible");
+        boolean sortAlreadySet = false;
+        for (Order order : sort) {
+            if (permittedPropertyNames.contains(order.getProperty())) {
+                if (sortAlreadySet) {
+                    throw new UnsupportedOperationException("Sorting by multiple attributes not possible");
 
-				}
-				queryRequest.setScanIndexForward(order.getDirection().equals(Direction.ASC));
-				sortAlreadySet = true;
-			} else {
-				throw new UnsupportedOperationException("Sorting only possible by " + permittedPropertyNames
-						+ " for the criteria specified and not for " + order.getProperty());
-			}
-		}
-	}
+                }
+                if (queryRequest.getKeyConditions().size() > 1 && !hasIndexHashKeyEqualCondition()) {
+                    throw new UnsupportedOperationException(
+                            "Sorting for global index queries with criteria on both hash and range not possible");
 
-	public boolean comparisonOperatorsPermittedForQuery() {
-		List<ComparisonOperator> comparisonOperatorsPermittedForQuery = Arrays.asList(ComparisonOperator.EQ, ComparisonOperator.LE, ComparisonOperator.LT, ComparisonOperator.GE,
-				ComparisonOperator.GT, ComparisonOperator.BEGINS_WITH, ComparisonOperator.BETWEEN);
+                }
+                queryRequest.setScanIndexForward(order.getDirection().equals(Direction.ASC));
+                sortAlreadySet = true;
+            } else {
+                throw new UnsupportedOperationException("Sorting only possible by " + permittedPropertyNames
+                        + " for the criteria specified and not for " + order.getProperty());
+            }
+        }
+    }
 
-		// Can only query on subset of Conditions
-		for (Collection<Condition> conditions : attributeConditions.values()) {
-			for (Condition condition : conditions) {
-				if (!comparisonOperatorsPermittedForQuery
-						.contains(ComparisonOperator.fromValue(condition.getComparisonOperator()))) {
-					return false;
-				}
-			}
-		}
-		return true;
-	}
+    public boolean comparisonOperatorsPermittedForQuery() {
+        List<ComparisonOperator> comparisonOperatorsPermittedForQuery = Arrays.asList(ComparisonOperator.EQ,
+                ComparisonOperator.LE, ComparisonOperator.LT, ComparisonOperator.GE, ComparisonOperator.GT,
+                ComparisonOperator.BEGINS_WITH, ComparisonOperator.BETWEEN);
 
-	protected List<Condition> getHashKeyConditions() {
-		List<Condition> hashKeyConditions = null;
-		if (isApplicableForGlobalSecondaryIndex() && entityInformation.getGlobalSecondaryIndexNamesByPropertyName().containsKey(getHashKeyPropertyName())) {
-			if (getHashKeyAttributeValue() != null) {
-				hashKeyConditions = Collections.singletonList(createSingleValueCondition(getHashKeyPropertyName(), ComparisonOperator.EQ,
-						getHashKeyAttributeValue(), getHashKeyAttributeValue().getClass(), true));
-			}
-			if (hashKeyConditions == null && attributeConditions.containsKey(getHashKeyAttributeName())) {
-				hashKeyConditions = attributeConditions.get(getHashKeyAttributeName());
-			}
+        // Can only query on subset of Conditions
+        for (Collection<Condition> conditions : attributeConditions.values()) {
+            for (Condition condition : conditions) {
+                if (!comparisonOperatorsPermittedForQuery
+                        .contains(ComparisonOperator.fromValue(condition.getComparisonOperator()))) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 
-		}
-		return hashKeyConditions;
-	}
+    protected List<Condition> getHashKeyConditions() {
+        List<Condition> hashKeyConditions = null;
+        if (isApplicableForGlobalSecondaryIndex() && entityInformation.getGlobalSecondaryIndexNamesByPropertyName()
+                .containsKey(getHashKeyPropertyName())) {
+            if (getHashKeyAttributeValue() != null) {
+                hashKeyConditions = Collections
+                        .singletonList(createSingleValueCondition(getHashKeyPropertyName(), ComparisonOperator.EQ,
+                                getHashKeyAttributeValue(), getHashKeyAttributeValue().getClass(), true));
+            }
+            if (hashKeyConditions == null && attributeConditions.containsKey(getHashKeyAttributeName())) {
+                hashKeyConditions = attributeConditions.get(getHashKeyAttributeName());
+            }
 
-	public AbstractDynamoDBQueryCriteria(DynamoDBEntityInformation<T, ID> dynamoDBEntityInformation,
-			final DynamoDBMapperTableModel<T> tableModel) {
-		this.clazz = dynamoDBEntityInformation.getJavaType();
-		this.attributeConditions = new LinkedMultiValueMap<>();
-		this.propertyConditions = new LinkedMultiValueMap<>();
-		this.hashKeyPropertyName = dynamoDBEntityInformation.getHashKeyPropertyName();
-		this.entityInformation = dynamoDBEntityInformation;
-		this.attributeNamesByPropertyName = new HashMap<>();
-		// TODO consider adding the DynamoDBMapper table model to
-		// DynamoDBEntityInformation instead
-		this.tableModel = tableModel;
-	}
+        }
+        return hashKeyConditions;
+    }
 
-	private String getFirstDeclaredIndexNameForAttribute(Map<String, String[]> indexNamesByAttributeName,
-			List<String> indexNamesToCheck, String attributeName) {
-		String indexName = null;
-		String[] declaredOrderedIndexNamesForAttribute = indexNamesByAttributeName.get(attributeName);
-		for (String declaredOrderedIndexNameForAttribute : declaredOrderedIndexNamesForAttribute) {
-			if (indexName == null && indexNamesToCheck.contains(declaredOrderedIndexNameForAttribute)) {
-				indexName = declaredOrderedIndexNameForAttribute;
-			}
-		}
+    public AbstractDynamoDBQueryCriteria(DynamoDBEntityInformation<T, ID> dynamoDBEntityInformation,
+            final DynamoDBMapperTableModel<T> tableModel) {
+        this.clazz = dynamoDBEntityInformation.getJavaType();
+        this.attributeConditions = new LinkedMultiValueMap<>();
+        this.propertyConditions = new LinkedMultiValueMap<>();
+        this.hashKeyPropertyName = dynamoDBEntityInformation.getHashKeyPropertyName();
+        this.entityInformation = dynamoDBEntityInformation;
+        this.attributeNamesByPropertyName = new HashMap<>();
+        // TODO consider adding the DynamoDBMapper table model to
+        // DynamoDBEntityInformation instead
+        this.tableModel = tableModel;
+    }
 
-		return indexName;
-	}
+    private String getFirstDeclaredIndexNameForAttribute(Map<String, String[]> indexNamesByAttributeName,
+            List<String> indexNamesToCheck, String attributeName) {
+        String indexName = null;
+        String[] declaredOrderedIndexNamesForAttribute = indexNamesByAttributeName.get(attributeName);
+        for (String declaredOrderedIndexNameForAttribute : declaredOrderedIndexNamesForAttribute) {
+            if (indexName == null && indexNamesToCheck.contains(declaredOrderedIndexNameForAttribute)) {
+                indexName = declaredOrderedIndexNameForAttribute;
+            }
+        }
 
-	protected String getGlobalSecondaryIndexName() {
+        return indexName;
+    }
 
-		// Lazy evaluate the globalSecondaryIndexName if not already set
+    protected String getGlobalSecondaryIndexName() {
 
-		// We must have attribute conditions specified in order to use a global
-		// secondary index, otherwise return null for index name
-		// Also this method only evaluates the
-		if (globalSecondaryIndexName == null && attributeConditions != null && !attributeConditions.isEmpty()) {
-			// Declare map of index names by attribute name which we will populate below -
-			// this will be used to determine which index to use if multiple indexes are
-			// applicable
-			Map<String, String[]> indexNamesByAttributeName = new HashMap<>();
+        // Lazy evaluate the globalSecondaryIndexName if not already set
 
-			// Declare map of attribute lists by index name which we will populate below -
-			// this will be used to determine whether we have an exact match index for
-			// specified attribute conditions
-			MultiValueMap<String, String> attributeListsByIndexName = new LinkedMultiValueMap<>();
+        // We must have attribute conditions specified in order to use a global
+        // secondary index, otherwise return null for index name
+        // Also this method only evaluates the
+        if (globalSecondaryIndexName == null && attributeConditions != null && !attributeConditions.isEmpty()) {
+            // Declare map of index names by attribute name which we will populate below -
+            // this will be used to determine which index to use if multiple indexes are
+            // applicable
+            Map<String, String[]> indexNamesByAttributeName = new HashMap<>();
 
-			// Populate the above maps
-			for (Entry<String, String[]> indexNamesForPropertyNameEntry : entityInformation
-					.getGlobalSecondaryIndexNamesByPropertyName().entrySet()) {
-				String propertyName = indexNamesForPropertyNameEntry.getKey();
-				String attributeName = getAttributeName(propertyName);
-				indexNamesByAttributeName.put(attributeName, indexNamesForPropertyNameEntry.getValue());
-				for (String indexNameForPropertyName : indexNamesForPropertyNameEntry.getValue()) {
-					attributeListsByIndexName.add(indexNameForPropertyName, attributeName);
-				}
-			}
+            // Declare map of attribute lists by index name which we will populate below -
+            // this will be used to determine whether we have an exact match index for
+            // specified attribute conditions
+            MultiValueMap<String, String> attributeListsByIndexName = new LinkedMultiValueMap<>();
 
-			// Declare lists to store matching index names
-			List<String> exactMatchIndexNames = new ArrayList<>();
-			List<String> partialMatchIndexNames = new ArrayList<>();
+            // Populate the above maps
+            for (Entry<String, String[]> indexNamesForPropertyNameEntry : entityInformation
+                    .getGlobalSecondaryIndexNamesByPropertyName().entrySet()) {
+                String propertyName = indexNamesForPropertyNameEntry.getKey();
+                String attributeName = getAttributeName(propertyName);
+                indexNamesByAttributeName.put(attributeName, indexNamesForPropertyNameEntry.getValue());
+                for (String indexNameForPropertyName : indexNamesForPropertyNameEntry.getValue()) {
+                    attributeListsByIndexName.add(indexNameForPropertyName, attributeName);
+                }
+            }
 
-			// Populate matching index name lists - an index is either an exact match ( the
-			// index attributes match all the specified criteria exactly)
-			// or a partial match ( the properties for the specified criteria are contained
-			// within the property set for an index )
-			for (Entry<String, List<String>> attributeListForIndexNameEntry : attributeListsByIndexName.entrySet()) {
-				String indexNameForAttributeList = attributeListForIndexNameEntry.getKey();
-				List<String> attributeList = attributeListForIndexNameEntry.getValue();
-				if (attributeList.containsAll(attributeConditions.keySet())) {
-					if (attributeConditions.keySet().containsAll(attributeList)) {
-						exactMatchIndexNames.add(indexNameForAttributeList);
-					} else {
-						partialMatchIndexNames.add(indexNameForAttributeList);
-					}
-				}
-			}
+            // Declare lists to store matching index names
+            List<String> exactMatchIndexNames = new ArrayList<>();
+            List<String> partialMatchIndexNames = new ArrayList<>();
 
-			if (exactMatchIndexNames.size() > 1) {
-				throw new RuntimeException(
-						"Multiple indexes defined on same attribute set:" + attributeConditions.keySet());
-			} else if (exactMatchIndexNames.size() == 1) {
-				globalSecondaryIndexName = exactMatchIndexNames.get(0);
-			} else if (partialMatchIndexNames.size() > 1) {
-				if (attributeConditions.size() == 1) {
-					globalSecondaryIndexName = getFirstDeclaredIndexNameForAttribute(indexNamesByAttributeName,
-							partialMatchIndexNames, attributeConditions.keySet().iterator().next());
-				}
-				if (globalSecondaryIndexName == null) {
-					globalSecondaryIndexName = partialMatchIndexNames.get(0);
-				}
-			} else if (partialMatchIndexNames.size() == 1) {
-				globalSecondaryIndexName = partialMatchIndexNames.get(0);
-			}
-		}
-		return globalSecondaryIndexName;
-	}
-	protected boolean isHashKeyProperty(String propertyName) {
-		return hashKeyPropertyName.equals(propertyName);
-	}
+            // Populate matching index name lists - an index is either an exact match ( the
+            // index attributes match all the specified criteria exactly)
+            // or a partial match ( the properties for the specified criteria are contained
+            // within the property set for an index )
+            for (Entry<String, List<String>> attributeListForIndexNameEntry : attributeListsByIndexName.entrySet()) {
+                String indexNameForAttributeList = attributeListForIndexNameEntry.getKey();
+                List<String> attributeList = attributeListForIndexNameEntry.getValue();
+                if (attributeList.containsAll(attributeConditions.keySet())) {
+                    if (attributeConditions.keySet().containsAll(attributeList)) {
+                        exactMatchIndexNames.add(indexNameForAttributeList);
+                    } else {
+                        partialMatchIndexNames.add(indexNameForAttributeList);
+                    }
+                }
+            }
 
-	protected String getHashKeyPropertyName() {
-		return hashKeyPropertyName;
-	}
+            if (exactMatchIndexNames.size() > 1) {
+                throw new RuntimeException(
+                        "Multiple indexes defined on same attribute set:" + attributeConditions.keySet());
+            } else if (exactMatchIndexNames.size() == 1) {
+                globalSecondaryIndexName = exactMatchIndexNames.get(0);
+            } else if (partialMatchIndexNames.size() > 1) {
+                if (attributeConditions.size() == 1) {
+                    globalSecondaryIndexName = getFirstDeclaredIndexNameForAttribute(indexNamesByAttributeName,
+                            partialMatchIndexNames, attributeConditions.keySet().iterator().next());
+                }
+                if (globalSecondaryIndexName == null) {
+                    globalSecondaryIndexName = partialMatchIndexNames.get(0);
+                }
+            } else if (partialMatchIndexNames.size() == 1) {
+                globalSecondaryIndexName = partialMatchIndexNames.get(0);
+            }
+        }
+        return globalSecondaryIndexName;
+    }
 
-	protected String getHashKeyAttributeName() {
-		return getAttributeName(getHashKeyPropertyName());
-	}
+    protected boolean isHashKeyProperty(String propertyName) {
+        return hashKeyPropertyName.equals(propertyName);
+    }
 
-	protected boolean hasIndexHashKeyEqualCondition() {
-		boolean hasIndexHashKeyEqualCondition = false;
-		for (Map.Entry<String, List<Condition>> propertyConditionList : propertyConditions.entrySet()) {
-			if (entityInformation.isGlobalIndexHashKeyProperty(propertyConditionList.getKey())) {
-				for (Condition condition : propertyConditionList.getValue()) {
-					if (condition.getComparisonOperator().equals(ComparisonOperator.EQ.name())) {
-						hasIndexHashKeyEqualCondition = true;
-					}
-				}
-			}
-		}
-		if (hashKeyAttributeValue != null && entityInformation.isGlobalIndexHashKeyProperty(hashKeyPropertyName)) {
-			hasIndexHashKeyEqualCondition = true;
-		}
-		return hasIndexHashKeyEqualCondition;
-	}
+    protected String getHashKeyPropertyName() {
+        return hashKeyPropertyName;
+    }
 
-	protected boolean hasIndexRangeKeyCondition() {
-		boolean hasIndexRangeKeyCondition = false;
-		for (Map.Entry<String, List<Condition>> propertyConditionList : propertyConditions.entrySet()) {
-			if (entityInformation.isGlobalIndexRangeKeyProperty(propertyConditionList.getKey())) {
-				hasIndexRangeKeyCondition = true;
-			}
-		}
-		if (hashKeyAttributeValue != null && entityInformation.isGlobalIndexRangeKeyProperty(hashKeyPropertyName)) {
-			hasIndexRangeKeyCondition = true;
-		}
-		return hasIndexRangeKeyCondition;
-	}
-	protected boolean isApplicableForGlobalSecondaryIndex() {
-		boolean global = this.getGlobalSecondaryIndexName() != null;
-		if (global && getHashKeyAttributeValue() != null && !entityInformation
-				.getGlobalSecondaryIndexNamesByPropertyName().keySet().contains(getHashKeyPropertyName())) {
-			return false;
-		}
+    protected String getHashKeyAttributeName() {
+        return getAttributeName(getHashKeyPropertyName());
+    }
 
-		int attributeConditionCount = attributeConditions.keySet().size();
-		boolean attributeConditionsAppropriate = hasIndexHashKeyEqualCondition()
-				&& (attributeConditionCount == 1 || (attributeConditionCount == 2 && hasIndexRangeKeyCondition()));
-		return global && (attributeConditionCount == 0 || attributeConditionsAppropriate)
-				&& comparisonOperatorsPermittedForQuery();
+    protected boolean hasIndexHashKeyEqualCondition() {
+        boolean hasIndexHashKeyEqualCondition = false;
+        for (Map.Entry<String, List<Condition>> propertyConditionList : propertyConditions.entrySet()) {
+            if (entityInformation.isGlobalIndexHashKeyProperty(propertyConditionList.getKey())) {
+                for (Condition condition : propertyConditionList.getValue()) {
+                    if (condition.getComparisonOperator().equals(ComparisonOperator.EQ.name())) {
+                        hasIndexHashKeyEqualCondition = true;
+                    }
+                }
+            }
+        }
+        if (hashKeyAttributeValue != null && entityInformation.isGlobalIndexHashKeyProperty(hashKeyPropertyName)) {
+            hasIndexHashKeyEqualCondition = true;
+        }
+        return hasIndexHashKeyEqualCondition;
+    }
 
-	}
+    protected boolean hasIndexRangeKeyCondition() {
+        boolean hasIndexRangeKeyCondition = false;
+        for (Map.Entry<String, List<Condition>> propertyConditionList : propertyConditions.entrySet()) {
+            if (entityInformation.isGlobalIndexRangeKeyProperty(propertyConditionList.getKey())) {
+                hasIndexRangeKeyCondition = true;
+            }
+        }
+        if (hashKeyAttributeValue != null && entityInformation.isGlobalIndexRangeKeyProperty(hashKeyPropertyName)) {
+            hasIndexRangeKeyCondition = true;
+        }
+        return hasIndexRangeKeyCondition;
+    }
 
-	public DynamoDBQueryCriteria<T, ID> withHashKeyEquals(Object value) {
-		Assert.notNull(value, "Creating conditions on null hash keys not supported: please specify a value for '"
-				+ getHashKeyPropertyName() + "'");
+    protected boolean isApplicableForGlobalSecondaryIndex() {
+        boolean global = this.getGlobalSecondaryIndexName() != null;
+        if (global && getHashKeyAttributeValue() != null && !entityInformation
+                .getGlobalSecondaryIndexNamesByPropertyName().keySet().contains(getHashKeyPropertyName())) {
+            return false;
+        }
 
-		hashKeyAttributeValue = getPropertyAttributeValue(getHashKeyPropertyName(), value);
-		hashKeyPropertyValue = value;
-		return this;
-	}
+        int attributeConditionCount = attributeConditions.keySet().size();
+        boolean attributeConditionsAppropriate = hasIndexHashKeyEqualCondition()
+                && (attributeConditionCount == 1 || (attributeConditionCount == 2 && hasIndexRangeKeyCondition()));
+        return global && (attributeConditionCount == 0 || attributeConditionsAppropriate)
+                && comparisonOperatorsPermittedForQuery();
 
-	public boolean isHashKeySpecified() {
-		return getHashKeyAttributeValue() != null;
-	}
+    }
 
-	public Object getHashKeyAttributeValue() {
-		return hashKeyAttributeValue;
-	}
+    public DynamoDBQueryCriteria<T, ID> withHashKeyEquals(Object value) {
+        Assert.notNull(value, "Creating conditions on null hash keys not supported: please specify a value for '"
+                + getHashKeyPropertyName() + "'");
 
-	public Object getHashKeyPropertyValue() {
-		return hashKeyPropertyValue;
-	}
+        hashKeyAttributeValue = getPropertyAttributeValue(getHashKeyPropertyName(), value);
+        hashKeyPropertyValue = value;
+        return this;
+    }
 
-	protected String getAttributeName(String propertyName) {
-		String attributeName = attributeNamesByPropertyName.get(propertyName);
-		if (attributeName == null) {
-			attributeName = entityInformation.getOverriddenAttributeName(propertyName).orElse(propertyName);
-			attributeNamesByPropertyName.put(propertyName, attributeName);
-		}
-		return attributeName;
+    public boolean isHashKeySpecified() {
+        return getHashKeyAttributeValue() != null;
+    }
 
-	}
+    public Object getHashKeyAttributeValue() {
+        return hashKeyAttributeValue;
+    }
 
-	@Override
-	public DynamoDBQueryCriteria<T, ID> withPropertyBetween(String propertyName, Object value1, Object value2,
-			Class<?> type) {
-		Condition condition = createCollectionCondition(propertyName, ComparisonOperator.BETWEEN,
-				Arrays.asList(value1, value2), type);
-		return withCondition(propertyName, condition);
-	}
+    public Object getHashKeyPropertyValue() {
+        return hashKeyPropertyValue;
+    }
 
-	@Override
-	public DynamoDBQueryCriteria<T, ID> withPropertyIn(String propertyName, Iterable<?> value, Class<?> propertyType) {
+    protected String getAttributeName(String propertyName) {
+        String attributeName = attributeNamesByPropertyName.get(propertyName);
+        if (attributeName == null) {
+            attributeName = entityInformation.getOverriddenAttributeName(propertyName).orElse(propertyName);
+            attributeNamesByPropertyName.put(propertyName, attributeName);
+        }
+        return attributeName;
 
-		Condition condition = createCollectionCondition(propertyName, ComparisonOperator.IN, value, propertyType);
-		return withCondition(propertyName, condition);
-	}
+    }
 
     @Override
-	public DynamoDBQueryCriteria<T, ID> withSingleValueCriteria(String propertyName,
-			ComparisonOperator comparisonOperator, Object value, Class<?> propertyType) {
-		if (comparisonOperator.equals(ComparisonOperator.EQ)) {
-			return withPropertyEquals(propertyName, value, propertyType);
-		} else {
-			Condition condition = createSingleValueCondition(propertyName, comparisonOperator, value, propertyType,
-					false);
-			return withCondition(propertyName, condition);
-		}
-	}
+    public DynamoDBQueryCriteria<T, ID> withPropertyBetween(String propertyName, Object value1, Object value2,
+            Class<?> type) {
+        Condition condition = createCollectionCondition(propertyName, ComparisonOperator.BETWEEN,
+                Arrays.asList(value1, value2), type);
+        return withCondition(propertyName, condition);
+    }
 
-	@Override
-	public Query<T> buildQuery(DynamoDBOperations dynamoDBOperations) {
-		if (isApplicableForLoad()) {
-			return buildSingleEntityLoadQuery(dynamoDBOperations);
-		} else {
-			return buildFinderQuery(dynamoDBOperations);
-		}
-	}
+    @Override
+    public DynamoDBQueryCriteria<T, ID> withPropertyIn(String propertyName, Iterable<?> value, Class<?> propertyType) {
 
-	@Override
-	public Query<Long> buildCountQuery(DynamoDBOperations dynamoDBOperations, boolean pageQuery) {
-		if (isApplicableForLoad()) {
-			return buildSingleEntityCountQuery(dynamoDBOperations);
-		} else {
-			return buildFinderCountQuery(dynamoDBOperations, pageQuery);
-		}
-	}
+        Condition condition = createCollectionCondition(propertyName, ComparisonOperator.IN, value, propertyType);
+        return withCondition(propertyName, condition);
+    }
 
-	protected abstract Query<T> buildSingleEntityLoadQuery(DynamoDBOperations dynamoDBOperations);
+    @Override
+    public DynamoDBQueryCriteria<T, ID> withSingleValueCriteria(String propertyName,
+            ComparisonOperator comparisonOperator, Object value, Class<?> propertyType) {
+        if (comparisonOperator.equals(ComparisonOperator.EQ)) {
+            return withPropertyEquals(propertyName, value, propertyType);
+        } else {
+            Condition condition = createSingleValueCondition(propertyName, comparisonOperator, value, propertyType,
+                    false);
+            return withCondition(propertyName, condition);
+        }
+    }
 
-	protected abstract Query<Long> buildSingleEntityCountQuery(DynamoDBOperations dynamoDBOperations);
+    @Override
+    public Query<T> buildQuery(DynamoDBOperations dynamoDBOperations) {
+        if (isApplicableForLoad()) {
+            return buildSingleEntityLoadQuery(dynamoDBOperations);
+        } else {
+            return buildFinderQuery(dynamoDBOperations);
+        }
+    }
 
-	protected abstract Query<T> buildFinderQuery(DynamoDBOperations dynamoDBOperations);
+    @Override
+    public Query<Long> buildCountQuery(DynamoDBOperations dynamoDBOperations, boolean pageQuery) {
+        if (isApplicableForLoad()) {
+            return buildSingleEntityCountQuery(dynamoDBOperations);
+        } else {
+            return buildFinderCountQuery(dynamoDBOperations, pageQuery);
+        }
+    }
 
-	protected abstract Query<Long> buildFinderCountQuery(DynamoDBOperations dynamoDBOperations, boolean pageQuery);
+    protected abstract Query<T> buildSingleEntityLoadQuery(DynamoDBOperations dynamoDBOperations);
 
-	protected abstract boolean isOnlyHashKeySpecified();
+    protected abstract Query<Long> buildSingleEntityCountQuery(DynamoDBOperations dynamoDBOperations);
 
-	@Override
-	public DynamoDBQueryCriteria<T, ID> withNoValuedCriteria(String propertyName,
-			ComparisonOperator comparisonOperator) {
-		Condition condition = createNoValueCondition(propertyName, comparisonOperator);
-		return withCondition(propertyName, condition);
+    protected abstract Query<T> buildFinderQuery(DynamoDBOperations dynamoDBOperations);
 
-	}
+    protected abstract Query<Long> buildFinderCountQuery(DynamoDBOperations dynamoDBOperations, boolean pageQuery);
 
-	public DynamoDBQueryCriteria<T, ID> withCondition(String propertyName, Condition condition) {
-		attributeConditions.add(getAttributeName(propertyName), condition);
-		propertyConditions.add(propertyName, condition);
+    protected abstract boolean isOnlyHashKeySpecified();
 
-		return this;
-	}
+    @Override
+    public DynamoDBQueryCriteria<T, ID> withNoValuedCriteria(String propertyName,
+            ComparisonOperator comparisonOperator) {
+        Condition condition = createNoValueCondition(propertyName, comparisonOperator);
+        return withCondition(propertyName, condition);
 
-	@SuppressWarnings({"deprecation", "unchecked"})
-	protected <V extends Object> Object getPropertyAttributeValue(final String propertyName, final V value) {
-		// TODO consider removing DynamoDBMarshaller code altogether as table model will
-		// handle accordingly
-		DynamoDBTypeConverter<Object, V> converter = (DynamoDBTypeConverter<Object, V>) entityInformation
-				.getTypeConverterForProperty(propertyName);
+    }
 
-		if (converter != null) {
-			return converter.convert(value);
-		}
+    public DynamoDBQueryCriteria<T, ID> withCondition(String propertyName, Condition condition) {
+        attributeConditions.add(getAttributeName(propertyName), condition);
+        propertyConditions.add(propertyName, condition);
 
-		DynamoDBMarshaller<V> marshaller = (DynamoDBMarshaller<V>) entityInformation
-				.getMarshallerForProperty(propertyName);
+        return this;
+    }
 
-		if (marshaller != null) {
-			return marshaller.marshall(value);
-		} else if (tableModel != null) { // purely here for testing as DynamoDBMapperTableModel cannot be mocked using
-											// Mockito
+    @SuppressWarnings({ "deprecation", "unchecked" })
+    protected <V extends Object> Object getPropertyAttributeValue(final String propertyName, final V value) {
+        // TODO consider removing DynamoDBMarshaller code altogether as table model will
+        // handle accordingly
+        DynamoDBTypeConverter<Object, V> converter = (DynamoDBTypeConverter<Object, V>) entityInformation
+                .getTypeConverterForProperty(propertyName);
 
-			String attributeName = getAttributeName(propertyName);
+        if (converter != null) {
+            return converter.convert(value);
+        }
 
-			DynamoDBMapperFieldModel<T, Object> fieldModel = tableModel.field(attributeName);
-			if (fieldModel != null) {
+        DynamoDBMarshaller<V> marshaller = (DynamoDBMarshaller<V>) entityInformation
+                .getMarshallerForProperty(propertyName);
+
+        if (marshaller != null) {
+            return marshaller.marshall(value);
+        } else if (tableModel != null) { // purely here for testing as DynamoDBMapperTableModel cannot be mocked using
+                                         // Mockito
+
+            String attributeName = getAttributeName(propertyName);
+
+            DynamoDBMapperFieldModel<T, Object> fieldModel = tableModel.field(attributeName);
+            if (fieldModel != null) {
                 if (fieldModel.attributeType() == DynamoDBMapperFieldModel.DynamoDBAttributeType.SS) {
-                    if(value instanceof Collection) {
+                    if (value instanceof Collection) {
                         return fieldModel.convert(value);
                     } else {
                         return new AttributeValue(value.toString());
@@ -563,239 +550,239 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
                 }
                 return fieldModel.convert(value);
             }
-		}
+        }
 
-		return value;
-	}
+        return value;
+    }
 
-	protected <V> Condition createNoValueCondition(String propertyName, ComparisonOperator comparisonOperator) {
+    protected <V> Condition createNoValueCondition(String propertyName, ComparisonOperator comparisonOperator) {
 
-		Condition condition = new Condition().withComparisonOperator(comparisonOperator);
+        Condition condition = new Condition().withComparisonOperator(comparisonOperator);
 
-		return condition;
-	}
+        return condition;
+    }
 
-	private List<String> getNumberListAsStringList(List<Number> numberList) {
-		List<String> list = new ArrayList<>();
-		for (Number number : numberList) {
-			if (number != null) {
-				list.add(number.toString());
-			} else {
-				list.add(null);
-			}
-		}
-		return list;
-	}
+    private List<String> getNumberListAsStringList(List<Number> numberList) {
+        List<String> list = new ArrayList<>();
+        for (Number number : numberList) {
+            if (number != null) {
+                list.add(number.toString());
+            } else {
+                list.add(null);
+            }
+        }
+        return list;
+    }
 
-	@SuppressWarnings("deprecation")
-	private List<String> getDateListAsStringList(List<Date> dateList) {
-		DynamoDBMarshaller<Date> marshaller = new Date2IsoDynamoDBMarshaller();
-		List<String> list = new ArrayList<String>();
-		for (Date date : dateList) {
-			if (date != null) {
-				list.add(marshaller.marshall(date));
-			} else {
-				list.add(null);
-			}
-		}
-		return list;
-	}
+    @SuppressWarnings("deprecation")
+    private List<String> getDateListAsStringList(List<Date> dateList) {
+        DynamoDBMarshaller<Date> marshaller = new Date2IsoDynamoDBMarshaller();
+        List<String> list = new ArrayList<String>();
+        for (Date date : dateList) {
+            if (date != null) {
+                list.add(marshaller.marshall(date));
+            } else {
+                list.add(null);
+            }
+        }
+        return list;
+    }
 
-	@SuppressWarnings("deprecation")
-	private List<String> getInstantListAsStringList(List<Instant> dateList) {
-		DynamoDBMarshaller<Instant> marshaller = new Instant2IsoDynamoDBMarshaller();
-		List<String> list = new ArrayList<>();
-		for (Instant date : dateList) {
-			if (date != null) {
-				list.add(marshaller.marshall(date));
-			} else {
-				list.add(null);
-			}
-		}
-		return list;
-	}
+    @SuppressWarnings("deprecation")
+    private List<String> getInstantListAsStringList(List<Instant> dateList) {
+        DynamoDBMarshaller<Instant> marshaller = new Instant2IsoDynamoDBMarshaller();
+        List<String> list = new ArrayList<>();
+        for (Instant date : dateList) {
+            if (date != null) {
+                list.add(marshaller.marshall(date));
+            } else {
+                list.add(null);
+            }
+        }
+        return list;
+    }
 
-	private List<String> getBooleanListAsStringList(List<Boolean> booleanList) {
-		List<String> list = new ArrayList<>();
-		for (Boolean booleanValue : booleanList) {
-			if (booleanValue != null) {
-				list.add(booleanValue.booleanValue() ? "1" : "0");
-			} else {
-				list.add(null);
-			}
-		}
-		return list;
-	}
+    private List<String> getBooleanListAsStringList(List<Boolean> booleanList) {
+        List<String> list = new ArrayList<>();
+        for (Boolean booleanValue : booleanList) {
+            if (booleanValue != null) {
+                list.add(booleanValue.booleanValue() ? "1" : "0");
+            } else {
+                list.add(null);
+            }
+        }
+        return list;
+    }
 
-	@SuppressWarnings("unchecked")
-	@Nullable
-	private <P> List<P> getAttributeValueAsList(@Nullable Object attributeValue) {
-		if (attributeValue == null) {
-			return null;
-		}
-		boolean isIterable = ClassUtils.isAssignable(Iterable.class, attributeValue.getClass());
-		if (isIterable) {
-			List<P> attributeValueAsList = new ArrayList<>();
-			Iterable<P> iterable = (Iterable<P>) attributeValue;
-			for (P attributeValueElement : iterable) {
-				attributeValueAsList.add(attributeValueElement);
-			}
-			return attributeValueAsList;
-		}
-		return null;
-	}
+    @SuppressWarnings("unchecked")
+    @Nullable
+    private <P> List<P> getAttributeValueAsList(@Nullable Object attributeValue) {
+        if (attributeValue == null) {
+            return null;
+        }
+        boolean isIterable = ClassUtils.isAssignable(Iterable.class, attributeValue.getClass());
+        if (isIterable) {
+            List<P> attributeValueAsList = new ArrayList<>();
+            Iterable<P> iterable = (Iterable<P>) attributeValue;
+            for (P attributeValueElement : iterable) {
+                attributeValueAsList.add(attributeValueElement);
+            }
+            return attributeValueAsList;
+        }
+        return null;
+    }
 
-	protected <P> List<AttributeValue> addAttributeValue(List<AttributeValue> attributeValueList,
-			@Nullable Object attributeValue, Class<P> propertyType, boolean expandCollectionValues) {
-		AttributeValue attributeValueObject = new AttributeValue();
+    protected <P> List<AttributeValue> addAttributeValue(List<AttributeValue> attributeValueList,
+            @Nullable Object attributeValue, Class<P> propertyType, boolean expandCollectionValues) {
+        AttributeValue attributeValueObject = new AttributeValue();
 
-		if (ClassUtils.isAssignable(String.class, propertyType)) {
-			List<String> attributeValueAsList = getAttributeValueAsList(attributeValue);
-			if (expandCollectionValues && attributeValueAsList != null) {
-				attributeValueObject.withSS(attributeValueAsList);
-			} else {
-				attributeValueObject.withS((String) attributeValue);
-			}
-		} else if (ClassUtils.isAssignable(Number.class, propertyType)) {
+        if (ClassUtils.isAssignable(String.class, propertyType)) {
+            List<String> attributeValueAsList = getAttributeValueAsList(attributeValue);
+            if (expandCollectionValues && attributeValueAsList != null) {
+                attributeValueObject.withSS(attributeValueAsList);
+            } else {
+                attributeValueObject.withS((String) attributeValue);
+            }
+        } else if (ClassUtils.isAssignable(Number.class, propertyType)) {
 
-			List<Number> attributeValueAsList = getAttributeValueAsList(attributeValue);
-			if (expandCollectionValues && attributeValueAsList != null) {
-				List<String> attributeValueAsStringList = getNumberListAsStringList(attributeValueAsList);
-				attributeValueObject.withNS(attributeValueAsStringList);
-			} else {
-				attributeValueObject.withN(attributeValue.toString());
-			}
-		} else if (ClassUtils.isAssignable(Boolean.class, propertyType)) {
-			List<Boolean> attributeValueAsList = getAttributeValueAsList(attributeValue);
-			if (expandCollectionValues && attributeValueAsList != null) {
-				List<String> attributeValueAsStringList = getBooleanListAsStringList(attributeValueAsList);
-				attributeValueObject.withNS(attributeValueAsStringList);
-			} else {
-				boolean boolValue = ((Boolean) attributeValue).booleanValue();
-				attributeValueObject.withN(boolValue ? "1" : "0");
-			}
-		} else if (ClassUtils.isAssignable(Date.class, propertyType)) {
-			List<Date> attributeValueAsList = getAttributeValueAsList(attributeValue);
-			if (expandCollectionValues && attributeValueAsList != null) {
-				List<String> attributeValueAsStringList = getDateListAsStringList(attributeValueAsList);
-				attributeValueObject.withSS(attributeValueAsStringList);
-			} else {
-				Date date = (Date) attributeValue;
-				String marshalledDate = new Date2IsoDynamoDBMarshaller().marshall(date);
-				attributeValueObject.withS(marshalledDate);
-			}
-		} else if (ClassUtils.isAssignable(Instant.class, propertyType)) {
-			List<Instant> attributeValueAsList = getAttributeValueAsList(attributeValue);
-			if (expandCollectionValues && attributeValueAsList != null) {
-				List<String> attributeValueAsStringList = getInstantListAsStringList(attributeValueAsList);
-				attributeValueObject.withSS(attributeValueAsStringList);
-			} else {
-				Instant date = (Instant) attributeValue;
-				String marshalledDate = new Instant2IsoDynamoDBMarshaller().marshall(date);
-				attributeValueObject.withS(marshalledDate);
-			}
-		} else {
-			throw new RuntimeException("Cannot create condition for type:" + attributeValue.getClass()
-					+ " property conditions must be String,Number or Boolean, or have a DynamoDBMarshaller configured");
-		}
-		attributeValueList.add(attributeValueObject);
+            List<Number> attributeValueAsList = getAttributeValueAsList(attributeValue);
+            if (expandCollectionValues && attributeValueAsList != null) {
+                List<String> attributeValueAsStringList = getNumberListAsStringList(attributeValueAsList);
+                attributeValueObject.withNS(attributeValueAsStringList);
+            } else {
+                attributeValueObject.withN(attributeValue.toString());
+            }
+        } else if (ClassUtils.isAssignable(Boolean.class, propertyType)) {
+            List<Boolean> attributeValueAsList = getAttributeValueAsList(attributeValue);
+            if (expandCollectionValues && attributeValueAsList != null) {
+                List<String> attributeValueAsStringList = getBooleanListAsStringList(attributeValueAsList);
+                attributeValueObject.withNS(attributeValueAsStringList);
+            } else {
+                boolean boolValue = ((Boolean) attributeValue).booleanValue();
+                attributeValueObject.withN(boolValue ? "1" : "0");
+            }
+        } else if (ClassUtils.isAssignable(Date.class, propertyType)) {
+            List<Date> attributeValueAsList = getAttributeValueAsList(attributeValue);
+            if (expandCollectionValues && attributeValueAsList != null) {
+                List<String> attributeValueAsStringList = getDateListAsStringList(attributeValueAsList);
+                attributeValueObject.withSS(attributeValueAsStringList);
+            } else {
+                Date date = (Date) attributeValue;
+                String marshalledDate = new Date2IsoDynamoDBMarshaller().marshall(date);
+                attributeValueObject.withS(marshalledDate);
+            }
+        } else if (ClassUtils.isAssignable(Instant.class, propertyType)) {
+            List<Instant> attributeValueAsList = getAttributeValueAsList(attributeValue);
+            if (expandCollectionValues && attributeValueAsList != null) {
+                List<String> attributeValueAsStringList = getInstantListAsStringList(attributeValueAsList);
+                attributeValueObject.withSS(attributeValueAsStringList);
+            } else {
+                Instant date = (Instant) attributeValue;
+                String marshalledDate = new Instant2IsoDynamoDBMarshaller().marshall(date);
+                attributeValueObject.withS(marshalledDate);
+            }
+        } else {
+            throw new RuntimeException("Cannot create condition for type:" + attributeValue.getClass()
+                    + " property conditions must be String,Number or Boolean, or have a DynamoDBMarshaller configured");
+        }
+        attributeValueList.add(attributeValueObject);
 
-		return attributeValueList;
-	}
+        return attributeValueList;
+    }
 
-	protected Condition createSingleValueCondition(String propertyName, ComparisonOperator comparisonOperator, Object o,
-			Class<?> propertyType, boolean alreadyMarshalledIfRequired) {
+    protected Condition createSingleValueCondition(String propertyName, ComparisonOperator comparisonOperator, Object o,
+            Class<?> propertyType, boolean alreadyMarshalledIfRequired) {
 
-		Assert.notNull(o, "Creating conditions on null property values not supported: please specify a value for '"
-				+ propertyName + "'");
+        Assert.notNull(o, "Creating conditions on null property values not supported: please specify a value for '"
+                + propertyName + "'");
 
-		List<AttributeValue> attributeValueList = new ArrayList<>(1);
-		Object attributeValue = !alreadyMarshalledIfRequired ? getPropertyAttributeValue(propertyName, o) : o;
-		if (ClassUtils.isAssignableValue(AttributeValue.class, attributeValue)) {
-			attributeValueList.add((AttributeValue) attributeValue);
-		} else {
-			boolean marshalled = !alreadyMarshalledIfRequired && attributeValue != o
-					&& !entityInformation.isCompositeHashAndRangeKeyProperty(propertyName);
+        List<AttributeValue> attributeValueList = new ArrayList<>(1);
+        Object attributeValue = !alreadyMarshalledIfRequired ? getPropertyAttributeValue(propertyName, o) : o;
+        if (ClassUtils.isAssignableValue(AttributeValue.class, attributeValue)) {
+            attributeValueList.add((AttributeValue) attributeValue);
+        } else {
+            boolean marshalled = !alreadyMarshalledIfRequired && attributeValue != o
+                    && !entityInformation.isCompositeHashAndRangeKeyProperty(propertyName);
 
-			Class<?> targetPropertyType = marshalled ? String.class : propertyType;
-			addAttributeValue(attributeValueList, attributeValue, targetPropertyType, true);
-		}
+            Class<?> targetPropertyType = marshalled ? String.class : propertyType;
+            addAttributeValue(attributeValueList, attributeValue, targetPropertyType, true);
+        }
 
-		return new Condition().withComparisonOperator(comparisonOperator).withAttributeValueList(attributeValueList);
-	}
+        return new Condition().withComparisonOperator(comparisonOperator).withAttributeValueList(attributeValueList);
+    }
 
-	protected Condition createCollectionCondition(String propertyName, ComparisonOperator comparisonOperator,
-			Iterable<?> o, Class<?> propertyType) {
+    protected Condition createCollectionCondition(String propertyName, ComparisonOperator comparisonOperator,
+            Iterable<?> o, Class<?> propertyType) {
 
-		Assert.notNull(o, "Creating conditions on null property values not supported: please specify a value for '"
-				+ propertyName + "'");
-		List<AttributeValue> attributeValueList = new ArrayList<>();
-		boolean marshalled = false;
-		for (Object object : o) {
-			Object attributeValue = getPropertyAttributeValue(propertyName, object);
-			if (ClassUtils.isAssignableValue(AttributeValue.class, attributeValue)) {
-				attributeValueList.add((AttributeValue) attributeValue);
-			} else {
-				if (attributeValue != null) {
-					marshalled = attributeValue != object
-							&& !entityInformation.isCompositeHashAndRangeKeyProperty(propertyName);
-				}
-				Class<?> targetPropertyType = marshalled ? String.class : propertyType;
-				addAttributeValue(attributeValueList, attributeValue, targetPropertyType, false);
-			}
-		}
+        Assert.notNull(o, "Creating conditions on null property values not supported: please specify a value for '"
+                + propertyName + "'");
+        List<AttributeValue> attributeValueList = new ArrayList<>();
+        boolean marshalled = false;
+        for (Object object : o) {
+            Object attributeValue = getPropertyAttributeValue(propertyName, object);
+            if (ClassUtils.isAssignableValue(AttributeValue.class, attributeValue)) {
+                attributeValueList.add((AttributeValue) attributeValue);
+            } else {
+                if (attributeValue != null) {
+                    marshalled = attributeValue != object
+                            && !entityInformation.isCompositeHashAndRangeKeyProperty(propertyName);
+                }
+                Class<?> targetPropertyType = marshalled ? String.class : propertyType;
+                addAttributeValue(attributeValueList, attributeValue, targetPropertyType, false);
+            }
+        }
 
-		return new Condition().withComparisonOperator(comparisonOperator).withAttributeValueList(attributeValueList);
+        return new Condition().withComparisonOperator(comparisonOperator).withAttributeValueList(attributeValueList);
 
-	}
+    }
 
-	@Override
-	public DynamoDBQueryCriteria<T, ID> withSort(Sort sort) {
-		this.sort = sort;
-		return this;
-	}
+    @Override
+    public DynamoDBQueryCriteria<T, ID> withSort(Sort sort) {
+        this.sort = sort;
+        return this;
+    }
 
-	@Override
-	public DynamoDBQueryCriteria<T, ID> withProjection(Optional<String> projection) {
-		this.projection = projection;
-		return this;
-	}
+    @Override
+    public DynamoDBQueryCriteria<T, ID> withProjection(Optional<String> projection) {
+        this.projection = projection;
+        return this;
+    }
 
-	@Override
-	public DynamoDBQueryCriteria<T, ID> withLimit(Optional<Integer> limit) {
-		this.limit = limit;
-		return this;
-	}
+    @Override
+    public DynamoDBQueryCriteria<T, ID> withLimit(Optional<Integer> limit) {
+        this.limit = limit;
+        return this;
+    }
 
-	@Override
-	public DynamoDBQueryCriteria<T, ID> withFilterExpression(Optional<String> filter) {
-		this.filterExpression = filter;
-		return this;
-	}
+    @Override
+    public DynamoDBQueryCriteria<T, ID> withFilterExpression(Optional<String> filter) {
+        this.filterExpression = filter;
+        return this;
+    }
 
-	@Override
-	public DynamoDBQueryCriteria<T, ID> withExpressionAttributeNames(ExpressionAttribute[] names) {
-		if(names != null)
-			this.expressionAttributeNames = names.clone();
-		return this;
-	}
+    @Override
+    public DynamoDBQueryCriteria<T, ID> withExpressionAttributeNames(ExpressionAttribute[] names) {
+        if (names != null)
+            this.expressionAttributeNames = names.clone();
+        return this;
+    }
 
-	@Override
-	public DynamoDBQueryCriteria<T, ID> withExpressionAttributeValues(ExpressionAttribute[] values) {
-		if(values != null)
-			this.expressionAttributeValues = values.clone();
-		return this;
-	}
+    @Override
+    public DynamoDBQueryCriteria<T, ID> withExpressionAttributeValues(ExpressionAttribute[] values) {
+        if (values != null)
+            this.expressionAttributeValues = values.clone();
+        return this;
+    }
 
-	@Override
-	public DynamoDBQueryCriteria<T, ID> withConsistentReads(QueryConstants.ConsistentReadMode consistentReads) {
-		this.consistentReads = consistentReads;
-		return this;
-	}
+    @Override
+    public DynamoDBQueryCriteria<T, ID> withConsistentReads(QueryConstants.ConsistentReadMode consistentReads) {
+        this.consistentReads = consistentReads;
+        return this;
+    }
 
-	@Override
-	public DynamoDBQueryCriteria<T, ID> withMappedExpressionValues(Map<String, String> map) {
-		this.mappedExpressionValues = map;
-		return this;
-	}
+    @Override
+    public DynamoDBQueryCriteria<T, ID> withMappedExpressionValues(Map<String, String> map) {
+        this.mappedExpressionValues = map;
+        return this;
+    }
 }

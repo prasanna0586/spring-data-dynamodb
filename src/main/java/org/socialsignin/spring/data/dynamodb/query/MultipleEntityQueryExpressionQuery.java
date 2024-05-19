@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,17 +26,17 @@ import java.util.List;
  */
 public class MultipleEntityQueryExpressionQuery<T> extends AbstractMultipleEntityQuery<T> {
 
-	private DynamoDBQueryExpression<T> queryExpression;
+    private DynamoDBQueryExpression<T> queryExpression;
 
-	public MultipleEntityQueryExpressionQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz,
-			DynamoDBQueryExpression<T> queryExpression) {
-		super(dynamoDBOperations, clazz);
-		this.queryExpression = queryExpression;
-	}
+    public MultipleEntityQueryExpressionQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz,
+            DynamoDBQueryExpression<T> queryExpression) {
+        super(dynamoDBOperations, clazz);
+        this.queryExpression = queryExpression;
+    }
 
-	@Override
-	public List<T> getResultList() {
-		return dynamoDBOperations.query(clazz, queryExpression);
-	}
+    @Override
+    public List<T> getResultList() {
+        return dynamoDBOperations.query(clazz, queryExpression);
+    }
 
 }

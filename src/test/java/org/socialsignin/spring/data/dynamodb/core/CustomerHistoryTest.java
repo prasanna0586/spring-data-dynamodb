@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,33 +34,33 @@ import static org.junit.Assert.assertNotNull;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @DirtiesContext(methodMode = MethodMode.BEFORE_METHOD)
-@ContextConfiguration(classes = {CustomerHistoryTest.TestAppConfig.class, DynamoDBLocalResource.class})
-@TestPropertySource(properties = {"spring.data.dynamodb.entity2ddl.auto=create"})
+@ContextConfiguration(classes = { CustomerHistoryTest.TestAppConfig.class, DynamoDBLocalResource.class })
+@TestPropertySource(properties = { "spring.data.dynamodb.entity2ddl.auto=create" })
 public class CustomerHistoryTest {
 
-	@Configuration
-	@EnableDynamoDBRepositories(basePackages = "org.socialsignin.spring.data.dynamodb.domain.sample")
-	public static class TestAppConfig {
-	}
+    @Configuration
+    @EnableDynamoDBRepositories(basePackages = "org.socialsignin.spring.data.dynamodb.domain.sample")
+    public static class TestAppConfig {
+    }
 
-	@Autowired
-	CustomerHistoryRepository customerHistoryRepository;
+    @Autowired
+    CustomerHistoryRepository customerHistoryRepository;
 
-	@Test
-	public void saveAndGSITest() {
+    @Test
+    public void saveAndGSITest() {
 
-		CustomerHistory expected = new CustomerHistory();
-		expected.setId("customerId");
-		expected.setCreateDt("createDTt");
-		expected.setTag("2342");
+        CustomerHistory expected = new CustomerHistory();
+        expected.setId("customerId");
+        expected.setCreateDt("createDTt");
+        expected.setTag("2342");
 
-		customerHistoryRepository.save(expected);
+        customerHistoryRepository.save(expected);
 
-		CustomerHistory actual = customerHistoryRepository.findByTag(expected.getTag());
+        CustomerHistory actual = customerHistoryRepository.findByTag(expected.getTag());
 
-		assertNotNull(actual);
-		assertEquals(expected.getId(), actual.getId());
-		assertEquals(expected.getCreateDt(), actual.getCreateDt());
-		assertEquals(expected.getTag(), actual.getTag());
-	}
+        assertNotNull(actual);
+        assertEquals(expected.getId(), actual.getId());
+        assertEquals(expected.getCreateDt(), actual.getCreateDt());
+        assertEquals(expected.getTag(), actual.getTag());
+    }
 }

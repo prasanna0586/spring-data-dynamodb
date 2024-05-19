@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,21 +20,21 @@ import java.util.List;
 
 public class StaticQuery<T> extends AbstractQuery<T> {
 
-	private final T result;
-	private final List<T> resultList;
+    private final T result;
+    private final List<T> resultList;
 
-	public StaticQuery(T result) {
-		this.result = result;
-		this.resultList = Collections.singletonList(result);
-	}
+    public StaticQuery(T result) {
+        this.result = result;
+        this.resultList = Collections.singletonList(result);
+    }
 
-	@Override
-	public List<T> getResultList() {
-		return resultList;
-	}
+    @Override
+    public List<T> getResultList() {
+        return resultList;
+    }
 
-	@Override
-	public T getSingleResult() {
-		return result;
-	}
+    @Override
+    public T getSingleResult() {
+        return result;
+    }
 }

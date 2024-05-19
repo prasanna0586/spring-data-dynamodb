@@ -1,5 +1,5 @@
 /**
- * Copyright © 2018 spring-data-dynamodb (https://github.com/boostchicken/spring-data-dynamodb)
+ * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,88 +40,86 @@ import java.util.Set;
 @Configuration
 public abstract class AbstractDynamoDBConfiguration {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDynamoDBConfiguration.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDynamoDBConfiguration.class);
 
-	public abstract AmazonDynamoDB amazonDynamoDB();
+    public abstract AmazonDynamoDB amazonDynamoDB();
 
-	public abstract AWSCredentials amazonAWSCredentials();
+    public abstract AWSCredentials amazonAWSCredentials();
 
-	/**
-	 * Return the base packages to scan for mapped {@link DynamoDBTable}s. Will
-	 * return the package name of the configuration class' (the concrete class, not
-	 * this one here) by default. So if you have a {@code com.acme.AppConfig}
-	 * extending {@link AbstractDynamoDBConfiguration} the base package will be
-	 * considered {@code com.acme} unless the method is overriden to implement
-	 * alternate behaviour.
-	 *
-	 * @return the base package to scan for mapped {@link DynamoDBTable} classes or
-	 *         {@literal null} to not enable scanning for entities.
-	 */
-	protected String[] getMappingBasePackages() {
+    /**
+     * Return the base packages to scan for mapped {@link DynamoDBTable}s. Will return the package name of the
+     * configuration class' (the concrete class, not this one here) by default. So if you have a
+     * {@code com.acme.AppConfig} extending {@link AbstractDynamoDBConfiguration} the base package will be considered
+     * {@code com.acme} unless the method is overriden to implement alternate behaviour.
+     *
+     * @return the base package to scan for mapped {@link DynamoDBTable} classes or {@literal null} to not enable
+     *         scanning for entities.
+     */
+    protected String[] getMappingBasePackages() {
 
-		Package mappingBasePackage = getClass().getPackage();
-		String basePackage = mappingBasePackage == null ? null : mappingBasePackage.getName();
+        Package mappingBasePackage = getClass().getPackage();
+        String basePackage = mappingBasePackage == null ? null : mappingBasePackage.getName();
 
-		return new String[]{basePackage};
-	}
+        return new String[] { basePackage };
+    }
 
-	/**
-	 * Creates a {@link DynamoDBMappingContext} equipped with entity classes scanned
-	 * from the mapping base package.
-	 *
-	 * @see #getMappingBasePackages()
-	 * @return A newly created {@link DynamoDBMappingContext}
-	 * @throws ClassNotFoundException
-	 *             if the class with {@link DynamoDBTable} annotation can't be
-	 *             loaded
-	 */
-	@Bean
-	public DynamoDBMappingContext dynamoDBMappingContext() throws ClassNotFoundException {
+    /**
+     * Creates a {@link DynamoDBMappingContext} equipped with entity classes scanned from the mapping base package.
+     *
+     * @see #getMappingBasePackages()
+     *
+     * @return A newly created {@link DynamoDBMappingContext}
+     *
+     * @throws ClassNotFoundException
+     *             if the class with {@link DynamoDBTable} annotation can't be loaded
+     */
+    @Bean
+    public DynamoDBMappingContext dynamoDBMappingContext() throws ClassNotFoundException {
 
-		DynamoDBMappingContext mappingContext = new DynamoDBMappingContext();
-		mappingContext.setInitialEntitySet(getInitialEntitySet());
+        DynamoDBMappingContext mappingContext = new DynamoDBMappingContext();
+        mappingContext.setInitialEntitySet(getInitialEntitySet());
 
-		return mappingContext;
-	}
+        return mappingContext;
+    }
 
-	/**
-	 * Scans the mapping base package for classes annotated with
-	 * {@link DynamoDBTable}.
-	 *
-	 * @see #getMappingBasePackages()
-	 * @return All classes with {@link DynamoDBTable} annotation
-	 * @throws ClassNotFoundException
-	 *             if the class with {@link DynamoDBTable} annotation can't be
-	 *             loaded
-	 */
-	protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+    /**
+     * Scans the mapping base package for classes annotated with {@link DynamoDBTable}.
+     *
+     * @see #getMappingBasePackages()
+     *
+     * @return All classes with {@link DynamoDBTable} annotation
+     *
+     * @throws ClassNotFoundException
+     *             if the class with {@link DynamoDBTable} annotation can't be loaded
+     */
+    protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
 
-		Set<Class<?>> initialEntitySet = new HashSet<>();
+        Set<Class<?>> initialEntitySet = new HashSet<>();
 
-		String[] basePackages = getMappingBasePackages();
+        String[] basePackages = getMappingBasePackages();
 
-		for (String basePackage : basePackages) {
-			LOGGER.trace("getInitialEntitySet. basePackage: {}", basePackage);
+        for (String basePackage : basePackages) {
+            LOGGER.trace("getInitialEntitySet. basePackage: {}", basePackage);
 
-			if (StringUtils.hasText(basePackage)) {
-				ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(
-						false);
-				componentProvider.addIncludeFilter(new AnnotationTypeFilter(DynamoDBTable.class));
+            if (StringUtils.hasText(basePackage)) {
+                ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(
+                        false);
+                componentProvider.addIncludeFilter(new AnnotationTypeFilter(DynamoDBTable.class));
 
-				for (BeanDefinition candidate : componentProvider.findCandidateComponents(basePackage)) {
-					String candidateClass = candidate.getBeanClassName();
-					if (candidateClass != null) {
-						LOGGER.trace("getInitialEntitySet. candidate: {}", candidateClass);
-						initialEntitySet.add(ClassUtils.forName(candidateClass,
-								AbstractDynamoDBConfiguration.class.getClassLoader()));
-					} else {
-						LOGGER.warn("getInitialEntitySet. candidate: {} did not provide a class", candidate);
-					}
-				}
-			}
-		}
+                for (BeanDefinition candidate : componentProvider.findCandidateComponents(basePackage)) {
+                    String candidateClass = candidate.getBeanClassName();
+                    if (candidateClass != null) {
+                        LOGGER.trace("getInitialEntitySet. candidate: {}", candidateClass);
+                        initialEntitySet.add(ClassUtils.forName(candidateClass,
+                                AbstractDynamoDBConfiguration.class.getClassLoader()));
+                    } else {
+                        LOGGER.warn("getInitialEntitySet. candidate: {} did not provide a class", candidate);
+                    }
+                }
+            }
+        }
 
-		return initialEntitySet;
-	}
+        return initialEntitySet;
+    }
 
 }
