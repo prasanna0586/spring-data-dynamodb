@@ -635,7 +635,7 @@
             <url>https://github.com/prasanna0586/spring-data-dynamodb</url>
         </site>
         <snapshotRepository>
-            <id>local</id>
+            <id>local-snapshot-repository</id>
             <url>file://${user.home}/.m2/repository</url>
         </snapshotRepository>
     </distributionManagement>
