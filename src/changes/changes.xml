@@ -23,7 +23,12 @@
     <author>prasanna0586</author>
   </properties>
   <body>
-    <release version="6.0.0" description="Spring Boot 3 and Java 17 upgrades">
+    <release version="6.0.2" description="Built the JAR with JDK 17">
+      <action dev="prasanna0586" type="update" date="2024-05-18">
+        Built the JAR with JDK 17 instead of 21 to reflect the same in Manifest.MF
+      </action>
+    </release>
+    <release version="6.0.1" description="Spring Boot 3 and Java 17 upgrades">
       <action dev="prasanna0586" type="update" date="2024-05-18">
         Forked the project https://github.com/boostchicken/spring-data-dynamodb and upgraded it to support
         spring boot 3.2.5 and Java 17
