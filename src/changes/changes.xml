@@ -23,6 +23,12 @@
     <author>prasanna0586</author>
   </properties>
   <body>
+    <release version="6.0.3" description="Fix again - Built the JAR with JDK 17">
+      <action dev="prasanna0586" type="update" date="2024-05-18">
+        6.0.2 didn't fix the issue. So doing it again - Built the JAR with JDK 17 instead of 21 to reflect the
+        same in Manifest.MF
+      </action>
+    </release>
     <release version="6.0.2" description="Built the JAR with JDK 17">
       <action dev="prasanna0586" type="update" date="2024-05-18">
         Built the JAR with JDK 17 instead of 21 to reflect the same in Manifest.MF

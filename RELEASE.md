@@ -22,7 +22,7 @@ mvn license:format
 Then execute
 
 ```
-  $ mvn release:prepare && mvn release:perform
+  $ mvn --batch-mode release:prepare && mvn release:perform
 ```
 
 which will tag, build, test and upload the artifacts to Sonatype's OSS staging area & closes the staging repository.
