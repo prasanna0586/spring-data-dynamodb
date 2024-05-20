@@ -285,6 +285,7 @@
                 <configuration>
                     <publishingServerId>central</publishingServerId>
                     <tokenAuth>true</tokenAuth>
+                    <autoPublish>true</autoPublish>
                 </configuration>
             </plugin>
             <plugin>
@@ -296,17 +297,10 @@
                     <autoVersionSubmodules>true</autoVersionSubmodules>
                     <useReleaseProfile>false</useReleaseProfile>
                     <releaseProfiles>release</releaseProfiles>
-                    <goals>deploy site-deploy</goals>
+                    <goals>deploy</goals>
                     <pushChanges>true</pushChanges>
                     <localCheckout>true</localCheckout>
                 </configuration>
-                <!--<dependencies>
-                    <dependency>
-                        <groupId>commons-io</groupId>
-                        <artifactId>commons-io</artifactId>
-                        <version>2.11.0</version>
-                    </dependency>
-                </dependencies>-->
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -402,7 +396,7 @@
         <url>https://github.com/prasanna0586/spring-data-dynamodb</url>
         <connection>scm:git:git://github.com/prasanna0586/spring-data-dynamodb.git</connection>
         <developerConnection>scm:git:git@github.com:prasanna0586/spring-data-dynamodb.git</developerConnection>
-      <tag>HEAD</tag>
+        <tag>HEAD</tag>
   </scm>
 
     <profiles>
@@ -524,40 +518,6 @@
                             </execution>
                         </executions>
                     </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-site-plugin</artifactId>
-                        <version>3.12.1</version>
-                        <configuration>
-                            <!-- Deactivate as Github plugin controls the upload -->
-                            <skipDeploy>true</skipDeploy>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <!-- Deploy the web site -->
-                        <groupId>com.github.github</groupId>
-                        <artifactId>site-maven-plugin</artifactId>
-                        <version>0.12</version>
-                        <executions>
-                            <execution>
-                                <goals>
-                                    <goal>site</goal>
-                                </goals>
-                                <!-- select the Maven phase in which the plugin will be executed -->
-                                <phase>site-deploy</phase>
-                                <configuration>
-                                    <!-- Plugin configuration ges here -->
-                                    <server>github</server>
-                                    <!-- The commit message -->
-                                    <message>Building site</message>
-                                    <!-- The location where the site is uploaded -->
-                                    <path>${site.path}</path>
-                                    <!-- Use merge or override the content -->
-                                    <merge>true</merge>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
                 </plugins>
             </build>
         </profile>
@@ -636,14 +596,6 @@
             <url>https://github.com/ryonday</url>
         </contributor>
     </contributors>
-
-
-    <distributionManagement>
-        <site>
-            <id>website</id>
-            <url>https://github.com/prasanna0586/spring-data-dynamodb</url>
-        </site>
-    </distributionManagement>
 
     <issueManagement>
         <system>GitHub</system>
@@ -729,12 +681,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-report-plugin</artifactId>
-                <!--<version>2.22.2</version>-->
-                <configuration>
-                </configuration>
             </plugin>
         </plugins>
     </reporting>
-
-
 </project>

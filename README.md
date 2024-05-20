@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.org/boostchicken/spring-data-dynamodb.svg?branch=master)](https://travis-ci.org/prasanna0586/spring-data-dynamodb) 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.boostchicken/spring-data-dynamodb/badge.svg)](https://search.maven.org/search?q=g:io.github.prasanna0586)
+[![Build Status](https://travis-ci.org/prasanna0586/spring-data-dynamodb.svg?branch=develop)](https://travis-ci.org/prasanna0586/spring-data-dynamodb) 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.prasanna0586/spring-data-dynamodb/badge.svg)](https://search.maven.org/search?q=g:io.github.prasanna0586)
 
 # Spring  Data DynamoDB #
 
@@ -27,13 +27,13 @@ please see [spring-data-dynamodb-examples](https://github.com/derjust/spring-dat
 
 ## Quick Start ##
 
-Download the JAR though [Maven Central](https://mvnrepository.com/artifact/com.prasanna.spring.data/spring-data-dynamodb)
+Download the JAR though [Maven Central](https://mvnrepository.com/artifact/io.github.prasanna0586/spring-data-dynamodb)
 
 ```xml
 <dependency>
-  <groupId>com.prasanna.spring.data</groupId>
+  <groupId>io.github.prasanna0586</groupId>
   <artifactId>spring-data-dynamodb</artifactId>
-  <version>6.0.0</version>
+  <version>6.0.2</version>
 </dependency>
 ```
 
