@@ -33,7 +33,7 @@ Download the JAR though [Maven Central](https://mvnrepository.com/artifact/io.gi
 <dependency>
   <groupId>io.github.prasanna0586</groupId>
   <artifactId>spring-data-dynamodb</artifactId>
-  <version>6.0.2</version>
+  <version>6.0.3</version>
 </dependency>
 ```
 
