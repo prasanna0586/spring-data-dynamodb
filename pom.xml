@@ -21,7 +21,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.5</version>
+        <version>3.5.6</version>
         <relativePath /> <!-- lookup parent from repository -->
     </parent>
     <groupId>io.github.prasanna0586</groupId>
@@ -44,15 +44,15 @@
     </licenses>
 
     <properties>
-        <aws-java-sdk.version>1.12.583</aws-java-sdk.version>
-        <cdi.version>4.0.1</cdi.version>
+        <aws-java-sdk.version>1.12.791</aws-java-sdk.version>
+        <cdi.version>4.1.0</cdi.version>
         <sqlite4java.version>1.0.392</sqlite4java.version>
-        <slf4j-test.version>3.0.1</slf4j-test.version>
+        <slf4j-test.version>3.0.3</slf4j-test.version>
         <findbugs.version>3.0.5</findbugs.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
     </properties>
 
     <dependencyManagement>
@@ -194,7 +194,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.12</version>
+                <version>0.8.13</version>
                 <executions>
                     <execution>
                         <goals>
@@ -240,7 +240,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>3.3.1</version>
+                <version>3.6.0</version>
                 <executions>
                     <execution>
                         <id>verify-style</id>
@@ -258,7 +258,7 @@
             <plugin>
                 <groupId>com.github.spotbugs</groupId>
                 <artifactId>spotbugs-maven-plugin</artifactId>
-                <version>4.8.5.0</version>
+                <version>4.9.6.0</version>
                 <configuration>
                     <!-- TODO: activate again -->
                     <skip>true</skip>
@@ -280,18 +280,18 @@
             <plugin>
                 <groupId>org.sonatype.central</groupId>
                 <artifactId>central-publishing-maven-plugin</artifactId>
-                <version>0.4.0</version>
+                <version>0.9.0</version>
                 <extensions>true</extensions>
                 <configuration>
                     <publishingServerId>central</publishingServerId>
-                    <tokenAuth>true</tokenAuth>
+                    <!--<tokenAuth>true</tokenAuth>-->
                     <autoPublish>true</autoPublish>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
-                <version>3.0.1</version>
+                <version>3.1.1</version>
                 <configuration>
                     <tagNameFormat>v@{project.version}</tagNameFormat>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
@@ -384,7 +384,7 @@
             <plugin>
                 <groupId>net.revelc.code.formatter</groupId>
                 <artifactId>formatter-maven-plugin</artifactId>
-                <version>2.23.0</version>
+                <version>2.29.0</version>
                 <configuration>
                     <lineEnding>LF</lineEnding>
                 </configuration>
@@ -494,7 +494,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.6.3</version>
+                        <version>3.12.0</version>
                         <executions>
                             <execution>
                                 <id>attach-javadocs</id>
@@ -507,7 +507,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.6</version>
+                        <version>3.2.8</version>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
@@ -531,69 +531,11 @@
             <url>https://www.github.com/prasanna0586</url>
             <timezone>America/Los_Angeles</timezone>
         </developer>
-        <developer>
-            <id>boostchicken</id>
-            <name>John Dorman</name>
-            <email>dorman@ataxia.cloud</email>
-            <url>https://www.github.com/boostchicken</url>
-            <timezone>America/Los_Angeles</timezone>
-        </developer>
-        <developer>
-            <id>michaellavelle</id>
-            <name>Michael Lavelle</name>
-            <timezone>0</timezone>
-        </developer>
-        <developer>
-            <id>derjust</id>
-            <name>Sebastian J</name>
-            <email>zeeman@zeeman.de</email>
-            <timezone>America/New_York</timezone>
-        </developer>
     </developers>
     <contributors>
         <contributor>
-            <name>Gaurav Rawat</name>
-            <url>https://github.com/gauravbrills</url>
-        </contributor>
-        <contributor>
-            <name>Michael Wyraz</name>
-            <url>https://github.com/micw</url>
-        </contributor>
-        <contributor>
-            <name>Vito Limandibhrata</name>
-            <url>https://github.com/vitolimandibhrata</url>
-        </contributor>
-        <contributor>
-            <name>Alex Arana</name>
-            <url>https://github.com/alexarana</url>
-        </contributor>
-        <contributor>
-            <name>Davin</name>
-            <url>https://github.com/Davinpidoto</url>
-        </contributor>
-        <contributor>
-            <name>Ben Cook</name>
-            <url>https://github.com/blx</url>
-        </contributor>
-        <contributor>
-            <name>CoderPaulK</name>
-            <url>https://github.com/CoderPaulK</url>
-        </contributor>
-        <contributor>
-            <name>boothen</name>
-            <url>https://github.com/boothen</url>
-        </contributor>
-        <contributor>
-            <name>Alex Simkin</name>
-            <url>https://github.com/SimY4</url>
-        </contributor>
-        <contributor>
-            <name>Rene Enriquez</name>
-            <url>enriquezrene</url>
-        </contributor>
-        <contributor>
-            <name>Ryon Day</name>
-            <url>https://github.com/ryonday</url>
+            <name>prasanna0586</name>
+            <url>https://www.github.com/prasanna0586</url>
         </contributor>
     </contributors>
 
@@ -625,12 +567,12 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-project-info-reports-plugin</artifactId>
-                <version>3.1.0</version>
+                <version>3.9.0</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.2.0</version>
+                <version>3.12.0</version>
                 <reportSets>
                     <reportSet>
                         <id>default</id>
@@ -662,12 +604,12 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jxr-plugin</artifactId>
-                <version>3.0.0</version>
+                <version>3.6.0</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-pmd-plugin</artifactId>
-                <version>3.13.0</version>
+                <version>3.27.0</version>
                 <configuration>
                     <linkXRef>true</linkXRef>
                     <analysisCache>false</analysisCache>
