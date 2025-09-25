@@ -23,10 +23,8 @@ import org.springframework.util.ReflectionUtils;
 import java.lang.reflect.Method;
 
 /**
- *
  * @author Michael Lavelle
  * @author Sebastian Just
- *
  */
 public class EnableScanAnnotationPermissions implements EnableScanPermissions {
 

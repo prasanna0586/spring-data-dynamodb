@@ -71,10 +71,8 @@ public @interface Query {
      *      Expressions</a>
      * @see <a href=
      *      "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.OperatorsAndFunctions.html">
-     *      Expression Syntax</a>
-     *
-     *
-     *      Example: {@code @Query(filterExpression = "contains(#field, :value)", expressionMappingNames =
+     *      Expression Syntax</a> Example:
+     *      {@code @Query(filterExpression = "contains(#field, :value)", expressionMappingNames =
      *      {@ExpressionAttribute(key = "#field", value = "name")}, expressionMappingValues =
      *      {@ExpressionAttribute(key=":value", value = "John Doe")})}
      *
@@ -90,10 +88,8 @@ public @interface Query {
      *      Expressions</a>
      * @see <a href=
      *      "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.OperatorsAndFunctions.html">
-     *      Expression Syntax</a>
-     *
-     *
-     *      Example: {@code @Query(filterExpression = "contains(#field, :value)", expressionMappingNames =
+     *      Expression Syntax</a> Example:
+     *      {@code @Query(filterExpression = "contains(#field, :value)", expressionMappingNames =
      *      {@ExpressionAttribute(key = "#field", value = "name")}, expressionMappingValues =
      *      {@ExpressionAttribute(key=":value", value = "John Doe")})}
      *
@@ -109,10 +105,7 @@ public @interface Query {
      *      Expressions</a>
      * @see <a href=
      *      "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.OperatorsAndFunctions.html">Expression
-     *      Syntax</a>
-     *
-     *
-     *      Example: {@code @Query(filterExpression = "contains(#field, :value)", expressionMappingNames =
+     *      Syntax</a> Example: {@code @Query(filterExpression = "contains(#field, :value)", expressionMappingNames =
      *      {@ExpressionAttribute(key = "#field", value = "name")}, expressionMappingValues =
      *      {@ExpressionAttribute(key=":value", value = "John Doe")})}
      *

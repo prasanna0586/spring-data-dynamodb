@@ -57,20 +57,20 @@ public class AbstractDynamoDBEventListenerTest {
     }
 
     @Test(expected = AssertionError.class)
-	public void testNullArgument() {
-		// This is impossible but let's be sure that it is covered
-		when(brokenEvent.getSource()).thenReturn(null);
+    public void testNullArgument() {
+        // This is impossible but let's be sure that it is covered
+        when(brokenEvent.getSource()).thenReturn(null);
 
-		underTest.onApplicationEvent(brokenEvent);
-	}
+        underTest.onApplicationEvent(brokenEvent);
+    }
 
     @Test(expected = AssertionError.class)
-	public void testUnknownEvent() {
-		// Simulate an unknown event
-		when(brokenEvent.getSource()).thenReturn(new User());
+    public void testUnknownEvent() {
+        // Simulate an unknown event
+        when(brokenEvent.getSource()).thenReturn(new User());
 
-		underTest.onApplicationEvent(brokenEvent);
-	}
+        underTest.onApplicationEvent(brokenEvent);
+    }
 
     @Test
     public void testRawType() {

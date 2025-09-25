@@ -67,7 +67,6 @@ public abstract class AbstractDynamoDBEventListener<E> implements ApplicationLis
 
     /*
      * (non-Javadoc)
-     *
      * @see org.springframework.context.ApplicationListener#onApplicationEvent(org
      * .springframework.context.ApplicationEvent)
      */

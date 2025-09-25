@@ -37,7 +37,6 @@ public class DynamoDBMappingContext
         extends AbstractMappingContext<DynamoDBPersistentEntityImpl<?>, DynamoDBPersistentProperty> {
     /*
      * (non-Javadoc)
-     *
      * @see org.springframework.data.mapping.context.AbstractMappingContext# shouldCreatePersistentEntityFor
      * (org.springframework.data.util.TypeInformation)
      */
@@ -49,7 +48,6 @@ public class DynamoDBMappingContext
 
     /*
      * (non-Javadoc)
-     *
      * @see org.springframework.data.mapping.AbstractMappingContext# createPersistentProperty(java.lang.reflect.Field,
      * java.beans.PropertyDescriptor, org.springframework.data.mapping.MutablePersistentEntity,
      * org.springframework.data.mapping.SimpleTypeHolder)
@@ -62,7 +60,6 @@ public class DynamoDBMappingContext
 
     /*
      * (non-Javadoc)
-     *
      * @see org.springframework.data.mapping.context.AbstractMappingContext# shouldCreatePersistentEntityFor
      * (org.springframework.data.util.TypeInformation)
      */

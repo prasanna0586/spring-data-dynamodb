@@ -104,7 +104,6 @@ public class DynamoDBQueryMethod<T, ID> extends QueryMethod {
 
     /*
      * (non-Javadoc)
-     *
      * @see org.springframework.data.repository.query.QueryMethod#getEntityInformation ()
      */
     @Override

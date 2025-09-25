@@ -137,52 +137,52 @@ public abstract class AbstractDynamoDBQueryCreator<T, ID, R>
         }
 
         switch (part.getType()) {
-        case IN:
-            return getInProperty(criteria, iterator, leafNodePropertyType, leafNodePropertyName);
-        case CONTAINING:
-            return getItemsProperty(criteria, ComparisonOperator.CONTAINS, iterator, leafNodePropertyType,
-                    leafNodePropertyName);
-        case NOT_CONTAINING:
-            return getItemsProperty(criteria, ComparisonOperator.NOT_CONTAINS, iterator, leafNodePropertyType,
-                    leafNodePropertyName);
-        case STARTING_WITH:
-            return criteria.withSingleValueCriteria(leafNodePropertyName, ComparisonOperator.BEGINS_WITH,
-                    iterator.next(), leafNodePropertyType);
-        case BETWEEN:
-            Object first = iterator.next();
-            Object second = iterator.next();
-            return criteria.withPropertyBetween(leafNodePropertyName, first, second, leafNodePropertyType);
-        case AFTER:
-        case GREATER_THAN:
-            return criteria.withSingleValueCriteria(leafNodePropertyName, ComparisonOperator.GT, iterator.next(),
-                    leafNodePropertyType);
-        case BEFORE:
-        case LESS_THAN:
-            return criteria.withSingleValueCriteria(leafNodePropertyName, ComparisonOperator.LT, iterator.next(),
-                    leafNodePropertyType);
-        case GREATER_THAN_EQUAL:
-            return criteria.withSingleValueCriteria(leafNodePropertyName, ComparisonOperator.GE, iterator.next(),
-                    leafNodePropertyType);
-        case LESS_THAN_EQUAL:
-            return criteria.withSingleValueCriteria(leafNodePropertyName, ComparisonOperator.LE, iterator.next(),
-                    leafNodePropertyType);
-        case IS_NULL:
-            return criteria.withNoValuedCriteria(leafNodePropertyName, ComparisonOperator.NULL);
-        case IS_NOT_NULL:
-            return criteria.withNoValuedCriteria(leafNodePropertyName, ComparisonOperator.NOT_NULL);
-        case TRUE:
-            return criteria.withSingleValueCriteria(leafNodePropertyName, ComparisonOperator.EQ, Boolean.TRUE,
-                    leafNodePropertyType);
-        case FALSE:
-            return criteria.withSingleValueCriteria(leafNodePropertyName, ComparisonOperator.EQ, Boolean.FALSE,
-                    leafNodePropertyType);
-        case SIMPLE_PROPERTY:
-            return criteria.withPropertyEquals(leafNodePropertyName, iterator.next(), leafNodePropertyType);
-        case NEGATING_SIMPLE_PROPERTY:
-            return criteria.withSingleValueCriteria(leafNodePropertyName, ComparisonOperator.NE, iterator.next(),
-                    leafNodePropertyType);
-        default:
-            throw new IllegalArgumentException("Unsupported keyword " + part.getType());
+            case IN:
+                return getInProperty(criteria, iterator, leafNodePropertyType, leafNodePropertyName);
+            case CONTAINING:
+                return getItemsProperty(criteria, ComparisonOperator.CONTAINS, iterator, leafNodePropertyType,
+                        leafNodePropertyName);
+            case NOT_CONTAINING:
+                return getItemsProperty(criteria, ComparisonOperator.NOT_CONTAINS, iterator, leafNodePropertyType,
+                        leafNodePropertyName);
+            case STARTING_WITH:
+                return criteria.withSingleValueCriteria(leafNodePropertyName, ComparisonOperator.BEGINS_WITH,
+                        iterator.next(), leafNodePropertyType);
+            case BETWEEN:
+                Object first = iterator.next();
+                Object second = iterator.next();
+                return criteria.withPropertyBetween(leafNodePropertyName, first, second, leafNodePropertyType);
+            case AFTER:
+            case GREATER_THAN:
+                return criteria.withSingleValueCriteria(leafNodePropertyName, ComparisonOperator.GT, iterator.next(),
+                        leafNodePropertyType);
+            case BEFORE:
+            case LESS_THAN:
+                return criteria.withSingleValueCriteria(leafNodePropertyName, ComparisonOperator.LT, iterator.next(),
+                        leafNodePropertyType);
+            case GREATER_THAN_EQUAL:
+                return criteria.withSingleValueCriteria(leafNodePropertyName, ComparisonOperator.GE, iterator.next(),
+                        leafNodePropertyType);
+            case LESS_THAN_EQUAL:
+                return criteria.withSingleValueCriteria(leafNodePropertyName, ComparisonOperator.LE, iterator.next(),
+                        leafNodePropertyType);
+            case IS_NULL:
+                return criteria.withNoValuedCriteria(leafNodePropertyName, ComparisonOperator.NULL);
+            case IS_NOT_NULL:
+                return criteria.withNoValuedCriteria(leafNodePropertyName, ComparisonOperator.NOT_NULL);
+            case TRUE:
+                return criteria.withSingleValueCriteria(leafNodePropertyName, ComparisonOperator.EQ, Boolean.TRUE,
+                        leafNodePropertyType);
+            case FALSE:
+                return criteria.withSingleValueCriteria(leafNodePropertyName, ComparisonOperator.EQ, Boolean.FALSE,
+                        leafNodePropertyType);
+            case SIMPLE_PROPERTY:
+                return criteria.withPropertyEquals(leafNodePropertyName, iterator.next(), leafNodePropertyType);
+            case NEGATING_SIMPLE_PROPERTY:
+                return criteria.withSingleValueCriteria(leafNodePropertyName, ComparisonOperator.NE, iterator.next(),
+                        leafNodePropertyType);
+            default:
+                throw new IllegalArgumentException("Unsupported keyword " + part.getType());
         }
 
     }

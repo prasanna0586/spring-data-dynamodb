@@ -141,21 +141,21 @@ public class SimpleDynamoDBCrudRepositoryTest {
     }
 
     @Test
-	public void deleteAll() {
-		when(dynamoDBOperations.scan(eq(User.class), any(DynamoDBScanExpression.class))).thenReturn(findAllResultMock);
+    public void deleteAll() {
+        when(dynamoDBOperations.scan(eq(User.class), any(DynamoDBScanExpression.class))).thenReturn(findAllResultMock);
 
-		repoForEntityWithOnlyHashKey.deleteAll();
-		verify(dynamoDBOperations).batchDelete(findAllResultMock);
-	}
+        repoForEntityWithOnlyHashKey.deleteAll();
+        verify(dynamoDBOperations).batchDelete(findAllResultMock);
+    }
 
     @Test
-	public void testFindAll() {
-		when(dynamoDBOperations.scan(eq(User.class), any(DynamoDBScanExpression.class))).thenReturn(findAllResultMock);
+    public void testFindAll() {
+        when(dynamoDBOperations.scan(eq(User.class), any(DynamoDBScanExpression.class))).thenReturn(findAllResultMock);
 
-		List<User> actual = repoForEntityWithOnlyHashKey.findAll();
+        List<User> actual = repoForEntityWithOnlyHashKey.findAll();
 
-		assertSame(actual, findAllResultMock);
-	}
+        assertSame(actual, findAllResultMock);
+    }
 
     /**
      * /**
@@ -182,13 +182,13 @@ public class SimpleDynamoDBCrudRepositoryTest {
     }
 
     @Test
-	public void existsEntityWithOnlyHashKey() {
-		when(dynamoDBOperations.load(User.class, 1l)).thenReturn(null);
+    public void existsEntityWithOnlyHashKey() {
+        when(dynamoDBOperations.load(User.class, 1l)).thenReturn(null);
 
-		boolean actual = repoForEntityWithOnlyHashKey.existsById(1l);
+        boolean actual = repoForEntityWithOnlyHashKey.existsById(1l);
 
-		assertFalse(actual);
-	}
+        assertFalse(actual);
+    }
 
     @Test
     public void testCount() {

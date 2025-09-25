@@ -132,7 +132,6 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
 
     /*
      * (non-Javadoc)
-     *
      * @see org.springframework.data.repository.core.EntityMetadata#getJavaType()
      */
     @Override

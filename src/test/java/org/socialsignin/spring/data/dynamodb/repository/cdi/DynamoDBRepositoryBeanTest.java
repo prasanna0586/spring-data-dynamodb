@@ -68,11 +68,11 @@ public class DynamoDBRepositoryBeanTest {
     private Class<SampleRepository> repositoryType = SampleRepository.class;
 
     @Before
-	public void setUp() {
-		when(beanManager.createCreationalContext(amazonDynamoDBBean)).thenReturn(creationalContext);
-		when(beanManager.getReference(amazonDynamoDBBean, AmazonDynamoDB.class, creationalContext))
-				.thenReturn(amazonDynamoDB);
-	}
+    public void setUp() {
+        when(beanManager.createCreationalContext(amazonDynamoDBBean)).thenReturn(creationalContext);
+        when(beanManager.getReference(amazonDynamoDBBean, AmazonDynamoDB.class, creationalContext))
+                .thenReturn(amazonDynamoDB);
+    }
 
     @Test
     public void testNullOperationsOk() {

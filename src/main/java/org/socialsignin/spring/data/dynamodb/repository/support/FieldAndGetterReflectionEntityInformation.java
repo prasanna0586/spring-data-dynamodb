@@ -83,7 +83,6 @@ public class FieldAndGetterReflectionEntityInformation<T, ID> extends AbstractEn
 
     /*
      * (non-Javadoc)
-     *
      * @see org.springframework.data.repository.core.EntityInformation#getId(java .lang.Object)
      */
     @Override
@@ -99,7 +98,6 @@ public class FieldAndGetterReflectionEntityInformation<T, ID> extends AbstractEn
 
     /*
      * (non-Javadoc)
-     *
      * @see org.springframework.data.repository.core.EntityInformation#getIdType()
      */
     @Override

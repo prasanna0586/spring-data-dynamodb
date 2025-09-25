@@ -20,12 +20,9 @@ import org.springframework.data.repository.core.EntityInformation;
 import java.util.Optional;
 
 /**
- * Encapsulates minimal information needed to load DynamoDB entities.
- *
- * As a minimum, provides access to hash-key related metadata.
- *
- * Implementing classes can elect to be either range-key aware or not. If a subclass is not range-key aware it should
- * return null from getRangeKey(ID id) method, and return false from isRangeKeyAware and
+ * Encapsulates minimal information needed to load DynamoDB entities. As a minimum, provides access to hash-key related
+ * metadata. Implementing classes can elect to be either range-key aware or not. If a subclass is not range-key aware it
+ * should return null from getRangeKey(ID id) method, and return false from isRangeKeyAware and
  * isCompositeHashAndRangeKeyProperty methods
  *
  * @author Michael Lavelle

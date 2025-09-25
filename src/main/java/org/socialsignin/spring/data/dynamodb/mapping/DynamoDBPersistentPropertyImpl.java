@@ -88,7 +88,6 @@ class DynamoDBPersistentPropertyImpl extends AnnotationBasedPersistentProperty<D
 
     /*
      * (non-Javadoc)
-     *
      * @see org.springframework.data.mapping.model.AnnotationBasedPersistentProperty #isIdProperty()
      */
     @Override
@@ -105,7 +104,6 @@ class DynamoDBPersistentPropertyImpl extends AnnotationBasedPersistentProperty<D
 
     /*
      * (non-Javadoc)
-     *
      * @see org.springframework.data.mapping.model.AbstractPersistentProperty#isEntity ()
      */
     // @Override
@@ -124,7 +122,6 @@ class DynamoDBPersistentPropertyImpl extends AnnotationBasedPersistentProperty<D
 
     /*
      * (non-Javadoc)
-     *
      * @see org.springframework.data.mapping.model.AnnotationBasedPersistentProperty #isAssociation()
      */
     @Override
@@ -144,7 +141,6 @@ class DynamoDBPersistentPropertyImpl extends AnnotationBasedPersistentProperty<D
 
     /*
      * (non-Javadoc)
-     *
      * @see org.springframework.data.mapping.model.AnnotationBasedPersistentProperty #isTransient()
      */
     @Override
@@ -159,7 +155,6 @@ class DynamoDBPersistentPropertyImpl extends AnnotationBasedPersistentProperty<D
 
     /*
      * (non-Javadoc)
-     *
      * @see org.springframework.data.mapping.model.AbstractPersistentProperty# createAssociation()
      */
     @Override

@@ -45,18 +45,18 @@ public class CountByHashKeyQueryTest {
     }
 
     @Test
-	public void testGetSingleResultExists() {
-		when(dynamoDBOperations.load(DOMAIN_CLASS, hashKey)).thenReturn(sampleEntity);
-		Long actual = underTest.getSingleResult();
+    public void testGetSingleResultExists() {
+        when(dynamoDBOperations.load(DOMAIN_CLASS, hashKey)).thenReturn(sampleEntity);
+        Long actual = underTest.getSingleResult();
 
-		assertEquals(Long.valueOf(1), actual);
-	}
+        assertEquals(Long.valueOf(1), actual);
+    }
 
     @Test
-	public void testGetSingleResultDoesntExist() {
-		when(dynamoDBOperations.load(DOMAIN_CLASS, hashKey)).thenReturn(null);
-		Long actual = underTest.getSingleResult();
+    public void testGetSingleResultDoesntExist() {
+        when(dynamoDBOperations.load(DOMAIN_CLASS, hashKey)).thenReturn(null);
+        Long actual = underTest.getSingleResult();
 
-		assertEquals(Long.valueOf(0), actual);
-	}
+        assertEquals(Long.valueOf(0), actual);
+    }
 }

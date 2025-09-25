@@ -84,7 +84,6 @@ class DynamoDBRepositoryBean<T> extends CdiRepositoryBean<T> {
 
     /*
      * (non-Javadoc)
-     *
      * @see jakarta.enterprise.context.spi.Contextual#create(jakarta.enterprise .context.spi.CreationalContext,
      * Class<T>, Optional<Object>)
      */

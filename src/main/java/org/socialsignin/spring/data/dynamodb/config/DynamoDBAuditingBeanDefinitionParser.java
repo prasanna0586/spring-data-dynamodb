@@ -39,7 +39,6 @@ public class DynamoDBAuditingBeanDefinitionParser extends AbstractSingleBeanDefi
 
     /*
      * (non-Javadoc)
-     *
      * @see org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser# getBeanClass(org.w3c.dom.Element)
      */
     @Override
@@ -49,7 +48,6 @@ public class DynamoDBAuditingBeanDefinitionParser extends AbstractSingleBeanDefi
 
     /*
      * (non-Javadoc)
-     *
      * @see org.springframework.beans.factory.xml.AbstractBeanDefinitionParser# shouldGenerateId()
      */
     @Override
@@ -59,7 +57,6 @@ public class DynamoDBAuditingBeanDefinitionParser extends AbstractSingleBeanDefi
 
     /*
      * (non-Javadoc)
-     *
      * @see org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser# doParse(org.w3c.dom.Element,
      * org.springframework.beans.factory.xml.ParserContext,
      * org.springframework.beans.factory.support.BeanDefinitionBuilder)

@@ -38,9 +38,7 @@ import java.util.stream.Collectors;
 
 /**
  * This is the base class for all classes performing the validation or auto-creation of tables based on the entity
- * classes.
- *
- * //TODO: It would be nice if the checks would run in parallel via a TaskScheduler (if available)
+ * classes. //TODO: It would be nice if the checks would run in parallel via a TaskScheduler (if available)
  *
  * @see Entity2DDL
  */
@@ -112,36 +110,36 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
 
         if (event instanceof ContextRefreshedEvent) {
             switch (mode) {
-            case CREATE_DROP:
-            case CREATE:
-                performDrop(entityInformation);
-                // TODO implement wait for deletion
-            case CREATE_ONLY:
-                performCreate(entityInformation);
-                break;
-            case VALIDATE:
-                performValidate(entityInformation);
-                break;
-            case DROP:
-            case NONE:
-            default:
-                LOGGER.debug("No auto table DDL performed on start");
-                break;
+                case CREATE_DROP:
+                case CREATE:
+                    performDrop(entityInformation);
+                    // TODO implement wait for deletion
+                case CREATE_ONLY:
+                    performCreate(entityInformation);
+                    break;
+                case VALIDATE:
+                    performValidate(entityInformation);
+                    break;
+                case DROP:
+                case NONE:
+                default:
+                    LOGGER.debug("No auto table DDL performed on start");
+                    break;
             }
         } else if (event instanceof ContextStoppedEvent) {
             switch (mode) {
-            case CREATE_DROP:
-            case DROP:
-                performDrop(entityInformation);
-                performCreate(entityInformation);
-                break;
+                case CREATE_DROP:
+                case DROP:
+                    performDrop(entityInformation);
+                    performCreate(entityInformation);
+                    break;
 
-            case CREATE:
-            case VALIDATE:
-            case NONE:
-            default:
-                LOGGER.debug("No auto table DDL performed on stop");
-                break;
+                case CREATE:
+                case VALIDATE:
+                case NONE:
+                default:
+                    LOGGER.debug("No auto table DDL performed on stop");
+                    break;
             }
         } else {
             LOGGER.trace("Ignored ApplicationContextEvent: {}", event);

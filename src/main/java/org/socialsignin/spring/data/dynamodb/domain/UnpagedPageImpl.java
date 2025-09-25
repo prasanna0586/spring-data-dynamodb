@@ -139,7 +139,6 @@ public class UnpagedPageImpl<T> implements Page<T> {
 
     /*
      * (non-Javadoc)
-     *
      * @see java.lang.Object#toString()
      */
     @Override
@@ -156,7 +155,6 @@ public class UnpagedPageImpl<T> implements Page<T> {
 
     /*
      * (non-Javadoc)
-     *
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
@@ -177,7 +175,6 @@ public class UnpagedPageImpl<T> implements Page<T> {
 
     /*
      * (non-Javadoc)
-     *
      * @see java.lang.Object#hashCode()
      */
     @Override

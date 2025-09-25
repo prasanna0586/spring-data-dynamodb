@@ -141,7 +141,8 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
         private List<T> readPageOfResultsRestrictMaxResultsIfNecessary(Iterator<T> iterator, int pageSize) {
             int processed = 0;
             int toProcess = getResultsRestrictionIfApplicable() != null
-                    ? Math.min(pageSize, getResultsRestrictionIfApplicable()) : pageSize;
+                    ? Math.min(pageSize, getResultsRestrictionIfApplicable())
+                    : pageSize;
             List<T> resultsPage = new ArrayList<>();
             while (iterator.hasNext() && processed < toProcess) {
                 resultsPage.add(iterator.next());
@@ -216,7 +217,8 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
         private List<T> readPageOfResultsRestrictMaxResultsIfNecessary(Iterator<T> iterator, int pageSize) {
             int processed = 0;
             int toProcess = getResultsRestrictionIfApplicable() != null
-                    ? Math.min(pageSize, getResultsRestrictionIfApplicable()) : pageSize;
+                    ? Math.min(pageSize, getResultsRestrictionIfApplicable())
+                    : pageSize;
 
             List<T> resultsPage = new ArrayList<>();
             while (iterator.hasNext() && processed < toProcess) {
@@ -299,7 +301,6 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
 
     /*
      * (non-Javadoc)
-     *
      * @see org.springframework.data.repository.query.RepositoryQuery#execute(java .lang.Object[])
      */
     public Object execute(Object[] parameters) {

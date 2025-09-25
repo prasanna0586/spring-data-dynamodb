@@ -338,7 +338,8 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
                 String[] rangeKeyIndexNames = entityInformation.getGlobalSecondaryIndexNamesByPropertyName()
                         .get(this.getRangeKeyPropertyName());
                 globalSecondaryIndexName = rangeKeyIndexNames != null && rangeKeyIndexNames.length > 0
-                        ? rangeKeyIndexNames[0] : null;
+                        ? rangeKeyIndexNames[0]
+                        : null;
             }
         }
         return globalSecondaryIndexName;

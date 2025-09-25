@@ -24,16 +24,11 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Encapsulates minimal information needed to load DynamoDB entities.
- *
- * This default implementation is NOT range-key aware - getRangeKey(ID id) will always return null
- *
- * Delegates to wrapped DynamoDBHashKeyExtractingEntityMetadata component for many operations - it is the responsibility
- * of calling clients to ensure they pass in a valid DynamoDBHashKeyExtractingEntityMetadata implementation for this
- * entity.
- *
- * Entities of type T must have a public getter method of return type ID annotated with @DynamoDBHashKey to ensure
- * correct behavior
+ * Encapsulates minimal information needed to load DynamoDB entities. This default implementation is NOT range-key aware
+ * - getRangeKey(ID id) will always return null Delegates to wrapped DynamoDBHashKeyExtractingEntityMetadata component
+ * for many operations - it is the responsibility of calling clients to ensure they pass in a valid
+ * DynamoDBHashKeyExtractingEntityMetadata implementation for this entity. Entities of type T must have a public getter
+ * method of return type ID annotated with @DynamoDBHashKey to ensure correct behavior
  *
  * @author Michael Lavelle
  * @author Sebastian Just

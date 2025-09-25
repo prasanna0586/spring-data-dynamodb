@@ -30,7 +30,6 @@ public class DynamoDBRepositoryNameSpaceHandler extends NamespaceHandlerSupport 
 
     /*
      * (non-Javadoc)
-     *
      * @see org.springframework.beans.factory.xml.NamespaceHandler#init()
      */
     public void init() {

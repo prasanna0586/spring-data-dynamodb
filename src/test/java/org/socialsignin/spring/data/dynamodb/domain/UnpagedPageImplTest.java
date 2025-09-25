@@ -42,10 +42,10 @@ public class UnpagedPageImplTest {
     private UnpagedPageImpl<Object> underTest;
 
     @Before
-	public void setUp() {
-		when(content.iterator()).thenReturn(iterator);
-		underTest = new UnpagedPageImpl<Object>(content, total);
-	}
+    public void setUp() {
+        when(content.iterator()).thenReturn(iterator);
+        underTest = new UnpagedPageImpl<Object>(content, total);
+    }
 
     @Test
     public void testStaticValues() {

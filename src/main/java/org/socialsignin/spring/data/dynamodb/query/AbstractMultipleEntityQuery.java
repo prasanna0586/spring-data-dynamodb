@@ -21,7 +21,6 @@ import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import java.util.List;
 
 /**
- *
  * @author Michael Lavelle
  * @author Sebastian Just
  */

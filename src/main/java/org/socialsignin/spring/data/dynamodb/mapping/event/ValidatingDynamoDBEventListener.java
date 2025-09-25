@@ -68,7 +68,6 @@ public class ValidatingDynamoDBEventListener extends AbstractDynamoDBEventListen
 
     /*
      * (non-Javadoc)
-     *
      * @see org.socialsignin.spring.data.dynamodb.mapping.event.
      * AbstractDynamoDBEventListener#onBeforeSave(java.lang.Object)
      */

@@ -33,7 +33,6 @@ public class DynamoDBCountQueryCreator<T, ID> extends AbstractDynamoDBQueryCreat
     private boolean pageQuery;
 
     /**
-     *
      * @deprecated use the new constructor with all required fields, will be removed in 5.3.0
      */
     @Deprecated

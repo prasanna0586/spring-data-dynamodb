@@ -56,7 +56,6 @@ public class DynamoDBQueryLookupStrategy {
 
         /*
          * (non-Javadoc)
-         *
          * @see org.springframework.data.repository.query.QueryLookupStrategy# resolveQuery(java.lang.reflect.Method,
          * org.springframework.data.repository.core.RepositoryMetadata,
          * org.springframework.data.repository.core.NamedQueries)
@@ -172,14 +171,14 @@ public class DynamoDBQueryLookupStrategy {
         }
 
         switch (key) {
-        case CREATE:
-            return new CreateQueryLookupStrategy(dynamoDBOperations);
-        case USE_DECLARED_QUERY:
-            throw new IllegalArgumentException(String.format("Unsupported query lookup strategy %s!", key));
-        case CREATE_IF_NOT_FOUND:
-            return new CreateIfNotFoundQueryLookupStrategy(dynamoDBOperations);
-        default:
-            throw new IllegalArgumentException(String.format("Unsupported query lookup strategy %s!", key));
+            case CREATE:
+                return new CreateQueryLookupStrategy(dynamoDBOperations);
+            case USE_DECLARED_QUERY:
+                throw new IllegalArgumentException(String.format("Unsupported query lookup strategy %s!", key));
+            case CREATE_IF_NOT_FOUND:
+                return new CreateIfNotFoundQueryLookupStrategy(dynamoDBOperations);
+            default:
+                throw new IllegalArgumentException(String.format("Unsupported query lookup strategy %s!", key));
         }
     }
 

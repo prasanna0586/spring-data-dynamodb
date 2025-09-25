@@ -158,27 +158,27 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
 
     protected void applyConsistentReads(QueryRequest queryRequest) {
         switch (consistentReads) {
-        case CONSISTENT:
-            queryRequest.setConsistentRead(true);
-            break;
-        case EVENTUAL:
-            queryRequest.setConsistentRead(false);
-            break;
-        default:
-            break;
+            case CONSISTENT:
+                queryRequest.setConsistentRead(true);
+                break;
+            case EVENTUAL:
+                queryRequest.setConsistentRead(false);
+                break;
+            default:
+                break;
         }
     }
 
     protected void applyConsistentReads(DynamoDBQueryExpression<T> queryExpression) {
         switch (consistentReads) {
-        case CONSISTENT:
-            queryExpression.setConsistentRead(true);
-            break;
-        case EVENTUAL:
-            queryExpression.setConsistentRead(false);
-            break;
-        default:
-            break;
+            case CONSISTENT:
+                queryExpression.setConsistentRead(true);
+                break;
+            case EVENTUAL:
+                queryExpression.setConsistentRead(false);
+                break;
+            default:
+                break;
         }
     }
 
