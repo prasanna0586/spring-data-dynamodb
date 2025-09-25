@@ -4,7 +4,7 @@ sudo: false
 language: java
 
 jdk:
-  - openjdk17
+  - openjdk21
 
 install: mvn --settings .travis.settings.xml clean install -DskipTests=true -Dmaven.javadoc.skip=true --batch-mode --show-version
 
