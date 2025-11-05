@@ -13,6 +13,10 @@ jobs:
     name: Run Tests
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    permissions:
+      checks: write
+      pull-requests: write
+      contents: read
 
     steps:
       - uses: actions/checkout@v5
