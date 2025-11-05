@@ -15,11 +15,11 @@
  */
 package org.socialsignin.spring.data.dynamodb.domain;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
 
 import java.util.Collections;
@@ -27,10 +27,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class UnpagedPageImplTest {
 
     @Mock
@@ -41,14 +41,15 @@ public class UnpagedPageImplTest {
 
     private UnpagedPageImpl<Object> underTest;
 
-    @Before
+    @BeforeEach
     public void setUp() {
-        when(content.iterator()).thenReturn(iterator);
         underTest = new UnpagedPageImpl<Object>(content, total);
     }
 
     @Test
     public void testStaticValues() {
+        when(content.iterator()).thenReturn(iterator);
+
         assertSame(iterator, underTest.iterator());
         assertSame(Pageable.unpaged().getSort(), underTest.getSort());
 
@@ -88,9 +89,11 @@ public class UnpagedPageImplTest {
 
     @Test
     public void testToString() {
+        when(content.iterator()).thenReturn(iterator);
+
         String actual = underTest.toString();
 
-        assertTrue(actual, actual.matches("^Page 1 of 1 containing .+ instances$"));
+        assertTrue(actual.matches("^Page 1 of 1 containing .+ instances$"), actual);
     }
 
     @Test

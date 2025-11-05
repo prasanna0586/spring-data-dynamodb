@@ -15,12 +15,10 @@
  */
 package org.socialsignin.spring.data.dynamodb.query;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.socialsignin.spring.data.dynamodb.domain.sample.User;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
@@ -28,10 +26,12 @@ import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class AbstractMultipleEntityQueryTest {
 
     private static class TestAbstractMultipleEntityQuery extends AbstractMultipleEntityQuery<User> {
@@ -47,9 +47,6 @@ public class AbstractMultipleEntityQueryTest {
             return resultList;
         }
     }
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
 
     @Mock
     private DynamoDBOperations dynamoDBOperations;
@@ -74,9 +71,12 @@ public class AbstractMultipleEntityQueryTest {
 
     @Test
     public void testMultiResult() {
-        expectedException.expect(IncorrectResultSizeDataAccessException.class);
         underTest = new TestAbstractMultipleEntityQuery(dynamoDBOperations, entity, entity);
 
-        underTest.getSingleResult();
+        IncorrectResultSizeDataAccessException exception = assertThrows(IncorrectResultSizeDataAccessException.class, () -> {
+            underTest.getSingleResult();
+        });
+
+        assertTrue(exception.getMessage().contains("result returns more than one elements"));
     }
 }

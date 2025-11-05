@@ -17,12 +17,11 @@ package org.socialsignin.spring.data.dynamodb.mapping.event;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedQueryList;
 import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedScanList;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.socialsignin.spring.data.dynamodb.domain.sample.User;
 
 import java.util.ArrayList;
@@ -30,7 +29,7 @@ import java.util.List;
 
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class LoggingEventListenerTest {
 
     private final User sampleEntity = new User();
@@ -41,14 +40,6 @@ public class LoggingEventListenerTest {
 
     @Spy
     private LoggingEventListener underTest;
-
-    @Before
-    public void setUp() {
-        List<User> queryList = new ArrayList<>();
-        queryList.add(sampleEntity);
-        when(sampleQueryList.stream()).thenReturn(queryList.stream());
-        when(sampleScanList.stream()).thenReturn(queryList.stream());
-    }
 
     @Test
     public void testAfterDelete() {
@@ -66,6 +57,10 @@ public class LoggingEventListenerTest {
 
     @Test
     public void testAfterQuery() {
+        List<User> queryList = new ArrayList<>();
+        queryList.add(sampleEntity);
+        when(sampleQueryList.stream()).thenReturn(queryList.stream());
+
         underTest.onApplicationEvent(new AfterQueryEvent<>(sampleQueryList));
 
         verify(underTest).onAfterQuery(sampleEntity);
@@ -80,6 +75,10 @@ public class LoggingEventListenerTest {
 
     @Test
     public void testAfterScan() {
+        List<User> scanList = new ArrayList<>();
+        scanList.add(sampleEntity);
+        when(sampleScanList.stream()).thenReturn(scanList.stream());
+
         underTest.onApplicationEvent(new AfterScanEvent<>(sampleScanList));
 
         verify(underTest).onAfterScan(sampleEntity);

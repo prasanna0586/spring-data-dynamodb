@@ -15,8 +15,8 @@
  */
 package org.socialsignin.spring.data.dynamodb.core;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.domain.sample.CustomerHistory;
 import org.socialsignin.spring.data.dynamodb.domain.sample.CustomerHistoryRepository;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -27,12 +27,12 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.MethodMode;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @DirtiesContext(methodMode = MethodMode.BEFORE_METHOD)
 @ContextConfiguration(classes = { CustomerHistoryTest.TestAppConfig.class, DynamoDBLocalResource.class })
 @TestPropertySource(properties = { "spring.data.dynamodb.entity2ddl.auto=create" })

@@ -15,41 +15,36 @@
  */
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
-import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
+import org.socialsignin.spring.data.dynamodb.utils.DynamoDBLocalResource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Show the usage of Hash+Range key as also how to use XML based configuration
+ * Show the usage of Hash+Range key
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = { "classpath:META-INF/context/HashRangeKeyIT-context.xml" })
-public class HashRangeKeyIT {
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = { HashRangeKeyIntegrationTest.TestAppConfig.class, DynamoDBLocalResource.class })
+@TestPropertySource(properties = { "spring.data.dynamodb.entity2ddl.auto=create" })
+public class HashRangeKeyIntegrationTest {
+
+    @Configuration
+    @EnableDynamoDBRepositories(basePackageClasses = PlaylistRepository.class)
+    public static class TestAppConfig {
+    }
 
     @Autowired
     private PlaylistRepository playlistRepository;
-
-    @Autowired
-    private AmazonDynamoDB ddb;
-
-    @Before
-    public void setUp() {
-        CreateTableRequest ctr = new DynamoDBMapper(ddb).generateCreateTableRequest(Playlist.class);
-        ctr.withProvisionedThroughput(new ProvisionedThroughput(10L, 10L));
-        ddb.createTable(ctr);
-    }
 
     @Test
     public void runCrudOperations() {

@@ -18,11 +18,11 @@ package org.socialsignin.spring.data.dynamodb.repository.util;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.model.*;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBEntityInformation;
 import org.socialsignin.spring.data.dynamodb.repository.support.SimpleDynamoDBCrudRepository;
 import org.springframework.aop.TargetSource;
@@ -35,7 +35,7 @@ import org.springframework.data.repository.core.RepositoryInformation;
 
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class Entity2DynamoDBTableSynchronizerTest<T, ID> {
 
     private Entity2DynamoDBTableSynchronizer<T, ID> underTest;
@@ -54,7 +54,7 @@ public class Entity2DynamoDBTableSynchronizerTest<T, ID> {
     @Mock
     private DynamoDBEntityInformation<T, ID> entityInformation;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         TargetSource targetSource = mock(TargetSource.class);
         when(targetSource.getTarget()).thenReturn(repository);
@@ -63,17 +63,22 @@ public class Entity2DynamoDBTableSynchronizerTest<T, ID> {
         when(repository.getEntityInformation()).thenReturn(entityInformation);
 
         when(entityInformation.getDynamoDBTableName()).thenReturn("tableName");
+    }
 
+    private void setupCreateTableMocks() {
         CreateTableRequest ctr = mock(CreateTableRequest.class);
         when(mapper.generateCreateTableRequest(any())).thenReturn(ctr);
-        DeleteTableRequest dtr = mock(DeleteTableRequest.class);
-        when(mapper.generateDeleteTableRequest(any())).thenReturn(dtr);
 
         DescribeTableResult describeResult = mock(DescribeTableResult.class);
         TableDescription description = mock(TableDescription.class);
         when(description.getTableStatus()).thenReturn(TableStatus.ACTIVE.toString());
         when(describeResult.getTable()).thenReturn(description);
         when(amazonDynamoDB.describeTable(any(DescribeTableRequest.class))).thenReturn(describeResult);
+    }
+
+    private void setupDeleteTableMocks() {
+        DeleteTableRequest dtr = mock(DeleteTableRequest.class);
+        when(mapper.generateDeleteTableRequest(any())).thenReturn(dtr);
     }
 
     public void setUp(Entity2DDL mode) {
@@ -114,6 +119,8 @@ public class Entity2DynamoDBTableSynchronizerTest<T, ID> {
 
     @Test
     public void testCreate() {
+        setupCreateTableMocks();
+        setupDeleteTableMocks();
         setUp(Entity2DDL.CREATE);
 
         runContextStart();
@@ -128,6 +135,8 @@ public class Entity2DynamoDBTableSynchronizerTest<T, ID> {
 
     @Test
     public void testDrop() {
+        setupCreateTableMocks();
+        setupDeleteTableMocks();
         setUp(Entity2DDL.DROP);
 
         runContextStart();
@@ -137,6 +146,7 @@ public class Entity2DynamoDBTableSynchronizerTest<T, ID> {
 
     @Test
     public void testCreateOnly() {
+        setupCreateTableMocks();
         setUp(Entity2DDL.CREATE_ONLY);
 
         runContextStart();
@@ -149,6 +159,8 @@ public class Entity2DynamoDBTableSynchronizerTest<T, ID> {
 
     @Test
     public void testCreateDrop() {
+        setupCreateTableMocks();
+        setupDeleteTableMocks();
         setUp(Entity2DDL.CREATE_DROP);
 
         runContextStart();

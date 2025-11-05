@@ -16,13 +16,11 @@
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMarshaller;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.Test;
 import org.socialsignin.spring.data.dynamodb.domain.sample.User;
 
-@RunWith(MockitoJUnitRunner.class)
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 public class DynamoDBEntityMetadataSupportUnitTest {
 
     @Test
@@ -30,7 +28,7 @@ public class DynamoDBEntityMetadataSupportUnitTest {
         DynamoDBEntityMetadataSupport<User, ?> support = new DynamoDBEntityMetadataSupport<>(User.class);
         @SuppressWarnings("deprecation")
         DynamoDBMarshaller<?> fieldAnnotation = support.getMarshallerForProperty("joinYear");
-        Assert.assertNotNull(fieldAnnotation);
+        assertNotNull(fieldAnnotation);
     }
 
     @Test
@@ -38,6 +36,6 @@ public class DynamoDBEntityMetadataSupportUnitTest {
         DynamoDBEntityMetadataSupport<User, ?> support = new DynamoDBEntityMetadataSupport<>(User.class);
         @SuppressWarnings("deprecation")
         DynamoDBMarshaller<?> methodAnnotation = support.getMarshallerForProperty("leaveDate");
-        Assert.assertNotNull(methodAnnotation);
+        assertNotNull(methodAnnotation);
     }
 }

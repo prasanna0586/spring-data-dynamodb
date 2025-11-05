@@ -15,25 +15,22 @@
  */
 package org.socialsignin.spring.data.dynamodb.utils;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
-public class SortHandlerTest {
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
+public class SortHandlerTest {
     private SortHandler underTest = new SortHandler() {
     };
 
     @Test
     public void testThrowUnsupportedSortException() {
-        expectedException.expect(UnsupportedOperationException.class);
-
-        underTest.throwUnsupportedSortOperationException();
+        assertThrows(UnsupportedOperationException.class, () -> {
+            underTest.throwUnsupportedSortOperationException();
+        });
     }
 
     @Test
@@ -43,9 +40,9 @@ public class SortHandlerTest {
 
     @Test
     public void testEnsureNoSortSorted() {
-        expectedException.expect(UnsupportedOperationException.class);
-
-        underTest.ensureNoSort(Sort.by("property"));
+        assertThrows(UnsupportedOperationException.class, () -> {
+            underTest.ensureNoSort(Sort.by("property"));
+        });
     }
 
     @Test
@@ -60,8 +57,8 @@ public class SortHandlerTest {
 
     @Test
     public void TestEnsureNoSortPagedSorted() {
-        expectedException.expect(UnsupportedOperationException.class);
-
-        underTest.ensureNoSort(PageRequest.of(0, 1, Sort.by("property")));
+        assertThrows(UnsupportedOperationException.class, () -> {
+            underTest.ensureNoSort(PageRequest.of(0, 1, Sort.by("property")));
+        });
     }
 }

@@ -16,11 +16,11 @@
 package org.socialsignin.spring.data.dynamodb.mapping;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.socialsignin.spring.data.dynamodb.repository.DynamoDBHashAndRangeKey;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.model.Property;
@@ -29,9 +29,9 @@ import org.springframework.data.util.ClassTypeInformation;
 
 import java.util.Comparator;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class DynamoDBPersistentEntityTest {
 
     static class DynamoDBPersistentEntity {
@@ -52,7 +52,7 @@ public class DynamoDBPersistentEntityTest {
             .from(DynamoDBPersistentEntity.class);
     private DynamoDBPersistentEntityImpl<DynamoDBPersistentEntity> underTest;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         underTest = new DynamoDBPersistentEntityImpl<>(cti, comparator);
     }

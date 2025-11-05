@@ -15,8 +15,8 @@
  */
 package org.socialsignin.spring.data.dynamodb.core;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.domain.sample.Feed;
 import org.socialsignin.spring.data.dynamodb.domain.sample.FeedPagingRepository;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -27,18 +27,18 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.LocalDateTime;
 import java.util.Random;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = { SortPageableIT.TestAppConfig.class, DynamoDBLocalResource.class })
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = { SortPageableIntegrationTest.TestAppConfig.class, DynamoDBLocalResource.class })
 @TestPropertySource(properties = { "spring.data.dynamodb.entity2ddl.auto=create" })
-public class SortPageableIT {
+public class SortPageableIntegrationTest {
     private final Random r = new Random();
 
     @Configuration

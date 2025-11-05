@@ -12,8 +12,8 @@ http://docs.socialsignin.org/schema/data/dynamodb http://docs.socialsignin.org/s
 
 
 
-    <context:component-scan base-package="org.socialsignin.spring.data.dynamodb.core">
-        <context:include-filter type="regex" expression="org\.socialsignin\.spring\.data\.dynamodb\.core\.ConfigurationTI"/>
+    <context:component-scan base-package="org.socialsignin.spring.data.dynamodb.utils">
+        <context:include-filter type="regex" expression="org\.socialsignin\.spring\.data\.dynamodb\.utils\.DynamoDBLocalResource"/>
     </context:component-scan>
 
     <dynamodb:repositories base-package="org.socialsignin.spring.data.dynamodb.domain.sample" amazon-dynamodb-ref="amazonDynamoDB">

@@ -15,18 +15,41 @@
  */
 package org.socialsignin.spring.data.dynamodb.utils;
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.local.embedded.DynamoDBEmbedded;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.TestExecutionListener;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.utility.DockerImageName;
 
 @Configuration
 public class DynamoDBLocalResource implements TestExecutionListener {
 
+    private static final GenericContainer<?> dynamoDBContainer;
+
+    static {
+        dynamoDBContainer = new GenericContainer<>(DockerImageName.parse("amazon/dynamodb-local:latest"))
+                .withExposedPorts(8000)
+                .withCommand("-jar", "DynamoDBLocal.jar", "-inMemory", "-sharedDb");
+        dynamoDBContainer.start();
+    }
+
     @Bean
     public AmazonDynamoDB amazonDynamoDB() {
-        return DynamoDBEmbedded.create().amazonDynamoDB();
+        String endpoint = String.format("http://%s:%d",
+                dynamoDBContainer.getHost(),
+                dynamoDBContainer.getMappedPort(8000));
+
+        return AmazonDynamoDBClientBuilder.standard()
+                .withEndpointConfiguration(
+                        new AwsClientBuilder.EndpointConfiguration(endpoint, "us-east-1"))
+                .withCredentials(new AWSStaticCredentialsProvider(
+                        new BasicAWSCredentials("dummy", "dummy")))
+                .build();
     }
 
 }
