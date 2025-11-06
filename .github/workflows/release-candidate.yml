@@ -1,0 +1,135 @@
+name: Release Candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      rcNumber:
+        description: 'RC number (e.g., 1 for RC1, 2 for RC2)'
+        required: true
+
+jobs:
+  release-candidate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'liberica'
+          cache: 'maven'
+          server-id: central
+          server-username: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          server-password: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Calculate RC Version
+        id: version
+        run: |
+          # Get current version from pom.xml
+          CURRENT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "Current version: $CURRENT_VERSION"
+
+          # Validate current version is SNAPSHOT
+          if [[ ! "$CURRENT_VERSION" =~ -SNAPSHOT$ ]]; then
+            echo "❌ Error: Current version must be a SNAPSHOT version"
+            echo "   Current: $CURRENT_VERSION"
+            exit 1
+          fi
+
+          # Remove -SNAPSHOT to get base version
+          BASE_VERSION=${CURRENT_VERSION%-SNAPSHOT}
+
+          # Build RC version
+          RC_VERSION="${BASE_VERSION}-RC${{ github.event.inputs.rcNumber }}"
+          RC_TAG="v${RC_VERSION}"
+
+          # Next development version stays the same (back to SNAPSHOT)
+          NEXT_VERSION="$CURRENT_VERSION"
+
+          echo "rc_version=$RC_VERSION" >> $GITHUB_OUTPUT
+          echo "rc_tag=$RC_TAG" >> $GITHUB_OUTPUT
+          echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+          echo "base_version=$BASE_VERSION" >> $GITHUB_OUTPUT
+
+          echo ""
+          echo "✅ Calculated versions:"
+          echo "   Current:  $CURRENT_VERSION"
+          echo "   RC:       $RC_VERSION"
+          echo "   Tag:      $RC_TAG"
+          echo "   Next Dev: $NEXT_VERSION"
+
+      - name: Check if RC Already Exists
+        run: |
+          RC_TAG="${{ steps.version.outputs.rc_tag }}"
+
+          # Check if tag exists locally
+          if git rev-parse "$RC_TAG" >/dev/null 2>&1; then
+            NEXT_RC=$(({{ github.event.inputs.rcNumber }} + 1))
+            echo "❌ Error: Tag $RC_TAG already exists locally"
+            echo ""
+            echo "💡 This RC has already been created."
+            echo "   To create a new RC, increment the number:"
+            echo "   Current: RC${{ github.event.inputs.rcNumber }}"
+            echo "   Next:    RC${NEXT_RC}"
+            exit 1
+          fi
+
+          # Fetch tags from remote to check if it exists there
+          git fetch --tags
+
+          if git rev-parse "$RC_TAG" >/dev/null 2>&1; then
+            NEXT_RC=$(({{ github.event.inputs.rcNumber }} + 1))
+            echo "❌ Error: Tag $RC_TAG already exists on remote"
+            echo ""
+            echo "💡 This RC has already been published."
+            echo "   To create a new RC, increment the number:"
+            echo "   Current: RC${{ github.event.inputs.rcNumber }}"
+            echo "   Next:    RC${NEXT_RC}"
+            echo ""
+            echo "🔍 View existing release:"
+            echo "   https://github.com/${{ github.repository }}/releases/tag/$RC_TAG"
+            exit 1
+          fi
+
+          echo "✅ Tag $RC_TAG does not exist - safe to proceed"
+
+      - name: Configure Git
+        run: |
+          git config user.name "Prasanna Kumar Ramachandran"
+          git config user.email "prasanna0586@gmail.com"
+
+      - name: Prepare Release Candidate
+        run: |
+          mvn --batch-mode release:prepare \
+            -DreleaseVersion=${{ steps.version.outputs.rc_version }} \
+            -DdevelopmentVersion=${{ steps.version.outputs.next_version }} \
+            -Dtag=${{ steps.version.outputs.rc_tag }}
+
+      - name: Perform Release Candidate
+        run: mvn --batch-mode release:perform
+
+      - name: Summary
+        run: |
+          echo "✅ Release Candidate Published!"
+          echo ""
+          echo "📦 Version: ${{ steps.version.outputs.rc_version }}"
+          echo "🏷️  Git Tag: ${{ steps.version.outputs.rc_tag }}"
+          echo "📝 Next Dev Version: ${{ steps.version.outputs.next_version }}"
+          echo ""
+          echo "🔍 Verify at:"
+          echo "   Maven Central: https://central.sonatype.com/artifact/io.github.prasanna0586/spring-data-dynamodb/${{ steps.version.outputs.rc_version }}"
+          echo ""
+          echo "⚠️  May take a few hours to appear in Maven Central"
+          echo ""
+          echo "📝 Next Steps:"
+          echo "   1. Manually create a GitHub Release at:"
+          echo "      https://github.com/${{ github.repository }}/releases/new?tag=${{ steps.version.outputs.rc_tag }}&prerelease=1"
+          echo "   2. Mark it as a pre-release"
+          echo "   3. Add release notes describing what's being tested"
