@@ -17,21 +17,22 @@ package org.socialsignin.spring.data.dynamodb.mapping.event;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedQueryList;
 import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedScanList;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.socialsignin.spring.data.dynamodb.domain.sample.User;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class AbstractDynamoDBEventListenerTest {
 
     private User sampleEntity = new User();
@@ -45,31 +46,30 @@ public class AbstractDynamoDBEventListenerTest {
 
     private AbstractDynamoDBEventListener<User> underTest;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         underTest = Mockito.spy(new AbstractDynamoDBEventListener<User>() {
         });
-
-        List<User> queryList = new ArrayList<>();
-        queryList.add(sampleEntity);
-        when(sampleQueryList.stream()).thenReturn(queryList.stream());
-        when(sampleScanList.stream()).thenReturn(queryList.stream());
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void testNullArgument() {
         // This is impossible but let's be sure that it is covered
         when(brokenEvent.getSource()).thenReturn(null);
 
-        underTest.onApplicationEvent(brokenEvent);
+        assertThrows(AssertionError.class, () -> {
+            underTest.onApplicationEvent(brokenEvent);
+        });
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void testUnknownEvent() {
         // Simulate an unknown event
         when(brokenEvent.getSource()).thenReturn(new User());
 
-        underTest.onApplicationEvent(brokenEvent);
+        assertThrows(AssertionError.class, () -> {
+            underTest.onApplicationEvent(brokenEvent);
+        });
     }
 
     @Test
@@ -108,6 +108,10 @@ public class AbstractDynamoDBEventListenerTest {
 
     @Test
     public void testAfterQuery() {
+        List<User> queryList = new ArrayList<>();
+        queryList.add(sampleEntity);
+        when(sampleQueryList.stream()).thenReturn(queryList.stream());
+
         underTest.onApplicationEvent(new AfterQueryEvent<>(sampleQueryList));
 
         verify(underTest, never()).onAfterDelete(any());
@@ -134,6 +138,10 @@ public class AbstractDynamoDBEventListenerTest {
 
     @Test
     public void testAfterScan() {
+        List<User> scanList = new ArrayList<>();
+        scanList.add(sampleEntity);
+        when(sampleScanList.stream()).thenReturn(scanList.stream());
+
         underTest.onApplicationEvent(new AfterScanEvent<>(sampleScanList));
 
         verify(underTest, never()).onAfterDelete(any());

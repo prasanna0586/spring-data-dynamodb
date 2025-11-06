@@ -31,7 +31,6 @@
         <aws-java-sdk.version>1.12.791</aws-java-sdk.version>
         <cdi.version>4.1.0</cdi.version>
         <testcontainers.version>1.20.4</testcontainers.version>
-        <slf4j-test.version>3.0.3</slf4j-test.version>
     </properties>
 
     <dependencyManagement>
@@ -104,12 +103,6 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>33.0.0-jre</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.github.valfirst</groupId>
-            <artifactId>slf4j-test</artifactId>
-            <version>${slf4j-test.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

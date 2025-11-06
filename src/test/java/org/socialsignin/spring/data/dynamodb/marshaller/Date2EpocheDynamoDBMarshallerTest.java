@@ -15,19 +15,20 @@
  */
 package org.socialsignin.spring.data.dynamodb.marshaller;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class Date2EpocheDynamoDBMarshallerTest {
 
     private Date2EpocheDynamoDBMarshaller underTest;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         underTest = new Date2EpocheDynamoDBMarshaller();
     }
@@ -60,8 +61,10 @@ public class Date2EpocheDynamoDBMarshallerTest {
 
     }
 
-    @Test(expected = NumberFormatException.class)
+    @Test
     public void testUnmarshallGarbage() {
-        underTest.unmarshall(Date.class, "something");
+        assertThrows(NumberFormatException.class, () -> {
+            underTest.unmarshall(Date.class, "something");
+        });
     }
 }
