@@ -21,13 +21,13 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.socialsignin.spring.data.dynamodb.domain.sample.Playlist;
 import org.socialsignin.spring.data.dynamodb.domain.sample.User;
 import org.springframework.context.ApplicationContext;
@@ -35,13 +35,13 @@ import org.springframework.context.ApplicationContext;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class DynamoDBTemplateTest {
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -58,7 +58,7 @@ public class DynamoDBTemplateTest {
 
     private DynamoDBTemplate dynamoDBTemplate;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         this.dynamoDBTemplate = new DynamoDBTemplate(dynamoDB, dynamoDBMapper, dynamoDBMapperConfig);
         this.dynamoDBTemplate.setApplicationContext(applicationContext);
@@ -98,7 +98,7 @@ public class DynamoDBTemplateTest {
         // Introduced constructor via #91 should not fail its assert
         this.dynamoDBTemplate = new DynamoDBTemplate(dynamoDB, dynamoDBMapper, dynamoDBMapperConfig);
 
-        assertTrue("The constructor should not fail with an assert error", true);
+        assertTrue(true, "The constructor should not fail with an assert error");
     }
 
     @Test

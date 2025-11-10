@@ -15,20 +15,20 @@
  */
 package org.socialsignin.spring.data.dynamodb.query;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.socialsignin.spring.data.dynamodb.domain.sample.User;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class CountByHashAndRangeKeyQueryTest {
     private static final Class<User> DOMAIN_CLASS = User.class;
     @Mock
@@ -39,7 +39,7 @@ public class CountByHashAndRangeKeyQueryTest {
     private Object rangeKey;
     private CountByHashAndRangeKeyQuery<User> underTest;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         hashKey = ThreadLocalRandom.current().nextLong();
         rangeKey = ThreadLocalRandom.current().nextLong();

@@ -15,19 +15,21 @@
  */
 package org.socialsignin.spring.data.dynamodb.config;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.core.type.AnnotationMetadata;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Unit tests for {@link DynamoDBAuditingRegistrar}.
  *
  * @author Vito Limandibhrata
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class DynamoDBAuditingRegistrarUnitTests {
 
     DynamoDBAuditingRegistrar registrar = new DynamoDBAuditingRegistrar();
@@ -37,13 +39,17 @@ public class DynamoDBAuditingRegistrarUnitTests {
     @Mock
     BeanDefinitionRegistry registry;
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void rejectsNullAnnotationMetadata() {
-        registrar.registerBeanDefinitions(null, registry);
+        assertThrows(IllegalArgumentException.class, () -> {
+            registrar.registerBeanDefinitions(null, registry);
+        });
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void rejectsNullBeanDefinitionRegistry() {
-        registrar.registerBeanDefinitions(metadata, null);
+        assertThrows(IllegalArgumentException.class, () -> {
+            registrar.registerBeanDefinitions(metadata, null);
+        });
     }
 }

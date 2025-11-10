@@ -16,14 +16,14 @@
 package org.socialsignin.spring.data.dynamodb.utils;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.socialsignin.spring.data.dynamodb.exception.BatchWriteException;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ExceptionHandlerTest {
 

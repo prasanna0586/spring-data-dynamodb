@@ -1,0 +1,52 @@
+name: Run Snapshot Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-snapshot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'liberica'
+          cache: 'maven'
+          server-id: central
+          server-username: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          server-password: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Verify Version is SNAPSHOT
+        run: |
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          if [[ ! "$VERSION" =~ -SNAPSHOT$ ]]; then
+            echo "Error: Version must end with -SNAPSHOT for snapshot deployment"
+            echo "Current version: $VERSION"
+            exit 1
+          fi
+          echo "✅ Version is SNAPSHOT: $VERSION"
+
+      - name: Run Tests
+        run: mvn --batch-mode clean verify
+
+      - name: Deploy Snapshot
+        run: mvn --batch-mode deploy -Prelease -DskipTests
+
+      - name: Summary
+        run: |
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "✅ Successfully deployed snapshot!"
+          echo ""
+          echo "📦 Artifact: io.github.prasanna0586:spring-data-dynamodb:$VERSION"
+          echo ""
+          echo "🔍 Verify at:"
+          echo "https://central.sonatype.com/artifact/io.github.prasanna0586/spring-data-dynamodb/$VERSION"
+          echo ""
+          echo "⚠️  Snapshots may take a few minutes to appear in Maven Central"

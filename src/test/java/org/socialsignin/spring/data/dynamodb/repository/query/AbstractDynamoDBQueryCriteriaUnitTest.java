@@ -17,7 +17,7 @@ package org.socialsignin.spring.data.dynamodb.repository.query;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.text.DateFormat;
 import java.text.ParseException;

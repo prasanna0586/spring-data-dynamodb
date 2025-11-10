@@ -15,20 +15,20 @@
  */
 package org.socialsignin.spring.data.dynamodb.query;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.socialsignin.spring.data.dynamodb.domain.sample.User;
 
 import java.util.List;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class AbstractDynamicQueryTest {
 
     private static class QueryTest<T> extends AbstractDynamicQuery<T> {
@@ -51,7 +51,7 @@ public class AbstractDynamicQueryTest {
     private DynamoDBOperations dynamoDBOperations;
     private AbstractQuery<User> underTest;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         underTest = new QueryTest<>(dynamoDBOperations, User.class);
     }

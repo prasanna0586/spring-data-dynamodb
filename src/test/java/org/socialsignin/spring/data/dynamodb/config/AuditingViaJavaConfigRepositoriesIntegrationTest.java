@@ -15,9 +15,9 @@
  */
 package org.socialsignin.spring.data.dynamodb.config;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,14 +31,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
 
 /**
@@ -46,13 +46,13 @@ import static org.mockito.Mockito.doReturn;
  *
  * @author Vito Limandibhrata
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = { DynamoDBLocalResource.class,
-        AuditingViaJavaConfigRepositoriesIT.TestAppConfig.class })
+        AuditingViaJavaConfigRepositoriesIntegrationTest.TestAppConfig.class })
 @TestPropertySource(properties = { "spring.data.dynamodb.entity2ddl.auto=create" })
-public class AuditingViaJavaConfigRepositoriesIT {
+public class AuditingViaJavaConfigRepositoriesIntegrationTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AuditingViaJavaConfigRepositoriesIT.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuditingViaJavaConfigRepositoriesIntegrationTest.class);
 
     @Configuration
     @EnableDynamoDBAuditing(auditorAwareRef = "auditorProvider")
@@ -75,7 +75,7 @@ public class AuditingViaJavaConfigRepositoriesIT {
 
     AuditableUser auditor;
 
-    @Before
+    @BeforeEach
     public void setUp() throws InterruptedException {
         this.auditor = auditableUserRepository.save(new AuditableUser("auditor"));
         assertThat(this.auditor, is(notNullValue()));

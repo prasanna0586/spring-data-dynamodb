@@ -15,19 +15,20 @@
  */
 package org.socialsignin.spring.data.dynamodb.marshaller;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class Instant2IsoDynamoDBMarshallerTest {
 
     private Instant2IsoDynamoDBMarshaller underTest;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         underTest = new Instant2IsoDynamoDBMarshaller();
     }
@@ -58,8 +59,10 @@ public class Instant2IsoDynamoDBMarshallerTest {
         assertEquals(Instant.ofEpochMilli(0), underTest.unconvert("1970-01-01T00:00:00.000Z"));
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void testUnmarshallGarbage() {
-        underTest.unmarshall(Instant.class, "something");
+        assertThrows(RuntimeException.class, () -> {
+            underTest.unmarshall(Instant.class, "something");
+        });
     }
 }

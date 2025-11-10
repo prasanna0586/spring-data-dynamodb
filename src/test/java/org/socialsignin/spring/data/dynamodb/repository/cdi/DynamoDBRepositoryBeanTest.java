@@ -21,13 +21,11 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.BeanManager;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.socialsignin.spring.data.dynamodb.domain.sample.User;
 import org.springframework.data.repository.Repository;
@@ -36,16 +34,15 @@ import java.lang.annotation.Annotation;
 import java.util.Collections;
 import java.util.Set;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class DynamoDBRepositoryBeanTest {
     interface SampleRepository extends Repository<User, String> {
     }
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
 
     @Mock
     private CreationalContext<AmazonDynamoDB> creationalContext;
@@ -67,8 +64,11 @@ public class DynamoDBRepositoryBeanTest {
     private Set<Annotation> qualifiers = Collections.emptySet();
     private Class<SampleRepository> repositoryType = SampleRepository.class;
 
-    @Before
+    @BeforeEach
     public void setUp() {
+    }
+
+    private void setupAmazonDynamoDBBeanStubs() {
         when(beanManager.createCreationalContext(amazonDynamoDBBean)).thenReturn(creationalContext);
         when(beanManager.getReference(amazonDynamoDBBean, AmazonDynamoDB.class, creationalContext))
                 .thenReturn(amazonDynamoDB);
@@ -84,10 +84,12 @@ public class DynamoDBRepositoryBeanTest {
 
     @Test
     public void testNullOperationFail() {
-        expectedException.expectMessage("amazonDynamoDBBean must not be null!");
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            new DynamoDBRepositoryBean<>(beanManager, null, dynamoDBMapperConfigBean, null, null, qualifiers,
+                    repositoryType);
+        });
 
-        new DynamoDBRepositoryBean<>(beanManager, null, dynamoDBMapperConfigBean, null, null, qualifiers,
-                repositoryType);
+        assertTrue(exception.getMessage().contains("amazonDynamoDBBean must not be null!"));
     }
 
     @Test
@@ -100,24 +102,30 @@ public class DynamoDBRepositoryBeanTest {
 
     @Test
     public void testSetOperationFail1() {
-        expectedException.expectMessage(
-                "Cannot specify both dynamoDBMapperConfigBean bean and dynamoDBOperationsBean in repository configuration");
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            new DynamoDBRepositoryBean<>(beanManager, null, dynamoDBMapperConfigBean, dynamoDBOperationsBean,
+                    dynamoDBMapperBean, qualifiers, repositoryType);
+        });
 
-        new DynamoDBRepositoryBean<>(beanManager, null, dynamoDBMapperConfigBean, dynamoDBOperationsBean,
-                dynamoDBMapperBean, qualifiers, repositoryType);
+        assertTrue(exception.getMessage().contains(
+                "Cannot specify both dynamoDBMapperConfigBean bean and dynamoDBOperationsBean in repository configuration"));
     }
 
     @Test
     public void testSetOperationFail2() {
-        expectedException.expectMessage(
-                "Cannot specify both amazonDynamoDB bean and dynamoDBOperationsBean in repository configuration");
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            new DynamoDBRepositoryBean<>(beanManager, amazonDynamoDBBean, null, dynamoDBOperationsBean, dynamoDBMapperBean,
+                    qualifiers, repositoryType);
+        });
 
-        new DynamoDBRepositoryBean<>(beanManager, amazonDynamoDBBean, null, dynamoDBOperationsBean, dynamoDBMapperBean,
-                qualifiers, repositoryType);
+        assertTrue(exception.getMessage().contains(
+                "Cannot specify both amazonDynamoDB bean and dynamoDBOperationsBean in repository configuration"));
     }
 
     @Test
     public void testCreateRepostiory() {
+        setupAmazonDynamoDBBeanStubs();
+
         DynamoDBRepositoryBean<SampleRepository> underTest = new DynamoDBRepositoryBean<>(beanManager,
                 amazonDynamoDBBean, dynamoDBMapperConfigBean, null, dynamoDBMapperBean, qualifiers, repositoryType);
 
