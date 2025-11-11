@@ -1,7 +1,7 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.model.*;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -44,7 +44,7 @@ public class NestedDocumentsIntegrationTest {
     private CustomerOrderRepository orderRepository;
 
     @Autowired
-    private AmazonDynamoDB amazonDynamoDB;
+    private DynamoDbClient amazonDynamoDB;
 
     @BeforeEach
     void setUp() {
@@ -197,11 +197,12 @@ public class NestedDocumentsIntegrationTest {
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":newCity", new AttributeValue("Fort Lauderdale"));
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("CustomerOrder")
-                .withKey(key)
-                .withUpdateExpression("SET shippingAddress.city = :newCity")
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("CustomerOrder")
+                .key(key)
+                .updateExpression("SET shippingAddress.city = :newCity")
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(updateRequest);
 
@@ -233,14 +234,16 @@ public class NestedDocumentsIntegrationTest {
         key.put("orderId", new AttributeValue("order-006"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":newQty", new AttributeValue().withN("2"));
+        expressionAttributeValues.put(":newQty", AttributeValue.builder().n("2")
+                .build());
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("CustomerOrder")
-                .withKey(key)
-                .withUpdateExpression("SET #items[0].quantity = :newQty")
-                .withExpressionAttributeNames(Collections.singletonMap("#items", "items"))
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("CustomerOrder")
+                .key(key)
+                .updateExpression("SET #items[0].quantity = :newQty")
+                .expressionAttributeNames(Collections.singletonMap("#items", "items"))
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(updateRequest);
 
@@ -273,21 +276,27 @@ public class NestedDocumentsIntegrationTest {
         Map<String, AttributeValue> newItemMap = new HashMap<>();
         newItemMap.put("productId", new AttributeValue("prod-009"));
         newItemMap.put("productName", new AttributeValue("Stylus"));
-        newItemMap.put("quantity", new AttributeValue().withN("1"));
-        newItemMap.put("price", new AttributeValue().withN("79.99"));
-        newItemMap.put("totalPrice", new AttributeValue().withN("79.99"));
+        newItemMap.put("quantity", AttributeValue.builder().n("1")
+                .build());
+        newItemMap.put("price", AttributeValue.builder().n("79.99")
+                .build());
+        newItemMap.put("totalPrice", AttributeValue.builder().n("79.99")
+                .build());
 
-        AttributeValue newItemList = new AttributeValue().withL(new AttributeValue().withM(newItemMap));
+        AttributeValue newItemList = AttributeValue.builder().l(AttributeValue.builder().m(newItemMap)
+                .build())
+                .build();
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":newItem", newItemList);
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("CustomerOrder")
-                .withKey(key)
-                .withUpdateExpression("SET #items = list_append(#items, :newItem)")
-                .withExpressionAttributeNames(Collections.singletonMap("#items", "items"))
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("CustomerOrder")
+                .key(key)
+                .updateExpression("SET #items = list_append(#items, :newItem)")
+                .expressionAttributeNames(Collections.singletonMap("#items", "items"))
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(updateRequest);
 
@@ -364,13 +373,15 @@ public class NestedDocumentsIntegrationTest {
         newAddressMap.put("country", new AttributeValue("USA"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":newAddress", new AttributeValue().withM(newAddressMap));
+        expressionAttributeValues.put(":newAddress", AttributeValue.builder().m(newAddressMap)
+                .build());
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("CustomerOrder")
-                .withKey(key)
-                .withUpdateExpression("SET shippingAddress = :newAddress")
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("CustomerOrder")
+                .key(key)
+                .updateExpression("SET shippingAddress = :newAddress")
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(updateRequest);
 

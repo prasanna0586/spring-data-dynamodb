@@ -15,11 +15,11 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.util;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.model.*;
-import com.amazonaws.services.dynamodbv2.util.TableUtils;
-import com.amazonaws.services.dynamodbv2.util.TableUtils.TableNeverTransitionedToStateException;
+import software.amazon.awssdk.services.dynamodb.util.TableUtils;
+import software.amazon.awssdk.services.dynamodb.util.TableUtilsTableNeverTransitionedToStateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBEntityInformation;
@@ -52,7 +52,7 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
     private static final String CONFIGURATION_KEY_entity2ddl_readCapacity = "${spring.data.dynamodb.entity2ddl.readCapacity:10}";
     private static final String CONFIGURATION_KEY_entity2ddl_writeCapacity = "${spring.data.dynamodb.entity2ddl.writeCapacity:1}";
 
-    private final AmazonDynamoDB amazonDynamoDB;
+    private final DynamoDbClient amazonDynamoDB;
     private final DynamoDBMapper mapper;
 
     private final Entity2DDL mode;
@@ -62,13 +62,13 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
 
     private final Collection<DynamoDBEntityInformation<T, ID>> registeredEntities = new ArrayList<>();
 
-    public Entity2DynamoDBTableSynchronizer(AmazonDynamoDB amazonDynamoDB, DynamoDBMapper mapper, Entity2DDL mode) {
+    public Entity2DynamoDBTableSynchronizer(DynamoDbClient amazonDynamoDB, DynamoDBMapper mapper, Entity2DDL mode) {
         this(amazonDynamoDB, mapper, mode.getConfigurationValue(), ProjectionType.ALL.name(), ProjectionType.ALL.name(),
                 10L, 10L);
     }
 
     @Autowired
-    public Entity2DynamoDBTableSynchronizer(AmazonDynamoDB amazonDynamoDB, DynamoDBMapper mapper,
+    public Entity2DynamoDBTableSynchronizer(DynamoDbClient amazonDynamoDB, DynamoDBMapper mapper,
             @Value(CONFIGURATION_KEY_entity2ddl_auto) String mode,
             @Value(CONFIGURATION_KEY_entity2ddl_gsiProjectionType) String gsiProjectionType,
             @Value(CONFIGURATION_KEY_entity2ddl_lsiProjectionType) String lsiProjectionType,
@@ -152,25 +152,27 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
         Class<T> domainType = entityInformation.getJavaType();
 
         CreateTableRequest ctr = mapper.generateCreateTableRequest(domainType);
-        LOGGER.trace("Creating table {} for entity {}", ctr.getTableName(), domainType);
-        ctr.setProvisionedThroughput(pt);
+        LOGGER.trace("Creating table {} for entity {}", ctr.tableName(), domainType);
+        ctr = ctr.toBuilder().provisionedThroughput(pt).build();
 
-        if (ctr.getGlobalSecondaryIndexes() != null) {
-            ctr.getGlobalSecondaryIndexes().forEach(gsi -> {
-                gsi.setProjection(new Projection().withProjectionType(gsiProjectionType));
+        if (ctr.globalSecondaryIndexes() != null) {
+            ctr.globalSecondaryIndexes().forEach(gsi -> {
+                gsi.setProjection(Projection.builder().projectionType(gsiProjectionType)
+                        .build());
                 gsi.setProvisionedThroughput(pt);
             });
         }
 
-        if (ctr.getLocalSecondaryIndexes() != null) {
-            ctr.getLocalSecondaryIndexes()
-                    .forEach(lsi -> lsi.setProjection(new Projection().withProjectionType(lsiProjectionType)));
+        if (ctr.localSecondaryIndexes() != null) {
+            ctr.localSecondaryIndexes()
+                    .forEach(lsi -> lsi.setProjection(Projection.builder().projectionType(lsiProjectionType)
+                    .build()));
         }
 
         boolean result = TableUtils.createTableIfNotExists(amazonDynamoDB, ctr);
         if (result) {
-            TableUtils.waitUntilActive(amazonDynamoDB, ctr.getTableName());
-            LOGGER.debug("Created table {} for entity {}", ctr.getTableName(), domainType);
+            TableUtils.waitUntilActive(amazonDynamoDB, ctr.tableName());
+            LOGGER.debug("Created table {} for entity {}", ctr.tableName(), domainType);
         }
         return result;
     }
@@ -179,11 +181,11 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
         Class<T> domainType = entityInformation.getJavaType();
 
         DeleteTableRequest dtr = mapper.generateDeleteTableRequest(domainType);
-        LOGGER.trace("Dropping table {} for entity {}", dtr.getTableName(), domainType);
+        LOGGER.trace("Dropping table {} for entity {}", dtr.tableName(), domainType);
 
         boolean result = TableUtils.deleteTableIfExists(amazonDynamoDB, dtr);
         if (result) {
-            LOGGER.debug("Deleted table {} for entity {}", dtr.getTableName(), domainType);
+            LOGGER.debug("Deleted table {} for entity {}", dtr.tableName(), domainType);
         }
 
         return result;
@@ -196,31 +198,31 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
      * @throws IllegalStateException
      *             is thrown if the existing table doesn't match the entity's annotation
      */
-    private DescribeTableResult performValidate(DynamoDBEntityInformation<T, ID> entityInformation)
+    private DescribeTableResponse performValidate(DynamoDBEntityInformation<T, ID> entityInformation)
             throws IllegalStateException {
         Class<T> domainType = entityInformation.getJavaType();
 
         CreateTableRequest expected = mapper.generateCreateTableRequest(domainType);
-        DescribeTableResult result = amazonDynamoDB.describeTable(expected.getTableName());
-        TableDescription actual = result.getTable();
+        DescribeTableResponse result = amazonDynamoDB.describeTable(expected.tableName());
+        TableDescription actual = result.table();
 
-        if (!expected.getKeySchema().equals(actual.getKeySchema())) {
-            throw new IllegalStateException("KeySchema is not as expected. Expected: <" + expected.getKeySchema()
-                    + "> but found <" + actual.getKeySchema() + ">");
+        if (!expected.keySchema().equals(actual.keySchema())) {
+            throw new IllegalStateException("KeySchema is not as expected. Expected: <" + expected.keySchema()
+                    + "> but found <" + actual.keySchema() + ">");
         }
         LOGGER.debug("KeySchema is valid");
 
-        if (expected.getGlobalSecondaryIndexes() != null) {
-            if (!Arrays.deepEquals(expected.getGlobalSecondaryIndexes().toArray(),
-                    actual.getGlobalSecondaryIndexes().toArray())) {
+        if (expected.globalSecondaryIndexes() != null) {
+            if (!Arrays.deepEquals(expected.globalSecondaryIndexes().toArray(),
+                    actual.globalSecondaryIndexes().toArray())) {
                 throw new IllegalStateException("Global Secondary Indexes are not as expected. Expected: <"
-                        + expected.getGlobalSecondaryIndexes() + "> but found <" + actual.getGlobalSecondaryIndexes()
+                        + expected.globalSecondaryIndexes() + "> but found <" + actual.globalSecondaryIndexes()
                         + ">");
             }
         }
         LOGGER.debug("Global Secondary Indexes are valid");
 
-        LOGGER.info("Validated table {} for entity{}", expected.getTableName(), domainType);
+        LOGGER.info("Validated table {} for entity{}", expected.tableName(), domainType);
         return result;
     }
 

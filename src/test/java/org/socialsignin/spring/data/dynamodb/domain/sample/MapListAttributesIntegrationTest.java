@@ -1,7 +1,7 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.model.*;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -48,7 +48,7 @@ public class MapListAttributesIntegrationTest {
     private ProductRepository productRepository;
 
     @Autowired
-    private AmazonDynamoDB amazonDynamoDB;
+    private DynamoDbClient amazonDynamoDB;
 
     @BeforeEach
     void setUp() {
@@ -172,12 +172,13 @@ public class MapListAttributesIntegrationTest {
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":size", new AttributeValue("42"));
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("Product")
-                .withKey(key)
-                .withUpdateExpression("SET attributes.#size = :size")
-                .withExpressionAttributeNames(Collections.singletonMap("#size", "size"))
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("Product")
+                .key(key)
+                .updateExpression("SET attributes.#size = :size")
+                .expressionAttributeNames(Collections.singletonMap("#size", "size"))
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(updateRequest);
 
@@ -210,11 +211,12 @@ public class MapListAttributesIntegrationTest {
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":newColor", new AttributeValue("blue"));
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("Product")
-                .withKey(key)
-                .withUpdateExpression("SET attributes.color = :newColor")
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("Product")
+                .key(key)
+                .updateExpression("SET attributes.color = :newColor")
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(updateRequest);
 
@@ -244,10 +246,11 @@ public class MapListAttributesIntegrationTest {
         Map<String, AttributeValue> key = new HashMap<>();
         key.put("productId", new AttributeValue("prod-007"));
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("Product")
-                .withKey(key)
-                .withUpdateExpression("REMOVE attributes.material");
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("Product")
+                .key(key)
+                .updateExpression("REMOVE attributes.material")
+                .build();
 
         amazonDynamoDB.updateItem(updateRequest);
 
@@ -274,17 +277,19 @@ public class MapListAttributesIntegrationTest {
         Map<String, AttributeValue> key = new HashMap<>();
         key.put("productId", new AttributeValue("prod-008"));
 
-        AttributeValue newCategories = new AttributeValue()
-                .withL(new AttributeValue("Photography"), new AttributeValue("Professional"));
+        AttributeValue newCategories = AttributeValue.builder()
+                .l(new AttributeValue("Photography"), new AttributeValue("Professional"))
+                .build();
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":newCats", newCategories);
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("Product")
-                .withKey(key)
-                .withUpdateExpression("SET categories = list_append(categories, :newCats)")
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("Product")
+                .key(key)
+                .updateExpression("SET categories = list_append(categories, :newCats)")
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(updateRequest);
 
@@ -310,17 +315,19 @@ public class MapListAttributesIntegrationTest {
         Map<String, AttributeValue> key = new HashMap<>();
         key.put("productId", new AttributeValue("prod-009"));
 
-        AttributeValue newCategories = new AttributeValue()
-                .withL(new AttributeValue("Electronics"));
+        AttributeValue newCategories = AttributeValue.builder()
+                .l(new AttributeValue("Electronics"))
+                .build();
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":newCats", newCategories);
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("Product")
-                .withKey(key)
-                .withUpdateExpression("SET categories = list_append(:newCats, categories)")
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("Product")
+                .key(key)
+                .updateExpression("SET categories = list_append(:newCats, categories)")
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(updateRequest);
 
@@ -347,13 +354,15 @@ public class MapListAttributesIntegrationTest {
         key.put("productId", new AttributeValue("prod-010"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":newPrice", new AttributeValue().withN("449.99"));
+        expressionAttributeValues.put(":newPrice", AttributeValue.builder().n("449.99")
+                .build());
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("Product")
-                .withKey(key)
-                .withUpdateExpression("SET priceHistory[1] = :newPrice")
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("Product")
+                .key(key)
+                .updateExpression("SET priceHistory[1] = :newPrice")
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(updateRequest);
 
@@ -378,10 +387,11 @@ public class MapListAttributesIntegrationTest {
         Map<String, AttributeValue> key = new HashMap<>();
         key.put("productId", new AttributeValue("prod-011"));
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("Product")
-                .withKey(key)
-                .withUpdateExpression("REMOVE categories[1]");
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("Product")
+                .key(key)
+                .updateExpression("REMOVE categories[1]")
+                .build();
 
         amazonDynamoDB.updateItem(updateRequest);
 

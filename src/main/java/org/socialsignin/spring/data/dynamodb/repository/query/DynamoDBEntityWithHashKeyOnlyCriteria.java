@@ -17,13 +17,13 @@ package org.socialsignin.spring.data.dynamodb.repository.query;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperTableModel;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
-import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
-import com.amazonaws.services.dynamodbv2.model.Condition;
-import com.amazonaws.services.dynamodbv2.model.QueryRequest;
-import com.amazonaws.services.dynamodbv2.model.Select;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.socialsignin.spring.data.dynamodb.query.*;
 import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBEntityInformation;
+import software.amazon.awssdk.services.dynamodb.model.ComparisonOperator;
+import software.amazon.awssdk.services.dynamodb.model.Condition;
+import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
+import software.amazon.awssdk.services.dynamodb.model.Select;
 
 import java.util.List;
 import java.util.Map;
@@ -71,7 +71,7 @@ public class DynamoDBEntityWithHashKeyOnlyCriteria<T, ID> extends AbstractDynamo
             QueryRequest queryRequest = buildQueryRequest(
                     dynamoDBOperations.getOverriddenTableName(clazz, entityInformation.getDynamoDBTableName()),
                     getGlobalSecondaryIndexName(), getHashKeyAttributeName(), null, null, hashKeyConditions, null);
-            queryRequest.setSelect(Select.COUNT);
+            queryRequest = queryRequest.toBuilder().select(Select.COUNT).build();
             return new QueryRequestCountQuery(dynamoDBOperations, queryRequest);
 
         } else {

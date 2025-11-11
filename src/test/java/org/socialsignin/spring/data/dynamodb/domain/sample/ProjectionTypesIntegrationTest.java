@@ -1,10 +1,10 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
-import com.amazonaws.services.dynamodbv2.model.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -55,7 +55,7 @@ public class ProjectionTypesIntegrationTest {
     }
 
     @Autowired
-    private AmazonDynamoDB amazonDynamoDB;
+    private DynamoDbClient amazonDynamoDB;
 
     @Autowired
     private DynamoDBMapper dynamoDBMapper;
@@ -158,9 +158,9 @@ public class ProjectionTypesIntegrationTest {
         assertThat(item).containsKey("stock");
 
         // Verify attribute values
-        assertThat(item.get("productName").getS()).isEqualTo("DynamoDB Guide");
-        assertThat(item.get("description").getS()).isEqualTo("Comprehensive guide to DynamoDB");
-        assertThat(item.get("stock").getN()).isEqualTo("100");
+        assertThat(item.get("productName").s()).isEqualTo("DynamoDB Guide");
+        assertThat(item.get("description").s()).isEqualTo("Comprehensive guide to DynamoDB");
+        assertThat(item.get("stock").n()).isEqualTo("100");
     }
 
     @Test
@@ -266,26 +266,29 @@ public class ProjectionTypesIntegrationTest {
         );
 
         // Define GSI
-        Projection projection = new Projection().withProjectionType(projectionType);
+        Projection projection = Projection.builder().projectionType(projectionType)
+                .build();
         if (projectionType == ProjectionType.INCLUDE && nonKeyAttributes != null) {
-            projection.setNonKeyAttributes(nonKeyAttributes);
+            projection = projection.toBuilder().nonKeyAttributes(nonKeyAttributes).build();
         }
 
-        GlobalSecondaryIndex gsi = new GlobalSecondaryIndex()
-                .withIndexName("category-price-index")
-                .withKeySchema(
+        GlobalSecondaryIndex gsi = GlobalSecondaryIndex.builder()
+                .indexName("category-price-index")
+                .keySchema(
                         new KeySchemaElement("category", KeyType.HASH),
                         new KeySchemaElement("price", KeyType.RANGE)
                 )
-                .withProjection(projection)
-                .withProvisionedThroughput(new ProvisionedThroughput(5L, 5L));
+                .projection(projection)
+                .provisionedThroughput(new ProvisionedThroughput(5L, 5L))
+                .build();
 
-        CreateTableRequest request = new CreateTableRequest()
-                .withTableName(TABLE_NAME)
-                .withAttributeDefinitions(attributeDefinitions)
-                .withKeySchema(keySchema)
-                .withGlobalSecondaryIndexes(gsi)
-                .withProvisionedThroughput(new ProvisionedThroughput(5L, 5L));
+        CreateTableRequest request = CreateTableRequest.builder()
+                .tableName(TABLE_NAME)
+                .attributeDefinitions(attributeDefinitions)
+                .keySchema(keySchema)
+                .globalSecondaryIndexes(gsi)
+                .provisionedThroughput(new ProvisionedThroughput(5L, 5L))
+                .build();
 
         amazonDynamoDB.createTable(request);
 
@@ -303,8 +306,10 @@ public class ProjectionTypesIntegrationTest {
         item.put("category", new AttributeValue(category));
         item.put("productName", new AttributeValue(productName));
         item.put("description", new AttributeValue(description));
-        item.put("price", new AttributeValue().withN(String.valueOf(price)));
-        item.put("stock", new AttributeValue().withN(String.valueOf(stock)));
+        item.put("price", AttributeValue.builder().n(String.valueOf(price))
+                .build());
+        item.put("stock", AttributeValue.builder().n(String.valueOf(stock))
+                .build());
 
         amazonDynamoDB.putItem(TABLE_NAME, item);
     }
@@ -316,14 +321,15 @@ public class ProjectionTypesIntegrationTest {
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":category", new AttributeValue(category));
 
-        QueryRequest queryRequest = new QueryRequest()
-                .withTableName(TABLE_NAME)
-                .withIndexName("category-price-index")
-                .withKeyConditionExpression("category = :category")
-                .withExpressionAttributeValues(expressionAttributeValues);
+        QueryRequest queryRequest = QueryRequest.builder()
+                .tableName(TABLE_NAME)
+                .indexName("category-price-index")
+                .keyConditionExpression("category = :category")
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
-        QueryResult result = amazonDynamoDB.query(queryRequest);
-        return result.getItems();
+        QueryResponse result = amazonDynamoDB.query(queryRequest);
+        return result.items();
     }
 
     /**
@@ -335,14 +341,14 @@ public class ProjectionTypesIntegrationTest {
 
         while (attempt < maxAttempts) {
             try {
-                DescribeTableResult result = amazonDynamoDB.describeTable(TABLE_NAME);
-                String status = result.getTable().getTableStatus();
+                DescribeTableResponse result = amazonDynamoDB.describeTable(TABLE_NAME);
+                String status = result.table().tableStatus();
 
                 if ("ACTIVE".equals(status)) {
                     // Also check GSI status
-                    if (result.getTable().getGlobalSecondaryIndexes() != null) {
-                        boolean allGsiActive = result.getTable().getGlobalSecondaryIndexes().stream()
-                                .allMatch(gsi -> "ACTIVE".equals(gsi.getIndexStatus()));
+                    if (result.table().globalSecondaryIndexes() != null) {
+                        boolean allGsiActive = result.table().globalSecondaryIndexes().stream()
+                                .allMatch(gsi -> "ACTIVE".equals(gsi.indexStatus()));
                         if (allGsiActive) {
                             return;
                         }

@@ -15,7 +15,6 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.cdi;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
 import jakarta.enterprise.context.spi.CreationalContext;
@@ -26,6 +25,7 @@ import org.socialsignin.spring.data.dynamodb.core.DynamoDBTemplate;
 import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBRepositoryFactory;
 import org.springframework.data.repository.cdi.CdiRepositoryBean;
 import org.springframework.util.Assert;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.lang.annotation.Annotation;
 import java.util.Set;
@@ -40,7 +40,7 @@ import java.util.Set;
  *            The type of the repository.
  */
 class DynamoDBRepositoryBean<T> extends CdiRepositoryBean<T> {
-    private final Bean<AmazonDynamoDB> amazonDynamoDBBean;
+    private final Bean<DynamoDbClient> amazonDynamoDBBean;
 
     private final Bean<DynamoDBMapperConfig> dynamoDBMapperConfigBean;
 
@@ -62,7 +62,7 @@ class DynamoDBRepositoryBean<T> extends CdiRepositoryBean<T> {
      * @param repositoryType
      *            must not be {@literal null}.
      */
-    DynamoDBRepositoryBean(BeanManager beanManager, Bean<AmazonDynamoDB> amazonDynamoDBBean,
+    DynamoDBRepositoryBean(BeanManager beanManager, Bean<DynamoDbClient> amazonDynamoDBBean,
             Bean<DynamoDBMapperConfig> dynamoDBMapperConfigBean, Bean<DynamoDBOperations> dynamoDBOperationsBean,
             Bean<DynamoDBMapper> dynamoDBMapperBean, Set<Annotation> qualifiers, Class<T> repositoryType) {
 
@@ -90,7 +90,7 @@ class DynamoDBRepositoryBean<T> extends CdiRepositoryBean<T> {
     @Override
     protected T create(CreationalContext<T> creationalContext, Class<T> repositoryType) {
         // Get an instance from the associated AmazonDynamoDB bean.
-        AmazonDynamoDB amazonDynamoDB = getDependencyInstance(amazonDynamoDBBean, AmazonDynamoDB.class);
+        DynamoDbClient amazonDynamoDB = getDependencyInstance(amazonDynamoDBBean, DynamoDbClient.class);
 
         // Get an instance from the associated optional AmazonDynamoDB bean.
         DynamoDBMapperConfig dynamoDBMapperConfig = dynamoDBMapperConfigBean == null ? null

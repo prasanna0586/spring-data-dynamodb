@@ -1,8 +1,8 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.model.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -52,7 +52,7 @@ public class TransactionalOperationsIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
-    private AmazonDynamoDB amazonDynamoDB;
+    private DynamoDbClient amazonDynamoDB;
 
     @Autowired
     private DynamoDBMapper dynamoDBMapper;
@@ -76,35 +76,45 @@ public class TransactionalOperationsIntegrationTest {
         Map<String, AttributeValue> item1 = new HashMap<>();
         item1.put("accountId", new AttributeValue("txn-account-1"));
         item1.put("accountHolder", new AttributeValue("Alice"));
-        item1.put("balance", new AttributeValue().withN("1000.0"));
+        item1.put("balance", AttributeValue.builder().n("1000.0")
+                .build());
         item1.put("status", new AttributeValue("ACTIVE"));
-        actions.add(new TransactWriteItem().withPut(
-                new Put().withTableName("BankAccount").withItem(item1)
-        ));
+        actions.add(TransactWriteItem.builder().put(
+                Put.builder().tableName("BankAccount").item(item1)
+                .build()
+        )
+        .build());
 
         // Account 2
         Map<String, AttributeValue> item2 = new HashMap<>();
         item2.put("accountId", new AttributeValue("txn-account-2"));
         item2.put("accountHolder", new AttributeValue("Bob"));
-        item2.put("balance", new AttributeValue().withN("2000.0"));
+        item2.put("balance", AttributeValue.builder().n("2000.0")
+                .build());
         item2.put("status", new AttributeValue("ACTIVE"));
-        actions.add(new TransactWriteItem().withPut(
-                new Put().withTableName("BankAccount").withItem(item2)
-        ));
+        actions.add(TransactWriteItem.builder().put(
+                Put.builder().tableName("BankAccount").item(item2)
+                .build()
+        )
+        .build());
 
         // Account 3
         Map<String, AttributeValue> item3 = new HashMap<>();
         item3.put("accountId", new AttributeValue("txn-account-3"));
         item3.put("accountHolder", new AttributeValue("Charlie"));
-        item3.put("balance", new AttributeValue().withN("3000.0"));
+        item3.put("balance", AttributeValue.builder().n("3000.0")
+                .build());
         item3.put("status", new AttributeValue("ACTIVE"));
-        actions.add(new TransactWriteItem().withPut(
-                new Put().withTableName("BankAccount").withItem(item3)
-        ));
+        actions.add(TransactWriteItem.builder().put(
+                Put.builder().tableName("BankAccount").item(item3)
+                .build()
+        )
+        .build());
 
         // When - Execute transaction
-        TransactWriteItemsRequest request = new TransactWriteItemsRequest()
-                .withTransactItems(actions);
+        TransactWriteItemsRequest request = TransactWriteItemsRequest.builder()
+                .transactItems(actions)
+                .build();
         amazonDynamoDB.transactWriteItems(request);
 
         // Then - All 3 accounts should exist
@@ -133,31 +143,38 @@ public class TransactionalOperationsIntegrationTest {
         // Debit Alice's account
         Map<String, AttributeValue> key1 = new HashMap<>();
         key1.put("accountId", new AttributeValue("txn-transfer-1"));
-        actions.add(new TransactWriteItem().withUpdate(
-                new Update()
-                        .withTableName("BankAccount")
-                        .withKey(key1)
-                        .withUpdateExpression("SET balance = balance - :amount")
-                        .withExpressionAttributeValues(Collections.singletonMap(
-                                ":amount", new AttributeValue().withN("300")
+        actions.add(TransactWriteItem.builder().update(
+                Update.builder()
+                        .tableName("BankAccount")
+                        .key(key1)
+                        .updateExpression("SET balance = balance - :amount")
+                        .expressionAttributeValues(Collections.singletonMap(
+                                ":amount",  AttributeValue.builder().n("300")
+                                .build()
                         ))
-        ));
+                .build()
+        )
+        .build());
 
         // Credit Bob's account
         Map<String, AttributeValue> key2 = new HashMap<>();
         key2.put("accountId", new AttributeValue("txn-transfer-2"));
-        actions.add(new TransactWriteItem().withUpdate(
-                new Update()
-                        .withTableName("BankAccount")
-                        .withKey(key2)
-                        .withUpdateExpression("SET balance = balance + :amount")
-                        .withExpressionAttributeValues(Collections.singletonMap(
-                                ":amount", new AttributeValue().withN("300")
+        actions.add(TransactWriteItem.builder().update(
+                Update.builder()
+                        .tableName("BankAccount")
+                        .key(key2)
+                        .updateExpression("SET balance = balance + :amount")
+                        .expressionAttributeValues(Collections.singletonMap(
+                                ":amount",  AttributeValue.builder().n("300")
+                                .build()
                         ))
-        ));
+                .build()
+        )
+        .build());
 
-        TransactWriteItemsRequest request = new TransactWriteItemsRequest()
-                .withTransactItems(actions);
+        TransactWriteItemsRequest request = TransactWriteItemsRequest.builder()
+                .transactItems(actions)
+                .build();
         amazonDynamoDB.transactWriteItems(request);
 
         // Then - Balances should be updated atomically
@@ -183,31 +200,38 @@ public class TransactionalOperationsIntegrationTest {
 
         Map<String, AttributeValue> key1 = new HashMap<>();
         key1.put("accountId", new AttributeValue("txn-cond-1"));
-        actions.add(new TransactWriteItem().withUpdate(
-                new Update()
-                        .withTableName("BankAccount")
-                        .withKey(key1)
-                        .withUpdateExpression("SET balance = balance - :amount")
-                        .withConditionExpression("balance >= :amount")
-                        .withExpressionAttributeValues(Collections.singletonMap(
-                                ":amount", new AttributeValue().withN("300")
+        actions.add(TransactWriteItem.builder().update(
+                Update.builder()
+                        .tableName("BankAccount")
+                        .key(key1)
+                        .updateExpression("SET balance = balance - :amount")
+                        .conditionExpression("balance >= :amount")
+                        .expressionAttributeValues(Collections.singletonMap(
+                                ":amount",  AttributeValue.builder().n("300")
+                                .build()
                         ))
-        ));
+                .build()
+        )
+        .build());
 
         Map<String, AttributeValue> key2 = new HashMap<>();
         key2.put("accountId", new AttributeValue("txn-cond-2"));
-        actions.add(new TransactWriteItem().withUpdate(
-                new Update()
-                        .withTableName("BankAccount")
-                        .withKey(key2)
-                        .withUpdateExpression("SET balance = balance + :amount")
-                        .withExpressionAttributeValues(Collections.singletonMap(
-                                ":amount", new AttributeValue().withN("300")
+        actions.add(TransactWriteItem.builder().update(
+                Update.builder()
+                        .tableName("BankAccount")
+                        .key(key2)
+                        .updateExpression("SET balance = balance + :amount")
+                        .expressionAttributeValues(Collections.singletonMap(
+                                ":amount",  AttributeValue.builder().n("300")
+                                .build()
                         ))
-        ));
+                .build()
+        )
+        .build());
 
-        TransactWriteItemsRequest request = new TransactWriteItemsRequest()
-                .withTransactItems(actions);
+        TransactWriteItemsRequest request = TransactWriteItemsRequest.builder()
+                .transactItems(actions)
+                .build();
 
         // Then - Transaction should fail and NEITHER account should be modified
         assertThatThrownBy(() -> amazonDynamoDB.transactWriteItems(request))
@@ -238,32 +262,38 @@ public class TransactionalOperationsIntegrationTest {
         // ConditionCheck - Verify activeAccount is ACTIVE
         Map<String, AttributeValue> checkKey = new HashMap<>();
         checkKey.put("accountId", new AttributeValue("txn-check-active"));
-        actions.add(new TransactWriteItem().withConditionCheck(
-                new ConditionCheck()
-                        .withTableName("BankAccount")
-                        .withKey(checkKey)
-                        .withConditionExpression("#status = :active")
-                        .withExpressionAttributeNames(Collections.singletonMap("#status", "status"))
-                        .withExpressionAttributeValues(Collections.singletonMap(
+        actions.add(TransactWriteItem.builder().conditionCheck(
+                ConditionCheck.builder()
+                        .tableName("BankAccount")
+                        .key(checkKey)
+                        .conditionExpression("#status = :active")
+                        .expressionAttributeNames(Collections.singletonMap("#status", "status"))
+                        .expressionAttributeValues(Collections.singletonMap(
                                 ":active", new AttributeValue("ACTIVE")
                         ))
-        ));
+                .build()
+        )
+        .build());
 
         // Update - Debit the target account
         Map<String, AttributeValue> updateKey = new HashMap<>();
         updateKey.put("accountId", new AttributeValue("txn-check-1"));
-        actions.add(new TransactWriteItem().withUpdate(
-                new Update()
-                        .withTableName("BankAccount")
-                        .withKey(updateKey)
-                        .withUpdateExpression("SET balance = balance - :amount")
-                        .withExpressionAttributeValues(Collections.singletonMap(
-                                ":amount", new AttributeValue().withN("200")
+        actions.add(TransactWriteItem.builder().update(
+                Update.builder()
+                        .tableName("BankAccount")
+                        .key(updateKey)
+                        .updateExpression("SET balance = balance - :amount")
+                        .expressionAttributeValues(Collections.singletonMap(
+                                ":amount",  AttributeValue.builder().n("200")
+                                .build()
                         ))
-        ));
+                .build()
+        )
+        .build());
 
-        TransactWriteItemsRequest request = new TransactWriteItemsRequest()
-                .withTransactItems(actions);
+        TransactWriteItemsRequest request = TransactWriteItemsRequest.builder()
+                .transactItems(actions)
+                .build();
         amazonDynamoDB.transactWriteItems(request);
 
         // Then - Withdrawal should succeed because activeAccount is ACTIVE
@@ -286,29 +316,35 @@ public class TransactionalOperationsIntegrationTest {
         Map<String, AttributeValue> key = new HashMap<>();
         key.put("accountId", new AttributeValue("txn-frozen-1"));
 
-        actions.add(new TransactWriteItem().withConditionCheck(
-                new ConditionCheck()
-                        .withTableName("BankAccount")
-                        .withKey(key)
-                        .withConditionExpression("#status = :active")
-                        .withExpressionAttributeNames(Collections.singletonMap("#status", "status"))
-                        .withExpressionAttributeValues(Collections.singletonMap(
+        actions.add(TransactWriteItem.builder().conditionCheck(
+                ConditionCheck.builder()
+                        .tableName("BankAccount")
+                        .key(key)
+                        .conditionExpression("#status = :active")
+                        .expressionAttributeNames(Collections.singletonMap("#status", "status"))
+                        .expressionAttributeValues(Collections.singletonMap(
                                 ":active", new AttributeValue("ACTIVE")
                         ))
-        ));
+                .build()
+        )
+        .build());
 
-        actions.add(new TransactWriteItem().withUpdate(
-                new Update()
-                        .withTableName("BankAccount")
-                        .withKey(key)
-                        .withUpdateExpression("SET balance = balance - :amount")
-                        .withExpressionAttributeValues(Collections.singletonMap(
-                                ":amount", new AttributeValue().withN("200")
+        actions.add(TransactWriteItem.builder().update(
+                Update.builder()
+                        .tableName("BankAccount")
+                        .key(key)
+                        .updateExpression("SET balance = balance - :amount")
+                        .expressionAttributeValues(Collections.singletonMap(
+                                ":amount",  AttributeValue.builder().n("200")
+                                .build()
                         ))
-        ));
+                .build()
+        )
+        .build());
 
-        TransactWriteItemsRequest request = new TransactWriteItemsRequest()
-                .withTransactItems(actions);
+        TransactWriteItemsRequest request = TransactWriteItemsRequest.builder()
+                .transactItems(actions)
+                .build();
 
         // Then - Transaction should fail
         assertThatThrownBy(() -> amazonDynamoDB.transactWriteItems(request))
@@ -335,28 +371,33 @@ public class TransactionalOperationsIntegrationTest {
         // Delete account1
         Map<String, AttributeValue> key1 = new HashMap<>();
         key1.put("accountId", new AttributeValue("txn-delete-1"));
-        actions.add(new TransactWriteItem().withDelete(
-                new Delete()
-                        .withTableName("BankAccount")
-                        .withKey(key1)
-        ));
+        actions.add(TransactWriteItem.builder().delete(
+                Delete.builder()
+                        .tableName("BankAccount")
+                        .key(key1)
+                .build()
+        )
+        .build());
 
         // Update account2
         Map<String, AttributeValue> key2 = new HashMap<>();
         key2.put("accountId", new AttributeValue("txn-delete-2"));
-        actions.add(new TransactWriteItem().withUpdate(
-                new Update()
-                        .withTableName("BankAccount")
-                        .withKey(key2)
-                        .withUpdateExpression("SET #status = :closed")
-                        .withExpressionAttributeNames(Collections.singletonMap("#status", "status"))
-                        .withExpressionAttributeValues(Collections.singletonMap(
+        actions.add(TransactWriteItem.builder().update(
+                Update.builder()
+                        .tableName("BankAccount")
+                        .key(key2)
+                        .updateExpression("SET #status = :closed")
+                        .expressionAttributeNames(Collections.singletonMap("#status", "status"))
+                        .expressionAttributeValues(Collections.singletonMap(
                                 ":closed", new AttributeValue("CLOSED")
                         ))
-        ));
+                .build()
+        )
+        .build());
 
-        TransactWriteItemsRequest request = new TransactWriteItemsRequest()
-                .withTransactItems(actions);
+        TransactWriteItemsRequest request = TransactWriteItemsRequest.builder()
+                .transactItems(actions)
+                .build();
         amazonDynamoDB.transactWriteItems(request);
 
         // Then - Account1 deleted, Account2 updated
@@ -381,27 +422,34 @@ public class TransactionalOperationsIntegrationTest {
         Map<String, AttributeValue> newItem = new HashMap<>();
         newItem.put("accountId", new AttributeValue("txn-mixed-2"));
         newItem.put("accountHolder", new AttributeValue("Bob"));
-        newItem.put("balance", new AttributeValue().withN("1000.0"));
+        newItem.put("balance", AttributeValue.builder().n("1000.0")
+                .build());
         newItem.put("status", new AttributeValue("ACTIVE"));
-        actions.add(new TransactWriteItem().withPut(
-                new Put().withTableName("BankAccount").withItem(newItem)
-        ));
+        actions.add(TransactWriteItem.builder().put(
+                Put.builder().tableName("BankAccount").item(newItem)
+                .build()
+        )
+        .build());
 
         // Update - Modify existing account
         Map<String, AttributeValue> updateKey = new HashMap<>();
         updateKey.put("accountId", new AttributeValue("txn-mixed-1"));
-        actions.add(new TransactWriteItem().withUpdate(
-                new Update()
-                        .withTableName("BankAccount")
-                        .withKey(updateKey)
-                        .withUpdateExpression("SET balance = balance + :amount")
-                        .withExpressionAttributeValues(Collections.singletonMap(
-                                ":amount", new AttributeValue().withN("500")
+        actions.add(TransactWriteItem.builder().update(
+                Update.builder()
+                        .tableName("BankAccount")
+                        .key(updateKey)
+                        .updateExpression("SET balance = balance + :amount")
+                        .expressionAttributeValues(Collections.singletonMap(
+                                ":amount",  AttributeValue.builder().n("500")
+                                .build()
                         ))
-        ));
+                .build()
+        )
+        .build());
 
-        TransactWriteItemsRequest request = new TransactWriteItemsRequest()
-                .withTransactItems(actions);
+        TransactWriteItemsRequest request = TransactWriteItemsRequest.builder()
+                .transactItems(actions)
+                .build();
         amazonDynamoDB.transactWriteItems(request);
 
         // Then - All operations succeeded
@@ -427,38 +475,45 @@ public class TransactionalOperationsIntegrationTest {
 
         Map<String, AttributeValue> key1 = new HashMap<>();
         key1.put("accountId", new AttributeValue("txn-get-1"));
-        items.add(new TransactGetItem().withGet(
-                new Get().withTableName("BankAccount").withKey(key1)
-        ));
+        items.add(TransactGetItem.builder().get(
+                Get.builder().tableName("BankAccount").key(key1)
+                .build()
+        )
+        .build());
 
         Map<String, AttributeValue> key2 = new HashMap<>();
         key2.put("accountId", new AttributeValue("txn-get-2"));
-        items.add(new TransactGetItem().withGet(
-                new Get().withTableName("BankAccount").withKey(key2)
-        ));
+        items.add(TransactGetItem.builder().get(
+                Get.builder().tableName("BankAccount").key(key2)
+                .build()
+        )
+        .build());
 
         Map<String, AttributeValue> key3 = new HashMap<>();
         key3.put("accountId", new AttributeValue("txn-get-3"));
-        items.add(new TransactGetItem().withGet(
-                new Get().withTableName("BankAccount").withKey(key3)
-        ));
+        items.add(TransactGetItem.builder().get(
+                Get.builder().tableName("BankAccount").key(key3)
+                .build()
+        )
+        .build());
 
-        TransactGetItemsRequest request = new TransactGetItemsRequest()
-                .withTransactItems(items);
-        TransactGetItemsResult result = amazonDynamoDB.transactGetItems(request);
+        TransactGetItemsRequest request = TransactGetItemsRequest.builder()
+                .transactItems(items)
+                .build();
+        TransactGetItemsResponse result = amazonDynamoDB.transactGetItems(request);
 
         // Then - Should get all 3 items with consistent read
-        assertThat(result.getResponses()).hasSize(3);
+        assertThat(result.responses()).hasSize(3);
 
-        ItemResponse response1 = result.getResponses().get(0);
-        assertThat(response1.getItem().get("accountHolder").getS()).isEqualTo("Alice");
-        assertThat(response1.getItem().get("balance").getN()).isEqualTo("1000.0");
+        ItemResponse response1 = result.responses().get(0);
+        assertThat(response1.item().get("accountHolder").s()).isEqualTo("Alice");
+        assertThat(response1.item().get("balance").n()).isEqualTo("1000.0");
 
-        ItemResponse response2 = result.getResponses().get(1);
-        assertThat(response2.getItem().get("accountHolder").getS()).isEqualTo("Bob");
+        ItemResponse response2 = result.responses().get(1);
+        assertThat(response2.item().get("accountHolder").s()).isEqualTo("Bob");
 
-        ItemResponse response3 = result.getResponses().get(2);
-        assertThat(response3.getItem().get("accountHolder").getS()).isEqualTo("Charlie");
+        ItemResponse response3 = result.responses().get(2);
+        assertThat(response3.item().get("accountHolder").s()).isEqualTo("Charlie");
     }
 
     @Test
@@ -478,24 +533,29 @@ public class TransactionalOperationsIntegrationTest {
 
         Map<String, AttributeValue> accountKey = new HashMap<>();
         accountKey.put("accountId", new AttributeValue("txn-cross-1"));
-        items.add(new TransactGetItem().withGet(
-                new Get().withTableName("BankAccount").withKey(accountKey)
-        ));
+        items.add(TransactGetItem.builder().get(
+                Get.builder().tableName("BankAccount").key(accountKey)
+                .build()
+        )
+        .build());
 
         Map<String, AttributeValue> userKey = new HashMap<>();
         userKey.put("Id", new AttributeValue("txn-cross-user-1"));
-        items.add(new TransactGetItem().withGet(
-                new Get().withTableName("user").withKey(userKey)
-        ));
+        items.add(TransactGetItem.builder().get(
+                Get.builder().tableName("user").key(userKey)
+                .build()
+        )
+        .build());
 
-        TransactGetItemsRequest request = new TransactGetItemsRequest()
-                .withTransactItems(items);
-        TransactGetItemsResult result = amazonDynamoDB.transactGetItems(request);
+        TransactGetItemsRequest request = TransactGetItemsRequest.builder()
+                .transactItems(items)
+                .build();
+        TransactGetItemsResponse result = amazonDynamoDB.transactGetItems(request);
 
         // Then - Should get items from both tables
-        assertThat(result.getResponses()).hasSize(2);
-        assertThat(result.getResponses().get(0).getItem()).isNotNull();
-        assertThat(result.getResponses().get(1).getItem()).isNotNull();
+        assertThat(result.responses()).hasSize(2);
+        assertThat(result.responses().get(0).item()).isNotNull();
+        assertThat(result.responses().get(1).item()).isNotNull();
     }
 
     @Test
@@ -510,24 +570,29 @@ public class TransactionalOperationsIntegrationTest {
 
         Map<String, AttributeValue> key1 = new HashMap<>();
         key1.put("accountId", new AttributeValue("txn-exists-1"));
-        items.add(new TransactGetItem().withGet(
-                new Get().withTableName("BankAccount").withKey(key1)
-        ));
+        items.add(TransactGetItem.builder().get(
+                Get.builder().tableName("BankAccount").key(key1)
+                .build()
+        )
+        .build());
 
         Map<String, AttributeValue> key2 = new HashMap<>();
         key2.put("accountId", new AttributeValue("non-existent"));
-        items.add(new TransactGetItem().withGet(
-                new Get().withTableName("BankAccount").withKey(key2)
-        ));
+        items.add(TransactGetItem.builder().get(
+                Get.builder().tableName("BankAccount").key(key2)
+                .build()
+        )
+        .build());
 
-        TransactGetItemsRequest request = new TransactGetItemsRequest()
-                .withTransactItems(items);
-        TransactGetItemsResult result = amazonDynamoDB.transactGetItems(request);
+        TransactGetItemsRequest request = TransactGetItemsRequest.builder()
+                .transactItems(items)
+                .build();
+        TransactGetItemsResponse result = amazonDynamoDB.transactGetItems(request);
 
         // Then - Should get 2 responses, second one null
-        assertThat(result.getResponses()).hasSize(2);
-        assertThat(result.getResponses().get(0).getItem()).isNotNull();
-        assertThat(result.getResponses().get(1).getItem()).isNull();
+        assertThat(result.responses()).hasSize(2);
+        assertThat(result.responses().get(0).item()).isNotNull();
+        assertThat(result.responses().get(1).item()).isNull();
     }
 
     // ==================== Advanced Transaction Scenarios ====================
@@ -543,17 +608,21 @@ public class TransactionalOperationsIntegrationTest {
             Map<String, AttributeValue> item = new HashMap<>();
             item.put("accountId", new AttributeValue("txn-bulk-" + i));
             item.put("accountHolder", new AttributeValue("User" + i));
-            item.put("balance", new AttributeValue().withN(String.valueOf(i * 100.0)));
+            item.put("balance", AttributeValue.builder().n(String.valueOf(i * 100.0))
+                    .build());
             item.put("status", new AttributeValue("ACTIVE"));
 
-            actions.add(new TransactWriteItem().withPut(
-                    new Put().withTableName("BankAccount").withItem(item)
-            ));
+            actions.add(TransactWriteItem.builder().put(
+                    Put.builder().tableName("BankAccount").item(item)
+                    .build()
+            )
+            .build());
         }
 
         // When - Execute transaction with 10 operations
-        TransactWriteItemsRequest request = new TransactWriteItemsRequest()
-                .withTransactItems(actions);
+        TransactWriteItemsRequest request = TransactWriteItemsRequest.builder()
+                .transactItems(actions)
+                .build();
         amazonDynamoDB.transactWriteItems(request);
 
         // Then - All 10 accounts should exist
@@ -573,16 +642,20 @@ public class TransactionalOperationsIntegrationTest {
         Map<String, AttributeValue> item = new HashMap<>();
         item.put("accountId", new AttributeValue("txn-idempotent-1"));
         item.put("accountHolder", new AttributeValue("Alice"));
-        item.put("balance", new AttributeValue().withN("1000.0"));
+        item.put("balance", AttributeValue.builder().n("1000.0")
+                .build());
         item.put("status", new AttributeValue("ACTIVE"));
 
-        actions.add(new TransactWriteItem().withPut(
-                new Put().withTableName("BankAccount").withItem(item)
-        ));
+        actions.add(TransactWriteItem.builder().put(
+                Put.builder().tableName("BankAccount").item(item)
+                .build()
+        )
+        .build());
 
-        TransactWriteItemsRequest request = new TransactWriteItemsRequest()
-                .withTransactItems(actions)
-                .withClientRequestToken(idempotencyToken);
+        TransactWriteItemsRequest request = TransactWriteItemsRequest.builder()
+                .transactItems(actions)
+                .clientRequestToken(idempotencyToken)
+                .build();
 
         // When - Execute transaction twice with same token
         amazonDynamoDB.transactWriteItems(request);
@@ -605,32 +678,39 @@ public class TransactionalOperationsIntegrationTest {
         // Valid update
         Map<String, AttributeValue> key1 = new HashMap<>();
         key1.put("accountId", new AttributeValue("txn-rollback-1"));
-        actions.add(new TransactWriteItem().withUpdate(
-                new Update()
-                        .withTableName("BankAccount")
-                        .withKey(key1)
-                        .withUpdateExpression("SET balance = :newBalance")
-                        .withExpressionAttributeValues(Collections.singletonMap(
-                                ":newBalance", new AttributeValue().withN("2000.0")
+        actions.add(TransactWriteItem.builder().update(
+                Update.builder()
+                        .tableName("BankAccount")
+                        .key(key1)
+                        .updateExpression("SET balance = :newBalance")
+                        .expressionAttributeValues(Collections.singletonMap(
+                                ":newBalance",  AttributeValue.builder().n("2000.0")
+                                .build()
                         ))
-        ));
+                .build()
+        )
+        .build());
 
         // Invalid update - non-existent item with condition
         Map<String, AttributeValue> key2 = new HashMap<>();
         key2.put("accountId", new AttributeValue("non-existent"));
-        actions.add(new TransactWriteItem().withUpdate(
-                new Update()
-                        .withTableName("BankAccount")
-                        .withKey(key2)
-                        .withUpdateExpression("SET balance = :newBalance")
-                        .withConditionExpression("attribute_exists(accountId)")
-                        .withExpressionAttributeValues(Collections.singletonMap(
-                                ":newBalance", new AttributeValue().withN("500.0")
+        actions.add(TransactWriteItem.builder().update(
+                Update.builder()
+                        .tableName("BankAccount")
+                        .key(key2)
+                        .updateExpression("SET balance = :newBalance")
+                        .conditionExpression("attribute_exists(accountId)")
+                        .expressionAttributeValues(Collections.singletonMap(
+                                ":newBalance",  AttributeValue.builder().n("500.0")
+                                .build()
                         ))
-        ));
+                .build()
+        )
+        .build());
 
-        TransactWriteItemsRequest request = new TransactWriteItemsRequest()
-                .withTransactItems(actions);
+        TransactWriteItemsRequest request = TransactWriteItemsRequest.builder()
+                .transactItems(actions)
+                .build();
 
         // Then - Transaction should fail and first update should be rolled back
         assertThatThrownBy(() -> amazonDynamoDB.transactWriteItems(request))
@@ -651,18 +731,22 @@ public class TransactionalOperationsIntegrationTest {
         Map<String, AttributeValue> item = new HashMap<>();
         item.put("accountId", new AttributeValue("txn-not-exists-1"));
         item.put("accountHolder", new AttributeValue("Alice"));
-        item.put("balance", new AttributeValue().withN("1000.0"));
+        item.put("balance", AttributeValue.builder().n("1000.0")
+                .build());
         item.put("status", new AttributeValue("ACTIVE"));
 
-        actions.add(new TransactWriteItem().withPut(
-                new Put()
-                        .withTableName("BankAccount")
-                        .withItem(item)
-                        .withConditionExpression("attribute_not_exists(accountId)")
-        ));
+        actions.add(TransactWriteItem.builder().put(
+                Put.builder()
+                        .tableName("BankAccount")
+                        .item(item)
+                        .conditionExpression("attribute_not_exists(accountId)")
+                .build()
+        )
+        .build());
 
-        TransactWriteItemsRequest request = new TransactWriteItemsRequest()
-                .withTransactItems(actions);
+        TransactWriteItemsRequest request = TransactWriteItemsRequest.builder()
+                .transactItems(actions)
+                .build();
 
         // First time - should succeed
         amazonDynamoDB.transactWriteItems(request);
@@ -684,27 +768,31 @@ public class TransactionalOperationsIntegrationTest {
 
         Map<String, AttributeValue> key = new HashMap<>();
         key.put("accountId", new AttributeValue("txn-cancel-1"));
-        actions.add(new TransactWriteItem().withUpdate(
-                new Update()
-                        .withTableName("BankAccount")
-                        .withKey(key)
-                        .withUpdateExpression("SET balance = balance - :amount")
-                        .withConditionExpression("balance >= :amount")
-                        .withExpressionAttributeValues(Collections.singletonMap(
-                                ":amount", new AttributeValue().withN("500")
+        actions.add(TransactWriteItem.builder().update(
+                Update.builder()
+                        .tableName("BankAccount")
+                        .key(key)
+                        .updateExpression("SET balance = balance - :amount")
+                        .conditionExpression("balance >= :amount")
+                        .expressionAttributeValues(Collections.singletonMap(
+                                ":amount",  AttributeValue.builder().n("500")
+                                .build()
                         ))
-        ));
+                .build()
+        )
+        .build());
 
-        TransactWriteItemsRequest request = new TransactWriteItemsRequest()
-                .withTransactItems(actions);
+        TransactWriteItemsRequest request = TransactWriteItemsRequest.builder()
+                .transactItems(actions)
+                .build();
 
         // Then - Transaction cancelled with ConditionalCheckFailed reason
         try {
             amazonDynamoDB.transactWriteItems(request);
         } catch (TransactionCanceledException e) {
             assertThat(e.getMessage()).contains("Transaction cancelled");
-            assertThat(e.getCancellationReasons()).isNotEmpty();
-            assertThat(e.getCancellationReasons().get(0).getCode()).isEqualTo("ConditionalCheckFailed");
+            assertThat(e.cancellationReasons()).isNotEmpty();
+            assertThat(e.cancellationReasons().get(0).code()).isEqualTo("ConditionalCheckFailed");
         }
     }
 
@@ -727,31 +815,38 @@ public class TransactionalOperationsIntegrationTest {
         // Update user
         Map<String, AttributeValue> userKey = new HashMap<>();
         userKey.put("Id", new AttributeValue("txn-cross-update-1"));
-        actions.add(new TransactWriteItem().withUpdate(
-                new Update()
-                        .withTableName("user")
-                        .withKey(userKey)
-                        .withUpdateExpression("SET numberOfPlaylists = :count")
-                        .withExpressionAttributeValues(Collections.singletonMap(
-                                ":count", new AttributeValue().withN("5")
+        actions.add(TransactWriteItem.builder().update(
+                Update.builder()
+                        .tableName("user")
+                        .key(userKey)
+                        .updateExpression("SET numberOfPlaylists = :count")
+                        .expressionAttributeValues(Collections.singletonMap(
+                                ":count",  AttributeValue.builder().n("5")
+                                .build()
                         ))
-        ));
+                .build()
+        )
+        .build());
 
         // Update account
         Map<String, AttributeValue> accountKey = new HashMap<>();
         accountKey.put("accountId", new AttributeValue("txn-cross-update-1"));
-        actions.add(new TransactWriteItem().withUpdate(
-                new Update()
-                        .withTableName("BankAccount")
-                        .withKey(accountKey)
-                        .withUpdateExpression("SET balance = balance + :amount")
-                        .withExpressionAttributeValues(Collections.singletonMap(
-                                ":amount", new AttributeValue().withN("100")
+        actions.add(TransactWriteItem.builder().update(
+                Update.builder()
+                        .tableName("BankAccount")
+                        .key(accountKey)
+                        .updateExpression("SET balance = balance + :amount")
+                        .expressionAttributeValues(Collections.singletonMap(
+                                ":amount",  AttributeValue.builder().n("100")
+                                .build()
                         ))
-        ));
+                .build()
+        )
+        .build());
 
-        TransactWriteItemsRequest request = new TransactWriteItemsRequest()
-                .withTransactItems(actions);
+        TransactWriteItemsRequest request = TransactWriteItemsRequest.builder()
+                .transactItems(actions)
+                .build();
         amazonDynamoDB.transactWriteItems(request);
 
         // Then - Both should be updated atomically

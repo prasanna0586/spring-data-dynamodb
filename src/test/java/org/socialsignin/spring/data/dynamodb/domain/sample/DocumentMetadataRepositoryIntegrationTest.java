@@ -1,8 +1,8 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.model.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -48,7 +48,7 @@ public class DocumentMetadataRepositoryIntegrationTest {
     private DocumentMetadataRepository repository;
 
     @Autowired
-    private AmazonDynamoDB amazonDynamoDB;
+    private DynamoDbClient amazonDynamoDB;
 
     private static boolean tableCreated = false;
     private final List<String> testDocumentIds = new ArrayList<>();
@@ -81,12 +81,13 @@ public class DocumentMetadataRepositoryIntegrationTest {
             CreateTableRequest createTableRequest = new DynamoDBMapper(amazonDynamoDB)
                     .generateCreateTableRequest(DocumentMetadata.class);
 
-            createTableRequest.setProvisionedThroughput(new ProvisionedThroughput(5L, 5L));
+            createTableRequest = createTableRequest.toBuilder().provisionedThroughput(new ProvisionedThroughput(5L, 5L)).build();
 
-            if (createTableRequest.getGlobalSecondaryIndexes() != null) {
-                for (GlobalSecondaryIndex gsi : createTableRequest.getGlobalSecondaryIndexes()) {
-                    gsi.setProvisionedThroughput(new ProvisionedThroughput(5L, 5L));
-                    gsi.setProjection(new Projection().withProjectionType(ProjectionType.ALL));
+            if (createTableRequest.globalSecondaryIndexes() != null) {
+                for (GlobalSecondaryIndex gsi : createTableRequest.globalSecondaryIndexes()) {
+                    gsi = gsi.toBuilder().provisionedThroughput(new ProvisionedThroughput(5L, 5L)).build();
+                    gsi = gsi.toBuilder().projection(Projection.builder().projectionType(ProjectionType.ALL)
+                            .build()).build();
                 }
             }
 

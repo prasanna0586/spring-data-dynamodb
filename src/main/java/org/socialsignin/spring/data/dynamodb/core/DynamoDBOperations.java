@@ -16,8 +16,8 @@
 package org.socialsignin.spring.data.dynamodb.core;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper.FailedBatch;
+import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
 import com.amazonaws.services.dynamodbv2.datamodeling.*;
-import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 
 import java.util.List;
 import java.util.Map;

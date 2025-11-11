@@ -1,8 +1,8 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.model.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -55,7 +55,7 @@ public class DocumentMetadataServiceIntegrationTest {
     private DocumentMetadataService documentMetadataService;
 
     @Autowired
-    private AmazonDynamoDB amazonDynamoDB;
+    private DynamoDbClient amazonDynamoDB;
 
     private static boolean tableCreated = false;
     private static final List<String> testDocumentIds = new ArrayList<>();
@@ -69,15 +69,16 @@ public class DocumentMetadataServiceIntegrationTest {
     }
 
     @AfterAll
-    static void cleanup(@Autowired AmazonDynamoDB amazonDynamoDB) {
+    static void cleanup(@Autowired DynamoDbClient amazonDynamoDB) {
         // Clean up all test documents
         for (String docId : testDocumentIds) {
             try {
-                amazonDynamoDB.deleteItem(new DeleteItemRequest()
-                        .withTableName("DocumentMetadata")
-                        .withKey(java.util.Collections.singletonMap(
+                amazonDynamoDB.deleteItem(DeleteItemRequest.builder()
+                        .tableName("DocumentMetadata")
+                        .key(java.util.Collections.singletonMap(
                                 "uniqueDocumentId",
-                                new AttributeValue(docId))));
+                                new AttributeValue(docId)))
+                        .build());
             } catch (Exception e) {
                 // Ignore cleanup errors
             }
@@ -91,12 +92,13 @@ public class DocumentMetadataServiceIntegrationTest {
             CreateTableRequest createTableRequest = new DynamoDBMapper(amazonDynamoDB)
                     .generateCreateTableRequest(DocumentMetadata.class);
 
-            createTableRequest.setProvisionedThroughput(new ProvisionedThroughput(5L, 5L));
+            createTableRequest = createTableRequest.toBuilder().provisionedThroughput(new ProvisionedThroughput(5L, 5L)).build();
 
-            if (createTableRequest.getGlobalSecondaryIndexes() != null) {
-                for (GlobalSecondaryIndex gsi : createTableRequest.getGlobalSecondaryIndexes()) {
-                    gsi.setProvisionedThroughput(new ProvisionedThroughput(5L, 5L));
-                    gsi.setProjection(new Projection().withProjectionType(ProjectionType.ALL));
+            if (createTableRequest.globalSecondaryIndexes() != null) {
+                for (GlobalSecondaryIndex gsi : createTableRequest.globalSecondaryIndexes()) {
+                    gsi = gsi.toBuilder().provisionedThroughput(new ProvisionedThroughput(5L, 5L)).build();
+                    gsi = gsi.toBuilder().projection(Projection.builder().projectionType(ProjectionType.ALL)
+                            .build()).build();
                 }
             }
 

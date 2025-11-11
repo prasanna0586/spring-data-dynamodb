@@ -2,12 +2,12 @@ package org.socialsignin.spring.data.dynamodb.domain.sample;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
 import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedQueryList;
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
-import com.amazonaws.services.dynamodbv2.model.Condition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.ComparisonOperator;
+import software.amazon.awssdk.services.dynamodb.model.Condition;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,9 +48,11 @@ public class DocumentMetadataRepositoryImpl implements DocumentMetadataRepositor
                     .withIndexName("memberId-documentCategory-index")
                     .withConsistentRead(false)
                     .withHashKeyValues(gsiKey) // Pass the object with memberId as hash key
-                    .withRangeKeyCondition("documentCategory", new Condition()
-                        .withComparisonOperator(ComparisonOperator.EQ)
-                        .withAttributeValueList(new AttributeValue().withN(category.toString())));
+                    .withRangeKeyCondition("documentCategory", Condition.builder()
+                        .comparisonOperator(ComparisonOperator.EQ)
+                        .attributeValueList(AttributeValue.builder().n(category.toString())
+                                .build())
+                        .build());
 
                 PaginatedQueryList<DocumentMetadata> results = dynamoDBOperations.query(DocumentMetadata.class, query);
                 return new ArrayList<>(results);
@@ -85,9 +87,11 @@ public class DocumentMetadataRepositoryImpl implements DocumentMetadataRepositor
                     .withIndexName("memberId-documentSubCategory-index")
                     .withConsistentRead(false)
                     .withHashKeyValues(gsiKey) // Pass the object with memberId as hash key
-                    .withRangeKeyCondition("documentSubCategory", new Condition()
-                        .withComparisonOperator(ComparisonOperator.EQ)
-                        .withAttributeValueList(new AttributeValue().withN(subCategory.toString())));
+                    .withRangeKeyCondition("documentSubCategory", Condition.builder()
+                        .comparisonOperator(ComparisonOperator.EQ)
+                        .attributeValueList(AttributeValue.builder().n(subCategory.toString())
+                                .build())
+                        .build());
 
                 PaginatedQueryList<DocumentMetadata> results = dynamoDBOperations.query(DocumentMetadata.class, query);
                 return new ArrayList<>(results);

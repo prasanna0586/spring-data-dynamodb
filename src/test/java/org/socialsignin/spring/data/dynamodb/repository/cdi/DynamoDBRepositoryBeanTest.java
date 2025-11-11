@@ -15,7 +15,6 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.cdi;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
 import jakarta.enterprise.context.spi.CreationalContext;
@@ -29,6 +28,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.socialsignin.spring.data.dynamodb.domain.sample.User;
 import org.springframework.data.repository.Repository;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.lang.annotation.Annotation;
 import java.util.Collections;
@@ -45,15 +45,15 @@ public class DynamoDBRepositoryBeanTest {
     }
 
     @Mock
-    private CreationalContext<AmazonDynamoDB> creationalContext;
+    private CreationalContext<DynamoDbClient> creationalContext;
     @Mock
     private CreationalContext<SampleRepository> repoCreationalContext;
     @Mock
     private BeanManager beanManager;
     @Mock
-    private Bean<AmazonDynamoDB> amazonDynamoDBBean;
+    private Bean<DynamoDbClient> amazonDynamoDBBean;
     @Mock
-    private AmazonDynamoDB amazonDynamoDB;
+    private DynamoDbClient amazonDynamoDB;
     @Mock
     private jakarta.enterprise.inject.spi.Bean<DynamoDBMapperConfig> dynamoDBMapperConfigBean;
     @Mock
@@ -70,7 +70,7 @@ public class DynamoDBRepositoryBeanTest {
 
     private void setupAmazonDynamoDBBeanStubs() {
         when(beanManager.createCreationalContext(amazonDynamoDBBean)).thenReturn(creationalContext);
-        when(beanManager.getReference(amazonDynamoDBBean, AmazonDynamoDB.class, creationalContext))
+        when(beanManager.getReference(amazonDynamoDBBean, DynamoDbClient.class, creationalContext))
                 .thenReturn(amazonDynamoDB);
     }
 

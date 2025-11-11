@@ -1,7 +1,7 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.model.*;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -47,7 +47,7 @@ public class PaginationCompatibilityIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
-    private AmazonDynamoDB amazonDynamoDB;
+    private DynamoDbClient amazonDynamoDB;
 
     @BeforeEach
     void setUp() {
@@ -76,21 +76,22 @@ public class PaginationCompatibilityIntegrationTest {
         int pageCount = 0;
 
         do {
-            ScanRequest scanRequest = new ScanRequest()
-                    .withTableName("user")
-                    .withLimit(pageSize);
+            ScanRequest scanRequest = ScanRequest.builder()
+                    .tableName("user")
+                    .limit(pageSize)
+                    .build();
 
             if (lastEvaluatedKey != null) {
-                scanRequest.withExclusiveStartKey(lastEvaluatedKey);
+                scanRequest.exclusiveStartKey(lastEvaluatedKey);
             }
 
-            ScanResult result = amazonDynamoDB.scan(scanRequest);
+            ScanResponse result = amazonDynamoDB.scan(scanRequest);
 
-            totalItemsScanned += result.getCount();
-            lastEvaluatedKey = result.getLastEvaluatedKey();
+            totalItemsScanned += result.count();
+            lastEvaluatedKey = result.lastEvaluatedKey();
             pageCount++;
 
-            System.out.println("Page " + pageCount + ": Retrieved " + result.getCount() + " items");
+            System.out.println("Page " + pageCount + ": Retrieved " + result.count() + " items");
 
         } while (lastEvaluatedKey != null && !lastEvaluatedKey.isEmpty());
 
@@ -113,15 +114,16 @@ public class PaginationCompatibilityIntegrationTest {
         }
 
         // When - Scan with large page size
-        ScanRequest scanRequest = new ScanRequest()
-                .withTableName("user")
-                .withLimit(20); // Larger than dataset
+        ScanRequest scanRequest = ScanRequest.builder()
+                .tableName("user")
+                .limit(20)
+                .build(); // Larger than dataset
 
-        ScanResult result = amazonDynamoDB.scan(scanRequest);
+        ScanResponse result = amazonDynamoDB.scan(scanRequest);
 
         // Then - Last page should have null or empty lastEvaluatedKey
-        assertThat(result.getCount()).isEqualTo(15);
-        assertThat(result.getLastEvaluatedKey()).satisfiesAnyOf(
+        assertThat(result.count()).isEqualTo(15);
+        assertThat(result.lastEvaluatedKey()).satisfiesAnyOf(
                 key -> assertThat(key).isNull(),
                 key -> assertThat(key).isEmpty()
         );
@@ -145,26 +147,27 @@ public class PaginationCompatibilityIntegrationTest {
         Map<String, AttributeValue> lastEvaluatedKey = null;
 
         do {
-            ScanRequest scanRequest = new ScanRequest()
-                    .withTableName("user")
-                    .withLimit(10);
+            ScanRequest scanRequest = ScanRequest.builder()
+                    .tableName("user")
+                    .limit(10)
+                    .build();
 
             if (lastEvaluatedKey != null) {
-                scanRequest.withExclusiveStartKey(lastEvaluatedKey);
+                scanRequest.exclusiveStartKey(lastEvaluatedKey);
             }
 
-            ScanResult result = amazonDynamoDB.scan(scanRequest);
+            ScanResponse result = amazonDynamoDB.scan(scanRequest);
 
             // Collect all IDs from this page
-            for (Map<String, AttributeValue> item : result.getItems()) {
+            for (Map<String, AttributeValue> item : result.items()) {
                 AttributeValue idAttr = item.get("id");
-                if (idAttr != null && idAttr.getS() != null) {
-                    scannedIds.add(idAttr.getS());
+                if (idAttr != null && idAttr.s() != null) {
+                    scannedIds.add(idAttr.s());
                     totalScanned++;
                 }
             }
 
-            lastEvaluatedKey = result.getLastEvaluatedKey();
+            lastEvaluatedKey = result.lastEvaluatedKey();
 
         } while (lastEvaluatedKey != null && !lastEvaluatedKey.isEmpty());
 
@@ -195,25 +198,27 @@ public class PaginationCompatibilityIntegrationTest {
         int pageCount = 0;
 
         do {
-            ScanRequest scanRequest = new ScanRequest()
-                    .withTableName("user")
-                    .withLimit(pageSize)
-                    .withFilterExpression("numberOfPlaylists > :threshold")
-                    .withExpressionAttributeValues(
-                            Collections.singletonMap(":threshold", new AttributeValue().withN("15"))
-                    );
+            ScanRequest scanRequest = ScanRequest.builder()
+                    .tableName("user")
+                    .limit(pageSize)
+                    .filterExpression("numberOfPlaylists > :threshold")
+                    .expressionAttributeValues(
+                            Collections.singletonMap(":threshold",  AttributeValue.builder().n("15")
+                                    .build())
+                    )
+                    .build();
 
             if (lastEvaluatedKey != null) {
-                scanRequest.withExclusiveStartKey(lastEvaluatedKey);
+                scanRequest.exclusiveStartKey(lastEvaluatedKey);
             }
 
-            ScanResult result = amazonDynamoDB.scan(scanRequest);
+            ScanResponse result = amazonDynamoDB.scan(scanRequest);
 
-            totalItemsFound += result.getCount();
-            lastEvaluatedKey = result.getLastEvaluatedKey();
+            totalItemsFound += result.count();
+            lastEvaluatedKey = result.lastEvaluatedKey();
             pageCount++;
 
-            System.out.println("Scan Page " + pageCount + ": Retrieved " + result.getCount() + " items (scanned " + result.getScannedCount() + ")");
+            System.out.println("Scan Page " + pageCount + ": Retrieved " + result.count() + " items (scanned " + result.scannedCount() + ")");
 
         } while (lastEvaluatedKey != null && !lastEvaluatedKey.isEmpty());
 
@@ -235,18 +240,20 @@ public class PaginationCompatibilityIntegrationTest {
         }
 
         // When - Scan with filter that matches nothing
-        ScanRequest scanRequest = new ScanRequest()
-                .withTableName("user")
-                .withFilterExpression("numberOfPlaylists > :threshold")
-                .withExpressionAttributeValues(
-                        Collections.singletonMap(":threshold", new AttributeValue().withN("1000"))
-                );
+        ScanRequest scanRequest = ScanRequest.builder()
+                .tableName("user")
+                .filterExpression("numberOfPlaylists > :threshold")
+                .expressionAttributeValues(
+                        Collections.singletonMap(":threshold",  AttributeValue.builder().n("1000")
+                                .build())
+                )
+                .build();
 
-        ScanResult result = amazonDynamoDB.scan(scanRequest);
+        ScanResponse result = amazonDynamoDB.scan(scanRequest);
 
         // Then - Should return no items (but may have scanned items)
-        assertThat(result.getCount()).isEqualTo(0);
-        System.out.println("Scanned " + result.getScannedCount() + " items, filtered to 0");
+        assertThat(result.count()).isEqualTo(0);
+        System.out.println("Scanned " + result.scannedCount() + " items, filtered to 0");
     }
 
     // ==================== Manual Pagination with Application Logic ====================
@@ -270,18 +277,19 @@ public class PaginationCompatibilityIntegrationTest {
         Map<String, AttributeValue> lastKey = null;
 
         do {
-            ScanRequest scanRequest = new ScanRequest()
-                    .withTableName("user")
-                    .withLimit(pageSize);
+            ScanRequest scanRequest = ScanRequest.builder()
+                    .tableName("user")
+                    .limit(pageSize)
+                    .build();
 
             if (lastKey != null) {
-                scanRequest.withExclusiveStartKey(lastKey);
+                scanRequest.exclusiveStartKey(lastKey);
             }
 
-            ScanResult result = amazonDynamoDB.scan(scanRequest);
+            ScanResponse result = amazonDynamoDB.scan(scanRequest);
             totalPages++;
-            totalItems += result.getCount();
-            lastKey = result.getLastEvaluatedKey();
+            totalItems += result.count();
+            lastKey = result.lastEvaluatedKey();
 
         } while (lastKey != null && !lastKey.isEmpty());
 
@@ -310,17 +318,18 @@ public class PaginationCompatibilityIntegrationTest {
         int pageCount = 0;
 
         do {
-            ScanRequest scanRequest = new ScanRequest()
-                    .withTableName("user")
-                    .withLimit(10);
+            ScanRequest scanRequest = ScanRequest.builder()
+                    .tableName("user")
+                    .limit(10)
+                    .build();
 
             if (lastKey != null) {
-                scanRequest.withExclusiveStartKey(lastKey);
+                scanRequest.exclusiveStartKey(lastKey);
             }
 
-            ScanResult result = amazonDynamoDB.scan(scanRequest);
-            pageSizes.add(result.getCount());
-            lastKey = result.getLastEvaluatedKey();
+            ScanResponse result = amazonDynamoDB.scan(scanRequest);
+            pageSizes.add(result.count());
+            lastKey = result.lastEvaluatedKey();
             pageCount++;
 
         } while (lastKey != null && !lastKey.isEmpty());
@@ -355,22 +364,24 @@ public class PaginationCompatibilityIntegrationTest {
         Map<String, AttributeValue> lastEvaluatedKey = null;
 
         do {
-            ScanRequest scanRequest = new ScanRequest()
-                    .withTableName("user")
-                    .withLimit(pageSize)
-                    .withFilterExpression("numberOfPlaylists > :threshold")
-                    .withExpressionAttributeValues(
-                            Collections.singletonMap(":threshold", new AttributeValue().withN("25"))
-                    );
+            ScanRequest scanRequest = ScanRequest.builder()
+                    .tableName("user")
+                    .limit(pageSize)
+                    .filterExpression("numberOfPlaylists > :threshold")
+                    .expressionAttributeValues(
+                            Collections.singletonMap(":threshold",  AttributeValue.builder().n("25")
+                                    .build())
+                    )
+                    .build();
 
             if (lastEvaluatedKey != null) {
-                scanRequest.withExclusiveStartKey(lastEvaluatedKey);
+                scanRequest.exclusiveStartKey(lastEvaluatedKey);
             }
 
-            ScanResult result = amazonDynamoDB.scan(scanRequest);
+            ScanResponse result = amazonDynamoDB.scan(scanRequest);
 
-            totalItemsFiltered += result.getCount();
-            lastEvaluatedKey = result.getLastEvaluatedKey();
+            totalItemsFiltered += result.count();
+            lastEvaluatedKey = result.lastEvaluatedKey();
 
         } while (lastEvaluatedKey != null && !lastEvaluatedKey.isEmpty());
 
@@ -397,19 +408,20 @@ public class PaginationCompatibilityIntegrationTest {
         Map<String, AttributeValue> lastEvaluatedKey = null;
 
         do {
-            ScanRequest scanRequest = new ScanRequest()
-                    .withTableName("user")
-                    .withLimit(pageSize);
+            ScanRequest scanRequest = ScanRequest.builder()
+                    .tableName("user")
+                    .limit(pageSize)
+                    .build();
 
             if (lastEvaluatedKey != null) {
-                scanRequest.withExclusiveStartKey(lastEvaluatedKey);
+                scanRequest.exclusiveStartKey(lastEvaluatedKey);
             }
 
-            ScanResult result = amazonDynamoDB.scan(scanRequest);
+            ScanResponse result = amazonDynamoDB.scan(scanRequest);
 
             totalPages++;
-            totalItems += result.getCount();
-            lastEvaluatedKey = result.getLastEvaluatedKey();
+            totalItems += result.count();
+            lastEvaluatedKey = result.lastEvaluatedKey();
 
         } while (lastEvaluatedKey != null && !lastEvaluatedKey.isEmpty());
 
@@ -432,29 +444,31 @@ public class PaginationCompatibilityIntegrationTest {
         }
 
         // When - Get first page and extract token
-        ScanRequest scanRequest = new ScanRequest()
-                .withTableName("user")
-                .withLimit(10);
+        ScanRequest scanRequest = ScanRequest.builder()
+                .tableName("user")
+                .limit(10)
+                .build();
 
-        ScanResult firstPage = amazonDynamoDB.scan(scanRequest);
-        Map<String, AttributeValue> paginationToken = firstPage.getLastEvaluatedKey();
+        ScanResponse firstPage = amazonDynamoDB.scan(scanRequest);
+        Map<String, AttributeValue> paginationToken = firstPage.lastEvaluatedKey();
 
         // Then - Token should be reusable
         assertThat(paginationToken).isNotNull();
         assertThat(paginationToken).isNotEmpty();
 
         // When - Use token for next page
-        ScanRequest secondPageRequest = new ScanRequest()
-                .withTableName("user")
-                .withLimit(10)
-                .withExclusiveStartKey(paginationToken);
+        ScanRequest secondPageRequest = ScanRequest.builder()
+                .tableName("user")
+                .limit(10)
+                .exclusiveStartKey(paginationToken)
+                .build();
 
-        ScanResult secondPage = amazonDynamoDB.scan(secondPageRequest);
+        ScanResponse secondPage = amazonDynamoDB.scan(secondPageRequest);
 
         // Then
-        assertThat(secondPage.getCount()).isGreaterThan(0);
-        System.out.println("First page: " + firstPage.getCount() + " items");
-        System.out.println("Second page: " + secondPage.getCount() + " items");
+        assertThat(secondPage.count()).isGreaterThan(0);
+        System.out.println("First page: " + firstPage.count() + " items");
+        System.out.println("Second page: " + secondPage.count() + " items");
         System.out.println("Pagination token keys: " + paginationToken.keySet());
     }
 }

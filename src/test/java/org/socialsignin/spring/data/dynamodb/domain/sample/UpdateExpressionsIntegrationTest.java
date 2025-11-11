@@ -1,8 +1,8 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.model.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -53,7 +53,7 @@ public class UpdateExpressionsIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
-    private AmazonDynamoDB amazonDynamoDB;
+    private DynamoDbClient amazonDynamoDB;
 
     @Autowired
     private DynamoDBMapper dynamoDBMapper;
@@ -81,12 +81,13 @@ public class UpdateExpressionsIntegrationTest {
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":newName", new AttributeValue("Updated Name"));
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("SET #n = :newName")
-                .withExpressionAttributeNames(Collections.singletonMap("#n", "name"))
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("SET #n = :newName")
+                .expressionAttributeNames(Collections.singletonMap("#n", "name"))
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(updateRequest);
 
@@ -117,12 +118,13 @@ public class UpdateExpressionsIntegrationTest {
         expressionAttributeValues.put(":name", new AttributeValue("New Name"));
         expressionAttributeValues.put(":postCode", new AttributeValue("67890"));
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("SET #n = :name, postCode = :postCode")
-                .withExpressionAttributeNames(Collections.singletonMap("#n", "name"))
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("SET #n = :name, postCode = :postCode")
+                .expressionAttributeNames(Collections.singletonMap("#n", "name"))
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(updateRequest);
 
@@ -149,13 +151,15 @@ public class UpdateExpressionsIntegrationTest {
         key.put("Id", new AttributeValue("update-user-3"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":inc", new AttributeValue().withN("5"));
+        expressionAttributeValues.put(":inc", AttributeValue.builder().n("5")
+                .build());
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("ADD numberOfPlaylists :inc")
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("ADD numberOfPlaylists :inc")
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(updateRequest);
 
@@ -181,13 +185,15 @@ public class UpdateExpressionsIntegrationTest {
         key.put("Id", new AttributeValue("update-user-4"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":dec", new AttributeValue().withN("-3"));
+        expressionAttributeValues.put(":dec", AttributeValue.builder().n("-3")
+                .build());
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("ADD numberOfPlaylists :dec")
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("ADD numberOfPlaylists :dec")
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(updateRequest);
 
@@ -212,15 +218,17 @@ public class UpdateExpressionsIntegrationTest {
         Map<String, AttributeValue> key = new HashMap<>();
         key.put("Id", new AttributeValue("update-user-5"));
 
-        AttributeValue newTags = new AttributeValue().withSS("tag3", "tag4");
+        AttributeValue newTags = AttributeValue.builder().ss("tag3", "tag4")
+                .build();
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":newTags", newTags);
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("ADD tags :newTags")
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("ADD tags :newTags")
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(updateRequest);
 
@@ -245,15 +253,17 @@ public class UpdateExpressionsIntegrationTest {
         Map<String, AttributeValue> key = new HashMap<>();
         key.put("Id", new AttributeValue("update-user-6"));
 
-        AttributeValue tagsToRemove = new AttributeValue().withSS("tag2", "tag4");
+        AttributeValue tagsToRemove = AttributeValue.builder().ss("tag2", "tag4")
+                .build();
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":removeTags", tagsToRemove);
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("DELETE tags :removeTags")
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("DELETE tags :removeTags")
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(updateRequest);
 
@@ -278,10 +288,11 @@ public class UpdateExpressionsIntegrationTest {
         Map<String, AttributeValue> key = new HashMap<>();
         key.put("Id", new AttributeValue("update-user-7"));
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("REMOVE postCode");
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("REMOVE postCode")
+                .build();
 
         amazonDynamoDB.updateItem(updateRequest);
 
@@ -306,13 +317,15 @@ public class UpdateExpressionsIntegrationTest {
         key.put("Id", new AttributeValue("update-user-8"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":zero", new AttributeValue().withN("0"));
+        expressionAttributeValues.put(":zero", AttributeValue.builder().n("0")
+                .build());
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("SET numberOfPlaylists = if_not_exists(numberOfPlaylists, :zero)")
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("SET numberOfPlaylists = if_not_exists(numberOfPlaylists, :zero)")
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(updateRequest);
 
@@ -322,8 +335,9 @@ public class UpdateExpressionsIntegrationTest {
         assertThat(updated.getNumberOfPlaylists()).isEqualTo(0);
 
         // When - Try again (should not change since it exists now)
-        expressionAttributeValues.put(":zero", new AttributeValue().withN("100"));
-        updateRequest.setExpressionAttributeValues(expressionAttributeValues);
+        expressionAttributeValues.put(":zero", AttributeValue.builder().n("100")
+                .build());
+        updateRequest = updateRequest.toBuilder().expressionAttributeValues(expressionAttributeValues).build();
         amazonDynamoDB.updateItem(updateRequest);
 
         updated = userRepository.findById("update-user-8").orElse(null);
@@ -346,15 +360,18 @@ public class UpdateExpressionsIntegrationTest {
         key.put("Id", new AttributeValue("update-user-9"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":newCount", new AttributeValue().withN("20"));
-        expressionAttributeValues.put(":expectedCount", new AttributeValue().withN("10"));
+        expressionAttributeValues.put(":newCount", AttributeValue.builder().n("20")
+                .build());
+        expressionAttributeValues.put(":expectedCount", AttributeValue.builder().n("10")
+                .build());
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("SET numberOfPlaylists = :newCount")
-                .withConditionExpression("numberOfPlaylists = :expectedCount")
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("SET numberOfPlaylists = :newCount")
+                .conditionExpression("numberOfPlaylists = :expectedCount")
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(updateRequest);
 
@@ -383,18 +400,21 @@ public class UpdateExpressionsIntegrationTest {
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":newName", new AttributeValue("Updated User 10"));
-        expressionAttributeValues.put(":inc", new AttributeValue().withN("3"));
-        expressionAttributeValues.put(":newTag", new AttributeValue().withSS("tag2"));
+        expressionAttributeValues.put(":inc", AttributeValue.builder().n("3")
+                .build());
+        expressionAttributeValues.put(":newTag", AttributeValue.builder().ss("tag2")
+                .build());
 
         Map<String, String> expressionAttributeNames = new HashMap<>();
         expressionAttributeNames.put("#n", "name");
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("SET #n = :newName ADD numberOfPlaylists :inc, tags :newTag REMOVE postCode")
-                .withExpressionAttributeNames(expressionAttributeNames)
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("SET #n = :newName ADD numberOfPlaylists :inc, tags :newTag REMOVE postCode")
+                .expressionAttributeNames(expressionAttributeNames)
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(updateRequest);
 
@@ -423,13 +443,15 @@ public class UpdateExpressionsIntegrationTest {
         key.put("Id", new AttributeValue("update-user-11"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":inc", new AttributeValue().withN("5"));
+        expressionAttributeValues.put(":inc", AttributeValue.builder().n("5")
+                .build());
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("SET numberOfPlaylists = numberOfPlaylists + :inc")
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("SET numberOfPlaylists = numberOfPlaylists + :inc")
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(updateRequest);
 
@@ -455,19 +477,21 @@ public class UpdateExpressionsIntegrationTest {
         key.put("Id", new AttributeValue("update-user-12"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":inc", new AttributeValue().withN("10"));
+        expressionAttributeValues.put(":inc", AttributeValue.builder().n("10")
+                .build());
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("ADD numberOfPlaylists :inc")
-                .withExpressionAttributeValues(expressionAttributeValues)
-                .withReturnValues(ReturnValue.ALL_NEW);
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("ADD numberOfPlaylists :inc")
+                .expressionAttributeValues(expressionAttributeValues)
+                .returnValues(ReturnValue.ALL_NEW)
+                .build();
 
-        UpdateItemResult result = amazonDynamoDB.updateItem(updateRequest);
+        UpdateItemResponse result = amazonDynamoDB.updateItem(updateRequest);
 
         // Then - Result contains updated values
-        assertThat(result.getAttributes()).isNotNull();
-        assertThat(result.getAttributes().get("numberOfPlaylists").getN()).isEqualTo("15");
+        assertThat(result.attributes()).isNotNull();
+        assertThat(result.attributes().get("numberOfPlaylists").n()).isEqualTo("15");
     }
 }

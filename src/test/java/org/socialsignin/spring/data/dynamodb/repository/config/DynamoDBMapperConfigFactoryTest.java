@@ -15,7 +15,6 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.config;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig.TableNameOverride;
@@ -24,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -35,7 +35,7 @@ public class DynamoDBMapperConfigFactoryTest {
     @Mock
     private DynamoDBMapperConfig dynamoDBMapperConfig;
     @Mock
-    private AmazonDynamoDB dynamoDB;
+    private DynamoDbClient dynamoDB;
 
     DynamoDBMapperConfigFactory underTest;
 

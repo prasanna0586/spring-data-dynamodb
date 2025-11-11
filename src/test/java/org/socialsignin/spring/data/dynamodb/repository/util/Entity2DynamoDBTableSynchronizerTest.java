@@ -15,9 +15,9 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.util;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,7 +40,7 @@ public class Entity2DynamoDBTableSynchronizerTest<T, ID> {
 
     private Entity2DynamoDBTableSynchronizer<T, ID> underTest;
     @Mock
-    private AmazonDynamoDB amazonDynamoDB;
+    private DynamoDbClient amazonDynamoDB;
     @Mock
     private DynamoDBMapper mapper;
     @Mock
@@ -69,10 +69,10 @@ public class Entity2DynamoDBTableSynchronizerTest<T, ID> {
         CreateTableRequest ctr = mock(CreateTableRequest.class);
         when(mapper.generateCreateTableRequest(any())).thenReturn(ctr);
 
-        DescribeTableResult describeResult = mock(DescribeTableResult.class);
+        DescribeTableResponse describeResult = mock(DescribeTableResponse.class);
         TableDescription description = mock(TableDescription.class);
-        when(description.getTableStatus()).thenReturn(TableStatus.ACTIVE.toString());
-        when(describeResult.getTable()).thenReturn(description);
+        when(description.tableStatus()).thenReturn(TableStatus.ACTIVE.toString());
+        when(describeResult.table()).thenReturn(description);
         when(amazonDynamoDB.describeTable(any(DescribeTableRequest.class))).thenReturn(describeResult);
     }
 

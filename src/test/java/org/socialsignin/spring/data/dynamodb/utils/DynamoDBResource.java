@@ -15,17 +15,17 @@
  */
 package org.socialsignin.spring.data.dynamodb.utils;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.Assert;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.awscore.client.builder.AwsSyncClientBuilder;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClientBuilder;
 
 /**
- * Clue {@link Configuration} class for all integration tests. It exposes the {@link AmazonDynamoDB} pre-configured to
+ * Clue {@link Configuration} class for all integration tests. It exposes the {@link DynamoDbClient} pre-configured to
  * use the launched local DynamoDB by Maven's integration-test.
  */
 @Configuration
@@ -34,13 +34,13 @@ public class DynamoDBResource {
     private static final String PORT = System.getProperty(DYNAMODB_PORT_PROPERTY);
 
     @Bean
-    public AmazonDynamoDB amazonDynamoDB() {
+    public DynamoDbClient amazonDynamoDB() {
         Assert.notNull(PORT, "System property '" + DYNAMODB_PORT_PROPERTY + " not set!");
 
-        AmazonDynamoDBClientBuilder builder = AmazonDynamoDBClientBuilder.standard();
-        builder.withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials("AWS-Key", "")));
-        builder.withEndpointConfiguration(
-                new AwsClientBuilder.EndpointConfiguration(String.format("http://localhost:%s", PORT), "us-east-1"));
+        DynamoDbClientBuilder builder = DynamoDbClient.builder();
+        builder.credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("AWS-Key", "")));
+        builder.endpointOverride(
+                new AwsSyncClientBuilder.EndpointConfiguration(String.format("http://localhost:%s", PORT), "us-east-1"));
 
         return builder.build();
     }

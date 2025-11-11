@@ -1,10 +1,10 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
-import com.amazonaws.services.dynamodbv2.model.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -52,7 +52,7 @@ public class AdvancedQueryPatternsIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
-    private AmazonDynamoDB amazonDynamoDB;
+    private DynamoDbClient amazonDynamoDB;
 
     @Autowired
     private DynamoDBMapper dynamoDBMapper;
@@ -110,18 +110,21 @@ public class AdvancedQueryPatternsIntegrationTest {
 
         // When - Scan with BETWEEN filter
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":min", new AttributeValue().withN("8"));
-        expressionAttributeValues.put(":max", new AttributeValue().withN("15"));
+        expressionAttributeValues.put(":min", AttributeValue.builder().n("8")
+                .build());
+        expressionAttributeValues.put(":max", AttributeValue.builder().n("15")
+                .build());
 
-        ScanRequest scanRequest = new ScanRequest()
-                .withTableName("user")
-                .withFilterExpression("numberOfPlaylists BETWEEN :min AND :max")
-                .withExpressionAttributeValues(expressionAttributeValues);
+        ScanRequest scanRequest = ScanRequest.builder()
+                .tableName("user")
+                .filterExpression("numberOfPlaylists BETWEEN :min AND :max")
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
-        ScanResult result = amazonDynamoDB.scan(scanRequest);
+        ScanResponse result = amazonDynamoDB.scan(scanRequest);
 
         // Then - Should return users with 8-15 playlists
-        assertThat(result.getItems()).hasSize(3); // user2(10), user3(15), user4(8)
+        assertThat(result.items()).hasSize(3); // user2(10), user3(15), user4(8)
     }
 
     @Test
@@ -133,15 +136,16 @@ public class AdvancedQueryPatternsIntegrationTest {
         expressionAttributeValues.put(":code1", new AttributeValue("12345"));
         expressionAttributeValues.put(":code2", new AttributeValue("67890"));
 
-        ScanRequest scanRequest = new ScanRequest()
-                .withTableName("user")
-                .withFilterExpression("postCode IN (:code1, :code2)")
-                .withExpressionAttributeValues(expressionAttributeValues);
+        ScanRequest scanRequest = ScanRequest.builder()
+                .tableName("user")
+                .filterExpression("postCode IN (:code1, :code2)")
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
-        ScanResult result = amazonDynamoDB.scan(scanRequest);
+        ScanResponse result = amazonDynamoDB.scan(scanRequest);
 
         // Then - Should return users in postcodes 12345 or 67890
-        assertThat(result.getItems()).hasSize(4); // user1, user2, user3, user4
+        assertThat(result.items()).hasSize(4); // user1, user2, user3, user4
     }
 
     @Test
@@ -155,16 +159,17 @@ public class AdvancedQueryPatternsIntegrationTest {
         Map<String, String> expressionAttributeNames = new HashMap<>();
         expressionAttributeNames.put("#n", "name");
 
-        ScanRequest scanRequest = new ScanRequest()
-                .withTableName("user")
-                .withFilterExpression("begins_with(#n, :prefix)")
-                .withExpressionAttributeNames(expressionAttributeNames)
-                .withExpressionAttributeValues(expressionAttributeValues);
+        ScanRequest scanRequest = ScanRequest.builder()
+                .tableName("user")
+                .filterExpression("begins_with(#n, :prefix)")
+                .expressionAttributeNames(expressionAttributeNames)
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
-        ScanResult result = amazonDynamoDB.scan(scanRequest);
+        ScanResponse result = amazonDynamoDB.scan(scanRequest);
 
         // Then - Should return Alice Anderson and Alice Baker
-        assertThat(result.getItems()).hasSize(2);
+        assertThat(result.items()).hasSize(2);
     }
 
     @Test
@@ -178,16 +183,17 @@ public class AdvancedQueryPatternsIntegrationTest {
         Map<String, String> expressionAttributeNames = new HashMap<>();
         expressionAttributeNames.put("#n", "name");
 
-        ScanRequest scanRequest = new ScanRequest()
-                .withTableName("user")
-                .withFilterExpression("contains(#n, :substring)")
-                .withExpressionAttributeNames(expressionAttributeNames)
-                .withExpressionAttributeValues(expressionAttributeValues);
+        ScanRequest scanRequest = ScanRequest.builder()
+                .tableName("user")
+                .filterExpression("contains(#n, :substring)")
+                .expressionAttributeNames(expressionAttributeNames)
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
-        ScanResult result = amazonDynamoDB.scan(scanRequest);
+        ScanResponse result = amazonDynamoDB.scan(scanRequest);
 
         // Then - Should return Bob Brown
-        assertThat(result.getItems()).hasSize(1);
+        assertThat(result.items()).hasSize(1);
     }
 
     @Test
@@ -197,17 +203,19 @@ public class AdvancedQueryPatternsIntegrationTest {
         // When - Scan with multiple AND conditions
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":postCode", new AttributeValue("12345"));
-        expressionAttributeValues.put(":minPlaylists", new AttributeValue().withN("8"));
+        expressionAttributeValues.put(":minPlaylists", AttributeValue.builder().n("8")
+                .build());
 
-        ScanRequest scanRequest = new ScanRequest()
-                .withTableName("user")
-                .withFilterExpression("postCode = :postCode AND numberOfPlaylists > :minPlaylists")
-                .withExpressionAttributeValues(expressionAttributeValues);
+        ScanRequest scanRequest = ScanRequest.builder()
+                .tableName("user")
+                .filterExpression("postCode = :postCode AND numberOfPlaylists > :minPlaylists")
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
-        ScanResult result = amazonDynamoDB.scan(scanRequest);
+        ScanResponse result = amazonDynamoDB.scan(scanRequest);
 
         // Then - Should return user2 (postCode=12345, playlists=10)
-        assertThat(result.getItems()).hasSize(1);
+        assertThat(result.items()).hasSize(1);
     }
 
     @Test
@@ -216,18 +224,21 @@ public class AdvancedQueryPatternsIntegrationTest {
     void testFilterExpressionOr() {
         // When - Scan with OR conditions
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":high", new AttributeValue().withN("20"));
-        expressionAttributeValues.put(":low", new AttributeValue().withN("5"));
+        expressionAttributeValues.put(":high", AttributeValue.builder().n("20")
+                .build());
+        expressionAttributeValues.put(":low", AttributeValue.builder().n("5")
+                .build());
 
-        ScanRequest scanRequest = new ScanRequest()
-                .withTableName("user")
-                .withFilterExpression("numberOfPlaylists = :high OR numberOfPlaylists = :low")
-                .withExpressionAttributeValues(expressionAttributeValues);
+        ScanRequest scanRequest = ScanRequest.builder()
+                .tableName("user")
+                .filterExpression("numberOfPlaylists = :high OR numberOfPlaylists = :low")
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
-        ScanResult result = amazonDynamoDB.scan(scanRequest);
+        ScanResponse result = amazonDynamoDB.scan(scanRequest);
 
         // Then - Should return user1(5) and user5(20)
-        assertThat(result.getItems()).hasSize(2);
+        assertThat(result.items()).hasSize(2);
     }
 
     @Test
@@ -238,15 +249,16 @@ public class AdvancedQueryPatternsIntegrationTest {
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":code", new AttributeValue("12345"));
 
-        ScanRequest scanRequest = new ScanRequest()
-                .withTableName("user")
-                .withFilterExpression("NOT postCode = :code")
-                .withExpressionAttributeValues(expressionAttributeValues);
+        ScanRequest scanRequest = ScanRequest.builder()
+                .tableName("user")
+                .filterExpression("NOT postCode = :code")
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
-        ScanResult result = amazonDynamoDB.scan(scanRequest);
+        ScanResponse result = amazonDynamoDB.scan(scanRequest);
 
         // Then - Should return users not in postCode 12345
-        assertThat(result.getItems()).hasSize(3); // user3, user4, user5
+        assertThat(result.items()).hasSize(3); // user3, user4, user5
     }
 
     @Test
@@ -254,14 +266,15 @@ public class AdvancedQueryPatternsIntegrationTest {
     @DisplayName("Test 8: Filter expression - attribute_exists()")
     void testFilterExpressionAttributeExists() {
         // When - Scan for users with tags
-        ScanRequest scanRequest = new ScanRequest()
-                .withTableName("user")
-                .withFilterExpression("attribute_exists(tags)");
+        ScanRequest scanRequest = ScanRequest.builder()
+                .tableName("user")
+                .filterExpression("attribute_exists(tags)")
+                .build();
 
-        ScanResult result = amazonDynamoDB.scan(scanRequest);
+        ScanResponse result = amazonDynamoDB.scan(scanRequest);
 
         // Then - Should return users with tags set
-        assertThat(result.getItems()).hasSize(3); // user1, user2, user4
+        assertThat(result.items()).hasSize(3); // user1, user2, user4
     }
 
     @Test
@@ -269,14 +282,15 @@ public class AdvancedQueryPatternsIntegrationTest {
     @DisplayName("Test 9: Filter expression - attribute_not_exists()")
     void testFilterExpressionAttributeNotExists() {
         // When - Scan for users without tags
-        ScanRequest scanRequest = new ScanRequest()
-                .withTableName("user")
-                .withFilterExpression("attribute_not_exists(tags)");
+        ScanRequest scanRequest = ScanRequest.builder()
+                .tableName("user")
+                .filterExpression("attribute_not_exists(tags)")
+                .build();
 
-        ScanResult result = amazonDynamoDB.scan(scanRequest);
+        ScanResponse result = amazonDynamoDB.scan(scanRequest);
 
         // Then - Should return users without tags
-        assertThat(result.getItems()).hasSize(2); // user3, user5
+        assertThat(result.items()).hasSize(2); // user3, user5
     }
 
     @Test
@@ -285,17 +299,19 @@ public class AdvancedQueryPatternsIntegrationTest {
     void testFilterExpressionSizeFunction() {
         // When - Scan for users with exactly 2 tags
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":size", new AttributeValue().withN("2"));
+        expressionAttributeValues.put(":size", AttributeValue.builder().n("2")
+                .build());
 
-        ScanRequest scanRequest = new ScanRequest()
-                .withTableName("user")
-                .withFilterExpression("size(tags) = :size")
-                .withExpressionAttributeValues(expressionAttributeValues);
+        ScanRequest scanRequest = ScanRequest.builder()
+                .tableName("user")
+                .filterExpression("size(tags) = :size")
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
-        ScanResult result = amazonDynamoDB.scan(scanRequest);
+        ScanResponse result = amazonDynamoDB.scan(scanRequest);
 
         // Then - Should return user1 (has 2 tags: premium, verified)
-        assertThat(result.getItems()).hasSize(1);
+        assertThat(result.items()).hasSize(1);
     }
 
     @Test
@@ -306,22 +322,24 @@ public class AdvancedQueryPatternsIntegrationTest {
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":code1", new AttributeValue("12345"));
         expressionAttributeValues.put(":code2", new AttributeValue("67890"));
-        expressionAttributeValues.put(":minPlaylists", new AttributeValue().withN("5"));
+        expressionAttributeValues.put(":minPlaylists", AttributeValue.builder().n("5")
+                .build());
         expressionAttributeValues.put(":prefix", new AttributeValue("A"));
 
         Map<String, String> expressionAttributeNames = new HashMap<>();
         expressionAttributeNames.put("#n", "name");
 
-        ScanRequest scanRequest = new ScanRequest()
-                .withTableName("user")
-                .withFilterExpression("(postCode = :code1 OR postCode = :code2) AND numberOfPlaylists > :minPlaylists AND begins_with(#n, :prefix)")
-                .withExpressionAttributeNames(expressionAttributeNames)
-                .withExpressionAttributeValues(expressionAttributeValues);
+        ScanRequest scanRequest = ScanRequest.builder()
+                .tableName("user")
+                .filterExpression("(postCode = :code1 OR postCode = :code2) AND numberOfPlaylists > :minPlaylists AND begins_with(#n, :prefix)")
+                .expressionAttributeNames(expressionAttributeNames)
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
-        ScanResult result = amazonDynamoDB.scan(scanRequest);
+        ScanResponse result = amazonDynamoDB.scan(scanRequest);
 
         // Then - Should return user3 (Alice Baker, postCode=67890, playlists=15)
-        assertThat(result.getItems()).hasSize(1);
+        assertThat(result.items()).hasSize(1);
     }
 
     @Test
@@ -344,14 +362,15 @@ public class AdvancedQueryPatternsIntegrationTest {
     @DisplayName("Test 13: Query with limit")
     void testQueryWithLimit() {
         // When - Scan with limit
-        ScanRequest scanRequest = new ScanRequest()
-                .withTableName("user")
-                .withLimit(2);
+        ScanRequest scanRequest = ScanRequest.builder()
+                .tableName("user")
+                .limit(2)
+                .build();
 
-        ScanResult result = amazonDynamoDB.scan(scanRequest);
+        ScanResponse result = amazonDynamoDB.scan(scanRequest);
 
         // Then - Should return at most 2 items
-        assertThat(result.getItems().size()).isLessThanOrEqualTo(2);
+        assertThat(result.items().size()).isLessThanOrEqualTo(2);
     }
 
     @Test
@@ -363,14 +382,15 @@ public class AdvancedQueryPatternsIntegrationTest {
         Map<String, AttributeValue> lastEvaluatedKey = null;
 
         do {
-            ScanRequest scanRequest = new ScanRequest()
-                    .withTableName("user")
-                    .withLimit(2)
-                    .withExclusiveStartKey(lastEvaluatedKey);
+            ScanRequest scanRequest = ScanRequest.builder()
+                    .tableName("user")
+                    .limit(2)
+                    .exclusiveStartKey(lastEvaluatedKey)
+                    .build();
 
-            ScanResult result = amazonDynamoDB.scan(scanRequest);
-            allItems.addAll(result.getItems());
-            lastEvaluatedKey = result.getLastEvaluatedKey();
+            ScanResponse result = amazonDynamoDB.scan(scanRequest);
+            allItems.addAll(result.items());
+            lastEvaluatedKey = result.lastEvaluatedKey();
         } while (lastEvaluatedKey != null);
 
         // Then - Should have retrieved all 5 users via pagination
@@ -383,17 +403,19 @@ public class AdvancedQueryPatternsIntegrationTest {
     void testCountWithFilter() {
         // When - Count users with more than 10 playlists
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":threshold", new AttributeValue().withN("10"));
+        expressionAttributeValues.put(":threshold", AttributeValue.builder().n("10")
+                .build());
 
-        ScanRequest scanRequest = new ScanRequest()
-                .withTableName("user")
-                .withSelect(Select.COUNT)
-                .withFilterExpression("numberOfPlaylists > :threshold")
-                .withExpressionAttributeValues(expressionAttributeValues);
+        ScanRequest scanRequest = ScanRequest.builder()
+                .tableName("user")
+                .select(Select.COUNT)
+                .filterExpression("numberOfPlaylists > :threshold")
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
-        ScanResult result = amazonDynamoDB.scan(scanRequest);
+        ScanResponse result = amazonDynamoDB.scan(scanRequest);
 
         // Then - Should count users with >10 playlists
-        assertThat(result.getCount()).isEqualTo(2); // user3(15), user5(20)
+        assertThat(result.count()).isEqualTo(2); // user3(15), user5(20)
     }
 }

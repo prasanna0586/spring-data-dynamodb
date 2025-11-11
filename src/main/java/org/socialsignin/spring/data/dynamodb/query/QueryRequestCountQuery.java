@@ -15,8 +15,8 @@
  */
 package org.socialsignin.spring.data.dynamodb.query;
 
-import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
+import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
 
 public class QueryRequestCountQuery extends AbstractSingleEntityQuery<Long> {
 

@@ -1,7 +1,7 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.model.*;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -52,7 +52,7 @@ public class TimeToLiveIntegrationTest {
     private SessionDataRepository sessionDataRepository;
 
     @Autowired
-    private AmazonDynamoDB amazonDynamoDB;
+    private DynamoDbClient amazonDynamoDB;
 
     private static final String TABLE_NAME = "SessionData";
     private static final String TTL_ATTRIBUTE = "expirationTime";
@@ -67,21 +67,23 @@ public class TimeToLiveIntegrationTest {
     @DisplayName("Test 1: Enable TTL on table using UpdateTimeToLiveRequest")
     void testEnableTTL() {
         // Given - TTL specification
-        TimeToLiveSpecification ttlSpec = new TimeToLiveSpecification()
-                .withAttributeName(TTL_ATTRIBUTE)
-                .withEnabled(true);
+        TimeToLiveSpecification ttlSpec = TimeToLiveSpecification.builder()
+                .attributeName(TTL_ATTRIBUTE)
+                .enabled(true)
+                .build();
 
-        UpdateTimeToLiveRequest request = new UpdateTimeToLiveRequest()
-                .withTableName(TABLE_NAME)
-                .withTimeToLiveSpecification(ttlSpec);
+        UpdateTimeToLiveRequest request = UpdateTimeToLiveRequest.builder()
+                .tableName(TABLE_NAME)
+                .timeToLiveSpecification(ttlSpec)
+                .build();
 
         // When - Enable TTL
-        UpdateTimeToLiveResult result = amazonDynamoDB.updateTimeToLive(request);
+        UpdateTimeToLiveResponse result = amazonDynamoDB.updateTimeToLive(request);
 
         // Then - Verify TTL configuration
-        assertThat(result.getTimeToLiveSpecification()).isNotNull();
-        assertThat(result.getTimeToLiveSpecification().getAttributeName()).isEqualTo(TTL_ATTRIBUTE);
-        assertThat(result.getTimeToLiveSpecification().getEnabled()).isTrue();
+        assertThat(result.timeToLiveSpecification()).isNotNull();
+        assertThat(result.timeToLiveSpecification().attributeName()).isEqualTo(TTL_ATTRIBUTE);
+        assertThat(result.timeToLiveSpecification().enabled()).isTrue();
     }
 
     @Test
@@ -92,15 +94,16 @@ public class TimeToLiveIntegrationTest {
         enableTTL();
 
         // When - Describe TTL
-        DescribeTimeToLiveRequest request = new DescribeTimeToLiveRequest()
-                .withTableName(TABLE_NAME);
-        DescribeTimeToLiveResult result = amazonDynamoDB.describeTimeToLive(request);
+        DescribeTimeToLiveRequest request = DescribeTimeToLiveRequest.builder()
+                .tableName(TABLE_NAME)
+                .build();
+        DescribeTimeToLiveResponse result = amazonDynamoDB.describeTimeToLive(request);
 
         // Then - Verify TTL is enabled
-        assertThat(result.getTimeToLiveDescription()).isNotNull();
-        assertThat(result.getTimeToLiveDescription().getAttributeName()).isEqualTo(TTL_ATTRIBUTE);
+        assertThat(result.timeToLiveDescription()).isNotNull();
+        assertThat(result.timeToLiveDescription().attributeName()).isEqualTo(TTL_ATTRIBUTE);
         // Status could be ENABLING or ENABLED depending on timing
-        assertThat(result.getTimeToLiveDescription().getTimeToLiveStatus())
+        assertThat(result.timeToLiveDescription().timeToLiveStatus())
                 .isIn("ENABLING", "ENABLED");
     }
 
@@ -283,31 +286,35 @@ public class TimeToLiveIntegrationTest {
         enableTTL();
 
         // When - Disable TTL
-        TimeToLiveSpecification ttlSpec = new TimeToLiveSpecification()
-                .withAttributeName(TTL_ATTRIBUTE)
-                .withEnabled(false);
+        TimeToLiveSpecification ttlSpec = TimeToLiveSpecification.builder()
+                .attributeName(TTL_ATTRIBUTE)
+                .enabled(false)
+                .build();
 
-        UpdateTimeToLiveRequest request = new UpdateTimeToLiveRequest()
-                .withTableName(TABLE_NAME)
-                .withTimeToLiveSpecification(ttlSpec);
+        UpdateTimeToLiveRequest request = UpdateTimeToLiveRequest.builder()
+                .tableName(TABLE_NAME)
+                .timeToLiveSpecification(ttlSpec)
+                .build();
 
-        UpdateTimeToLiveResult result = amazonDynamoDB.updateTimeToLive(request);
+        UpdateTimeToLiveResponse result = amazonDynamoDB.updateTimeToLive(request);
 
         // Then - Verify TTL is disabled
-        assertThat(result.getTimeToLiveSpecification()).isNotNull();
-        assertThat(result.getTimeToLiveSpecification().getEnabled()).isFalse();
+        assertThat(result.timeToLiveSpecification()).isNotNull();
+        assertThat(result.timeToLiveSpecification().enabled()).isFalse();
     }
 
     // Helper method to enable TTL
     private void enableTTL() {
         try {
-            TimeToLiveSpecification ttlSpec = new TimeToLiveSpecification()
-                    .withAttributeName(TTL_ATTRIBUTE)
-                    .withEnabled(true);
+            TimeToLiveSpecification ttlSpec = TimeToLiveSpecification.builder()
+                    .attributeName(TTL_ATTRIBUTE)
+                    .enabled(true)
+                    .build();
 
-            UpdateTimeToLiveRequest request = new UpdateTimeToLiveRequest()
-                    .withTableName(TABLE_NAME)
-                    .withTimeToLiveSpecification(ttlSpec);
+            UpdateTimeToLiveRequest request = UpdateTimeToLiveRequest.builder()
+                    .tableName(TABLE_NAME)
+                    .timeToLiveSpecification(ttlSpec)
+                    .build();
 
             amazonDynamoDB.updateTimeToLive(request);
         } catch (Exception e) {

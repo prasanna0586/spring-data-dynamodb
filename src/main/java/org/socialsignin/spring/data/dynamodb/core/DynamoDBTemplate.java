@@ -15,12 +15,8 @@
  */
 package org.socialsignin.spring.data.dynamodb.core;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.datamodeling.*;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper.FailedBatch;
-import com.amazonaws.services.dynamodbv2.model.QueryRequest;
-import com.amazonaws.services.dynamodbv2.model.QueryResult;
-import com.amazonaws.services.dynamodbv2.model.Select;
 import org.socialsignin.spring.data.dynamodb.mapping.event.*;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +25,10 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
+import software.amazon.awssdk.services.dynamodb.model.QueryResponse;
+import software.amazon.awssdk.services.dynamodb.model.Select;
 
 import java.util.List;
 import java.util.Map;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 
 public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextAware {
     private final DynamoDBMapper dynamoDBMapper;
-    private final AmazonDynamoDB amazonDynamoDB;
+    private final DynamoDbClient amazonDynamoDB;
     private final DynamoDBMapperConfig dynamoDBMapperConfig;
     private ApplicationEventPublisher eventPublisher;
 
@@ -49,11 +49,11 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
      * @param dynamoDBMapperConfig
      *            can be {@code null} - {@link DynamoDBMapperConfig#DEFAULT} is used if {@code null} is passed in
      * @param dynamoDBMapper
-     *            can be {@code null} - {@link DynamoDBMapper#DynamoDBMapper(AmazonDynamoDB, DynamoDBMapperConfig)} is
+     *            can be {@code null} - {@link DynamoDBMapper#DynamoDBMapper(DynamoDbClient, DynamoDBMapperConfig)} is
      *            used if {@code null} is passed in
      */
     @Autowired
-    public DynamoDBTemplate(AmazonDynamoDB amazonDynamoDB, DynamoDBMapper dynamoDBMapper,
+    public DynamoDBTemplate(DynamoDbClient amazonDynamoDB, DynamoDBMapper dynamoDBMapper,
             DynamoDBMapperConfig dynamoDBMapperConfig) {
         Assert.notNull(amazonDynamoDB, "amazonDynamoDB must not be null!");
         Assert.notNull(dynamoDBMapper, "dynamoDBMapper must not be null!");
@@ -158,14 +158,14 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
 
     @Override
     public <T> PaginatedQueryList<T> query(Class<T> clazz, QueryRequest queryRequest) {
-        QueryResult queryResult = amazonDynamoDB.query(queryRequest);
+        QueryResponse queryResult = amazonDynamoDB.query(queryRequest);
 
         // If a limit is set, deactivate lazy loading of (matching) items after the
         // limit
         // via
         // com.amazonaws.services.dynamodbv2.datamodeling.PaginatedQueryList.atEndOfResults()
-        if (queryRequest.getLimit() != null) {
-            queryResult.setLastEvaluatedKey(null);
+        if (queryRequest.limit() != null) {
+            queryResult = queryResult.toBuilder().lastEvaluatedKey(null).build();
         }
 
         return new PaginatedQueryList<T>(dynamoDBMapper, clazz, amazonDynamoDB, queryRequest, queryResult,
@@ -174,16 +174,16 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
 
     @Override
     public <T> int count(Class<T> clazz, QueryRequest mutableQueryRequest) {
-        mutableQueryRequest.setSelect(Select.COUNT);
+        mutableQueryRequest = mutableQueryRequest.toBuilder().select(Select.COUNT).build();
 
         // Count queries can also be truncated for large datasets
         int count = 0;
-        QueryResult queryResult = null;
+        QueryResponse queryResult = null;
         do {
             queryResult = amazonDynamoDB.query(mutableQueryRequest);
-            count += queryResult.getCount();
-            mutableQueryRequest.setExclusiveStartKey(queryResult.getLastEvaluatedKey());
-        } while (queryResult.getLastEvaluatedKey() != null);
+            count += queryResult.count();
+            mutableQueryRequest = mutableQueryRequest.toBuilder().exclusiveStartKey(queryResult.lastEvaluatedKey()).build();
+        } while (queryResult.lastEvaluatedKey() != null);
 
         return count;
     }

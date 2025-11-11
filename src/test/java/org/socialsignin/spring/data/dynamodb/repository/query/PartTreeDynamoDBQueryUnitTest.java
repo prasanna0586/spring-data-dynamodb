@@ -19,9 +19,6 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
 import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedQueryList;
 import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedScanList;
-import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
-import com.amazonaws.services.dynamodbv2.model.Condition;
-import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,6 +39,9 @@ import org.springframework.data.repository.query.Parameter;
 import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.util.ClassUtils;
+import software.amazon.awssdk.services.dynamodb.model.ComparisonOperator;
+import software.amazon.awssdk.services.dynamodb.model.Condition;
+import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
 
 import java.io.Serializable;
 import java.text.DateFormat;
@@ -292,23 +292,23 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         assertNotNull(filterCondition);
 
-        assertEquals(ComparisonOperator.EQ.name(), filterCondition.getComparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), filterCondition.comparisonOperator());
 
         // Assert we only have one attribute value for the filter condition
-        assertEquals(1, filterCondition.getAttributeValueList().size());
+        assertEquals(1, filterCondition.attributeValueList().size());
 
         // Assert that there the attribute value type for this attribute value
         // is String,
         // and its value is the parameter expected
-        assertEquals("somePlaylistName", filterCondition.getAttributeValueList().get(0).getS());
+        assertEquals("somePlaylistName", filterCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(filterCondition.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition.attributeValueList().get(0).ss());
+        assertNull(filterCondition.attributeValueList().get(0).n());
+        assertNull(filterCondition.attributeValueList().get(0).ns());
+        assertNull(filterCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(playlistClassCaptor.getValue(), scanCaptor.getValue());
@@ -353,23 +353,23 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         assertNotNull(filterCondition);
 
-        assertEquals(ComparisonOperator.EQ.name(), filterCondition.getComparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), filterCondition.comparisonOperator());
 
         // Assert we only have one attribute value for the filter condition
-        assertEquals(1, filterCondition.getAttributeValueList().size());
+        assertEquals(1, filterCondition.attributeValueList().size());
 
         // Assert that there the attribute value type for this attribute value
         // is String,
         // and its value is the parameter expected
-        assertEquals("somePlaylistName", filterCondition.getAttributeValueList().get(0).getS());
+        assertEquals("somePlaylistName", filterCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(filterCondition.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition.attributeValueList().get(0).ss());
+        assertNull(filterCondition.attributeValueList().get(0).n());
+        assertNull(filterCondition.attributeValueList().get(0).ns());
+        assertNull(filterCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(playlistClassCaptor.getValue(), scanCaptor.getValue());
@@ -454,23 +454,23 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         assertNotNull(filterCondition);
 
-        assertEquals(ComparisonOperator.EQ.name(), filterCondition.getComparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), filterCondition.comparisonOperator());
 
         // Assert we only have one attribute value for the filter condition
-        assertEquals(1, filterCondition.getAttributeValueList().size());
+        assertEquals(1, filterCondition.attributeValueList().size());
 
         // Assert that there the attribute value type for this attribute value
         // is String,
         // and its value is the parameter expected
-        assertEquals("somePlaylistName", filterCondition.getAttributeValueList().get(0).getS());
+        assertEquals("somePlaylistName", filterCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(filterCondition.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition.attributeValueList().get(0).ss());
+        assertNull(filterCondition.attributeValueList().get(0).n());
+        assertNull(filterCondition.attributeValueList().get(0).ns());
+        assertNull(filterCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).count(playlistClassCaptor.getValue(), scanCaptor.getValue());
@@ -549,32 +549,32 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Condition filterCondition1 = filterConditions.get("userName");
         Condition filterCondition2 = filterConditions.get("playlistName");
 
-        assertEquals(ComparisonOperator.EQ.name(), filterCondition1.getComparisonOperator());
-        assertEquals(ComparisonOperator.NE.name(), filterCondition2.getComparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), filterCondition1.comparisonOperator());
+        assertEquals(ComparisonOperator.NE.name(), filterCondition2.comparisonOperator());
 
         // Assert we only have one attribute value for this filter condition
-        assertEquals(1, filterCondition1.getAttributeValueList().size());
-        assertEquals(1, filterCondition2.getAttributeValueList().size());
+        assertEquals(1, filterCondition1.attributeValueList().size());
+        assertEquals(1, filterCondition2.attributeValueList().size());
 
         // Assert that there the attribute value type for this attribute value
         // is String,
         // and its value is the parameter expected
-        assertEquals("someUserName", filterCondition1.getAttributeValueList().get(0).getS());
-        assertEquals("somePlaylistName", filterCondition2.getAttributeValueList().get(0).getS());
+        assertEquals("someUserName", filterCondition1.attributeValueList().get(0).s());
+        assertEquals("somePlaylistName", filterCondition2.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(filterCondition1.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition1.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition1.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition1.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition1.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition1.attributeValueList().get(0).ss());
+        assertNull(filterCondition1.attributeValueList().get(0).n());
+        assertNull(filterCondition1.attributeValueList().get(0).ns());
+        assertNull(filterCondition1.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition1.attributeValueList().get(0).bs());
 
-        assertNull(filterCondition2.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition2.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition2.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition2.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition2.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition2.attributeValueList().get(0).ss());
+        assertNull(filterCondition2.attributeValueList().get(0).n());
+        assertNull(filterCondition2.attributeValueList().get(0).ns());
+        assertNull(filterCondition2.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition2.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(playlistClassCaptor.getValue(), scanCaptor.getValue()); // Assert
@@ -728,9 +728,9 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         assertEquals(1, playlistQueryCaptor.getValue().getRangeKeyConditions().size());
 
         Condition condition = (Condition) playlistQueryCaptor.getValue().getRangeKeyConditions().get("displayName");
-        assertEquals(ComparisonOperator.EQ.name(), condition.getComparisonOperator());
-        assertEquals(1, condition.getAttributeValueList().size());
-        assertEquals("someDisplayName", condition.getAttributeValueList().get(0).getS());
+        assertEquals(ComparisonOperator.EQ.name(), condition.comparisonOperator());
+        assertEquals(1, condition.attributeValueList().size());
+        assertEquals("someDisplayName", condition.attributeValueList().get(0).s());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.getValue(), playlistQueryCaptor.getValue());
@@ -886,9 +886,9 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         assertEquals(1, playlistQueryCaptor.getValue().getRangeKeyConditions().size());
         Condition condition = (Condition) playlistQueryCaptor.getValue().getRangeKeyConditions().get("displayName");
-        assertEquals(ComparisonOperator.EQ.name(), condition.getComparisonOperator());
-        assertEquals(1, condition.getAttributeValueList().size());
-        assertEquals("someDisplayName", condition.getAttributeValueList().get(0).getS());
+        assertEquals(ComparisonOperator.EQ.name(), condition.comparisonOperator());
+        assertEquals(1, condition.attributeValueList().size());
+        assertEquals("someDisplayName", condition.attributeValueList().get(0).s());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.getValue(), playlistQueryCaptor.getValue());
@@ -935,9 +935,9 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         assertEquals(1, playlistQueryCaptor.getValue().getRangeKeyConditions().size());
         Condition condition = (Condition) playlistQueryCaptor.getValue().getRangeKeyConditions().get("displayName");
-        assertEquals(ComparisonOperator.EQ.name(), condition.getComparisonOperator());
-        assertEquals(1, condition.getAttributeValueList().size());
-        assertEquals("someDisplayName", condition.getAttributeValueList().get(0).getS());
+        assertEquals(ComparisonOperator.EQ.name(), condition.comparisonOperator());
+        assertEquals(1, condition.attributeValueList().size());
+        assertEquals("someDisplayName", condition.attributeValueList().get(0).s());
 
         assertFalse(playlistQueryCaptor.getValue().isScanIndexForward());
 
@@ -1015,9 +1015,9 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         assertEquals(1, playlistQueryCaptor.getValue().getRangeKeyConditions().size());
         Condition condition = (Condition) playlistQueryCaptor.getValue().getRangeKeyConditions().get("displayName");
-        assertEquals(ComparisonOperator.EQ.name(), condition.getComparisonOperator());
-        assertEquals(1, condition.getAttributeValueList().size());
-        assertEquals("someDisplayName", condition.getAttributeValueList().get(0).getS());
+        assertEquals(ComparisonOperator.EQ.name(), condition.comparisonOperator());
+        assertEquals(1, condition.attributeValueList().size());
+        assertEquals("someDisplayName", condition.attributeValueList().get(0).s());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.getValue(), playlistQueryCaptor.getValue());
@@ -1097,9 +1097,9 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         assertEquals(1, playlistQueryCaptor.getValue().getRangeKeyConditions().size());
         Condition condition = (Condition) playlistQueryCaptor.getValue().getRangeKeyConditions().get("DisplayName");
-        assertEquals(ComparisonOperator.EQ.name(), condition.getComparisonOperator());
-        assertEquals(1, condition.getAttributeValueList().size());
-        assertEquals("someDisplayName", condition.getAttributeValueList().get(0).getS());
+        assertEquals(ComparisonOperator.EQ.name(), condition.comparisonOperator());
+        assertEquals(1, condition.attributeValueList().size());
+        assertEquals("someDisplayName", condition.attributeValueList().get(0).s());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.getValue(), playlistQueryCaptor.getValue());
@@ -1143,32 +1143,32 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Condition filterCondition1 = filterConditions.get("userName");
         Condition filterCondition2 = filterConditions.get("DisplayName");
 
-        assertEquals(ComparisonOperator.EQ.name(), filterCondition1.getComparisonOperator());
-        assertEquals(ComparisonOperator.EQ.name(), filterCondition2.getComparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), filterCondition1.comparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), filterCondition2.comparisonOperator());
 
         // Assert we only have one attribute value for this filter condition
-        assertEquals(1, filterCondition1.getAttributeValueList().size());
-        assertEquals(1, filterCondition2.getAttributeValueList().size());
+        assertEquals(1, filterCondition1.attributeValueList().size());
+        assertEquals(1, filterCondition2.attributeValueList().size());
 
         // Assert that there the attribute value type for this attribute value
         // is String,
         // and its value is the parameter expected
-        assertEquals("someUserName", filterCondition1.getAttributeValueList().get(0).getS());
-        assertEquals("someDisplayName", filterCondition2.getAttributeValueList().get(0).getS());
+        assertEquals("someUserName", filterCondition1.attributeValueList().get(0).s());
+        assertEquals("someDisplayName", filterCondition2.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(filterCondition1.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition1.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition1.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition1.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition1.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition1.attributeValueList().get(0).ss());
+        assertNull(filterCondition1.attributeValueList().get(0).n());
+        assertNull(filterCondition1.attributeValueList().get(0).ns());
+        assertNull(filterCondition1.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition1.attributeValueList().get(0).bs());
 
-        assertNull(filterCondition2.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition2.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition2.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition2.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition2.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition2.attributeValueList().get(0).ss());
+        assertNull(filterCondition2.attributeValueList().get(0).n());
+        assertNull(filterCondition2.attributeValueList().get(0).ns());
+        assertNull(filterCondition2.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition2.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.getValue(), scanCaptor.getValue()); // Assert
@@ -1210,32 +1210,32 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Condition filterCondition1 = filterConditions.get("playlistName");
         Condition filterCondition2 = filterConditions.get("DisplayName");
 
-        assertEquals(ComparisonOperator.EQ.name(), filterCondition1.getComparisonOperator());
-        assertEquals(ComparisonOperator.EQ.name(), filterCondition2.getComparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), filterCondition1.comparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), filterCondition2.comparisonOperator());
 
         // Assert we only have one attribute value for this filter condition
-        assertEquals(1, filterCondition1.getAttributeValueList().size());
-        assertEquals(1, filterCondition2.getAttributeValueList().size());
+        assertEquals(1, filterCondition1.attributeValueList().size());
+        assertEquals(1, filterCondition2.attributeValueList().size());
 
         // Assert that there the attribute value type for this attribute value
         // is String,
         // and its value is the parameter expected
-        assertEquals("somePlaylistName", filterCondition1.getAttributeValueList().get(0).getS());
-        assertEquals("someDisplayName", filterCondition2.getAttributeValueList().get(0).getS());
+        assertEquals("somePlaylistName", filterCondition1.attributeValueList().get(0).s());
+        assertEquals("someDisplayName", filterCondition2.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(filterCondition1.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition1.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition1.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition1.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition1.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition1.attributeValueList().get(0).ss());
+        assertNull(filterCondition1.attributeValueList().get(0).n());
+        assertNull(filterCondition1.attributeValueList().get(0).ns());
+        assertNull(filterCondition1.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition1.attributeValueList().get(0).bs());
 
-        assertNull(filterCondition2.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition2.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition2.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition2.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition2.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition2.attributeValueList().get(0).ss());
+        assertNull(filterCondition2.attributeValueList().get(0).n());
+        assertNull(filterCondition2.attributeValueList().get(0).ns());
+        assertNull(filterCondition2.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition2.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.getValue(), scanCaptor.getValue()); // Assert
@@ -1268,32 +1268,32 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Condition filterCondition1 = filterConditions.get("userName");
         Condition filterCondition2 = filterConditions.get("playlistName");
 
-        assertEquals(ComparisonOperator.NE.name(), filterCondition1.getComparisonOperator());
-        assertEquals(ComparisonOperator.NE.name(), filterCondition2.getComparisonOperator());
+        assertEquals(ComparisonOperator.NE.name(), filterCondition1.comparisonOperator());
+        assertEquals(ComparisonOperator.NE.name(), filterCondition2.comparisonOperator());
 
         // Assert we only have one attribute value for this filter condition
-        assertEquals(1, filterCondition1.getAttributeValueList().size());
-        assertEquals(1, filterCondition2.getAttributeValueList().size());
+        assertEquals(1, filterCondition1.attributeValueList().size());
+        assertEquals(1, filterCondition2.attributeValueList().size());
 
         // Assert that there the attribute value type for this attribute value
         // is String,
         // and its value is the parameter expected
-        assertEquals("someUserName", filterCondition1.getAttributeValueList().get(0).getS());
-        assertEquals("somePlaylistName", filterCondition2.getAttributeValueList().get(0).getS());
+        assertEquals("someUserName", filterCondition1.attributeValueList().get(0).s());
+        assertEquals("somePlaylistName", filterCondition2.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(filterCondition1.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition1.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition1.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition1.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition1.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition1.attributeValueList().get(0).ss());
+        assertNull(filterCondition1.attributeValueList().get(0).n());
+        assertNull(filterCondition1.attributeValueList().get(0).ns());
+        assertNull(filterCondition1.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition1.attributeValueList().get(0).bs());
 
-        assertNull(filterCondition2.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition2.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition2.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition2.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition2.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition2.attributeValueList().get(0).ss());
+        assertNull(filterCondition2.attributeValueList().get(0).n());
+        assertNull(filterCondition2.attributeValueList().get(0).ns());
+        assertNull(filterCondition2.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition2.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.getValue(), scanCaptor.getValue()); // Assert
@@ -1340,41 +1340,41 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Condition filterCondition2 = filterConditions.get("playlistName");
         Condition filterCondition3 = filterConditions.get("DisplayName");
 
-        assertEquals(ComparisonOperator.EQ.name(), filterCondition1.getComparisonOperator());
-        assertEquals(ComparisonOperator.EQ.name(), filterCondition2.getComparisonOperator());
-        assertEquals(ComparisonOperator.EQ.name(), filterCondition3.getComparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), filterCondition1.comparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), filterCondition2.comparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), filterCondition3.comparisonOperator());
 
         // Assert we only have one attribute value for this filter condition
-        assertEquals(1, filterCondition1.getAttributeValueList().size());
-        assertEquals(1, filterCondition2.getAttributeValueList().size());
-        assertEquals(1, filterCondition3.getAttributeValueList().size());
+        assertEquals(1, filterCondition1.attributeValueList().size());
+        assertEquals(1, filterCondition2.attributeValueList().size());
+        assertEquals(1, filterCondition3.attributeValueList().size());
 
         // Assert that there the attribute value type for this attribute value
         // is String,
         // and its value is the parameter expected
-        assertEquals("someUserName", filterCondition1.getAttributeValueList().get(0).getS());
-        assertEquals("somePlaylistName", filterCondition2.getAttributeValueList().get(0).getS());
-        assertEquals("someDisplayName", filterCondition3.getAttributeValueList().get(0).getS());
+        assertEquals("someUserName", filterCondition1.attributeValueList().get(0).s());
+        assertEquals("somePlaylistName", filterCondition2.attributeValueList().get(0).s());
+        assertEquals("someDisplayName", filterCondition3.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(filterCondition1.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition1.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition1.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition1.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition1.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition1.attributeValueList().get(0).ss());
+        assertNull(filterCondition1.attributeValueList().get(0).n());
+        assertNull(filterCondition1.attributeValueList().get(0).ns());
+        assertNull(filterCondition1.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition1.attributeValueList().get(0).bs());
 
-        assertNull(filterCondition2.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition2.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition2.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition2.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition2.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition2.attributeValueList().get(0).ss());
+        assertNull(filterCondition2.attributeValueList().get(0).n());
+        assertNull(filterCondition2.attributeValueList().get(0).ns());
+        assertNull(filterCondition2.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition2.attributeValueList().get(0).bs());
 
-        assertNull(filterCondition3.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition3.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition3.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition3.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition3.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition3.attributeValueList().get(0).ss());
+        assertNull(filterCondition3.attributeValueList().get(0).n());
+        assertNull(filterCondition3.attributeValueList().get(0).ns());
+        assertNull(filterCondition3.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition3.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.getValue(), scanCaptor.getValue()); // Assert
@@ -1409,23 +1409,23 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Condition filterCondition = filterConditions.get("name");
         assertNotNull(filterCondition);
 
-        assertEquals(ComparisonOperator.EQ.name(), filterCondition.getComparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), filterCondition.comparisonOperator());
 
         // Assert we only have one attribute value for this filter condition
-        assertEquals(1, filterCondition.getAttributeValueList().size());
+        assertEquals(1, filterCondition.attributeValueList().size());
 
         // Assert that there the attribute value type for this attribute value
         // is String,
         // and its value is the parameter expected
-        assertEquals("someName", filterCondition.getAttributeValueList().get(0).getS());
+        assertEquals("someName", filterCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(filterCondition.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition.attributeValueList().get(0).ss());
+        assertNull(filterCondition.attributeValueList().get(0).n());
+        assertNull(filterCondition.attributeValueList().get(0).ns());
+        assertNull(filterCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.getValue(), scanCaptor.getValue());
@@ -1460,23 +1460,23 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Condition filterCondition = filterConditions.get("Name");
         assertNotNull(filterCondition);
 
-        assertEquals(ComparisonOperator.EQ.name(), filterCondition.getComparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), filterCondition.comparisonOperator());
 
         // Assert we only have one attribute value for this filter condition
-        assertEquals(1, filterCondition.getAttributeValueList().size());
+        assertEquals(1, filterCondition.attributeValueList().size());
 
         // Assert that there the attribute value type for this attribute value
         // is String,
         // and its value is the parameter expected
-        assertEquals("someName", filterCondition.getAttributeValueList().get(0).getS());
+        assertEquals("someName", filterCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(filterCondition.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition.attributeValueList().get(0).ss());
+        assertNull(filterCondition.attributeValueList().get(0).n());
+        assertNull(filterCondition.attributeValueList().get(0).ns());
+        assertNull(filterCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.getValue(), scanCaptor.getValue());
@@ -1511,31 +1511,31 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Condition idFilterCondition = filterConditions.get("id");
         assertNotNull(idFilterCondition);
 
-        assertEquals(ComparisonOperator.EQ.name(), nameFilterCondition.getComparisonOperator());
-        assertEquals(ComparisonOperator.EQ.name(), idFilterCondition.getComparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), nameFilterCondition.comparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), idFilterCondition.comparisonOperator());
 
         // Assert we only have one attribute value for each filter condition
-        assertEquals(1, nameFilterCondition.getAttributeValueList().size());
-        assertEquals(1, idFilterCondition.getAttributeValueList().size());
+        assertEquals(1, nameFilterCondition.attributeValueList().size());
+        assertEquals(1, idFilterCondition.attributeValueList().size());
 
         // Assert that there the attribute value type for this attribute value
         // is String,
         // and its value is the parameter expected
-        assertEquals("someName", nameFilterCondition.getAttributeValueList().get(0).getS());
-        assertEquals("someId", idFilterCondition.getAttributeValueList().get(0).getS());
+        assertEquals("someName", nameFilterCondition.attributeValueList().get(0).s());
+        assertEquals("someId", idFilterCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(nameFilterCondition.getAttributeValueList().get(0).getSS());
-        assertNull(nameFilterCondition.getAttributeValueList().get(0).getN());
-        assertNull(nameFilterCondition.getAttributeValueList().get(0).getNS());
-        assertNull(nameFilterCondition.getAttributeValueList().get(0).getB());
-        assertNull(nameFilterCondition.getAttributeValueList().get(0).getBS());
-        assertNull(idFilterCondition.getAttributeValueList().get(0).getSS());
-        assertNull(idFilterCondition.getAttributeValueList().get(0).getN());
-        assertNull(idFilterCondition.getAttributeValueList().get(0).getNS());
-        assertNull(idFilterCondition.getAttributeValueList().get(0).getB());
-        assertNull(idFilterCondition.getAttributeValueList().get(0).getBS());
+        assertNull(nameFilterCondition.attributeValueList().get(0).ss());
+        assertNull(nameFilterCondition.attributeValueList().get(0).n());
+        assertNull(nameFilterCondition.attributeValueList().get(0).ns());
+        assertNull(nameFilterCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(nameFilterCondition.attributeValueList().get(0).bs());
+        assertNull(idFilterCondition.attributeValueList().get(0).ss());
+        assertNull(idFilterCondition.attributeValueList().get(0).n());
+        assertNull(idFilterCondition.attributeValueList().get(0).ns());
+        assertNull(idFilterCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(idFilterCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.getValue(), scanCaptor.getValue());
@@ -1571,30 +1571,30 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Condition testSetFilterCondition = filterConditions.get("testSet");
         assertNotNull(testSetFilterCondition);
 
-        assertEquals(ComparisonOperator.EQ.name(), testSetFilterCondition.getComparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), testSetFilterCondition.comparisonOperator());
 
         // Assert we only have one attribute value for each filter condition
-        assertEquals(1, testSetFilterCondition.getAttributeValueList().size());
+        assertEquals(1, testSetFilterCondition.attributeValueList().size());
 
         // Assert that there the attribute value type for this attribute value
         // is String,
         // and its value is the parameter expected
-        assertNotNull(testSetFilterCondition.getAttributeValueList().get(0).getSS());
+        assertNotNull(testSetFilterCondition.attributeValueList().get(0).ss());
 
         assertTrue(ClassUtils.isAssignable(Iterable.class,
-                testSetFilterCondition.getAttributeValueList().get(0).getSS().getClass()));
+                testSetFilterCondition.attributeValueList().get(0).ss().getClass()));
 
-        List<String> returnObjects = testSetFilterCondition.getAttributeValueList().get(0).getSS();
+        List<String> returnObjects = testSetFilterCondition.attributeValueList().get(0).ss();
         assertEquals(1, returnObjects.size());
         assertEquals("testData", returnObjects.get(0));
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(testSetFilterCondition.getAttributeValueList().get(0).getS());
-        assertNull(testSetFilterCondition.getAttributeValueList().get(0).getN());
-        assertNull(testSetFilterCondition.getAttributeValueList().get(0).getNS());
-        assertNull(testSetFilterCondition.getAttributeValueList().get(0).getB());
-        assertNull(testSetFilterCondition.getAttributeValueList().get(0).getBS());
+        assertNull(testSetFilterCondition.attributeValueList().get(0).s());
+        assertNull(testSetFilterCondition.attributeValueList().get(0).n());
+        assertNull(testSetFilterCondition.attributeValueList().get(0).ns());
+        assertNull(testSetFilterCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(testSetFilterCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.getValue(), scanCaptor.getValue());
@@ -1632,31 +1632,31 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Condition idFilterCondition = filterConditions.get("Id");
         assertNotNull(idFilterCondition);
 
-        assertEquals(ComparisonOperator.EQ.name(), nameFilterCondition.getComparisonOperator());
-        assertEquals(ComparisonOperator.EQ.name(), idFilterCondition.getComparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), nameFilterCondition.comparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), idFilterCondition.comparisonOperator());
 
         // Assert we only have one attribute value for each filter condition
-        assertEquals(1, nameFilterCondition.getAttributeValueList().size());
-        assertEquals(1, idFilterCondition.getAttributeValueList().size());
+        assertEquals(1, nameFilterCondition.attributeValueList().size());
+        assertEquals(1, idFilterCondition.attributeValueList().size());
 
         // Assert that there the attribute value type for this attribute value
         // is String,
         // and its value is the parameter expected
-        assertEquals("someName", nameFilterCondition.getAttributeValueList().get(0).getS());
-        assertEquals("someId", idFilterCondition.getAttributeValueList().get(0).getS());
+        assertEquals("someName", nameFilterCondition.attributeValueList().get(0).s());
+        assertEquals("someId", idFilterCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(nameFilterCondition.getAttributeValueList().get(0).getSS());
-        assertNull(nameFilterCondition.getAttributeValueList().get(0).getN());
-        assertNull(nameFilterCondition.getAttributeValueList().get(0).getNS());
-        assertNull(nameFilterCondition.getAttributeValueList().get(0).getB());
-        assertNull(nameFilterCondition.getAttributeValueList().get(0).getBS());
-        assertNull(idFilterCondition.getAttributeValueList().get(0).getSS());
-        assertNull(idFilterCondition.getAttributeValueList().get(0).getN());
-        assertNull(idFilterCondition.getAttributeValueList().get(0).getNS());
-        assertNull(idFilterCondition.getAttributeValueList().get(0).getB());
-        assertNull(idFilterCondition.getAttributeValueList().get(0).getBS());
+        assertNull(nameFilterCondition.attributeValueList().get(0).ss());
+        assertNull(nameFilterCondition.attributeValueList().get(0).n());
+        assertNull(nameFilterCondition.attributeValueList().get(0).ns());
+        assertNull(nameFilterCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(nameFilterCondition.attributeValueList().get(0).bs());
+        assertNull(idFilterCondition.attributeValueList().get(0).ss());
+        assertNull(idFilterCondition.attributeValueList().get(0).n());
+        assertNull(idFilterCondition.attributeValueList().get(0).ns());
+        assertNull(idFilterCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(idFilterCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.getValue(), scanCaptor.getValue());
@@ -1695,23 +1695,23 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Condition filterCondition = filterConditions.get("name");
         assertNotNull(filterCondition);
 
-        assertEquals(ComparisonOperator.EQ.name(), filterCondition.getComparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), filterCondition.comparisonOperator());
 
         // Assert we only have one attribute value for this filter condition
-        assertEquals(1, filterCondition.getAttributeValueList().size());
+        assertEquals(1, filterCondition.attributeValueList().size());
 
         // Assert that there the attribute value type for this attribute value
         // is String,
         // and its value is the parameter expected
-        assertEquals("someName", filterCondition.getAttributeValueList().get(0).getS());
+        assertEquals("someName", filterCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(filterCondition.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition.attributeValueList().get(0).ss());
+        assertNull(filterCondition.attributeValueList().get(0).n());
+        assertNull(filterCondition.attributeValueList().get(0).ns());
+        assertNull(filterCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.getValue(), scanCaptor.getValue());
@@ -1800,24 +1800,24 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Condition filterCondition = filterConditions.get("name");
         assertNotNull(filterCondition);
 
-        assertEquals(ComparisonOperator.IN.name(), filterCondition.getComparisonOperator());
+        assertEquals(ComparisonOperator.IN.name(), filterCondition.comparisonOperator());
 
         // Assert we only have an attribute value for each element of the IN array
-        assertEquals(2, filterCondition.getAttributeValueList().size());
+        assertEquals(2, filterCondition.attributeValueList().size());
 
         // Assert that there the attribute value type for this attribute value
         // is String,
         // and its value is the parameter expected
-        assertEquals(names[0], filterCondition.getAttributeValueList().get(0).getS());
-        assertEquals(names[1], filterCondition.getAttributeValueList().get(1).getS());
+        assertEquals(names[0], filterCondition.attributeValueList().get(0).s());
+        assertEquals(names[1], filterCondition.attributeValueList().get(1).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(filterCondition.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition.attributeValueList().get(0).ss());
+        assertNull(filterCondition.attributeValueList().get(0).n());
+        assertNull(filterCondition.attributeValueList().get(0).ns());
+        assertNull(filterCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.getValue(), scanCaptor.getValue());
@@ -1858,24 +1858,24 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Condition filterCondition = filterConditions.get("name");
         assertNotNull(filterCondition);
 
-        assertEquals(ComparisonOperator.IN.name(), filterCondition.getComparisonOperator());
+        assertEquals(ComparisonOperator.IN.name(), filterCondition.comparisonOperator());
 
         // Assert we only have an attribute value for each element of the IN array
-        assertEquals(2, filterCondition.getAttributeValueList().size());
+        assertEquals(2, filterCondition.attributeValueList().size());
 
         // Assert that there the attribute value type for this attribute value
         // is String,
         // and its value is the parameter expected
-        assertEquals(names.get(0), filterCondition.getAttributeValueList().get(0).getS());
-        assertEquals(names.get(1), filterCondition.getAttributeValueList().get(1).getS());
+        assertEquals(names.get(0), filterCondition.attributeValueList().get(0).s());
+        assertEquals(names.get(1), filterCondition.attributeValueList().get(1).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(filterCondition.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition.attributeValueList().get(0).ss());
+        assertNull(filterCondition.attributeValueList().get(0).n());
+        assertNull(filterCondition.attributeValueList().get(0).ns());
+        assertNull(filterCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.getValue(), scanCaptor.getValue());
@@ -1920,23 +1920,23 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Condition filterCondition = filterConditions.get("joinDate");
         assertNotNull(filterCondition);
 
-        assertEquals(ComparisonOperator.EQ.name(), filterCondition.getComparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), filterCondition.comparisonOperator());
 
         // Assert we only have one attribute value for this filter condition
-        assertEquals(1, filterCondition.getAttributeValueList().size());
+        assertEquals(1, filterCondition.attributeValueList().size());
 
         // Assert that there the attribute value type for this attribute value
         // is String,
         // and its value is the parameter expected
-        assertEquals(joinDateString, filterCondition.getAttributeValueList().get(0).getS());
+        assertEquals(joinDateString, filterCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(filterCondition.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition.attributeValueList().get(0).ss());
+        assertNull(filterCondition.attributeValueList().get(0).n());
+        assertNull(filterCondition.attributeValueList().get(0).ns());
+        assertNull(filterCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.getValue(), scanCaptor.getValue());
@@ -1983,23 +1983,23 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Condition filterCondition = filterConditions.get("joinYear");
         assertNotNull(filterCondition);
 
-        assertEquals(ComparisonOperator.EQ.name(), filterCondition.getComparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), filterCondition.comparisonOperator());
 
         // Assert we only have one attribute value for this filter condition
-        assertEquals(1, filterCondition.getAttributeValueList().size());
+        assertEquals(1, filterCondition.attributeValueList().size());
 
         // Assert that there the attribute value type for this attribute value
         // is String,
         // and its value is the parameter expected
-        assertEquals(joinYearString, filterCondition.getAttributeValueList().get(0).getS());
+        assertEquals(joinYearString, filterCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(filterCondition.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition.attributeValueList().get(0).ss());
+        assertNull(filterCondition.attributeValueList().get(0).n());
+        assertNull(filterCondition.attributeValueList().get(0).ns());
+        assertNull(filterCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.getValue(), scanCaptor.getValue());
@@ -2047,27 +2047,27 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         // Assert that we scanned DynamoDB for the correct class
         assertEquals(userClassCaptor.getValue(), User.class);
 
-        String indexName = queryResultCaptor.getValue().getIndexName();
+        String indexName = queryResultCaptor.getValue().indexName();
         assertNotNull(indexName);
         assertEquals("JoinYear-index", indexName);
 
-        assertEquals("user", queryResultCaptor.getValue().getTableName());
+        assertEquals("user", queryResultCaptor.getValue().tableName());
 
         // Assert that we have only one range condition for the global secondary index
         // hash key
-        assertEquals(1, queryResultCaptor.getValue().getKeyConditions().size());
-        Condition condition = queryResultCaptor.getValue().getKeyConditions().get("joinYear");
-        assertEquals(ComparisonOperator.EQ.name(), condition.getComparisonOperator());
-        assertEquals(1, condition.getAttributeValueList().size());
-        assertEquals(joinYearString, condition.getAttributeValueList().get(0).getS());
+        assertEquals(1, queryResultCaptor.getValue().keyConditions().size());
+        Condition condition = queryResultCaptor.getValue().keyConditions().get("joinYear");
+        assertEquals(ComparisonOperator.EQ.name(), condition.comparisonOperator());
+        assertEquals(1, condition.attributeValueList().size());
+        assertEquals(joinYearString, condition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(condition.getAttributeValueList().get(0).getSS());
-        assertNull(condition.getAttributeValueList().get(0).getN());
-        assertNull(condition.getAttributeValueList().get(0).getNS());
-        assertNull(condition.getAttributeValueList().get(0).getB());
-        assertNull(condition.getAttributeValueList().get(0).getBS());
+        assertNull(condition.attributeValueList().get(0).ss());
+        assertNull(condition.attributeValueList().get(0).n());
+        assertNull(condition.attributeValueList().get(0).ns());
+        assertNull(condition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(condition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).query(userClassCaptor.getValue(), queryResultCaptor.getValue());
@@ -2121,36 +2121,36 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         // Assert that we scanned DynamoDB for the correct class
         assertEquals(userClassCaptor.getValue(), User.class);
 
-        String indexName = queryResultCaptor.getValue().getIndexName();
+        String indexName = queryResultCaptor.getValue().indexName();
         assertNotNull(indexName);
         assertEquals("JoinYear-index", indexName);
 
         // Assert that we have only two range conditions for the global secondary index
         // hash key and range key
-        assertEquals(2, queryResultCaptor.getValue().getKeyConditions().size());
-        Condition yearCondition = queryResultCaptor.getValue().getKeyConditions().get("joinYear");
-        assertEquals(ComparisonOperator.EQ.name(), yearCondition.getComparisonOperator());
-        assertEquals(1, yearCondition.getAttributeValueList().size());
-        assertEquals(joinYearString, yearCondition.getAttributeValueList().get(0).getS());
-        Condition postCodeCondition = queryResultCaptor.getValue().getKeyConditions().get("postCode");
-        assertEquals(ComparisonOperator.EQ.name(), postCodeCondition.getComparisonOperator());
-        assertEquals(1, postCodeCondition.getAttributeValueList().size());
-        assertEquals("nw1", postCodeCondition.getAttributeValueList().get(0).getS());
+        assertEquals(2, queryResultCaptor.getValue().keyConditions().size());
+        Condition yearCondition = queryResultCaptor.getValue().keyConditions().get("joinYear");
+        assertEquals(ComparisonOperator.EQ.name(), yearCondition.comparisonOperator());
+        assertEquals(1, yearCondition.attributeValueList().size());
+        assertEquals(joinYearString, yearCondition.attributeValueList().get(0).s());
+        Condition postCodeCondition = queryResultCaptor.getValue().keyConditions().get("postCode");
+        assertEquals(ComparisonOperator.EQ.name(), postCodeCondition.comparisonOperator());
+        assertEquals(1, postCodeCondition.attributeValueList().size());
+        assertEquals("nw1", postCodeCondition.attributeValueList().get(0).s());
 
-        assertEquals("user", queryResultCaptor.getValue().getTableName());
+        assertEquals("user", queryResultCaptor.getValue().tableName());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(yearCondition.getAttributeValueList().get(0).getSS());
-        assertNull(yearCondition.getAttributeValueList().get(0).getN());
-        assertNull(yearCondition.getAttributeValueList().get(0).getNS());
-        assertNull(yearCondition.getAttributeValueList().get(0).getB());
-        assertNull(yearCondition.getAttributeValueList().get(0).getBS());
-        assertNull(postCodeCondition.getAttributeValueList().get(0).getSS());
-        assertNull(postCodeCondition.getAttributeValueList().get(0).getN());
-        assertNull(postCodeCondition.getAttributeValueList().get(0).getNS());
-        assertNull(postCodeCondition.getAttributeValueList().get(0).getB());
-        assertNull(postCodeCondition.getAttributeValueList().get(0).getBS());
+        assertNull(yearCondition.attributeValueList().get(0).ss());
+        assertNull(yearCondition.attributeValueList().get(0).n());
+        assertNull(yearCondition.attributeValueList().get(0).ns());
+        assertNull(yearCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(yearCondition.attributeValueList().get(0).bs());
+        assertNull(postCodeCondition.attributeValueList().get(0).ss());
+        assertNull(postCodeCondition.attributeValueList().get(0).n());
+        assertNull(postCodeCondition.attributeValueList().get(0).ns());
+        assertNull(postCodeCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(postCodeCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).query(userClassCaptor.getValue(), queryResultCaptor.getValue());
@@ -2192,27 +2192,27 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         // Assert that we scanned DynamoDB for the correct class
         assertEquals(playlistClassCaptor.getValue(), Playlist.class);
 
-        String indexName = queryResultCaptor.getValue().getIndexName();
+        String indexName = queryResultCaptor.getValue().indexName();
         assertNotNull(indexName);
         assertEquals("DisplayName-index", indexName);
 
-        assertEquals("playlist", queryResultCaptor.getValue().getTableName());
+        assertEquals("playlist", queryResultCaptor.getValue().tableName());
 
         // Assert that we have only one range condition for the global secondary index
         // hash key
-        assertEquals(1, queryResultCaptor.getValue().getKeyConditions().size());
-        Condition condition = queryResultCaptor.getValue().getKeyConditions().get("displayName");
-        assertEquals(ComparisonOperator.EQ.name(), condition.getComparisonOperator());
-        assertEquals(1, condition.getAttributeValueList().size());
-        assertEquals("Michael", condition.getAttributeValueList().get(0).getS());
+        assertEquals(1, queryResultCaptor.getValue().keyConditions().size());
+        Condition condition = queryResultCaptor.getValue().keyConditions().get("displayName");
+        assertEquals(ComparisonOperator.EQ.name(), condition.comparisonOperator());
+        assertEquals(1, condition.attributeValueList().size());
+        assertEquals("Michael", condition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(condition.getAttributeValueList().get(0).getSS());
-        assertNull(condition.getAttributeValueList().get(0).getN());
-        assertNull(condition.getAttributeValueList().get(0).getNS());
-        assertNull(condition.getAttributeValueList().get(0).getB());
-        assertNull(condition.getAttributeValueList().get(0).getBS());
+        assertNull(condition.attributeValueList().get(0).ss());
+        assertNull(condition.attributeValueList().get(0).n());
+        assertNull(condition.attributeValueList().get(0).ns());
+        assertNull(condition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(condition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.getValue(), queryResultCaptor.getValue());
@@ -2253,26 +2253,26 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         // Assert that we scanned DynamoDB for the correct class
         assertEquals(playlistClassCaptor.getValue(), Playlist.class);
 
-        String indexName = queryResultCaptor.getValue().getIndexName();
+        String indexName = queryResultCaptor.getValue().indexName();
         assertNotNull(indexName);
         assertEquals("PlaylistName-index", indexName);
 
-        assertEquals("playlist", queryResultCaptor.getValue().getTableName());
+        assertEquals("playlist", queryResultCaptor.getValue().tableName());
 
         // Assert that we have the correct conditions
-        assertEquals(1, queryResultCaptor.getValue().getKeyConditions().size());
-        Condition condition = queryResultCaptor.getValue().getKeyConditions().get("playlistName");
-        assertEquals(ComparisonOperator.EQ.name(), condition.getComparisonOperator());
-        assertEquals(1, condition.getAttributeValueList().size());
-        assertEquals("Some Playlist", condition.getAttributeValueList().get(0).getS());
+        assertEquals(1, queryResultCaptor.getValue().keyConditions().size());
+        Condition condition = queryResultCaptor.getValue().keyConditions().get("playlistName");
+        assertEquals(ComparisonOperator.EQ.name(), condition.comparisonOperator());
+        assertEquals(1, condition.attributeValueList().size());
+        assertEquals("Some Playlist", condition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(condition.getAttributeValueList().get(0).getSS());
-        assertNull(condition.getAttributeValueList().get(0).getN());
-        assertNull(condition.getAttributeValueList().get(0).getNS());
-        assertNull(condition.getAttributeValueList().get(0).getB());
-        assertNull(condition.getAttributeValueList().get(0).getBS());
+        assertNull(condition.attributeValueList().get(0).ss());
+        assertNull(condition.attributeValueList().get(0).n());
+        assertNull(condition.attributeValueList().get(0).ns());
+        assertNull(condition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(condition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.getValue(), queryResultCaptor.getValue());
@@ -2319,36 +2319,36 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         // Assert that we scanned DynamoDB for the correct class
         assertEquals(playlistClassCaptor.getValue(), Playlist.class);
 
-        String indexName = queryResultCaptor.getValue().getIndexName();
+        String indexName = queryResultCaptor.getValue().indexName();
         assertNotNull(indexName);
         assertEquals("UserName-DisplayName-index", indexName);
 
-        assertEquals("playlist", queryResultCaptor.getValue().getTableName());
+        assertEquals("playlist", queryResultCaptor.getValue().tableName());
 
         // Assert that we the correct conditions
-        assertEquals(2, queryResultCaptor.getValue().getKeyConditions().size());
-        Condition globalRangeKeyCondition = queryResultCaptor.getValue().getKeyConditions().get("displayName");
-        assertEquals(ComparisonOperator.EQ.name(), globalRangeKeyCondition.getComparisonOperator());
-        assertEquals(1, globalRangeKeyCondition.getAttributeValueList().size());
-        assertEquals("Michael", globalRangeKeyCondition.getAttributeValueList().get(0).getS());
-        Condition globalHashKeyCondition = queryResultCaptor.getValue().getKeyConditions().get("userName");
-        assertEquals(ComparisonOperator.EQ.name(), globalHashKeyCondition.getComparisonOperator());
-        assertEquals(1, globalHashKeyCondition.getAttributeValueList().size());
-        assertEquals("1", globalHashKeyCondition.getAttributeValueList().get(0).getS());
+        assertEquals(2, queryResultCaptor.getValue().keyConditions().size());
+        Condition globalRangeKeyCondition = queryResultCaptor.getValue().keyConditions().get("displayName");
+        assertEquals(ComparisonOperator.EQ.name(), globalRangeKeyCondition.comparisonOperator());
+        assertEquals(1, globalRangeKeyCondition.attributeValueList().size());
+        assertEquals("Michael", globalRangeKeyCondition.attributeValueList().get(0).s());
+        Condition globalHashKeyCondition = queryResultCaptor.getValue().keyConditions().get("userName");
+        assertEquals(ComparisonOperator.EQ.name(), globalHashKeyCondition.comparisonOperator());
+        assertEquals(1, globalHashKeyCondition.attributeValueList().size());
+        assertEquals("1", globalHashKeyCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getSS());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getN());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getNS());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getB());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getBS());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ss());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).n());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ns());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).bs());
 
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getSS());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getN());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getNS());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getB());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getBS());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).ss());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).n());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).ns());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.getValue(), queryResultCaptor.getValue());
@@ -2394,36 +2394,36 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         // Assert that we scanned DynamoDB for the correct class
         assertEquals(playlistClassCaptor.getValue(), Playlist.class);
 
-        String indexName = queryResultCaptor.getValue().getIndexName();
+        String indexName = queryResultCaptor.getValue().indexName();
         assertNotNull(indexName);
         assertEquals("PlaylistName-DisplayName-index", indexName);
 
-        assertEquals("playlist", queryResultCaptor.getValue().getTableName());
+        assertEquals("playlist", queryResultCaptor.getValue().tableName());
 
         // Assert that we have the correct conditions
-        assertEquals(2, queryResultCaptor.getValue().getKeyConditions().size());
-        Condition globalRangeKeyCondition = queryResultCaptor.getValue().getKeyConditions().get("displayName");
-        assertEquals(ComparisonOperator.EQ.name(), globalRangeKeyCondition.getComparisonOperator());
-        assertEquals(1, globalRangeKeyCondition.getAttributeValueList().size());
-        assertEquals("Michael", globalRangeKeyCondition.getAttributeValueList().get(0).getS());
-        Condition globalHashKeyCondition = queryResultCaptor.getValue().getKeyConditions().get("playlistName");
-        assertEquals(ComparisonOperator.EQ.name(), globalHashKeyCondition.getComparisonOperator());
-        assertEquals(1, globalHashKeyCondition.getAttributeValueList().size());
-        assertEquals("SomePlaylistName", globalHashKeyCondition.getAttributeValueList().get(0).getS());
+        assertEquals(2, queryResultCaptor.getValue().keyConditions().size());
+        Condition globalRangeKeyCondition = queryResultCaptor.getValue().keyConditions().get("displayName");
+        assertEquals(ComparisonOperator.EQ.name(), globalRangeKeyCondition.comparisonOperator());
+        assertEquals(1, globalRangeKeyCondition.attributeValueList().size());
+        assertEquals("Michael", globalRangeKeyCondition.attributeValueList().get(0).s());
+        Condition globalHashKeyCondition = queryResultCaptor.getValue().keyConditions().get("playlistName");
+        assertEquals(ComparisonOperator.EQ.name(), globalHashKeyCondition.comparisonOperator());
+        assertEquals(1, globalHashKeyCondition.attributeValueList().size());
+        assertEquals("SomePlaylistName", globalHashKeyCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getSS());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getN());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getNS());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getB());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getBS());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ss());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).n());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ns());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).bs());
 
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getSS());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getN());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getNS());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getB());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getBS());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).ss());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).n());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).ns());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.getValue(), queryResultCaptor.getValue());
@@ -2469,37 +2469,37 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         // Assert that we scanned DynamoDB for the correct class
         assertEquals(playlistClassCaptor.getValue(), Playlist.class);
 
-        String indexName = queryResultCaptor.getValue().getIndexName();
+        String indexName = queryResultCaptor.getValue().indexName();
         assertNotNull(indexName);
         assertEquals("DisplayName-PlaylistName-index", indexName);
 
-        assertEquals("playlist", queryResultCaptor.getValue().getTableName());
+        assertEquals("playlist", queryResultCaptor.getValue().tableName());
 
         // Assert that we have the correct conditions
 
-        assertEquals(2, queryResultCaptor.getValue().getKeyConditions().size());
-        Condition globalRangeKeyCondition = queryResultCaptor.getValue().getKeyConditions().get("displayName");
-        assertEquals(ComparisonOperator.EQ.name(), globalRangeKeyCondition.getComparisonOperator());
-        assertEquals(1, globalRangeKeyCondition.getAttributeValueList().size());
-        assertEquals("SomeDisplayName", globalRangeKeyCondition.getAttributeValueList().get(0).getS());
-        Condition globalHashKeyCondition = queryResultCaptor.getValue().getKeyConditions().get("playlistName");
-        assertEquals(ComparisonOperator.EQ.name(), globalHashKeyCondition.getComparisonOperator());
-        assertEquals(1, globalHashKeyCondition.getAttributeValueList().size());
-        assertEquals("SomePlaylistName", globalHashKeyCondition.getAttributeValueList().get(0).getS());
+        assertEquals(2, queryResultCaptor.getValue().keyConditions().size());
+        Condition globalRangeKeyCondition = queryResultCaptor.getValue().keyConditions().get("displayName");
+        assertEquals(ComparisonOperator.EQ.name(), globalRangeKeyCondition.comparisonOperator());
+        assertEquals(1, globalRangeKeyCondition.attributeValueList().size());
+        assertEquals("SomeDisplayName", globalRangeKeyCondition.attributeValueList().get(0).s());
+        Condition globalHashKeyCondition = queryResultCaptor.getValue().keyConditions().get("playlistName");
+        assertEquals(ComparisonOperator.EQ.name(), globalHashKeyCondition.comparisonOperator());
+        assertEquals(1, globalHashKeyCondition.attributeValueList().size());
+        assertEquals("SomePlaylistName", globalHashKeyCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getSS());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getN());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getNS());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getB());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getBS());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ss());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).n());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ns());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).bs());
 
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getSS());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getN());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getNS());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getB());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getBS());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).ss());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).n());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).ns());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.getValue(), queryResultCaptor.getValue());
@@ -2545,37 +2545,37 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         // Assert that we scanned DynamoDB for the correct class
         assertEquals(playlistClassCaptor.getValue(), Playlist.class);
 
-        String indexName = queryResultCaptor.getValue().getIndexName();
+        String indexName = queryResultCaptor.getValue().indexName();
         assertNotNull(indexName);
         assertEquals("DisplayName-UserName-index", indexName);
 
-        assertEquals("playlist", queryResultCaptor.getValue().getTableName());
+        assertEquals("playlist", queryResultCaptor.getValue().tableName());
 
         // Assert that we have the correct conditions
 
-        assertEquals(2, queryResultCaptor.getValue().getKeyConditions().size());
-        Condition globalRangeKeyCondition = queryResultCaptor.getValue().getKeyConditions().get("displayName");
-        assertEquals(ComparisonOperator.EQ.name(), globalRangeKeyCondition.getComparisonOperator());
-        assertEquals(1, globalRangeKeyCondition.getAttributeValueList().size());
-        assertEquals("SomeDisplayName", globalRangeKeyCondition.getAttributeValueList().get(0).getS());
-        Condition globalHashKeyCondition = queryResultCaptor.getValue().getKeyConditions().get("userName");
-        assertEquals(ComparisonOperator.EQ.name(), globalHashKeyCondition.getComparisonOperator());
-        assertEquals(1, globalHashKeyCondition.getAttributeValueList().size());
-        assertEquals("SomeUserName", globalHashKeyCondition.getAttributeValueList().get(0).getS());
+        assertEquals(2, queryResultCaptor.getValue().keyConditions().size());
+        Condition globalRangeKeyCondition = queryResultCaptor.getValue().keyConditions().get("displayName");
+        assertEquals(ComparisonOperator.EQ.name(), globalRangeKeyCondition.comparisonOperator());
+        assertEquals(1, globalRangeKeyCondition.attributeValueList().size());
+        assertEquals("SomeDisplayName", globalRangeKeyCondition.attributeValueList().get(0).s());
+        Condition globalHashKeyCondition = queryResultCaptor.getValue().keyConditions().get("userName");
+        assertEquals(ComparisonOperator.EQ.name(), globalHashKeyCondition.comparisonOperator());
+        assertEquals(1, globalHashKeyCondition.attributeValueList().size());
+        assertEquals("SomeUserName", globalHashKeyCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getSS());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getN());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getNS());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getB());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getBS());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ss());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).n());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ns());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).bs());
 
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getSS());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getN());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getNS());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getB());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getBS());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).ss());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).n());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).ns());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.getValue(), queryResultCaptor.getValue());
@@ -2622,36 +2622,36 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         // Assert that we scanned DynamoDB for the correct class
         assertEquals(playlistClassCaptor.getValue(), Playlist.class);
 
-        String indexName = queryResultCaptor.getValue().getIndexName();
+        String indexName = queryResultCaptor.getValue().indexName();
         assertNotNull(indexName);
         assertEquals("UserName-DisplayName-index", indexName);
 
-        assertEquals("playlist", queryResultCaptor.getValue().getTableName());
+        assertEquals("playlist", queryResultCaptor.getValue().tableName());
 
         // Assert that we the correct conditions
-        assertEquals(2, queryResultCaptor.getValue().getKeyConditions().size());
-        Condition globalRangeKeyCondition = queryResultCaptor.getValue().getKeyConditions().get("displayName");
-        assertEquals(ComparisonOperator.GT.name(), globalRangeKeyCondition.getComparisonOperator());
-        assertEquals(1, globalRangeKeyCondition.getAttributeValueList().size());
-        assertEquals("Michael", globalRangeKeyCondition.getAttributeValueList().get(0).getS());
-        Condition globalHashKeyCondition = queryResultCaptor.getValue().getKeyConditions().get("userName");
-        assertEquals(ComparisonOperator.EQ.name(), globalHashKeyCondition.getComparisonOperator());
-        assertEquals(1, globalHashKeyCondition.getAttributeValueList().size());
-        assertEquals("1", globalHashKeyCondition.getAttributeValueList().get(0).getS());
+        assertEquals(2, queryResultCaptor.getValue().keyConditions().size());
+        Condition globalRangeKeyCondition = queryResultCaptor.getValue().keyConditions().get("displayName");
+        assertEquals(ComparisonOperator.GT.name(), globalRangeKeyCondition.comparisonOperator());
+        assertEquals(1, globalRangeKeyCondition.attributeValueList().size());
+        assertEquals("Michael", globalRangeKeyCondition.attributeValueList().get(0).s());
+        Condition globalHashKeyCondition = queryResultCaptor.getValue().keyConditions().get("userName");
+        assertEquals(ComparisonOperator.EQ.name(), globalHashKeyCondition.comparisonOperator());
+        assertEquals(1, globalHashKeyCondition.attributeValueList().size());
+        assertEquals("1", globalHashKeyCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getSS());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getN());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getNS());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getB());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getBS());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ss());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).n());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ns());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).bs());
 
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getSS());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getN());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getNS());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getB());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getBS());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).ss());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).n());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).ns());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.getValue(), queryResultCaptor.getValue());
@@ -2698,36 +2698,36 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         // Assert that we scanned DynamoDB for the correct class
         assertEquals(playlistClassCaptor.getValue(), Playlist.class);
 
-        String indexName = queryResultCaptor.getValue().getIndexName();
+        String indexName = queryResultCaptor.getValue().indexName();
         assertNotNull(indexName);
         assertEquals("UserName-DisplayName-index", indexName);
 
-        assertEquals("playlist", queryResultCaptor.getValue().getTableName());
+        assertEquals("playlist", queryResultCaptor.getValue().tableName());
 
         // Assert that we the correct conditions
-        assertEquals(2, queryResultCaptor.getValue().getKeyConditions().size());
-        Condition globalRangeKeyCondition = queryResultCaptor.getValue().getKeyConditions().get("displayName");
-        assertEquals(ComparisonOperator.GT.name(), globalRangeKeyCondition.getComparisonOperator());
-        assertEquals(1, globalRangeKeyCondition.getAttributeValueList().size());
-        assertEquals("Michael", globalRangeKeyCondition.getAttributeValueList().get(0).getS());
-        Condition globalHashKeyCondition = queryResultCaptor.getValue().getKeyConditions().get("userName");
-        assertEquals(ComparisonOperator.EQ.name(), globalHashKeyCondition.getComparisonOperator());
-        assertEquals(1, globalHashKeyCondition.getAttributeValueList().size());
-        assertEquals("1", globalHashKeyCondition.getAttributeValueList().get(0).getS());
+        assertEquals(2, queryResultCaptor.getValue().keyConditions().size());
+        Condition globalRangeKeyCondition = queryResultCaptor.getValue().keyConditions().get("displayName");
+        assertEquals(ComparisonOperator.GT.name(), globalRangeKeyCondition.comparisonOperator());
+        assertEquals(1, globalRangeKeyCondition.attributeValueList().size());
+        assertEquals("Michael", globalRangeKeyCondition.attributeValueList().get(0).s());
+        Condition globalHashKeyCondition = queryResultCaptor.getValue().keyConditions().get("userName");
+        assertEquals(ComparisonOperator.EQ.name(), globalHashKeyCondition.comparisonOperator());
+        assertEquals(1, globalHashKeyCondition.attributeValueList().size());
+        assertEquals("1", globalHashKeyCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getSS());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getN());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getNS());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getB());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getBS());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ss());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).n());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ns());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).bs());
 
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getSS());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getN());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getNS());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getB());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getBS());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).ss());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).n());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).ns());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.getValue(), queryResultCaptor.getValue());
@@ -2773,36 +2773,36 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         // Assert that we scanned DynamoDB for the correct class
         assertEquals(playlistClassCaptor.getValue(), Playlist.class);
 
-        String indexName = queryResultCaptor.getValue().getIndexName();
+        String indexName = queryResultCaptor.getValue().indexName();
         assertNotNull(indexName);
         assertEquals("PlaylistName-DisplayName-index", indexName);
 
-        assertEquals("playlist", queryResultCaptor.getValue().getTableName());
+        assertEquals("playlist", queryResultCaptor.getValue().tableName());
 
         // Assert that we have the correct conditions
-        assertEquals(2, queryResultCaptor.getValue().getKeyConditions().size());
-        Condition globalRangeKeyCondition = queryResultCaptor.getValue().getKeyConditions().get("displayName");
-        assertEquals(ComparisonOperator.GT.name(), globalRangeKeyCondition.getComparisonOperator());
-        assertEquals(1, globalRangeKeyCondition.getAttributeValueList().size());
-        assertEquals("Michael", globalRangeKeyCondition.getAttributeValueList().get(0).getS());
-        Condition globalHashKeyCondition = queryResultCaptor.getValue().getKeyConditions().get("playlistName");
-        assertEquals(ComparisonOperator.EQ.name(), globalHashKeyCondition.getComparisonOperator());
-        assertEquals(1, globalHashKeyCondition.getAttributeValueList().size());
-        assertEquals("SomePlaylistName", globalHashKeyCondition.getAttributeValueList().get(0).getS());
+        assertEquals(2, queryResultCaptor.getValue().keyConditions().size());
+        Condition globalRangeKeyCondition = queryResultCaptor.getValue().keyConditions().get("displayName");
+        assertEquals(ComparisonOperator.GT.name(), globalRangeKeyCondition.comparisonOperator());
+        assertEquals(1, globalRangeKeyCondition.attributeValueList().size());
+        assertEquals("Michael", globalRangeKeyCondition.attributeValueList().get(0).s());
+        Condition globalHashKeyCondition = queryResultCaptor.getValue().keyConditions().get("playlistName");
+        assertEquals(ComparisonOperator.EQ.name(), globalHashKeyCondition.comparisonOperator());
+        assertEquals(1, globalHashKeyCondition.attributeValueList().size());
+        assertEquals("SomePlaylistName", globalHashKeyCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getSS());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getN());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getNS());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getB());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getBS());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ss());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).n());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ns());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).bs());
 
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getSS());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getN());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getNS());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getB());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getBS());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).ss());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).n());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).ns());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.getValue(), queryResultCaptor.getValue());
@@ -2851,37 +2851,37 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         // Assert that we scanned DynamoDB for the correct class
         assertEquals(playlistClassCaptor.getValue(), Playlist.class);
 
-        String indexName = queryResultCaptor.getValue().getIndexName();
+        String indexName = queryResultCaptor.getValue().indexName();
         assertNotNull(indexName);
         assertEquals("DisplayName-PlaylistName-index", indexName);
 
-        assertEquals("playlist", queryResultCaptor.getValue().getTableName());
+        assertEquals("playlist", queryResultCaptor.getValue().tableName());
 
         // Assert that we have the correct conditions
 
-        assertEquals(2, queryResultCaptor.getValue().getKeyConditions().size());
-        Condition globalRangeKeyCondition = queryResultCaptor.getValue().getKeyConditions().get("displayName");
-        assertEquals(ComparisonOperator.EQ.name(), globalRangeKeyCondition.getComparisonOperator());
-        assertEquals(1, globalRangeKeyCondition.getAttributeValueList().size());
-        assertEquals("SomeDisplayName", globalRangeKeyCondition.getAttributeValueList().get(0).getS());
-        Condition globalHashKeyCondition = queryResultCaptor.getValue().getKeyConditions().get("playlistName");
-        assertEquals(ComparisonOperator.GT.name(), globalHashKeyCondition.getComparisonOperator());
-        assertEquals(1, globalHashKeyCondition.getAttributeValueList().size());
-        assertEquals("SomePlaylistName", globalHashKeyCondition.getAttributeValueList().get(0).getS());
+        assertEquals(2, queryResultCaptor.getValue().keyConditions().size());
+        Condition globalRangeKeyCondition = queryResultCaptor.getValue().keyConditions().get("displayName");
+        assertEquals(ComparisonOperator.EQ.name(), globalRangeKeyCondition.comparisonOperator());
+        assertEquals(1, globalRangeKeyCondition.attributeValueList().size());
+        assertEquals("SomeDisplayName", globalRangeKeyCondition.attributeValueList().get(0).s());
+        Condition globalHashKeyCondition = queryResultCaptor.getValue().keyConditions().get("playlistName");
+        assertEquals(ComparisonOperator.GT.name(), globalHashKeyCondition.comparisonOperator());
+        assertEquals(1, globalHashKeyCondition.attributeValueList().size());
+        assertEquals("SomePlaylistName", globalHashKeyCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getSS());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getN());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getNS());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getB());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getBS());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ss());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).n());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ns());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).bs());
 
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getSS());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getN());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getNS());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getB());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getBS());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).ss());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).n());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).ns());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.getValue(), queryResultCaptor.getValue());
@@ -2930,37 +2930,37 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         // Assert that we scanned DynamoDB for the correct class
         assertEquals(playlistClassCaptor.getValue(), Playlist.class);
 
-        String indexName = queryResultCaptor.getValue().getIndexName();
+        String indexName = queryResultCaptor.getValue().indexName();
         assertNotNull(indexName);
         assertEquals("DisplayName-UserName-index", indexName);
 
-        assertEquals("playlist", queryResultCaptor.getValue().getTableName());
+        assertEquals("playlist", queryResultCaptor.getValue().tableName());
 
         // Assert that we have the correct conditions
 
-        assertEquals(2, queryResultCaptor.getValue().getKeyConditions().size());
-        Condition globalRangeKeyCondition = queryResultCaptor.getValue().getKeyConditions().get("displayName");
-        assertEquals(ComparisonOperator.EQ.name(), globalRangeKeyCondition.getComparisonOperator());
-        assertEquals(1, globalRangeKeyCondition.getAttributeValueList().size());
-        assertEquals("SomeDisplayName", globalRangeKeyCondition.getAttributeValueList().get(0).getS());
-        Condition globalHashKeyCondition = queryResultCaptor.getValue().getKeyConditions().get("userName");
-        assertEquals(ComparisonOperator.GT.name(), globalHashKeyCondition.getComparisonOperator());
-        assertEquals(1, globalHashKeyCondition.getAttributeValueList().size());
-        assertEquals("SomeUserName", globalHashKeyCondition.getAttributeValueList().get(0).getS());
+        assertEquals(2, queryResultCaptor.getValue().keyConditions().size());
+        Condition globalRangeKeyCondition = queryResultCaptor.getValue().keyConditions().get("displayName");
+        assertEquals(ComparisonOperator.EQ.name(), globalRangeKeyCondition.comparisonOperator());
+        assertEquals(1, globalRangeKeyCondition.attributeValueList().size());
+        assertEquals("SomeDisplayName", globalRangeKeyCondition.attributeValueList().get(0).s());
+        Condition globalHashKeyCondition = queryResultCaptor.getValue().keyConditions().get("userName");
+        assertEquals(ComparisonOperator.GT.name(), globalHashKeyCondition.comparisonOperator());
+        assertEquals(1, globalHashKeyCondition.attributeValueList().size());
+        assertEquals("SomeUserName", globalHashKeyCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getSS());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getN());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getNS());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getB());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getBS());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ss());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).n());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ns());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).bs());
 
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getSS());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getN());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getNS());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getB());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getBS());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).ss());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).n());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).ns());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.getValue(), queryResultCaptor.getValue());
@@ -3009,37 +3009,37 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         // Assert that we scanned DynamoDB for the correct class
         assertEquals(userClassCaptor.getValue(), User.class);
 
-        String indexName = queryResultCaptor.getValue().getIndexName();
+        String indexName = queryResultCaptor.getValue().indexName();
         assertNotNull(indexName);
         assertEquals("Name-PostCode-index", indexName);
 
-        assertEquals("user", queryResultCaptor.getValue().getTableName());
+        assertEquals("user", queryResultCaptor.getValue().tableName());
 
         // Assert that we have the correct conditions
 
-        assertEquals(2, queryResultCaptor.getValue().getKeyConditions().size());
-        Condition globalRangeKeyCondition = queryResultCaptor.getValue().getKeyConditions().get("name");
-        assertEquals(ComparisonOperator.EQ.name(), globalRangeKeyCondition.getComparisonOperator());
-        assertEquals(1, globalRangeKeyCondition.getAttributeValueList().size());
-        assertEquals("SomeName", globalRangeKeyCondition.getAttributeValueList().get(0).getS());
-        Condition globalHashKeyCondition = queryResultCaptor.getValue().getKeyConditions().get("postCode");
-        assertEquals(ComparisonOperator.GT.name(), globalHashKeyCondition.getComparisonOperator());
-        assertEquals(1, globalHashKeyCondition.getAttributeValueList().size());
-        assertEquals("SomePostCode", globalHashKeyCondition.getAttributeValueList().get(0).getS());
+        assertEquals(2, queryResultCaptor.getValue().keyConditions().size());
+        Condition globalRangeKeyCondition = queryResultCaptor.getValue().keyConditions().get("name");
+        assertEquals(ComparisonOperator.EQ.name(), globalRangeKeyCondition.comparisonOperator());
+        assertEquals(1, globalRangeKeyCondition.attributeValueList().size());
+        assertEquals("SomeName", globalRangeKeyCondition.attributeValueList().get(0).s());
+        Condition globalHashKeyCondition = queryResultCaptor.getValue().keyConditions().get("postCode");
+        assertEquals(ComparisonOperator.GT.name(), globalHashKeyCondition.comparisonOperator());
+        assertEquals(1, globalHashKeyCondition.attributeValueList().size());
+        assertEquals("SomePostCode", globalHashKeyCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getSS());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getN());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getNS());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getB());
-        assertNull(globalRangeKeyCondition.getAttributeValueList().get(0).getBS());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ss());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).n());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ns());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).bs());
 
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getSS());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getN());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getNS());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getB());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getBS());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).ss());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).n());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).ns());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).query(userClassCaptor.getValue(), queryResultCaptor.getValue());
@@ -3090,23 +3090,23 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         // Assert that we scanned DynamoDB for the correct class
         assertEquals(userClassCaptor.getValue(), User.class);
 
-        String indexName = queryResultCaptor.getValue().getIndexName();
+        String indexName = queryResultCaptor.getValue().indexName();
         assertNotNull(indexName);
         assertEquals("Name-PostCode-index", indexName);
 
-        assertEquals("user", queryResultCaptor.getValue().getTableName());
+        assertEquals("user", queryResultCaptor.getValue().tableName());
 
         // Assert that we have the correct conditions
-        Condition globalHashKeyCondition = queryResultCaptor.getValue().getKeyConditions().get("name");
-        assertEquals(ComparisonOperator.EQ.name(), globalHashKeyCondition.getComparisonOperator());
-        assertEquals(1, globalHashKeyCondition.getAttributeValueList().size());
-        assertEquals("SomeName", globalHashKeyCondition.getAttributeValueList().get(0).getS());
+        Condition globalHashKeyCondition = queryResultCaptor.getValue().keyConditions().get("name");
+        assertEquals(ComparisonOperator.EQ.name(), globalHashKeyCondition.comparisonOperator());
+        assertEquals(1, globalHashKeyCondition.attributeValueList().size());
+        assertEquals("SomeName", globalHashKeyCondition.attributeValueList().get(0).s());
 
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getSS());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getN());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getNS());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getB());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getBS());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).ss());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).n());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).ns());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).query(userClassCaptor.getValue(), queryResultCaptor.getValue());
@@ -3157,23 +3157,23 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         // Assert that we scanned DynamoDB for the correct class
         assertEquals(userClassCaptor.getValue(), User.class);
 
-        String indexName = queryResultCaptor.getValue().getIndexName();
+        String indexName = queryResultCaptor.getValue().indexName();
         assertNotNull(indexName);
         assertEquals("Name-index", indexName);
 
-        assertEquals("user", queryResultCaptor.getValue().getTableName());
+        assertEquals("user", queryResultCaptor.getValue().tableName());
 
         // Assert that we have the correct conditions
-        Condition globalHashKeyCondition = queryResultCaptor.getValue().getKeyConditions().get("name");
-        assertEquals(ComparisonOperator.EQ.name(), globalHashKeyCondition.getComparisonOperator());
-        assertEquals(1, globalHashKeyCondition.getAttributeValueList().size());
-        assertEquals("SomeName", globalHashKeyCondition.getAttributeValueList().get(0).getS());
+        Condition globalHashKeyCondition = queryResultCaptor.getValue().keyConditions().get("name");
+        assertEquals(ComparisonOperator.EQ.name(), globalHashKeyCondition.comparisonOperator());
+        assertEquals(1, globalHashKeyCondition.attributeValueList().size());
+        assertEquals("SomeName", globalHashKeyCondition.attributeValueList().get(0).s());
 
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getSS());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getN());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getNS());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getB());
-        assertNull(globalHashKeyCondition.getAttributeValueList().get(0).getBS());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).ss());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).n());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).ns());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).query(userClassCaptor.getValue(), queryResultCaptor.getValue());
@@ -3219,23 +3219,23 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Condition filterCondition = filterConditions.get("postCode");
         assertNotNull(filterCondition);
 
-        assertEquals(ComparisonOperator.EQ.name(), filterCondition.getComparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), filterCondition.comparisonOperator());
 
         // Assert we only have one attribute value for this filter condition
-        assertEquals(1, filterCondition.getAttributeValueList().size());
+        assertEquals(1, filterCondition.attributeValueList().size());
 
         // Assert that there the attribute value type for this attribute value
         // is String,
         // and its value is the parameter expected
-        assertEquals("n1", filterCondition.getAttributeValueList().get(0).getS());
+        assertEquals("n1", filterCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(filterCondition.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition.attributeValueList().get(0).ss());
+        assertNull(filterCondition.attributeValueList().get(0).n());
+        assertNull(filterCondition.attributeValueList().get(0).ns());
+        assertNull(filterCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.getValue(), scanCaptor.getValue());
@@ -3276,23 +3276,23 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Condition filterCondition = filterConditions.get("numberOfPlaylists");
         assertNotNull(filterCondition);
 
-        assertEquals(ComparisonOperator.EQ.name(), filterCondition.getComparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), filterCondition.comparisonOperator());
 
         // Assert we only have one attribute value for this filter condition
-        assertEquals(1, filterCondition.getAttributeValueList().size());
+        assertEquals(1, filterCondition.attributeValueList().size());
 
         // Assert that there the attribute value type for this attribute value
         // is Number,
         // and its Dynamo value is the number as a string
-        assertEquals("5", filterCondition.getAttributeValueList().get(0).getN());
+        assertEquals("5", filterCondition.attributeValueList().get(0).n());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(filterCondition.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition.attributeValueList().get(0).ns());
+        assertNull(filterCondition.attributeValueList().get(0).s());
+        assertNull(filterCondition.attributeValueList().get(0).ss());
+        assertNull(filterCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.getValue(), scanCaptor.getValue());
@@ -3331,23 +3331,23 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Condition filterCondition = filterConditions.get("id");
         assertNotNull(filterCondition);
 
-        assertEquals(ComparisonOperator.NE.name(), filterCondition.getComparisonOperator());
+        assertEquals(ComparisonOperator.NE.name(), filterCondition.comparisonOperator());
 
         // Assert we only have one attribute value for this filter condition
-        assertEquals(1, filterCondition.getAttributeValueList().size());
+        assertEquals(1, filterCondition.attributeValueList().size());
 
         // Assert that there the attribute value type for this attribute value
         // is String,
         // and its value is the parameter expected
-        assertEquals("someId", filterCondition.getAttributeValueList().get(0).getS());
+        assertEquals("someId", filterCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(filterCondition.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition.attributeValueList().get(0).ss());
+        assertNull(filterCondition.attributeValueList().get(0).n());
+        assertNull(filterCondition.attributeValueList().get(0).ns());
+        assertNull(filterCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.getValue(), scanCaptor.getValue());
@@ -3386,23 +3386,23 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Condition filterCondition = filterConditions.get("name");
         assertNotNull(filterCondition);
 
-        assertEquals(ComparisonOperator.NE.name(), filterCondition.getComparisonOperator());
+        assertEquals(ComparisonOperator.NE.name(), filterCondition.comparisonOperator());
 
         // Assert we only have one attribute value for this filter condition
-        assertEquals(1, filterCondition.getAttributeValueList().size());
+        assertEquals(1, filterCondition.attributeValueList().size());
 
         // Assert that there the attribute value type for this attribute value
         // is String,
         // and its value is the parameter expected
-        assertEquals("someName", filterCondition.getAttributeValueList().get(0).getS());
+        assertEquals("someName", filterCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(filterCondition.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition.attributeValueList().get(0).ss());
+        assertNull(filterCondition.attributeValueList().get(0).n());
+        assertNull(filterCondition.attributeValueList().get(0).ns());
+        assertNull(filterCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.getValue(), scanCaptor.getValue());
@@ -3437,23 +3437,23 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Condition filterCondition = filterConditions.get("Name");
         assertNotNull(filterCondition);
 
-        assertEquals(ComparisonOperator.EQ.name(), filterCondition.getComparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), filterCondition.comparisonOperator());
 
         // Assert we only have one attribute value for this filter condition
-        assertEquals(1, filterCondition.getAttributeValueList().size());
+        assertEquals(1, filterCondition.attributeValueList().size());
 
         // Assert that there the attribute value type for this attribute value
         // is String,
         // and its value is the parameter expected
-        assertEquals("someName", filterCondition.getAttributeValueList().get(0).getS());
+        assertEquals("someName", filterCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(filterCondition.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition.attributeValueList().get(0).ss());
+        assertNull(filterCondition.attributeValueList().get(0).n());
+        assertNull(filterCondition.attributeValueList().get(0).ns());
+        assertNull(filterCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.getValue(), scanCaptor.getValue());
@@ -3489,23 +3489,23 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Condition filterCondition = filterConditions.get("Name");
         assertNotNull(filterCondition);
 
-        assertEquals(ComparisonOperator.EQ.name(), filterCondition.getComparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), filterCondition.comparisonOperator());
 
         // Assert we only have one attribute value for this filter condition
-        assertEquals(1, filterCondition.getAttributeValueList().size());
+        assertEquals(1, filterCondition.attributeValueList().size());
 
         // Assert that there the attribute value type for this attribute value
         // is String,
         // and its value is the parameter expected
-        assertEquals("someName", filterCondition.getAttributeValueList().get(0).getS());
+        assertEquals("someName", filterCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(filterCondition.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition.attributeValueList().get(0).ss());
+        assertNull(filterCondition.attributeValueList().get(0).n());
+        assertNull(filterCondition.attributeValueList().get(0).ns());
+        assertNull(filterCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.getValue(), scanCaptor.getValue());
@@ -3542,23 +3542,23 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Condition filterCondition = filterConditions.get("Name");
         assertNotNull(filterCondition);
 
-        assertEquals(ComparisonOperator.EQ.name(), filterCondition.getComparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), filterCondition.comparisonOperator());
 
         // Assert we only have one attribute value for this filter condition
-        assertEquals(1, filterCondition.getAttributeValueList().size());
+        assertEquals(1, filterCondition.attributeValueList().size());
 
         // Assert that there the attribute value type for this attribute value
         // is String,
         // and its value is the parameter expected
-        assertEquals("someName", filterCondition.getAttributeValueList().get(0).getS());
+        assertEquals("someName", filterCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(filterCondition.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition.attributeValueList().get(0).ss());
+        assertNull(filterCondition.attributeValueList().get(0).n());
+        assertNull(filterCondition.attributeValueList().get(0).ns());
+        assertNull(filterCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.getValue(), scanCaptor.getValue());
@@ -3593,23 +3593,23 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Condition filterCondition = filterConditions.get("Name");
         assertNotNull(filterCondition);
 
-        assertEquals(ComparisonOperator.EQ.name(), filterCondition.getComparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), filterCondition.comparisonOperator());
 
         // Assert we only have one attribute value for this filter condition
-        assertEquals(1, filterCondition.getAttributeValueList().size());
+        assertEquals(1, filterCondition.attributeValueList().size());
 
         // Assert that there the attribute value type for this attribute value
         // is String,
         // and its value is the parameter expected
-        assertEquals("someName", filterCondition.getAttributeValueList().get(0).getS());
+        assertEquals("someName", filterCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(filterCondition.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition.attributeValueList().get(0).ss());
+        assertNull(filterCondition.attributeValueList().get(0).n());
+        assertNull(filterCondition.attributeValueList().get(0).ns());
+        assertNull(filterCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.getValue(), scanCaptor.getValue());
@@ -3645,23 +3645,23 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Condition filterCondition = filterConditions.get("Name");
         assertNotNull(filterCondition);
 
-        assertEquals(ComparisonOperator.EQ.name(), filterCondition.getComparisonOperator());
+        assertEquals(ComparisonOperator.EQ.name(), filterCondition.comparisonOperator());
 
         // Assert we only have one attribute value for this filter condition
-        assertEquals(1, filterCondition.getAttributeValueList().size());
+        assertEquals(1, filterCondition.attributeValueList().size());
 
         // Assert that there the attribute value type for this attribute value
         // is String,
         // and its value is the parameter expected
-        assertEquals("someName", filterCondition.getAttributeValueList().get(0).getS());
+        assertEquals("someName", filterCondition.attributeValueList().get(0).s());
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(filterCondition.getAttributeValueList().get(0).getSS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getN());
-        assertNull(filterCondition.getAttributeValueList().get(0).getNS());
-        assertNull(filterCondition.getAttributeValueList().get(0).getB());
-        assertNull(filterCondition.getAttributeValueList().get(0).getBS());
+        assertNull(filterCondition.attributeValueList().get(0).ss());
+        assertNull(filterCondition.attributeValueList().get(0).n());
+        assertNull(filterCondition.attributeValueList().get(0).ns());
+        assertNull(filterCondition.attributeValueList().get(0).b().asByteBuffer());
+        assertNull(filterCondition.attributeValueList().get(0).bs());
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.getValue(), scanCaptor.getValue());

@@ -1,9 +1,9 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBSaveExpression;
-import com.amazonaws.services.dynamodbv2.model.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -50,7 +50,7 @@ public class ParallelScansAndErrorHandlingIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
-    private AmazonDynamoDB amazonDynamoDB;
+    private DynamoDbClient amazonDynamoDB;
 
     @Autowired
     private DynamoDBMapper dynamoDBMapper;
@@ -148,21 +148,23 @@ public class ParallelScansAndErrorHandlingIntegrationTest {
             final int currentSegment = segment;
             futures.add(executor.submit(() -> {
                 Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-                expressionAttributeValues.put(":threshold", new AttributeValue().withN("50"));
+                expressionAttributeValues.put(":threshold", AttributeValue.builder().n("50")
+                        .build());
 
-                ScanRequest scanRequest = new ScanRequest()
-                        .withTableName("user")
-                        .withSegment(currentSegment)
-                        .withTotalSegments(totalSegments)
-                        .withFilterExpression("numberOfPlaylists > :threshold")
-                        .withExpressionAttributeValues(expressionAttributeValues);
+                ScanRequest scanRequest = ScanRequest.builder()
+                        .tableName("user")
+                        .segment(currentSegment)
+                        .totalSegments(totalSegments)
+                        .filterExpression("numberOfPlaylists > :threshold")
+                        .expressionAttributeValues(expressionAttributeValues)
+                        .build();
 
                 List<Map<String, AttributeValue>> segmentItems = new ArrayList<>();
                 Map<String, AttributeValue> lastKey;
                 do {
-                    ScanResult result = amazonDynamoDB.scan(scanRequest);
-                    segmentItems.addAll(result.getItems());
-                    lastKey = result.getLastEvaluatedKey();
+                    ScanResponse result = amazonDynamoDB.scan(scanRequest);
+                    segmentItems.addAll(result.items());
+                    lastKey = result.lastEvaluatedKey();
                     scanRequest.setExclusiveStartKey(lastKey);
                 } while (lastKey != null);
 
@@ -197,9 +199,11 @@ public class ParallelScansAndErrorHandlingIntegrationTest {
         DynamoDBSaveExpression saveExpression = new DynamoDBSaveExpression();
         Map<String, ExpectedAttributeValue> expected = new HashMap<>();
         expected.put("numberOfPlaylists",
-                new ExpectedAttributeValue()
-                        .withValue(new AttributeValue().withN("999")) // Wrong value
-                        .withComparisonOperator("EQ"));
+                ExpectedAttributeValue.builder()
+                        .value(AttributeValue.builder().n("999")
+                                .build()) // Wrong value
+                        .comparisonOperator("EQ")
+                .build());
         saveExpression.setExpected(expected);
 
         user.setName("Updated Name");
@@ -233,13 +237,14 @@ public class ParallelScansAndErrorHandlingIntegrationTest {
         Map<String, AttributeValue> key = new HashMap<>();
         key.put("Id", new AttributeValue("error-user-2"));
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("SET invalid_syntax here"); // Invalid syntax
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("SET invalid_syntax here")
+                .build(); // Invalid syntax
 
         assertThatThrownBy(() -> amazonDynamoDB.updateItem(updateRequest))
-                .isInstanceOf(AmazonDynamoDBException.class);
+                .isInstanceOf(DynamoDbException.class);
     }
 
     @Test
@@ -255,15 +260,16 @@ public class ParallelScansAndErrorHandlingIntegrationTest {
         Map<String, AttributeValue> key = new HashMap<>();
         key.put("Id", new AttributeValue("error-user-3"));
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("SET #n = :value") // References :value
-                .withExpressionAttributeNames(Collections.singletonMap("#n", "name"));
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("SET #n = :value") // References :value
+                .expressionAttributeNames(Collections.singletonMap("#n", "name"))
+                .build();
         // Missing expressionAttributeValues
 
         assertThatThrownBy(() -> amazonDynamoDB.updateItem(updateRequest))
-                .isInstanceOf(AmazonDynamoDBException.class)
+                .isInstanceOf(DynamoDbException.class)
                 .hasMessageContaining("attribute value: :value");
     }
 
@@ -278,7 +284,7 @@ public class ParallelScansAndErrorHandlingIntegrationTest {
         user.setTags(new HashSet<>()); // Empty set
 
         assertThatThrownBy(() -> userRepository.save(user))
-                .isInstanceOf(AmazonDynamoDBException.class)
+                .isInstanceOf(DynamoDbException.class)
                 .hasMessageContaining("may not be empty");
     }
 
@@ -302,19 +308,24 @@ public class ParallelScansAndErrorHandlingIntegrationTest {
         Map<String, AttributeValue> item1 = new HashMap<>();
         item1.put("Id", new AttributeValue("duplicate-id"));
         item1.put("name", new AttributeValue("User 1"));
-        writeRequests.add(new WriteRequest().withPutRequest(new PutRequest().withItem(item1)));
+        writeRequests.add(WriteRequest.builder().putRequest(PutRequest.builder().item(item1)
+                .build())
+                .build());
 
         Map<String, AttributeValue> item2 = new HashMap<>();
         item2.put("Id", new AttributeValue("duplicate-id"));
         item2.put("name", new AttributeValue("User 2"));
-        writeRequests.add(new WriteRequest().withPutRequest(new PutRequest().withItem(item2)));
+        writeRequests.add(WriteRequest.builder().putRequest(PutRequest.builder().item(item2)
+                .build())
+                .build());
 
-        BatchWriteItemRequest batchRequest = new BatchWriteItemRequest()
-                .withRequestItems(Collections.singletonMap("user", writeRequests));
+        BatchWriteItemRequest batchRequest = BatchWriteItemRequest.builder()
+                .requestItems(Collections.singletonMap("user", writeRequests))
+                .build();
 
         // DynamoDB enforces no duplicate keys in a single batch write request
         assertThatThrownBy(() -> amazonDynamoDB.batchWriteItem(batchRequest))
-                .isInstanceOf(AmazonDynamoDBException.class)
+                .isInstanceOf(DynamoDbException.class)
                 .hasMessageContaining("duplicate");
     }
 
@@ -323,7 +334,8 @@ public class ParallelScansAndErrorHandlingIntegrationTest {
     @DisplayName("Test 10: Query with non-existent table throws ResourceNotFoundException")
     void testNonExistentTable() {
         // When/Then - Query non-existent table
-        ScanRequest scanRequest = new ScanRequest().withTableName("NonExistentTable");
+        ScanRequest scanRequest = ScanRequest.builder().tableName("NonExistentTable")
+                .build();
 
         assertThatThrownBy(() -> amazonDynamoDB.scan(scanRequest))
                 .isInstanceOf(ResourceNotFoundException.class);
@@ -349,15 +361,16 @@ public class ParallelScansAndErrorHandlingIntegrationTest {
         Map<String, AttributeValue> lastEvaluatedKey = null;
 
         do {
-            ScanRequest scanRequest = new ScanRequest()
-                    .withTableName("user")
-                    .withSegment(segment)
-                    .withTotalSegments(totalSegments)
-                    .withExclusiveStartKey(lastEvaluatedKey);
+            ScanRequest scanRequest = ScanRequest.builder()
+                    .tableName("user")
+                    .segment(segment)
+                    .totalSegments(totalSegments)
+                    .exclusiveStartKey(lastEvaluatedKey)
+                    .build();
 
-            ScanResult result = amazonDynamoDB.scan(scanRequest);
-            items.addAll(result.getItems());
-            lastEvaluatedKey = result.getLastEvaluatedKey();
+            ScanResponse result = amazonDynamoDB.scan(scanRequest);
+            items.addAll(result.items());
+            lastEvaluatedKey = result.lastEvaluatedKey();
         } while (lastEvaluatedKey != null);
 
         return items;

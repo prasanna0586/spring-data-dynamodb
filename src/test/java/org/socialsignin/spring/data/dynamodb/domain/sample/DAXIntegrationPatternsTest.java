@@ -1,7 +1,7 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.model.*;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -56,7 +56,7 @@ public class DAXIntegrationPatternsTest {
     private UserRepository userRepository;
 
     @Autowired
-    private AmazonDynamoDB amazonDynamoDB;
+    private DynamoDbClient amazonDynamoDB;
 
     @BeforeEach
     void setUp() {
@@ -82,17 +82,19 @@ public class DAXIntegrationPatternsTest {
 
         for (int i = 0; i < readCount; i++) {
             long start = System.nanoTime();
-            GetItemRequest request = new GetItemRequest()
-                    .withTableName("user")
-                    .withKey(Collections.singletonMap("Id", new AttributeValue().withS("hot-key-user")))
-                    .withConsistentRead(false); // Eventually consistent for DAX caching
+            GetItemRequest request = GetItemRequest.builder()
+                    .tableName("user")
+                    .key(Collections.singletonMap("Id",  AttributeValue.builder().s("hot-key-user")
+                            .build()))
+                    .consistentRead(false)
+                    .build(); // Eventually consistent for DAX caching
 
-            GetItemResult result = amazonDynamoDB.getItem(request);
+            GetItemResponse result = amazonDynamoDB.getItem(request);
             long duration = (System.nanoTime() - start) / 1_000_000; // Convert to ms
             readTimes.add(duration);
 
-            assertThat(result.getItem()).isNotNull();
-            assertThat(result.getItem().get("Id").getS()).isEqualTo("hot-key-user");
+            assertThat(result.item()).isNotNull();
+            assertThat(result.item().get("Id").s()).isEqualTo("hot-key-user");
         }
 
         // Then - Multiple reads of same item (DAX would cache this)
@@ -123,18 +125,20 @@ public class DAXIntegrationPatternsTest {
         for (int i = 0; i < queryCount; i++) {
             long start = System.nanoTime();
 
-            ScanRequest request = new ScanRequest()
-                    .withTableName("user")
-                    .withFilterExpression("numberOfPlaylists < :limit")
-                    .withExpressionAttributeValues(
-                            Collections.singletonMap(":limit", new AttributeValue().withN("10"))
-                    );
+            ScanRequest request = ScanRequest.builder()
+                    .tableName("user")
+                    .filterExpression("numberOfPlaylists < :limit")
+                    .expressionAttributeValues(
+                            Collections.singletonMap(":limit",  AttributeValue.builder().n("10")
+                                    .build())
+                    )
+                    .build();
 
-            ScanResult result = amazonDynamoDB.scan(request);
+            ScanResponse result = amazonDynamoDB.scan(request);
             long duration = (System.nanoTime() - start) / 1_000_000;
             queryTimes.add(duration);
 
-            assertThat(result.getCount()).isEqualTo(10);
+            assertThat(result.count()).isEqualTo(10);
         }
 
         // Then - Scan results (DAX would cache identical scans)
@@ -165,19 +169,22 @@ public class DAXIntegrationPatternsTest {
         List<Map<String, AttributeValue>> keys = new ArrayList<>();
 
         for (String id : userIds) {
-            keys.add(Collections.singletonMap("Id", new AttributeValue().withS(id)));
+            keys.add(Collections.singletonMap("Id", AttributeValue.builder().s(id)
+                    .build()));
         }
 
-        requestItems.put("user", new KeysAndAttributes().withKeys(keys));
+        requestItems.put("user", KeysAndAttributes.builder().keys(keys)
+                .build());
 
         long start = System.nanoTime();
-        BatchGetItemRequest request = new BatchGetItemRequest()
-                .withRequestItems(requestItems);
-        BatchGetItemResult result = amazonDynamoDB.batchGetItem(request);
+        BatchGetItemRequest request = BatchGetItemRequest.builder()
+                .requestItems(requestItems)
+                .build();
+        BatchGetItemResponse result = amazonDynamoDB.batchGetItem(request);
         long duration = (System.nanoTime() - start) / 1_000_000;
 
         // Then
-        List<Map<String, AttributeValue>> items = result.getResponses().get("user");
+        List<Map<String, AttributeValue>> items = result.responses().get("user");
         assertThat(items).hasSize(25);
 
         System.out.println("=== DAX Batch Get Pattern ===");
@@ -288,15 +295,17 @@ public class DAXIntegrationPatternsTest {
         userRepository.save(user);
 
         // When - Eventually consistent read (default for DAX)
-        GetItemRequest request = new GetItemRequest()
-                .withTableName("user")
-                .withKey(Collections.singletonMap("Id", new AttributeValue().withS("eventual-user")))
-                .withConsistentRead(false); // Eventually consistent
+        GetItemRequest request = GetItemRequest.builder()
+                .tableName("user")
+                .key(Collections.singletonMap("Id",  AttributeValue.builder().s("eventual-user")
+                        .build()))
+                .consistentRead(false)
+                .build(); // Eventually consistent
 
-        GetItemResult result = amazonDynamoDB.getItem(request);
+        GetItemResponse result = amazonDynamoDB.getItem(request);
 
         // Then - DAX can cache this
-        assertThat(result.getItem()).isNotNull();
+        assertThat(result.item()).isNotNull();
 
         System.out.println("=== DAX Consistency: Eventually Consistent ===");
         System.out.println("ConsistentRead=false (default) - DAX caches these reads");
@@ -313,15 +322,17 @@ public class DAXIntegrationPatternsTest {
         userRepository.save(user);
 
         // When - Strongly consistent read (bypasses DAX cache)
-        GetItemRequest request = new GetItemRequest()
-                .withTableName("user")
-                .withKey(Collections.singletonMap("Id", new AttributeValue().withS("strong-user")))
-                .withConsistentRead(true); // Strongly consistent
+        GetItemRequest request = GetItemRequest.builder()
+                .tableName("user")
+                .key(Collections.singletonMap("Id",  AttributeValue.builder().s("strong-user")
+                        .build()))
+                .consistentRead(true)
+                .build(); // Strongly consistent
 
-        GetItemResult result = amazonDynamoDB.getItem(request);
+        GetItemResponse result = amazonDynamoDB.getItem(request);
 
         // Then - Read directly from DynamoDB
-        assertThat(result.getItem()).isNotNull();
+        assertThat(result.item()).isNotNull();
 
         System.out.println("=== DAX Consistency: Strongly Consistent ===");
         System.out.println("ConsistentRead=true - Bypasses DAX, reads from DynamoDB");
@@ -388,18 +399,20 @@ public class DAXIntegrationPatternsTest {
         for (int i = 0; i < queryExecutions; i++) {
             long start = System.nanoTime();
 
-            ScanRequest request = new ScanRequest()
-                    .withTableName("user")
-                    .withFilterExpression("begins_with(Id, :prefix)")
-                    .withExpressionAttributeValues(
-                            Collections.singletonMap(":prefix", new AttributeValue().withS("cache-user-"))
-                    );
+            ScanRequest request = ScanRequest.builder()
+                    .tableName("user")
+                    .filterExpression("begins_with(Id, :prefix)")
+                    .expressionAttributeValues(
+                            Collections.singletonMap(":prefix",  AttributeValue.builder().s("cache-user-")
+                                    .build())
+                    )
+                    .build();
 
-            ScanResult result = amazonDynamoDB.scan(request);
+            ScanResponse result = amazonDynamoDB.scan(request);
             long duration = (System.nanoTime() - start) / 1_000_000;
             executionTimes.add(duration);
 
-            assertThat(result.getCount()).isEqualTo(20);
+            assertThat(result.count()).isEqualTo(20);
         }
 
         // Then
@@ -426,31 +439,36 @@ public class DAXIntegrationPatternsTest {
         user1.setName("User 1");
         userRepository.save(user1);
 
-        GetItemRequest getRequest = new GetItemRequest()
-                .withTableName("user")
-                .withKey(Collections.singletonMap("Id", new AttributeValue().withS("dax-compatible-1")));
-        GetItemResult getResult = amazonDynamoDB.getItem(getRequest);
-        assertThat(getResult.getItem()).isNotNull();
+        GetItemRequest getRequest = GetItemRequest.builder()
+                .tableName("user")
+                .key(Collections.singletonMap("Id",  AttributeValue.builder().s("dax-compatible-1")
+                        .build()))
+                .build();
+        GetItemResponse getResult = amazonDynamoDB.getItem(getRequest);
+        assertThat(getResult.item()).isNotNull();
 
         // Pattern 2: Scan with filter (DAX caches scan results)
         user1.setPostCode("dax-code");
         userRepository.save(user1);
 
-        ScanRequest scanWithFilterRequest = new ScanRequest()
-                .withTableName("user")
-                .withFilterExpression("postCode = :code")
-                .withExpressionAttributeValues(
-                        Collections.singletonMap(":code", new AttributeValue().withS("dax-code"))
-                );
-        ScanResult scanWithFilterResult = amazonDynamoDB.scan(scanWithFilterRequest);
-        assertThat(scanWithFilterResult.getCount()).isGreaterThan(0);
+        ScanRequest scanWithFilterRequest = ScanRequest.builder()
+                .tableName("user")
+                .filterExpression("postCode = :code")
+                .expressionAttributeValues(
+                        Collections.singletonMap(":code",  AttributeValue.builder().s("dax-code")
+                                .build())
+                )
+                .build();
+        ScanResponse scanWithFilterResult = amazonDynamoDB.scan(scanWithFilterRequest);
+        assertThat(scanWithFilterResult.count()).isGreaterThan(0);
 
         // Pattern 3: Scan
-        ScanRequest scanRequest = new ScanRequest()
-                .withTableName("user")
-                .withLimit(10);
-        ScanResult scanResult = amazonDynamoDB.scan(scanRequest);
-        assertThat(scanResult.getItems()).isNotEmpty();
+        ScanRequest scanRequest = ScanRequest.builder()
+                .tableName("user")
+                .limit(10)
+                .build();
+        ScanResponse scanResult = amazonDynamoDB.scan(scanRequest);
+        assertThat(scanResult.items()).isNotEmpty();
 
         System.out.println("=== DAX-Compatible API Patterns ===");
         System.out.println("GetItem: Compatible ✓");

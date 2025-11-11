@@ -1,8 +1,8 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.model.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -51,7 +51,7 @@ public class ComplexConditionalExpressionsIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
-    private AmazonDynamoDB amazonDynamoDB;
+    private DynamoDbClient amazonDynamoDB;
 
     @Autowired
     private DynamoDBMapper dynamoDBMapper;
@@ -79,19 +79,22 @@ public class ComplexConditionalExpressionsIntegrationTest {
         key.put("Id", new AttributeValue("complex-1"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":inc", new AttributeValue().withN("10"));
-        expressionAttributeValues.put(":threshold", new AttributeValue().withN("3"));
+        expressionAttributeValues.put(":inc", AttributeValue.builder().n("10")
+                .build());
+        expressionAttributeValues.put(":threshold", AttributeValue.builder().n("3")
+                .build());
 
         Map<String, String> expressionAttributeNames = new HashMap<>();
         expressionAttributeNames.put("#name", "name");
 
-        UpdateItemRequest request = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("SET numberOfPlaylists = numberOfPlaylists + :inc")
-                .withConditionExpression("attribute_exists(#name) AND numberOfPlaylists > :threshold")
-                .withExpressionAttributeNames(expressionAttributeNames)
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest request = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("SET numberOfPlaylists = numberOfPlaylists + :inc")
+                .conditionExpression("attribute_exists(#name) AND numberOfPlaylists > :threshold")
+                .expressionAttributeNames(expressionAttributeNames)
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(request);
 
@@ -117,15 +120,18 @@ public class ComplexConditionalExpressionsIntegrationTest {
         key.put("Id", new AttributeValue("complex-2"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":inc", new AttributeValue().withN("5"));
-        expressionAttributeValues.put(":threshold", new AttributeValue().withN("5"));
+        expressionAttributeValues.put(":inc", AttributeValue.builder().n("5")
+                .build());
+        expressionAttributeValues.put(":threshold", AttributeValue.builder().n("5")
+                .build());
 
-        UpdateItemRequest request = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("SET numberOfPlaylists = numberOfPlaylists + :inc")
-                .withConditionExpression("attribute_exists(postCode) AND numberOfPlaylists > :threshold")
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest request = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("SET numberOfPlaylists = numberOfPlaylists + :inc")
+                .conditionExpression("attribute_exists(postCode) AND numberOfPlaylists > :threshold")
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         assertThatThrownBy(() -> amazonDynamoDB.updateItem(request))
                 .isInstanceOf(ConditionalCheckFailedException.class);
@@ -153,13 +159,14 @@ public class ComplexConditionalExpressionsIntegrationTest {
         Map<String, String> expressionAttributeNames = new HashMap<>();
         expressionAttributeNames.put("#name", "name");
 
-        UpdateItemRequest request = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("SET #name = :newName")
-                .withConditionExpression("attribute_not_exists(postCode) OR postCode = :code")
-                .withExpressionAttributeNames(expressionAttributeNames)
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest request = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("SET #name = :newName")
+                .conditionExpression("attribute_not_exists(postCode) OR postCode = :code")
+                .expressionAttributeNames(expressionAttributeNames)
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(request);
 
@@ -190,18 +197,20 @@ public class ComplexConditionalExpressionsIntegrationTest {
         expressionAttributeValues.put(":newName", new AttributeValue("David Updated"));
         expressionAttributeValues.put(":code1", new AttributeValue("12345"));
         expressionAttributeValues.put(":code2", new AttributeValue("67890"));
-        expressionAttributeValues.put(":maxPlaylists", new AttributeValue().withN("20"));
+        expressionAttributeValues.put(":maxPlaylists", AttributeValue.builder().n("20")
+                .build());
 
         Map<String, String> expressionAttributeNames = new HashMap<>();
         expressionAttributeNames.put("#name", "name");
 
-        UpdateItemRequest request = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("SET #name = :newName")
-                .withConditionExpression("(postCode = :code1 OR postCode = :code2) AND numberOfPlaylists < :maxPlaylists")
-                .withExpressionAttributeNames(expressionAttributeNames)
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest request = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("SET #name = :newName")
+                .conditionExpression("(postCode = :code1 OR postCode = :code2) AND numberOfPlaylists < :maxPlaylists")
+                .expressionAttributeNames(expressionAttributeNames)
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(request);
 
@@ -233,13 +242,14 @@ public class ComplexConditionalExpressionsIntegrationTest {
         Map<String, String> expressionAttributeNames = new HashMap<>();
         expressionAttributeNames.put("#name", "name");
 
-        UpdateItemRequest request = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("SET #name = :newName")
-                .withConditionExpression("NOT (postCode = :code1 OR postCode = :code2)")
-                .withExpressionAttributeNames(expressionAttributeNames)
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest request = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("SET #name = :newName")
+                .conditionExpression("NOT (postCode = :code1 OR postCode = :code2)")
+                .expressionAttributeNames(expressionAttributeNames)
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(request);
 
@@ -268,19 +278,22 @@ public class ComplexConditionalExpressionsIntegrationTest {
         expressionAttributeValues.put(":newName", new AttributeValue("Frank Updated"));
         expressionAttributeValues.put(":code1", new AttributeValue("12345"));
         expressionAttributeValues.put(":code2", new AttributeValue("67890"));
-        expressionAttributeValues.put(":min", new AttributeValue().withN("10"));
-        expressionAttributeValues.put(":max", new AttributeValue().withN("20"));
+        expressionAttributeValues.put(":min", AttributeValue.builder().n("10")
+                .build());
+        expressionAttributeValues.put(":max", AttributeValue.builder().n("20")
+                .build());
 
         Map<String, String> expressionAttributeNames = new HashMap<>();
         expressionAttributeNames.put("#name", "name");
 
-        UpdateItemRequest request = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("SET #name = :newName")
-                .withConditionExpression("(postCode = :code1 OR postCode = :code2) AND (numberOfPlaylists BETWEEN :min AND :max)")
-                .withExpressionAttributeNames(expressionAttributeNames)
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest request = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("SET #name = :newName")
+                .conditionExpression("(postCode = :code1 OR postCode = :code2) AND (numberOfPlaylists BETWEEN :min AND :max)")
+                .expressionAttributeNames(expressionAttributeNames)
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(request);
 
@@ -308,16 +321,20 @@ public class ComplexConditionalExpressionsIntegrationTest {
         key.put("Id", new AttributeValue("complex-7"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":inc", new AttributeValue().withN("10"));
-        expressionAttributeValues.put(":minTags", new AttributeValue().withN("3"));
-        expressionAttributeValues.put(":minPlaylists", new AttributeValue().withN("3"));
+        expressionAttributeValues.put(":inc", AttributeValue.builder().n("10")
+                .build());
+        expressionAttributeValues.put(":minTags", AttributeValue.builder().n("3")
+                .build());
+        expressionAttributeValues.put(":minPlaylists", AttributeValue.builder().n("3")
+                .build());
 
-        UpdateItemRequest request = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("SET numberOfPlaylists = numberOfPlaylists + :inc")
-                .withConditionExpression("size(tags) >= :minTags AND numberOfPlaylists > :minPlaylists")
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest request = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("SET numberOfPlaylists = numberOfPlaylists + :inc")
+                .conditionExpression("size(tags) >= :minTags AND numberOfPlaylists > :minPlaylists")
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(request);
 
@@ -343,18 +360,20 @@ public class ComplexConditionalExpressionsIntegrationTest {
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":newName", new AttributeValue("Henry Updated"));
-        expressionAttributeValues.put(":minTags", new AttributeValue().withN("3"));
+        expressionAttributeValues.put(":minTags", AttributeValue.builder().n("3")
+                .build());
 
         Map<String, String> expressionAttributeNames = new HashMap<>();
         expressionAttributeNames.put("#name", "name");
 
-        UpdateItemRequest request = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("SET #name = :newName")
-                .withConditionExpression("size(tags) >= :minTags")
-                .withExpressionAttributeNames(expressionAttributeNames)
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest request = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("SET #name = :newName")
+                .conditionExpression("size(tags) >= :minTags")
+                .expressionAttributeNames(expressionAttributeNames)
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         assertThatThrownBy(() -> amazonDynamoDB.updateItem(request))
                 .isInstanceOf(ConditionalCheckFailedException.class);
@@ -381,18 +400,20 @@ public class ComplexConditionalExpressionsIntegrationTest {
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":newName", new AttributeValue("Ian Updated"));
         expressionAttributeValues.put(":prefix", new AttributeValue("123"));
-        expressionAttributeValues.put(":minPlaylists", new AttributeValue().withN("15"));
+        expressionAttributeValues.put(":minPlaylists", AttributeValue.builder().n("15")
+                .build());
 
         Map<String, String> expressionAttributeNames = new HashMap<>();
         expressionAttributeNames.put("#name", "name");
 
-        UpdateItemRequest request = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("SET #name = :newName")
-                .withConditionExpression("begins_with(postCode, :prefix) AND numberOfPlaylists >= :minPlaylists")
-                .withExpressionAttributeNames(expressionAttributeNames)
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest request = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("SET #name = :newName")
+                .conditionExpression("begins_with(postCode, :prefix) AND numberOfPlaylists >= :minPlaylists")
+                .expressionAttributeNames(expressionAttributeNames)
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(request);
 
@@ -420,18 +441,20 @@ public class ComplexConditionalExpressionsIntegrationTest {
         key.put("Id", new AttributeValue("complex-10"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":inc", new AttributeValue().withN("5"));
+        expressionAttributeValues.put(":inc", AttributeValue.builder().n("5")
+                .build());
 
         Map<String, String> expressionAttributeNames = new HashMap<>();
         expressionAttributeNames.put("#name", "name");
 
-        UpdateItemRequest request = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("SET numberOfPlaylists = numberOfPlaylists + :inc")
-                .withConditionExpression("attribute_exists(#name) AND attribute_exists(postCode) AND attribute_exists(numberOfPlaylists)")
-                .withExpressionAttributeNames(expressionAttributeNames)
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest request = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("SET numberOfPlaylists = numberOfPlaylists + :inc")
+                .conditionExpression("attribute_exists(#name) AND attribute_exists(postCode) AND attribute_exists(numberOfPlaylists)")
+                .expressionAttributeNames(expressionAttributeNames)
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(request);
 
@@ -461,13 +484,14 @@ public class ComplexConditionalExpressionsIntegrationTest {
         Map<String, String> expressionAttributeNames = new HashMap<>();
         expressionAttributeNames.put("#name", "name");
 
-        UpdateItemRequest request = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("SET #name = :newName")
-                .withConditionExpression("attribute_exists(postCode) OR attribute_not_exists(postCode)")
-                .withExpressionAttributeNames(expressionAttributeNames)
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest request = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("SET #name = :newName")
+                .conditionExpression("attribute_exists(postCode) OR attribute_not_exists(postCode)")
+                .expressionAttributeNames(expressionAttributeNames)
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(request);
 
@@ -495,13 +519,15 @@ public class ComplexConditionalExpressionsIntegrationTest {
         key.put("Id", new AttributeValue("complex-12"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":zero", new AttributeValue().withN("0"));
+        expressionAttributeValues.put(":zero", AttributeValue.builder().n("0")
+                .build());
 
-        DeleteItemRequest deleteRequest = new DeleteItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withConditionExpression("numberOfPlaylists = :zero AND attribute_exists(postCode)")
-                .withExpressionAttributeValues(expressionAttributeValues);
+        DeleteItemRequest deleteRequest = DeleteItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .conditionExpression("numberOfPlaylists = :zero AND attribute_exists(postCode)")
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.deleteItem(deleteRequest);
 
@@ -525,13 +551,15 @@ public class ComplexConditionalExpressionsIntegrationTest {
         key.put("Id", new AttributeValue("complex-13"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":zero", new AttributeValue().withN("0"));
+        expressionAttributeValues.put(":zero", AttributeValue.builder().n("0")
+                .build());
 
-        DeleteItemRequest deleteRequest = new DeleteItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withConditionExpression("numberOfPlaylists = :zero")
-                .withExpressionAttributeValues(expressionAttributeValues);
+        DeleteItemRequest deleteRequest = DeleteItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .conditionExpression("numberOfPlaylists = :zero")
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         assertThatThrownBy(() -> amazonDynamoDB.deleteItem(deleteRequest))
                 .isInstanceOf(ConditionalCheckFailedException.class);
@@ -560,19 +588,22 @@ public class ComplexConditionalExpressionsIntegrationTest {
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":newName", new AttributeValue("Nancy Updated"));
-        expressionAttributeValues.put(":min", new AttributeValue().withN("10"));
-        expressionAttributeValues.put(":max", new AttributeValue().withN("20"));
+        expressionAttributeValues.put(":min", AttributeValue.builder().n("10")
+                .build());
+        expressionAttributeValues.put(":max", AttributeValue.builder().n("20")
+                .build());
 
         Map<String, String> expressionAttributeNames = new HashMap<>();
         expressionAttributeNames.put("#name", "name");
 
-        UpdateItemRequest request = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("SET #name = :newName")
-                .withConditionExpression("numberOfPlaylists BETWEEN :min AND :max AND attribute_exists(postCode)")
-                .withExpressionAttributeNames(expressionAttributeNames)
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest request = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("SET #name = :newName")
+                .conditionExpression("numberOfPlaylists BETWEEN :min AND :max AND attribute_exists(postCode)")
+                .expressionAttributeNames(expressionAttributeNames)
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(request);
 
@@ -608,34 +639,42 @@ public class ComplexConditionalExpressionsIntegrationTest {
         Map<String, AttributeValue> key1 = new HashMap<>();
         key1.put("Id", new AttributeValue("complex-txn-1"));
         Map<String, AttributeValue> values1 = new HashMap<>();
-        values1.put(":inc", new AttributeValue().withN("10"));
-        values1.put(":threshold", new AttributeValue().withN("5"));
+        values1.put(":inc", AttributeValue.builder().n("10")
+                .build());
+        values1.put(":threshold", AttributeValue.builder().n("5")
+                .build());
 
-        actions.add(new TransactWriteItem().withUpdate(
-                new Update()
-                        .withTableName("user")
-                        .withKey(key1)
-                        .withUpdateExpression("SET numberOfPlaylists = numberOfPlaylists + :inc")
-                        .withConditionExpression("numberOfPlaylists > :threshold AND attribute_exists(postCode)")
-                        .withExpressionAttributeValues(values1)
-        ));
+        actions.add(TransactWriteItem.builder().update(
+                Update.builder()
+                        .tableName("user")
+                        .key(key1)
+                        .updateExpression("SET numberOfPlaylists = numberOfPlaylists + :inc")
+                        .conditionExpression("numberOfPlaylists > :threshold AND attribute_exists(postCode)")
+                        .expressionAttributeValues(values1)
+                .build()
+        )
+        .build());
 
         // Update user2
         Map<String, AttributeValue> key2 = new HashMap<>();
         key2.put("Id", new AttributeValue("complex-txn-2"));
         Map<String, AttributeValue> values2 = new HashMap<>();
-        values2.put(":inc", new AttributeValue().withN("5"));
+        values2.put(":inc", AttributeValue.builder().n("5")
+                .build());
 
-        actions.add(new TransactWriteItem().withUpdate(
-                new Update()
-                        .withTableName("user")
-                        .withKey(key2)
-                        .withUpdateExpression("SET numberOfPlaylists = numberOfPlaylists + :inc")
-                        .withExpressionAttributeValues(values2)
-        ));
+        actions.add(TransactWriteItem.builder().update(
+                Update.builder()
+                        .tableName("user")
+                        .key(key2)
+                        .updateExpression("SET numberOfPlaylists = numberOfPlaylists + :inc")
+                        .expressionAttributeValues(values2)
+                .build()
+        )
+        .build());
 
-        TransactWriteItemsRequest request = new TransactWriteItemsRequest()
-                .withTransactItems(actions);
+        TransactWriteItemsRequest request = TransactWriteItemsRequest.builder()
+                .transactItems(actions)
+                .build();
         amazonDynamoDB.transactWriteItems(request);
 
         // Then - Both updates should succeed

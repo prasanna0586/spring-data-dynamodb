@@ -1,8 +1,7 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
-
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.model.*;
+import software.amazon.awssdk.awscore.exception.AwsServiceException;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -46,7 +45,7 @@ public class ThrottlingAndRetryIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
-    private AmazonDynamoDB amazonDynamoDB;
+    private DynamoDbClient amazonDynamoDB;
 
     @BeforeEach
     void setUp() {
@@ -138,17 +137,18 @@ public class ThrottlingAndRetryIntegrationTest {
     @DisplayName("Test 4: Handle AmazonServiceException gracefully")
     void testHandleAmazonServiceException() {
         // When - Invalid table name
-        ScanRequest scanRequest = new ScanRequest()
-                .withTableName("Invalid@Table#Name");
+        ScanRequest scanRequest = ScanRequest.builder()
+                .tableName("Invalid@Table#Name")
+                .build();
 
         // Then - Should throw AmazonServiceException
         try {
             amazonDynamoDB.scan(scanRequest);
             Assertions.fail("Should have thrown exception");
-        } catch (AmazonServiceException e) {
+        } catch (AwsServiceException e) {
             // Expected - log and handle
-            System.out.println("Caught expected exception: " + e.getErrorCode());
-            assertThat(e.getStatusCode()).isGreaterThanOrEqualTo(400);
+            System.out.println("Caught expected exception: " + e.awsErrorDetails().errorCode());
+            assertThat(e.awsErrorDetails().sdkHttpResponse().statusCode()).isGreaterThanOrEqualTo(400);
         }
     }
 

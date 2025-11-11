@@ -1,9 +1,8 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.model.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -52,7 +51,7 @@ public class ErrorRecoveryIntegrationTest {
     private BankAccountRepository accountRepository;
 
     @Autowired
-    private AmazonDynamoDB amazonDynamoDB;
+    private DynamoDbClient amazonDynamoDB;
 
     @Autowired
     private DynamoDBMapper dynamoDBMapper;
@@ -76,19 +75,24 @@ public class ErrorRecoveryIntegrationTest {
         Map<String, AttributeValue> item1 = new HashMap<>();
         item1.put("Id", new AttributeValue("duplicate-key"));
         item1.put("name", new AttributeValue("Item 1"));
-        writeRequests.add(new WriteRequest().withPutRequest(new PutRequest().withItem(item1)));
+        writeRequests.add(WriteRequest.builder().putRequest(PutRequest.builder().item(item1)
+                .build())
+                .build());
 
         Map<String, AttributeValue> item2 = new HashMap<>();
         item2.put("Id", new AttributeValue("duplicate-key"));
         item2.put("name", new AttributeValue("Item 2"));
-        writeRequests.add(new WriteRequest().withPutRequest(new PutRequest().withItem(item2)));
+        writeRequests.add(WriteRequest.builder().putRequest(PutRequest.builder().item(item2)
+                .build())
+                .build());
 
-        BatchWriteItemRequest batchRequest = new BatchWriteItemRequest()
-                .withRequestItems(Collections.singletonMap("user", writeRequests));
+        BatchWriteItemRequest batchRequest = BatchWriteItemRequest.builder()
+                .requestItems(Collections.singletonMap("user", writeRequests))
+                .build();
 
         // When/Then - Should throw validation exception
         assertThatThrownBy(() -> amazonDynamoDB.batchWriteItem(batchRequest))
-                .isInstanceOf(AmazonDynamoDBException.class)
+                .isInstanceOf(DynamoDbException.class)
                 .hasMessageContaining("duplicate");
     }
 
@@ -147,14 +151,16 @@ public class ErrorRecoveryIntegrationTest {
                 Collections.singletonMap("Id", new AttributeValue("exists-2"))
         );
 
-        requestItems.put("user", new KeysAndAttributes().withKeys(keys));
+        requestItems.put("user", KeysAndAttributes.builder().keys(keys)
+                .build());
 
-        BatchGetItemRequest batchGetRequest = new BatchGetItemRequest()
-                .withRequestItems(requestItems);
-        BatchGetItemResult result = amazonDynamoDB.batchGetItem(batchGetRequest);
+        BatchGetItemRequest batchGetRequest = BatchGetItemRequest.builder()
+                .requestItems(requestItems)
+                .build();
+        BatchGetItemResponse result = amazonDynamoDB.batchGetItem(batchGetRequest);
 
         // Then - Should return only existing items
-        assertThat(result.getResponses().get("user")).hasSize(2);
+        assertThat(result.responses().get("user")).hasSize(2);
     }
 
     @Test
@@ -195,33 +201,41 @@ public class ErrorRecoveryIntegrationTest {
         // Update account 1 (will succeed)
         Map<String, AttributeValue> key1 = new HashMap<>();
         key1.put("accountId", new AttributeValue("txn-err-1"));
-        actions.add(new TransactWriteItem().withUpdate(
-                new Update()
-                        .withTableName("BankAccount")
-                        .withKey(key1)
-                        .withUpdateExpression("SET balance = balance + :amount")
-                        .withExpressionAttributeValues(Collections.singletonMap(
-                                ":amount", new AttributeValue().withN("100")
+        actions.add(TransactWriteItem.builder().update(
+                Update.builder()
+                        .tableName("BankAccount")
+                        .key(key1)
+                        .updateExpression("SET balance = balance + :amount")
+                        .expressionAttributeValues(Collections.singletonMap(
+                                ":amount",  AttributeValue.builder().n("100")
+                                .build()
                         ))
-        ));
+                .build()
+        )
+        .build());
 
         // Update account 2 with impossible condition (will fail)
         Map<String, AttributeValue> key2 = new HashMap<>();
         key2.put("accountId", new AttributeValue("txn-err-2"));
-        actions.add(new TransactWriteItem().withUpdate(
-                new Update()
-                        .withTableName("BankAccount")
-                        .withKey(key2)
-                        .withUpdateExpression("SET balance = balance - :amount")
-                        .withConditionExpression("balance >= :required")
-                        .withExpressionAttributeValues(Map.of(
-                                ":amount", new AttributeValue().withN("1000"),
-                                ":required", new AttributeValue().withN("1000")
+        actions.add(TransactWriteItem.builder().update(
+                Update.builder()
+                        .tableName("BankAccount")
+                        .key(key2)
+                        .updateExpression("SET balance = balance - :amount")
+                        .conditionExpression("balance >= :required")
+                        .expressionAttributeValues(Map.of(
+                                ":amount",  AttributeValue.builder().n("1000")
+                                        .build(),
+                                ":required",  AttributeValue.builder().n("1000")
+                                .build()
                         ))
-        ));
+                .build()
+        )
+        .build());
 
-        TransactWriteItemsRequest request = new TransactWriteItemsRequest()
-                .withTransactItems(actions);
+        TransactWriteItemsRequest request = TransactWriteItemsRequest.builder()
+                .transactItems(actions)
+                .build();
 
         // Then - Transaction fails, both rollback
         assertThatThrownBy(() -> amazonDynamoDB.transactWriteItems(request))
@@ -246,27 +260,31 @@ public class ErrorRecoveryIntegrationTest {
 
         Map<String, AttributeValue> key = new HashMap<>();
         key.put("accountId", new AttributeValue("txn-reason-1"));
-        actions.add(new TransactWriteItem().withUpdate(
-                new Update()
-                        .withTableName("BankAccount")
-                        .withKey(key)
-                        .withUpdateExpression("SET balance = balance - :amount")
-                        .withConditionExpression("balance >= :amount")
-                        .withExpressionAttributeValues(Collections.singletonMap(
-                                ":amount", new AttributeValue().withN("500")
+        actions.add(TransactWriteItem.builder().update(
+                Update.builder()
+                        .tableName("BankAccount")
+                        .key(key)
+                        .updateExpression("SET balance = balance - :amount")
+                        .conditionExpression("balance >= :amount")
+                        .expressionAttributeValues(Collections.singletonMap(
+                                ":amount",  AttributeValue.builder().n("500")
+                                .build()
                         ))
-        ));
+                .build()
+        )
+        .build());
 
-        TransactWriteItemsRequest request = new TransactWriteItemsRequest()
-                .withTransactItems(actions);
+        TransactWriteItemsRequest request = TransactWriteItemsRequest.builder()
+                .transactItems(actions)
+                .build();
 
         // Then - Check cancellation reasons
         try {
             amazonDynamoDB.transactWriteItems(request);
             Assertions.fail("Should have thrown TransactionCanceledException");
         } catch (TransactionCanceledException e) {
-            assertThat(e.getCancellationReasons()).isNotEmpty();
-            assertThat(e.getCancellationReasons().get(0).getCode())
+            assertThat(e.cancellationReasons()).isNotEmpty();
+            assertThat(e.cancellationReasons().get(0).code())
                     .isEqualTo("ConditionalCheckFailed");
         }
     }
@@ -278,7 +296,8 @@ public class ErrorRecoveryIntegrationTest {
     @DisplayName("Test 8: Handle ResourceNotFoundException for non-existent table")
     void testResourceNotFoundException() {
         // When/Then - Query non-existent table
-        ScanRequest scanRequest = new ScanRequest().withTableName("NonExistentTable");
+        ScanRequest scanRequest = ScanRequest.builder().tableName("NonExistentTable")
+                .build();
 
         assertThatThrownBy(() -> amazonDynamoDB.scan(scanRequest))
                 .isInstanceOf(ResourceNotFoundException.class);
@@ -297,13 +316,14 @@ public class ErrorRecoveryIntegrationTest {
         Map<String, AttributeValue> key = new HashMap<>();
         key.put("Id", new AttributeValue("validation-test"));
 
-        UpdateItemRequest request = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("INVALID SYNTAX HERE");
+        UpdateItemRequest request = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("INVALID SYNTAX HERE")
+                .build();
 
         assertThatThrownBy(() -> amazonDynamoDB.updateItem(request))
-                .isInstanceOf(AmazonDynamoDBException.class)
+                .isInstanceOf(DynamoDbException.class)
                 .hasMessageContaining("Syntax error");
     }
 
@@ -322,15 +342,18 @@ public class ErrorRecoveryIntegrationTest {
         Map<String, AttributeValue> key = new HashMap<>();
         key.put("Id", new AttributeValue("recover-1"));
 
-        UpdateItemRequest failingRequest = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("SET numberOfPlaylists = :value")
-                .withConditionExpression("numberOfPlaylists = :expected")
-                .withExpressionAttributeValues(Map.of(
-                        ":value", new AttributeValue().withN("20"),
-                        ":expected", new AttributeValue().withN("999")
-                ));
+        UpdateItemRequest failingRequest = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("SET numberOfPlaylists = :value")
+                .conditionExpression("numberOfPlaylists = :expected")
+                .expressionAttributeValues(Map.of(
+                        ":value",  AttributeValue.builder().n("20")
+                                .build(),
+                        ":expected",  AttributeValue.builder().n("999")
+                        .build()
+                ))
+                .build();
 
         try {
             amazonDynamoDB.updateItem(failingRequest);
@@ -339,15 +362,18 @@ public class ErrorRecoveryIntegrationTest {
         }
 
         // Retry with correct condition
-        UpdateItemRequest successRequest = new UpdateItemRequest()
-                .withTableName("user")
-                .withKey(key)
-                .withUpdateExpression("SET numberOfPlaylists = :value")
-                .withConditionExpression("numberOfPlaylists = :expected")
-                .withExpressionAttributeValues(Map.of(
-                        ":value", new AttributeValue().withN("20"),
-                        ":expected", new AttributeValue().withN("10")
-                ));
+        UpdateItemRequest successRequest = UpdateItemRequest.builder()
+                .tableName("user")
+                .key(key)
+                .updateExpression("SET numberOfPlaylists = :value")
+                .conditionExpression("numberOfPlaylists = :expected")
+                .expressionAttributeValues(Map.of(
+                        ":value",  AttributeValue.builder().n("20")
+                                .build(),
+                        ":expected",  AttributeValue.builder().n("10")
+                        .build()
+                ))
+                .build();
 
         amazonDynamoDB.updateItem(successRequest);
 

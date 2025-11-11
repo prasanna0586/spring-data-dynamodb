@@ -1,7 +1,7 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.model.*;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -45,7 +45,7 @@ public class DynamoDBStreamsIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
-    private AmazonDynamoDB amazonDynamoDB;
+    private DynamoDbClient amazonDynamoDB;
 
     @BeforeEach
     void setUp() {
@@ -59,18 +59,19 @@ public class DynamoDBStreamsIntegrationTest {
     @DisplayName("Test 1: Describe table stream settings")
     void testDescribeTableStreamSettings() {
         // When - Describe the user table
-        DescribeTableRequest describeRequest = new DescribeTableRequest()
-                .withTableName("user");
+        DescribeTableRequest describeRequest = DescribeTableRequest.builder()
+                .tableName("user")
+                .build();
 
-        DescribeTableResult result = amazonDynamoDB.describeTable(describeRequest);
+        DescribeTableResponse result = amazonDynamoDB.describeTable(describeRequest);
 
         // Then - Check stream specification
-        TableDescription tableDesc = result.getTable();
-        assertThat(tableDesc.getTableName()).isEqualTo("user");
+        TableDescription tableDesc = result.table();
+        assertThat(tableDesc.tableName()).isEqualTo("user");
 
         // Note: DynamoDB Local may not have full stream support
-        System.out.println("Table ARN: " + tableDesc.getTableArn());
-        System.out.println("Stream specification: " + tableDesc.getStreamSpecification());
+        System.out.println("Table ARN: " + tableDesc.tableArn());
+        System.out.println("Stream specification: " + tableDesc.streamSpecification());
     }
 
     @Test
@@ -84,18 +85,20 @@ public class DynamoDBStreamsIntegrationTest {
 
         try {
             // When - Enable streams
-            StreamSpecification streamSpec = new StreamSpecification()
-                    .withStreamEnabled(true)
-                    .withStreamViewType(StreamViewType.NEW_AND_OLD_IMAGES);
+            StreamSpecification streamSpec = StreamSpecification.builder()
+                    .streamEnabled(true)
+                    .streamViewType(StreamViewType.NEW_AND_OLD_IMAGES)
+                    .build();
 
-            UpdateTableRequest updateRequest = new UpdateTableRequest()
-                    .withTableName(tableName)
-                    .withStreamSpecification(streamSpec);
+            UpdateTableRequest updateRequest = UpdateTableRequest.builder()
+                    .tableName(tableName)
+                    .streamSpecification(streamSpec)
+                    .build();
 
-            UpdateTableResult result = amazonDynamoDB.updateTable(updateRequest);
+            UpdateTableResponse result = amazonDynamoDB.updateTable(updateRequest);
 
             // Then - Stream should be enabled
-            System.out.println("Stream enabled: " + result.getTableDescription().getStreamSpecification());
+            System.out.println("Stream enabled: " + result.tableDescription().streamSpecification());
         } catch (Exception e) {
             // DynamoDB Local may not support this operation
             System.out.println("Note: DynamoDB Local has limited stream support - " + e.getMessage());
@@ -313,18 +316,19 @@ public class DynamoDBStreamsIntegrationTest {
     @DisplayName("Test 11: Verify table has stream capability")
     void testTableHasStreamCapability() {
         // When - Check table capabilities
-        DescribeTableRequest request = new DescribeTableRequest()
-                .withTableName("user");
+        DescribeTableRequest request = DescribeTableRequest.builder()
+                .tableName("user")
+                .build();
 
-        DescribeTableResult result = amazonDynamoDB.describeTable(request);
+        DescribeTableResponse result = amazonDynamoDB.describeTable(request);
 
         // Then - Table should support streams (in real DynamoDB)
-        TableDescription table = result.getTable();
-        System.out.println("Table: " + table.getTableName());
-        System.out.println("Status: " + table.getTableStatus());
-        System.out.println("Stream Specification: " + table.getStreamSpecification());
+        TableDescription table = result.table();
+        System.out.println("Table: " + table.tableName());
+        System.out.println("Status: " + table.tableStatus());
+        System.out.println("Stream Specification: " + table.streamSpecification());
 
-        assertThat(table.getTableName()).isEqualTo("user");
+        assertThat(table.tableName()).isEqualTo("user");
     }
 
     @Test

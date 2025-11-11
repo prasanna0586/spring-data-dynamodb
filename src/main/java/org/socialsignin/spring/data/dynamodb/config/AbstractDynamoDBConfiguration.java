@@ -15,8 +15,6 @@
  */
 package org.socialsignin.spring.data.dynamodb.config;
 
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +26,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -42,9 +42,9 @@ public abstract class AbstractDynamoDBConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDynamoDBConfiguration.class);
 
-    public abstract AmazonDynamoDB amazonDynamoDB();
+    public abstract DynamoDbClient amazonDynamoDB();
 
-    public abstract AWSCredentials amazonAWSCredentials();
+    public abstract AwsCredentials amazonAWSCredentials();
 
     /**
      * Return the base packages to scan for mapped {@link DynamoDBTable}s. Will return the package name of the

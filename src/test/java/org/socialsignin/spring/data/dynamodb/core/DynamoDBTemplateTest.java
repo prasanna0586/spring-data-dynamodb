@@ -15,7 +15,6 @@
  */
 package org.socialsignin.spring.data.dynamodb.core;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
@@ -31,6 +30,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.socialsignin.spring.data.dynamodb.domain.sample.Playlist;
 import org.socialsignin.spring.data.dynamodb.domain.sample.User;
 import org.springframework.context.ApplicationContext;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,7 +50,7 @@ public class DynamoDBTemplateTest {
     @Mock
     private DynamoDBMapperConfig dynamoDBMapperConfig;
     @Mock
-    private AmazonDynamoDB dynamoDB;
+    private DynamoDbClient dynamoDB;
     @Mock
     private ApplicationContext applicationContext;
     @Mock

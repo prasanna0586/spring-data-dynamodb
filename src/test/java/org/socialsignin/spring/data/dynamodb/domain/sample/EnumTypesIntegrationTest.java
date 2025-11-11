@@ -1,8 +1,8 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.model.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -48,7 +48,7 @@ public class EnumTypesIntegrationTest {
     private TaskRepository taskRepository;
 
     @Autowired
-    private AmazonDynamoDB amazonDynamoDB;
+    private DynamoDbClient amazonDynamoDB;
 
     @Autowired
     private DynamoDBMapper dynamoDBMapper;
@@ -93,14 +93,15 @@ public class EnumTypesIntegrationTest {
         Map<String, AttributeValue> key = new HashMap<>();
         key.put("taskId", new AttributeValue("task-002"));
 
-        GetItemRequest request = new GetItemRequest()
-                .withTableName("Task")
-                .withKey(key);
-        GetItemResult result = amazonDynamoDB.getItem(request);
+        GetItemRequest request = GetItemRequest.builder()
+                .tableName("Task")
+                .key(key)
+                .build();
+        GetItemResponse result = amazonDynamoDB.getItem(request);
 
         // Then - Enums should be stored as strings
-        assertThat(result.getItem().get("status").getS()).isEqualTo("COMPLETED");
-        assertThat(result.getItem().get("priority").getS()).isEqualTo("MEDIUM");
+        assertThat(result.item().get("status").s()).isEqualTo("COMPLETED");
+        assertThat(result.item().get("priority").s()).isEqualTo("MEDIUM");
     }
 
     @Test
@@ -271,12 +272,13 @@ public class EnumTypesIntegrationTest {
         expressionAttributeValues.put(":newStatus", new AttributeValue("COMPLETED"));
         expressionAttributeValues.put(":newPriority", new AttributeValue("URGENT"));
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("Task")
-                .withKey(key)
-                .withUpdateExpression("SET #status = :newStatus, priority = :newPriority")
-                .withExpressionAttributeNames(Collections.singletonMap("#status", "status"))
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("Task")
+                .key(key)
+                .updateExpression("SET #status = :newStatus, priority = :newPriority")
+                .expressionAttributeNames(Collections.singletonMap("#status", "status"))
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(updateRequest);
 
@@ -302,16 +304,17 @@ public class EnumTypesIntegrationTest {
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":status", new AttributeValue("COMPLETED"));
 
-        ScanRequest scanRequest = new ScanRequest()
-                .withTableName("Task")
-                .withFilterExpression("#status = :status")
-                .withExpressionAttributeNames(Collections.singletonMap("#status", "status"))
-                .withExpressionAttributeValues(expressionAttributeValues);
+        ScanRequest scanRequest = ScanRequest.builder()
+                .tableName("Task")
+                .filterExpression("#status = :status")
+                .expressionAttributeNames(Collections.singletonMap("#status", "status"))
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
-        ScanResult result = amazonDynamoDB.scan(scanRequest);
+        ScanResponse result = amazonDynamoDB.scan(scanRequest);
 
         // Then
-        assertThat(result.getItems()).hasSize(2);
+        assertThat(result.items()).hasSize(2);
     }
 
     @Test
@@ -329,16 +332,17 @@ public class EnumTypesIntegrationTest {
         expressionAttributeValues.put(":status1", new AttributeValue("PENDING"));
         expressionAttributeValues.put(":status2", new AttributeValue("IN_PROGRESS"));
 
-        ScanRequest scanRequest = new ScanRequest()
-                .withTableName("Task")
-                .withFilterExpression("#status IN (:status1, :status2)")
-                .withExpressionAttributeNames(Collections.singletonMap("#status", "status"))
-                .withExpressionAttributeValues(expressionAttributeValues);
+        ScanRequest scanRequest = ScanRequest.builder()
+                .tableName("Task")
+                .filterExpression("#status IN (:status1, :status2)")
+                .expressionAttributeNames(Collections.singletonMap("#status", "status"))
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
-        ScanResult result = amazonDynamoDB.scan(scanRequest);
+        ScanResponse result = amazonDynamoDB.scan(scanRequest);
 
         // Then
-        assertThat(result.getItems()).hasSize(2);
+        assertThat(result.items()).hasSize(2);
     }
 
     // ==================== Conditional Expressions with Enums ====================
@@ -359,13 +363,14 @@ public class EnumTypesIntegrationTest {
         expressionAttributeValues.put(":newStatus", new AttributeValue("IN_PROGRESS"));
         expressionAttributeValues.put(":expectedStatus", new AttributeValue("PENDING"));
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("Task")
-                .withKey(key)
-                .withUpdateExpression("SET #status = :newStatus")
-                .withConditionExpression("#status = :expectedStatus")
-                .withExpressionAttributeNames(Collections.singletonMap("#status", "status"))
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("Task")
+                .key(key)
+                .updateExpression("SET #status = :newStatus")
+                .conditionExpression("#status = :expectedStatus")
+                .expressionAttributeNames(Collections.singletonMap("#status", "status"))
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         amazonDynamoDB.updateItem(updateRequest);
 
@@ -390,13 +395,14 @@ public class EnumTypesIntegrationTest {
         expressionAttributeValues.put(":newStatus", new AttributeValue("IN_PROGRESS"));
         expressionAttributeValues.put(":expectedStatus", new AttributeValue("PENDING"));
 
-        UpdateItemRequest updateRequest = new UpdateItemRequest()
-                .withTableName("Task")
-                .withKey(key)
-                .withUpdateExpression("SET #status = :newStatus")
-                .withConditionExpression("#status = :expectedStatus")
-                .withExpressionAttributeNames(Collections.singletonMap("#status", "status"))
-                .withExpressionAttributeValues(expressionAttributeValues);
+        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+                .tableName("Task")
+                .key(key)
+                .updateExpression("SET #status = :newStatus")
+                .conditionExpression("#status = :expectedStatus")
+                .expressionAttributeNames(Collections.singletonMap("#status", "status"))
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
         // Then - Update should fail
         try {
@@ -449,16 +455,17 @@ public class EnumTypesIntegrationTest {
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":status", new AttributeValue("in_progress")); // lowercase
 
-        ScanRequest scanRequest = new ScanRequest()
-                .withTableName("Task")
-                .withFilterExpression("#status = :status")
-                .withExpressionAttributeNames(Collections.singletonMap("#status", "status"))
-                .withExpressionAttributeValues(expressionAttributeValues);
+        ScanRequest scanRequest = ScanRequest.builder()
+                .tableName("Task")
+                .filterExpression("#status = :status")
+                .expressionAttributeNames(Collections.singletonMap("#status", "status"))
+                .expressionAttributeValues(expressionAttributeValues)
+                .build();
 
-        ScanResult result = amazonDynamoDB.scan(scanRequest);
+        ScanResponse result = amazonDynamoDB.scan(scanRequest);
 
         // Then - Should not find any (case sensitive)
-        assertThat(result.getItems()).isEmpty();
+        assertThat(result.items()).isEmpty();
     }
 
     @Test

@@ -3,9 +3,6 @@ package org.socialsignin.spring.data.dynamodb.domain.sample;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBSaveExpression;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBDeleteExpression;
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
-import com.amazonaws.services.dynamodbv2.model.ExpectedAttributeValue;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -15,6 +12,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
+import software.amazon.awssdk.services.dynamodb.model.ExpectedAttributeValue;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -88,9 +88,11 @@ public class ConditionalExpressionsIntegrationTest {
         DynamoDBSaveExpression saveExpression = new DynamoDBSaveExpression();
         Map<String, ExpectedAttributeValue> expected = new HashMap<>();
         expected.put("numberOfPlaylists",
-                new ExpectedAttributeValue()
-                        .withValue(new AttributeValue().withN("10"))
-                        .withComparisonOperator("EQ"));
+                ExpectedAttributeValue.builder()
+                        .value(AttributeValue.builder().n("10")
+                                .build())
+                        .comparisonOperator("EQ")
+                .build());
         saveExpression.setExpected(expected);
 
         // Should succeed since numberOfPlaylists is 10
@@ -121,9 +123,11 @@ public class ConditionalExpressionsIntegrationTest {
         DynamoDBSaveExpression saveExpression = new DynamoDBSaveExpression();
         Map<String, ExpectedAttributeValue> expected = new HashMap<>();
         expected.put("numberOfPlaylists",
-                new ExpectedAttributeValue()
-                        .withValue(new AttributeValue().withN("999"))
-                        .withComparisonOperator("EQ"));
+                ExpectedAttributeValue.builder()
+                        .value(AttributeValue.builder().n("999")
+                                .build())
+                        .comparisonOperator("EQ")
+                .build());
         saveExpression.setExpected(expected);
 
         // Should throw ConditionalCheckFailedException
@@ -154,9 +158,11 @@ public class ConditionalExpressionsIntegrationTest {
         DynamoDBDeleteExpression deleteExpression = new DynamoDBDeleteExpression();
         Map<String, ExpectedAttributeValue> expected = new HashMap<>();
         expected.put("numberOfPlaylists",
-                new ExpectedAttributeValue()
-                        .withValue(new AttributeValue().withN("10"))
-                        .withComparisonOperator("EQ"));
+                ExpectedAttributeValue.builder()
+                        .value(AttributeValue.builder().n("10")
+                                .build())
+                        .comparisonOperator("EQ")
+                .build());
         deleteExpression.setExpected(expected);
 
         // Should succeed
@@ -182,9 +188,11 @@ public class ConditionalExpressionsIntegrationTest {
         DynamoDBDeleteExpression deleteExpression = new DynamoDBDeleteExpression();
         Map<String, ExpectedAttributeValue> expected = new HashMap<>();
         expected.put("numberOfPlaylists",
-                new ExpectedAttributeValue()
-                        .withValue(new AttributeValue().withN("999"))
-                        .withComparisonOperator("EQ"));
+                ExpectedAttributeValue.builder()
+                        .value(AttributeValue.builder().n("999")
+                                .build())
+                        .comparisonOperator("EQ")
+                .build());
         deleteExpression.setExpected(expected);
 
         // Should throw ConditionalCheckFailedException
@@ -219,15 +227,19 @@ public class ConditionalExpressionsIntegrationTest {
 
         // Condition 1: numberOfPlaylists must be 10
         expected.put("numberOfPlaylists",
-                new ExpectedAttributeValue()
-                        .withValue(new AttributeValue().withN("10"))
-                        .withComparisonOperator("EQ"));
+                ExpectedAttributeValue.builder()
+                        .value(AttributeValue.builder().n("10")
+                                .build())
+                        .comparisonOperator("EQ")
+                .build());
 
         // Condition 2: name must be "User 9"
         expected.put("name",
-                new ExpectedAttributeValue()
-                        .withValue(new AttributeValue().withS("User 9"))
-                        .withComparisonOperator("EQ"));
+                ExpectedAttributeValue.builder()
+                        .value(AttributeValue.builder().s("User 9")
+                                .build())
+                        .comparisonOperator("EQ")
+                .build());
 
         saveExpression.setExpected(expected);
 
@@ -260,15 +272,19 @@ public class ConditionalExpressionsIntegrationTest {
 
         // Condition 1: numberOfPlaylists must be 10 (CORRECT)
         expected.put("numberOfPlaylists",
-                new ExpectedAttributeValue()
-                        .withValue(new AttributeValue().withN("10"))
-                        .withComparisonOperator("EQ"));
+                ExpectedAttributeValue.builder()
+                        .value(AttributeValue.builder().n("10")
+                                .build())
+                        .comparisonOperator("EQ")
+                .build());
 
         // Condition 2: name must be "Wrong Name" (INCORRECT)
         expected.put("name",
-                new ExpectedAttributeValue()
-                        .withValue(new AttributeValue().withS("Wrong Name"))
-                        .withComparisonOperator("EQ"));
+                ExpectedAttributeValue.builder()
+                        .value(AttributeValue.builder().s("Wrong Name")
+                                .build())
+                        .comparisonOperator("EQ")
+                .build());
 
         saveExpression.setExpected(expected);
 
@@ -301,9 +317,11 @@ public class ConditionalExpressionsIntegrationTest {
         DynamoDBSaveExpression saveExpression = new DynamoDBSaveExpression();
         Map<String, ExpectedAttributeValue> expected = new HashMap<>();
         expected.put("numberOfPlaylists",
-                new ExpectedAttributeValue()
-                        .withValue(new AttributeValue().withN("15"))
-                        .withComparisonOperator("LE")); // Less than or equal
+                ExpectedAttributeValue.builder()
+                        .value(AttributeValue.builder().n("15")
+                                .build())
+                        .comparisonOperator("LE")
+                .build()); // Less than or equal
         saveExpression.setExpected(expected);
 
         // Should succeed since 10 <= 15
@@ -332,9 +350,11 @@ public class ConditionalExpressionsIntegrationTest {
         DynamoDBSaveExpression saveExpression = new DynamoDBSaveExpression();
         Map<String, ExpectedAttributeValue> expected = new HashMap<>();
         expected.put("numberOfPlaylists",
-                new ExpectedAttributeValue()
-                        .withValue(new AttributeValue().withN("50"))
-                        .withComparisonOperator("GE")); // Greater than or equal
+                ExpectedAttributeValue.builder()
+                        .value(AttributeValue.builder().n("50")
+                                .build())
+                        .comparisonOperator("GE")
+                .build()); // Greater than or equal
         saveExpression.setExpected(expected);
 
         // Should succeed since 100 >= 50
@@ -367,9 +387,11 @@ public class ConditionalExpressionsIntegrationTest {
         DynamoDBSaveExpression saveExpression = new DynamoDBSaveExpression();
         Map<String, ExpectedAttributeValue> expected = new HashMap<>();
         expected.put("numberOfPlaylists",
-                new ExpectedAttributeValue()
-                        .withValue(new AttributeValue().withN(String.valueOf(currentValue)))
-                        .withComparisonOperator("EQ"));
+                ExpectedAttributeValue.builder()
+                        .value(AttributeValue.builder().n(String.valueOf(currentValue))
+                                .build())
+                        .comparisonOperator("EQ")
+                .build());
         saveExpression.setExpected(expected);
 
         // Should succeed
