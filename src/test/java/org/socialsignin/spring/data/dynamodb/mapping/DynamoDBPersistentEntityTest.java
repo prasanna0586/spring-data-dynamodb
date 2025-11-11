@@ -25,7 +25,7 @@ import org.socialsignin.spring.data.dynamodb.repository.DynamoDBHashAndRangeKey;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
-import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
 
 import java.util.Comparator;
 
@@ -48,8 +48,8 @@ public class DynamoDBPersistentEntityTest {
     @Mock
     private Comparator<DynamoDBPersistentProperty> comparator;
 
-    private ClassTypeInformation<DynamoDBPersistentEntity> cti = ClassTypeInformation
-            .from(DynamoDBPersistentEntity.class);
+    private TypeInformation<DynamoDBPersistentEntity> cti = TypeInformation
+            .of(DynamoDBPersistentEntity.class);
     private DynamoDBPersistentEntityImpl<DynamoDBPersistentEntity> underTest;
 
     @BeforeEach

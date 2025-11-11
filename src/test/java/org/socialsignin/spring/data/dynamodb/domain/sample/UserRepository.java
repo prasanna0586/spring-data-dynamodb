@@ -129,4 +129,8 @@ public interface UserRepository extends CrudRepository<User, String> {
 
     @EnableScan
     void deleteAll();
+
+    @EnableScan
+    @Override
+    long count();
 }
