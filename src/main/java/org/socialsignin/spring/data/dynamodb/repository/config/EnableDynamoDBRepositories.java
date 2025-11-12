@@ -15,6 +15,7 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.config;
 
+import org.socialsignin.spring.data.dynamodb.core.MarshallingMode;
 import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBRepositoryFactoryBean;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Import;
@@ -156,4 +157,19 @@ public @interface EnableDynamoDBRepositories {
      * repositories infrastructure.
      */
     boolean considerNestedRepositories() default false;
+
+    /**
+     * Configures the marshalling mode for type conversion between Java objects and DynamoDB AttributeValues.
+     *
+     * <p>Defaults to {@link MarshallingMode#SDK_V2_NATIVE} which uses AWS SDK v2's native type mappings
+     * (Boolean → BOOL, Date/Instant → Number/Converter).
+     *
+     * <p>Use {@link MarshallingMode#SDK_V1_COMPATIBLE} if you are migrating from spring-data-dynamodb
+     * with AWS SDK v1 and have existing data that uses the legacy type mappings (Boolean → Number "1"/"0",
+     * Date/Instant → String ISO-8601).
+     *
+     * @return The marshalling mode to use
+     * @since 7.0.0
+     */
+    MarshallingMode marshallingMode() default MarshallingMode.SDK_V2_NATIVE;
 }

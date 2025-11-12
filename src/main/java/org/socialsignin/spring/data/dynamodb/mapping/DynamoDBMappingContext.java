@@ -18,6 +18,7 @@ package org.socialsignin.spring.data.dynamodb.mapping;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
+import org.socialsignin.spring.data.dynamodb.core.MarshallingMode;
 import org.springframework.data.mapping.context.AbstractMappingContext;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
@@ -35,6 +36,36 @@ import java.lang.reflect.Method;
  */
 public class DynamoDBMappingContext
         extends AbstractMappingContext<DynamoDBPersistentEntityImpl<?>, DynamoDBPersistentProperty> {
+
+    private final MarshallingMode marshallingMode;
+
+    /**
+     * Creates a new DynamoDBMappingContext with the specified marshalling mode.
+     *
+     * @param marshallingMode The marshalling mode to use for type conversions
+     * @since 7.0.0
+     */
+    public DynamoDBMappingContext(MarshallingMode marshallingMode) {
+        this.marshallingMode = marshallingMode != null ? marshallingMode : MarshallingMode.SDK_V2_NATIVE;
+    }
+
+    /**
+     * Creates a new DynamoDBMappingContext with SDK_V2_NATIVE marshalling mode (default).
+     */
+    public DynamoDBMappingContext() {
+        this(MarshallingMode.SDK_V2_NATIVE);
+    }
+
+    /**
+     * Returns the marshalling mode configured for this mapping context.
+     *
+     * @return The marshalling mode
+     * @since 7.0.0
+     */
+    public MarshallingMode getMarshallingMode() {
+        return marshallingMode;
+    }
+
     /*
      * (non-Javadoc)
      * @see org.springframework.data.mapping.context.AbstractMappingContext# shouldCreatePersistentEntityFor

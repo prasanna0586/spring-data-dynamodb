@@ -20,6 +20,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbImmut
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBTemplate;
+import org.socialsignin.spring.data.dynamodb.core.MarshallingMode;
 import org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext;
 import org.socialsignin.spring.data.dynamodb.repository.DynamoDBCrudRepository;
 import org.socialsignin.spring.data.dynamodb.repository.DynamoDBPagingAndSortingRepository;
@@ -62,6 +63,7 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
 
     private BeanDefinitionRegistry registry;
     private String defaultDynamoDBMappingContext;
+    private MarshallingMode marshallingMode = MarshallingMode.SDK_V2_NATIVE;
 
     @Override
     public String getRepositoryFactoryBeanClassName() {
@@ -122,6 +124,15 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
             String dynamoDBMapperRef, String dynamoDBMapperConfigRef, String dynamoDBOperationsRef,
             String dynamoDBMappingContextRef) {
 
+        // Ensure mapping context is created first
+        if (!StringUtils.hasText(dynamoDBMappingContextRef)) {
+            // Register DynamoDBMappingContext only once if necessary
+            if (defaultDynamoDBMappingContext == null) {
+                defaultDynamoDBMappingContext = registerDynamoDBMappingContext(registry);
+            }
+            dynamoDBMappingContextRef = defaultDynamoDBMappingContext;
+        }
+
         if (StringUtils.hasText(dynamoDBOperationsRef)) {
             builder.addPropertyReference("dynamoDBOperations", dynamoDBOperationsRef);
             Assert.isTrue(!StringUtils.hasText(amazonDynamoDBRef),
@@ -139,12 +150,12 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
                     dynamoDBRef = DEFAULT_AMAZON_DYNAMO_DB_BEAN_NAME;
                 }
 
+                final String finalDynamoDBMappingContextRef = dynamoDBMappingContextRef;
                 dynamoDBOperationsRef = dynamoDBTemplateCache
                         .computeIfAbsent(getBeanNameWithModulePrefix("DynamoDBTemplate-" + dynamoDBRef), ref -> {
                             BeanDefinitionBuilder dynamoDBTemplateBuilder = BeanDefinitionBuilder
                                     .genericBeanDefinition(DynamoDBTemplate.class);
-                            // DynamoDbClient dynamoDbClient, DynamoDbEnhancedClient dynamoDbEnhancedClient,
-                            // DynamoDbEnhancedClientExtension config
+                            // DynamoDbClient, DynamoDBMapper, DynamoDBMapperConfig, DynamoDBMappingContext
                             dynamoDBTemplateBuilder.addConstructorArgReference(dynamoDBRef);
 
                             if (StringUtils.hasText(dynamoDBMapperRef)) {
@@ -159,21 +170,15 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
                                 dynamoDBTemplateBuilder.addConstructorArgReference(this.dynamoDBMapperConfigName);
                             }
 
+                            // Add mapping context as fourth constructor argument
+                            dynamoDBTemplateBuilder.addConstructorArgReference(finalDynamoDBMappingContextRef);
+
                             registry.registerBeanDefinition(ref, dynamoDBTemplateBuilder.getBeanDefinition());
                             return ref;
                         });
             }
 
             builder.addPropertyReference("dynamoDBOperations", dynamoDBOperationsRef);
-
-        }
-
-        if (!StringUtils.hasText(dynamoDBMappingContextRef)) {
-            // Register DynamoDBMappingContext only once if necessary
-            if (defaultDynamoDBMappingContext == null) {
-                defaultDynamoDBMappingContext = registerDynamoDBMappingContext(registry);
-            }
-            dynamoDBMappingContextRef = defaultDynamoDBMappingContext;
 
         }
 
@@ -239,10 +244,14 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
 
         BeanDefinitionBuilder dynamoDBMappingContextBuilder = BeanDefinitionBuilder
                 .genericBeanDefinition(DynamoDBMappingContext.class);
+
+        // Pass marshalling mode as constructor argument
+        dynamoDBMappingContextBuilder.addConstructorArgValue(marshallingMode);
+
         String dynamoDBMappingContextRef = getBeanNameWithModulePrefix("DynamoDBMappingContext");
 
-        LOGGER.debug("Adding bean <{}> of type <{}>", dynamoDBMappingContextRef,
-                dynamoDBMappingContextBuilder.getBeanDefinition());
+        LOGGER.debug("Adding bean <{}> of type <{}> with marshalling mode <{}>", dynamoDBMappingContextRef,
+                dynamoDBMappingContextBuilder.getBeanDefinition(), marshallingMode);
 
         registry.registerBeanDefinition(dynamoDBMappingContextRef, dynamoDBMappingContextBuilder.getBeanDefinition());
 
@@ -256,6 +265,12 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
 
         // Store for later to be used by #postProcess, too
         this.registry = registry;
+
+        // Read marshalling mode from configuration
+        if (configurationSource instanceof AnnotationRepositoryConfigurationSource) {
+            AnnotationAttributes attributes = ((AnnotationRepositoryConfigurationSource) configurationSource).getAttributes();
+            this.marshallingMode = attributes.getEnum("marshallingMode");
+        }
 
         this.dynamoDBMapperConfigName = getBeanNameWithModulePrefix("DynamoDBMapperConfig");
         Optional<String> dynamoDBMapperConfigRef = configurationSource.getAttribute("dynamoDBMapperConfigRef");

@@ -16,7 +16,11 @@
 package org.socialsignin.spring.data.dynamodb.repository.query;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.*;
+import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
+import org.socialsignin.spring.data.dynamodb.core.MarshallingMode;
+import org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext;
 import org.socialsignin.spring.data.dynamodb.marshaller.Date2IsoDynamoDBMarshaller;
 import org.socialsignin.spring.data.dynamodb.marshaller.Instant2IsoDynamoDBMarshaller;
 import org.socialsignin.spring.data.dynamodb.query.Query;
@@ -44,8 +48,9 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
     protected Class<T> clazz;
     private final DynamoDBEntityInformation<T, ID> entityInformation;
     private final Map<String, String> attributeNamesByPropertyName;
-    private final DynamoDBMapperTableModel<T> tableModel;
+    private final TableSchema<T> tableModel;
     private final String hashKeyPropertyName;
+    protected final DynamoDBMappingContext mappingContext;
 
     protected MultiValueMap<String, Condition> attributeConditions;
     protected MultiValueMap<String, Condition> propertyConditions;
@@ -170,42 +175,6 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         }
     }
 
-    protected void applyConsistentReads(DynamoDBQueryExpression<T> queryExpression) {
-        switch (consistentReads) {
-            case CONSISTENT:
-                queryExpression.setConsistentRead(true);
-                break;
-            case EVENTUAL:
-                queryExpression.setConsistentRead(false);
-                break;
-            default:
-                break;
-        }
-    }
-
-    protected void applySortIfSpecified(DynamoDBQueryExpression<T> queryExpression,
-            List<String> permittedPropertyNames) {
-        if (permittedPropertyNames.size() > 1) {
-            throw new UnsupportedOperationException("Can only sort by at most a single range or index range key");
-
-        }
-
-        boolean sortAlreadySet = false;
-        for (Order order : sort) {
-            if (permittedPropertyNames.contains(order.getProperty())) {
-                if (sortAlreadySet) {
-                    throw new UnsupportedOperationException("Sorting by multiple attributes not possible");
-
-                }
-                queryExpression.setScanIndexForward(order.getDirection().equals(Direction.ASC));
-                sortAlreadySet = true;
-            } else {
-                throw new UnsupportedOperationException(
-                        "Sorting only possible by " + permittedPropertyNames + " for the criteria specified");
-            }
-        }
-    }
-
     protected void applySortIfSpecified(QueryRequest queryRequest, List<String> permittedPropertyNames) {
         if (permittedPropertyNames.size() > 2) {
             throw new UnsupportedOperationException("Can only sort by at most a single global hash and range key");
@@ -241,7 +210,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         for (Collection<Condition> conditions : attributeConditions.values()) {
             for (Condition condition : conditions) {
                 if (!comparisonOperatorsPermittedForQuery
-                        .contains(ComparisonOperator.fromValue(condition.comparisonOperator()))) {
+                        .contains(condition.comparisonOperator())) {
                     return false;
                 }
             }
@@ -267,16 +236,17 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
     }
 
     public AbstractDynamoDBQueryCriteria(DynamoDBEntityInformation<T, ID> dynamoDBEntityInformation,
-            final DynamoDBMapperTableModel<T> tableModel) {
+            final TableSchema<T> tableModel, DynamoDBMappingContext mappingContext) {
         this.clazz = dynamoDBEntityInformation.getJavaType();
         this.attributeConditions = new LinkedMultiValueMap<>();
         this.propertyConditions = new LinkedMultiValueMap<>();
         this.hashKeyPropertyName = dynamoDBEntityInformation.getHashKeyPropertyName();
         this.entityInformation = dynamoDBEntityInformation;
         this.attributeNamesByPropertyName = new HashMap<>();
-        // TODO consider adding the DynamoDBMapper table model to
+        // TODO consider adding the table schema to
         // DynamoDBEntityInformation instead
         this.tableModel = tableModel;
+        this.mappingContext = mappingContext;
     }
 
     private String getFirstDeclaredIndexNameForAttribute(Map<String, String[]> indexNamesByAttributeName,
@@ -378,7 +348,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         for (Map.Entry<String, List<Condition>> propertyConditionList : propertyConditions.entrySet()) {
             if (entityInformation.isGlobalIndexHashKeyProperty(propertyConditionList.getKey())) {
                 for (Condition condition : propertyConditionList.getValue()) {
-                    if (condition.comparisonOperator().equals(ComparisonOperator.EQ.name())) {
+                    if (condition.comparisonOperator().equals(ComparisonOperator.EQ)) {
                         hasIndexHashKeyEqualCondition = true;
                     }
                 }
@@ -519,40 +489,21 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return this;
     }
 
-    @SuppressWarnings({ "deprecation", "unchecked" })
+    @SuppressWarnings("unchecked")
     protected <V extends Object> Object getPropertyAttributeValue(final String propertyName, final V value) {
-        // TODO consider removing DynamoDBMarshaller code altogether as table model will
-        // handle accordingly
-        DynamoDBTypeConverter<Object, V> converter = (DynamoDBTypeConverter<Object, V>) entityInformation
-                .getTypeConverterForProperty(propertyName);
+        // SDK v2: Check for custom attribute converters configured via @DynamoDbConvertedBy
+        AttributeConverter<?> attributeConverter = entityInformation.getAttributeConverterForProperty(propertyName);
 
-        if (converter != null) {
-            return converter.convert(value);
+        if (attributeConverter != null) {
+            // Cast is safe because the converter is for this specific property
+            AttributeConverter<V> typedConverter = (AttributeConverter<V>) attributeConverter;
+            // Convert the value using the custom converter
+            return typedConverter.transformFrom(value);
         }
 
-        DynamoDBMarshaller<V> marshaller = (DynamoDBMarshaller<V>) entityInformation
-                .getMarshallerForProperty(propertyName);
-
-        if (marshaller != null) {
-            return marshaller.marshall(value);
-        } else if (tableModel != null) { // purely here for testing as DynamoDBMapperTableModel cannot be mocked using
-                                         // Mockito
-
-            String attributeName = getAttributeName(propertyName);
-
-            DynamoDBMapperFieldModel<T, Object> fieldModel = tableModel.field(attributeName);
-            if (fieldModel != null) {
-                if (fieldModel.attributeType() == DynamoDBMapperFieldModel.DynamoDBAttributeType.SS) {
-                    if (value instanceof Collection) {
-                        return fieldModel.convert(value);
-                    } else {
-                        return new AttributeValue(value.toString());
-                    }
-                }
-                return fieldModel.convert(value);
-            }
-        }
-
+        // For standard types without custom converters, return the value as-is.
+        // The TableSchema in SDK v2's Enhanced Client handles type conversions internally
+        // when building and executing queries.
         return value;
     }
 
@@ -577,34 +528,63 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
     }
 
     @SuppressWarnings("deprecation")
-    private List<String> getDateListAsStringList(List<Date> dateList) {
-        DynamoDBMarshaller<Date> marshaller = new Date2IsoDynamoDBMarshaller();
+    private List<String> getDateListAsStringList(List<Date> dateList, MarshallingMode mode) {
         List<String> list = new ArrayList<String>();
-        for (Date date : dateList) {
-            if (date != null) {
-                list.add(marshaller.marshall(date));
-            } else {
-                list.add(null);
+        if (mode == MarshallingMode.SDK_V1_COMPATIBLE) {
+            // SDK v1 compatibility: Date marshalled to ISO format string
+            DynamoDBMarshaller<Date> marshaller = new Date2IsoDynamoDBMarshaller();
+            for (Date date : dateList) {
+                if (date != null) {
+                    list.add(marshaller.marshall(date));
+                } else {
+                    list.add(null);
+                }
+            }
+        } else {
+            // SDK v2 native: Date as epoch milliseconds in Number format
+            for (Date date : dateList) {
+                if (date != null) {
+                    list.add(String.valueOf(date.getTime()));
+                } else {
+                    list.add(null);
+                }
             }
         }
         return list;
     }
 
     @SuppressWarnings("deprecation")
-    private List<String> getInstantListAsStringList(List<Instant> dateList) {
-        DynamoDBMarshaller<Instant> marshaller = new Instant2IsoDynamoDBMarshaller();
+    private List<String> getInstantListAsStringList(List<Instant> dateList, MarshallingMode mode) {
+        // Both SDK v1 and v2 store Instant as String (ISO-8601 format)
+        // AWS SDK v2 uses InstantAsStringAttributeConverter by default
         List<String> list = new ArrayList<>();
-        for (Instant date : dateList) {
-            if (date != null) {
-                list.add(marshaller.marshall(date));
-            } else {
-                list.add(null);
+        if (mode == MarshallingMode.SDK_V1_COMPATIBLE) {
+            // SDK v1 compatibility: Instant marshalled to ISO format string with millisecond precision
+            DynamoDBMarshaller<Instant> marshaller = new Instant2IsoDynamoDBMarshaller();
+            for (Instant date : dateList) {
+                if (date != null) {
+                    list.add(marshaller.marshall(date));
+                } else {
+                    list.add(null);
+                }
+            }
+        } else {
+            // SDK v2 native: Instant as ISO-8601 string (matches AWS SDK v2 InstantAsStringAttributeConverter)
+            // Format: ISO-8601 with nanosecond precision, e.g., "1970-01-01T00:00:00.001Z"
+            for (Instant date : dateList) {
+                if (date != null) {
+                    list.add(date.toString());
+                } else {
+                    list.add(null);
+                }
             }
         }
         return list;
     }
 
-    private List<String> getBooleanListAsStringList(List<Boolean> booleanList) {
+    private List<String> getBooleanListAsStringList(List<Boolean> booleanList, MarshallingMode mode) {
+        // Note: DynamoDB doesn't support a BOOL set type (only SS/NS/BS)
+        // Boolean lists must always be stored as Number set "1"/"0" regardless of marshalling mode
         List<String> list = new ArrayList<>();
         for (Boolean booleanValue : booleanList) {
             if (booleanValue != null) {
@@ -636,59 +616,95 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
 
     protected <P> List<AttributeValue> addAttributeValue(List<AttributeValue> attributeValueList,
             @Nullable Object attributeValue, Class<P> propertyType, boolean expandCollectionValues) {
-        AttributeValue attributeValueObject = AttributeValue.builder()
-                .build();
+        AttributeValue.Builder attributeValueBuilder = AttributeValue.builder();
 
         if (ClassUtils.isAssignable(String.class, propertyType)) {
             List<String> attributeValueAsList = getAttributeValueAsList(attributeValue);
             if (expandCollectionValues && attributeValueAsList != null) {
-                attributeValueObject.ss(attributeValueAsList);
+                attributeValueBuilder.ss(attributeValueAsList);
             } else {
-                attributeValueObject.s((String) attributeValue);
+                attributeValueBuilder.s((String) attributeValue);
             }
         } else if (ClassUtils.isAssignable(Number.class, propertyType)) {
 
             List<Number> attributeValueAsList = getAttributeValueAsList(attributeValue);
             if (expandCollectionValues && attributeValueAsList != null) {
                 List<String> attributeValueAsStringList = getNumberListAsStringList(attributeValueAsList);
-                attributeValueObject.ns(attributeValueAsStringList);
+                attributeValueBuilder.ns(attributeValueAsStringList);
             } else {
-                attributeValueObject.n(attributeValue.toString());
+                attributeValueBuilder.n(attributeValue.toString());
             }
         } else if (ClassUtils.isAssignable(Boolean.class, propertyType)) {
             List<Boolean> attributeValueAsList = getAttributeValueAsList(attributeValue);
             if (expandCollectionValues && attributeValueAsList != null) {
-                List<String> attributeValueAsStringList = getBooleanListAsStringList(attributeValueAsList);
-                attributeValueObject.ns(attributeValueAsStringList);
+                if (mappingContext.getMarshallingMode() == MarshallingMode.SDK_V1_COMPATIBLE) {
+                    // SDK v1 compatibility: Boolean list stored as Number set "1"/"0"
+                    List<String> attributeValueAsStringList = getBooleanListAsStringList(attributeValueAsList, MarshallingMode.SDK_V1_COMPATIBLE);
+                    attributeValueBuilder.ns(attributeValueAsStringList);
+                } else {
+                    // SDK v2 native: Boolean list not directly supported in DynamoDB, use Number set
+                    // (DynamoDB doesn't have a BOOL set type, only SS/NS/BS)
+                    List<String> attributeValueAsStringList = getBooleanListAsStringList(attributeValueAsList, MarshallingMode.SDK_V1_COMPATIBLE);
+                    attributeValueBuilder.ns(attributeValueAsStringList);
+                }
             } else {
-                boolean boolValue = ((Boolean) attributeValue).booleanValue();
-                attributeValueObject.n(boolValue ? "1" : "0");
+                if (mappingContext.getMarshallingMode() == MarshallingMode.SDK_V1_COMPATIBLE) {
+                    // SDK v1 compatibility: Boolean stored as Number "1"/"0"
+                    boolean boolValue = ((Boolean) attributeValue).booleanValue();
+                    attributeValueBuilder.n(boolValue ? "1" : "0");
+                } else {
+                    // SDK v2 native: Boolean stored as BOOL type
+                    attributeValueBuilder.bool((Boolean) attributeValue);
+                }
             }
         } else if (ClassUtils.isAssignable(Date.class, propertyType)) {
             List<Date> attributeValueAsList = getAttributeValueAsList(attributeValue);
             if (expandCollectionValues && attributeValueAsList != null) {
-                List<String> attributeValueAsStringList = getDateListAsStringList(attributeValueAsList);
-                attributeValueObject.ss(attributeValueAsStringList);
+                if (mappingContext.getMarshallingMode() == MarshallingMode.SDK_V1_COMPATIBLE) {
+                    // SDK v1 compatibility: Date list stored as String set (ISO format)
+                    List<String> attributeValueAsStringList = getDateListAsStringList(attributeValueAsList, MarshallingMode.SDK_V1_COMPATIBLE);
+                    attributeValueBuilder.ss(attributeValueAsStringList);
+                } else {
+                    // SDK v2 native: Date list stored as Number set (epoch milliseconds)
+                    List<String> attributeValueAsStringList = getDateListAsStringList(attributeValueAsList, MarshallingMode.SDK_V2_NATIVE);
+                    attributeValueBuilder.ns(attributeValueAsStringList);
+                }
             } else {
-                Date date = (Date) attributeValue;
-                String marshalledDate = new Date2IsoDynamoDBMarshaller().marshall(date);
-                attributeValueObject.s(marshalledDate);
+                if (mappingContext.getMarshallingMode() == MarshallingMode.SDK_V1_COMPATIBLE) {
+                    // SDK v1 compatibility: Date stored as ISO format string
+                    Date date = (Date) attributeValue;
+                    String marshalledDate = new Date2IsoDynamoDBMarshaller().marshall(date);
+                    attributeValueBuilder.s(marshalledDate);
+                } else {
+                    // SDK v2 native: Date stored as epoch milliseconds in Number format
+                    attributeValueBuilder.n(String.valueOf(((Date) attributeValue).getTime()));
+                }
             }
         } else if (ClassUtils.isAssignable(Instant.class, propertyType)) {
+            // Both SDK v1 and v2 store Instant as String (ISO-8601 format)
+            // AWS SDK v2 uses InstantAsStringAttributeConverter by default
             List<Instant> attributeValueAsList = getAttributeValueAsList(attributeValue);
             if (expandCollectionValues && attributeValueAsList != null) {
-                List<String> attributeValueAsStringList = getInstantListAsStringList(attributeValueAsList);
-                attributeValueObject.ss(attributeValueAsStringList);
+                // Instant lists always stored as String set (ISO-8601 format) in both modes
+                List<String> attributeValueAsStringList = getInstantListAsStringList(attributeValueAsList, mappingContext.getMarshallingMode());
+                attributeValueBuilder.ss(attributeValueAsStringList);
             } else {
-                Instant date = (Instant) attributeValue;
-                String marshalledDate = new Instant2IsoDynamoDBMarshaller().marshall(date);
-                attributeValueObject.s(marshalledDate);
+                if (mappingContext.getMarshallingMode() == MarshallingMode.SDK_V1_COMPATIBLE) {
+                    // SDK v1 compatibility: Instant stored as ISO format string with millisecond precision
+                    Instant date = (Instant) attributeValue;
+                    String marshalledDate = new Instant2IsoDynamoDBMarshaller().marshall(date);
+                    attributeValueBuilder.s(marshalledDate);
+                } else {
+                    // SDK v2 native: Instant stored as ISO-8601 string (matches AWS SDK v2 InstantAsStringAttributeConverter)
+                    // Format: ISO-8601 with nanosecond precision, e.g., "1970-01-01T00:00:00.001Z"
+                    attributeValueBuilder.s(((Instant) attributeValue).toString());
+                }
             }
         } else {
             throw new RuntimeException("Cannot create condition for type:" + attributeValue.getClass()
                     + " property conditions must be String,Number or Boolean, or have a DynamoDBMarshaller configured");
         }
-        attributeValueList.add(attributeValueObject);
+        attributeValueList.add(attributeValueBuilder.build());
 
         return attributeValueList;
     }

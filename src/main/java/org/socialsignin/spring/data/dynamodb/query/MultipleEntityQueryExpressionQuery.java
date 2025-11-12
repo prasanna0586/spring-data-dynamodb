@@ -15,10 +15,12 @@
  */
 package org.socialsignin.spring.data.dynamodb.query;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * @author Michael Lavelle
@@ -26,17 +28,19 @@ import java.util.List;
  */
 public class MultipleEntityQueryExpressionQuery<T> extends AbstractMultipleEntityQuery<T> {
 
-    private DynamoDBQueryExpression<T> queryExpression;
+    private QueryEnhancedRequest queryRequest;
 
     public MultipleEntityQueryExpressionQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz,
-            DynamoDBQueryExpression<T> queryExpression) {
+            QueryEnhancedRequest queryRequest) {
         super(dynamoDBOperations, clazz);
-        this.queryExpression = queryExpression;
+        this.queryRequest = queryRequest;
     }
 
     @Override
     public List<T> getResultList() {
-        return dynamoDBOperations.query(clazz, queryExpression);
+        // SDK v2 returns PageIterable, convert to List
+        return StreamSupport.stream(dynamoDBOperations.query(clazz, queryRequest).items().spliterator(), false)
+                .collect(Collectors.toList());
     }
 
 }

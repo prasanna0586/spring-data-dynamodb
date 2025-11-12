@@ -17,6 +17,7 @@ package org.socialsignin.spring.data.dynamodb.core;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.*;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper.FailedBatch;
+import org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext;
 import org.socialsignin.spring.data.dynamodb.mapping.event.*;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +40,7 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
     private final DynamoDBMapper dynamoDBMapper;
     private final DynamoDbClient amazonDynamoDB;
     private final DynamoDBMapperConfig dynamoDBMapperConfig;
+    private final DynamoDBMappingContext mappingContext;
     private ApplicationEventPublisher eventPublisher;
 
     /**
@@ -51,10 +53,12 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
      * @param dynamoDBMapper
      *            can be {@code null} - {@link DynamoDBMapper#DynamoDBMapper(DynamoDbClient, DynamoDBMapperConfig)} is
      *            used if {@code null} is passed in
+     * @param mappingContext
+     *            the DynamoDB mapping context (uses default SDK_V2_NATIVE if null)
      */
     @Autowired
     public DynamoDBTemplate(DynamoDbClient amazonDynamoDB, DynamoDBMapper dynamoDBMapper,
-            DynamoDBMapperConfig dynamoDBMapperConfig) {
+            DynamoDBMapperConfig dynamoDBMapperConfig, DynamoDBMappingContext mappingContext) {
         Assert.notNull(amazonDynamoDB, "amazonDynamoDB must not be null!");
         Assert.notNull(dynamoDBMapper, "dynamoDBMapper must not be null!");
         Assert.notNull(dynamoDBMapperConfig, "dynamoDBMapperConfig must not be null!");
@@ -62,6 +66,7 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
         this.amazonDynamoDB = amazonDynamoDB;
         this.dynamoDBMapper = dynamoDBMapper;
         this.dynamoDBMapperConfig = dynamoDBMapperConfig;
+        this.mappingContext = mappingContext != null ? mappingContext : new DynamoDBMappingContext();
     }
 
     @Override
@@ -209,6 +214,14 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
     @Override
     public <T> DynamoDBMapperTableModel<T> getTableModel(Class<T> domainClass) {
         return dynamoDBMapper.getTableModel(domainClass, dynamoDBMapperConfig);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DynamoDBMappingContext getMappingContext() {
+        return mappingContext;
     }
 
     protected <T> void maybeEmitEvent(@Nullable T source, Function<T, DynamoDBMappingEvent<T>> factory) {

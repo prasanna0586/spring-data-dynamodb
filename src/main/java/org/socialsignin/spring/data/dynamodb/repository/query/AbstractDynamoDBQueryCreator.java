@@ -15,7 +15,7 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.query;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperTableModel;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.socialsignin.spring.data.dynamodb.query.Query;
 import org.socialsignin.spring.data.dynamodb.repository.ExpressionAttribute;
@@ -114,11 +114,13 @@ public abstract class AbstractDynamoDBQueryCreator<T, ID, R>
 
     @Override
     protected DynamoDBQueryCriteria<T, ID> create(Part part, Iterator<Object> iterator) {
-        final DynamoDBMapperTableModel<T> tableModel = dynamoDBOperations.getTableModel(entityMetadata.getJavaType());
+        final TableSchema<T> tableModel = dynamoDBOperations.getTableModel(entityMetadata.getJavaType());
         DynamoDBQueryCriteria<T, ID> criteria = entityMetadata.isRangeKeyAware()
                 ? new DynamoDBEntityWithHashAndRangeKeyCriteria<>(
-                        (DynamoDBIdIsHashAndRangeKeyEntityInformation<T, ID>) entityMetadata, tableModel)
-                : new DynamoDBEntityWithHashKeyOnlyCriteria<>(entityMetadata, tableModel);
+                        (DynamoDBIdIsHashAndRangeKeyEntityInformation<T, ID>) entityMetadata, tableModel,
+                        dynamoDBOperations.getMappingContext())
+                : new DynamoDBEntityWithHashKeyOnlyCriteria<>(entityMetadata, tableModel,
+                        dynamoDBOperations.getMappingContext());
         return addCriteria(criteria, part, iterator);
     }
 

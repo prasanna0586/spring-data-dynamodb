@@ -15,8 +15,7 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMarshaller;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverter;
+import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
 import org.springframework.data.annotation.Id;
 
 import java.util.Map;
@@ -92,15 +91,9 @@ public class DynamoDBIdIsHashAndRangeKeyEntityInformationImpl<T, ID>
         return metadata.getRangeKeyPropertyName();
     }
 
-    @SuppressWarnings("deprecation")
     @Override
-    public <V extends DynamoDBMarshaller<?>> V getMarshallerForProperty(String propertyName) {
-        return metadata.getMarshallerForProperty(propertyName);
-    }
-
-    @Override
-    public DynamoDBTypeConverter<?, ?> getTypeConverterForProperty(String propertyName) {
-        return metadata.getTypeConverterForProperty(propertyName);
+    public AttributeConverter<?> getAttributeConverterForProperty(String propertyName) {
+        return metadata.getAttributeConverterForProperty(propertyName);
     }
 
     @Override

@@ -15,6 +15,7 @@
  */
 package org.socialsignin.spring.data.dynamodb.core;
 
+import org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteResult;
 import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
@@ -70,4 +71,13 @@ public interface DynamoDBOperations {
      * @return Corresponding DynamoDB table schema
      */
     <T> TableSchema<T> getTableModel(Class<T> domainClass);
+
+    /**
+     * Provides access to the DynamoDB mapping context which contains configuration
+     * such as marshalling mode for type conversions.
+     *
+     * @return The DynamoDB mapping context
+     * @since 7.0.0
+     */
+    DynamoDBMappingContext getMappingContext();
 }
