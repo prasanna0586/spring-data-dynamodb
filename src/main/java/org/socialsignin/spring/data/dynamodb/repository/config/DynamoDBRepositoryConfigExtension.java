@@ -15,7 +15,8 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.config;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbImmutable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBTemplate;
@@ -69,15 +70,12 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
 
     @Override
     protected Collection<Class<?>> getIdentifyingTypes() {
-        List<Class<?>> types = new ArrayList<>(2);
-        types.add(DynamoDBPagingAndSortingRepository.class);
-        types.add(DynamoDBCrudRepository.class);
-        return Collections.unmodifiableList(types);
+        return List.of(DynamoDBPagingAndSortingRepository.class, DynamoDBCrudRepository.class);
     }
 
     @Override
     protected Collection<Class<? extends Annotation>> getIdentifyingAnnotations() {
-        return Collections.singleton(DynamoDBTable.class);
+        return List.of(DynamoDbBean.class, DynamoDbImmutable.class);
     }
 
     @Override
@@ -132,7 +130,7 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
                     "Cannot specify both dynamoDBMapperConfigBean bean and dynamoDBOperationsBean in repository configuration");
         } else {
 
-            if (StringUtils.isEmpty(dynamoDBOperationsRef)) {
+            if (!StringUtils.hasText(dynamoDBOperationsRef)) {
 
                 String dynamoDBRef;
                 if (StringUtils.hasText(amazonDynamoDBRef)) {
@@ -145,8 +143,8 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
                         .computeIfAbsent(getBeanNameWithModulePrefix("DynamoDBTemplate-" + dynamoDBRef), ref -> {
                             BeanDefinitionBuilder dynamoDBTemplateBuilder = BeanDefinitionBuilder
                                     .genericBeanDefinition(DynamoDBTemplate.class);
-                            // AmazonDynamoDB amazonDynamoDB, DynamoDBMapper dynamoDBMapper,
-                            // DynamoDBMapperConfig dynamoDBMapperConfig
+                            // DynamoDbClient dynamoDbClient, DynamoDbEnhancedClient dynamoDbEnhancedClient,
+                            // DynamoDbEnhancedClientExtension config
                             dynamoDBTemplateBuilder.addConstructorArgReference(dynamoDBRef);
 
                             if (StringUtils.hasText(dynamoDBMapperRef)) {

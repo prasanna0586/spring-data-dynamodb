@@ -15,9 +15,13 @@
  */
 package org.socialsignin.spring.data.dynamodb.core;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper.FailedBatch;
+import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteResult;
+import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
-import com.amazonaws.services.dynamodbv2.datamodeling.*;
 
 import java.util.List;
 import java.util.Map;
@@ -27,43 +31,43 @@ import java.util.Map;
  */
 public interface DynamoDBOperations {
 
-    <T> int count(Class<T> domainClass, DynamoDBQueryExpression<T> queryExpression);
+    <T> int count(Class<T> domainClass, QueryEnhancedRequest queryExpression);
 
-    <T> int count(Class<T> domainClass, DynamoDBScanExpression scanExpression);
+    <T> int count(Class<T> domainClass, ScanEnhancedRequest scanExpression);
 
     <T> int count(Class<T> clazz, QueryRequest mutableQueryRequest);
 
-    <T> PaginatedQueryList<T> query(Class<T> clazz, QueryRequest queryRequest);
+    <T> PageIterable<T> query(Class<T> clazz, QueryRequest queryRequest);
 
-    <T> PaginatedQueryList<T> query(Class<T> domainClass, DynamoDBQueryExpression<T> queryExpression);
+    <T> PageIterable<T> query(Class<T> domainClass, QueryEnhancedRequest queryExpression);
 
-    <T> PaginatedScanList<T> scan(Class<T> domainClass, DynamoDBScanExpression scanExpression);
+    <T> PageIterable<T> scan(Class<T> domainClass, ScanEnhancedRequest scanExpression);
 
     <T> T load(Class<T> domainClass, Object hashKey, Object rangeKey);
 
     <T> T load(Class<T> domainClass, Object hashKey);
 
-    <T> List<T> batchLoad(Map<Class<?>, List<KeyPair>> itemsToGet);
+    <T> List<T> batchLoad(Map<Class<?>, List<Key>> itemsToGet);
 
     <T> T save(T entity);
 
-    List<FailedBatch> batchSave(Iterable<?> entities);
+    List<BatchWriteResult> batchSave(Iterable<?> entities);
 
     <T> T delete(T entity);
 
-    List<FailedBatch> batchDelete(Iterable<?> entities);
+    List<BatchWriteResult> batchDelete(Iterable<?> entities);
 
     <T> String getOverriddenTableName(Class<T> domainClass, String tableName);
 
     /**
-     * Provides access to the DynamoDB mapper table model of the underlying domain type.
+     * Provides access to the DynamoDB table schema of the underlying domain type.
      *
      * @param <T>
      *            The type of the domain type itself
      * @param domainClass
      *            A domain type
      *
-     * @return Corresponding DynamoDB table model
+     * @return Corresponding DynamoDB table schema
      */
-    <T> DynamoDBMapperTableModel<T> getTableModel(Class<T> domainClass);
+    <T> TableSchema<T> getTableModel(Class<T> domainClass);
 }

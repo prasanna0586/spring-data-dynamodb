@@ -15,7 +15,8 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.*;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
+import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
@@ -70,27 +71,32 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
         Assert.notNull(domainType, "Domain type must not be null!");
         this.domainType = domainType;
 
-        DynamoDBTable table = this.domainType.getAnnotation(DynamoDBTable.class);
-        Assert.notNull(table, "Domain type must by annotated with DynamoDBTable!");
+        DynamoDbBean table = this.domainType.getAnnotation(DynamoDbBean.class);
+        DynamoDbImmutable immutableTable = this.domainType.getAnnotation(DynamoDbImmutable.class);
+        Assert.isTrue(table != null || immutableTable != null, "Domain type must be annotated with @DynamoDbBean or @DynamoDbImmutable!");
+
+        // In SDK v2, table name is typically inferred from class name or set via TableSchema
+        // For now, use the class simple name as default
+        String tableName = domainType.getSimpleName();
 
         if (dynamoDBOperations != null) {
-            this.dynamoDBTableName = dynamoDBOperations.getOverriddenTableName(domainType, table.tableName());
+            this.dynamoDBTableName = dynamoDBOperations.getOverriddenTableName(domainType, tableName);
         } else {
-            this.dynamoDBTableName = table.tableName();
+            this.dynamoDBTableName = tableName;
         }
         this.hashKeyPropertyName = null;
         this.globalSecondaryIndexNames = new HashMap<>();
         this.globalIndexHashKeyPropertyNames = new ArrayList<>();
         this.globalIndexRangeKeyPropertyNames = new ArrayList<>();
         ReflectionUtils.doWithMethods(domainType, method -> {
-            if (method.getAnnotation(DynamoDBHashKey.class) != null) {
+            if (method.getAnnotation(DynamoDbPartitionKey.class) != null) {
                 hashKeyPropertyName = getPropertyNameForAccessorMethod(method);
             }
-            if (method.getAnnotation(DynamoDBRangeKey.class) != null) {
+            if (method.getAnnotation(DynamoDbSortKey.class) != null) {
                 hasRangeKey = true;
             }
-            DynamoDBIndexRangeKey dynamoDBRangeKeyAnnotation = method.getAnnotation(DynamoDBIndexRangeKey.class);
-            DynamoDBIndexHashKey dynamoDBHashKeyAnnotation = method.getAnnotation(DynamoDBIndexHashKey.class);
+            DynamoDbSecondarySortKey dynamoDBRangeKeyAnnotation = method.getAnnotation(DynamoDbSecondarySortKey.class);
+            DynamoDbSecondaryPartitionKey dynamoDBHashKeyAnnotation = method.getAnnotation(DynamoDbSecondaryPartitionKey.class);
 
             if (dynamoDBRangeKeyAnnotation != null) {
                 addGlobalSecondaryIndexNames(method, dynamoDBRangeKeyAnnotation);
@@ -100,14 +106,14 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
             }
         });
         ReflectionUtils.doWithFields(domainType, field -> {
-            if (field.getAnnotation(DynamoDBHashKey.class) != null) {
+            if (field.getAnnotation(DynamoDbPartitionKey.class) != null) {
                 hashKeyPropertyName = getPropertyNameForField(field);
             }
-            if (field.getAnnotation(DynamoDBRangeKey.class) != null) {
+            if (field.getAnnotation(DynamoDbSortKey.class) != null) {
                 hasRangeKey = true;
             }
-            DynamoDBIndexRangeKey dynamoDBRangeKeyAnnotation = field.getAnnotation(DynamoDBIndexRangeKey.class);
-            DynamoDBIndexHashKey dynamoDBHashKeyAnnotation = field.getAnnotation(DynamoDBIndexHashKey.class);
+            DynamoDbSecondarySortKey dynamoDBRangeKeyAnnotation = field.getAnnotation(DynamoDbSecondarySortKey.class);
+            DynamoDbSecondaryPartitionKey dynamoDBHashKeyAnnotation = field.getAnnotation(DynamoDbSecondaryPartitionKey.class);
 
             if (dynamoDBRangeKeyAnnotation != null) {
                 addGlobalSecondaryIndexNames(field, dynamoDBRangeKeyAnnotation);
@@ -192,30 +198,13 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
     public String getOverriddenAttributeName(Method method) {
 
         if (method != null) {
-            if (method.getAnnotation(DynamoDBAttribute.class) != null
-                    && !StringUtils.isEmpty(method.getAnnotation(DynamoDBAttribute.class).attributeName())) {
-                return method.getAnnotation(DynamoDBAttribute.class).attributeName();
+            // In SDK v2, @DynamoDbAttribute is used to override attribute names
+            if (method.getAnnotation(DynamoDbAttribute.class) != null
+                    && StringUtils.hasText(method.getAnnotation(DynamoDbAttribute.class).value())) {
+                return method.getAnnotation(DynamoDbAttribute.class).value();
             }
-            if (method.getAnnotation(DynamoDBHashKey.class) != null
-                    && !StringUtils.isEmpty(method.getAnnotation(DynamoDBHashKey.class).attributeName())) {
-                return method.getAnnotation(DynamoDBHashKey.class).attributeName();
-            }
-            if (method.getAnnotation(DynamoDBRangeKey.class) != null
-                    && !StringUtils.isEmpty(method.getAnnotation(DynamoDBRangeKey.class).attributeName())) {
-                return method.getAnnotation(DynamoDBRangeKey.class).attributeName();
-            }
-            if (method.getAnnotation(DynamoDBIndexRangeKey.class) != null
-                    && !StringUtils.isEmpty(method.getAnnotation(DynamoDBIndexRangeKey.class).attributeName())) {
-                return method.getAnnotation(DynamoDBIndexRangeKey.class).attributeName();
-            }
-            if (method.getAnnotation(DynamoDBIndexHashKey.class) != null
-                    && !StringUtils.isEmpty(method.getAnnotation(DynamoDBIndexHashKey.class).attributeName())) {
-                return method.getAnnotation(DynamoDBIndexHashKey.class).attributeName();
-            }
-            if (method.getAnnotation(DynamoDBVersionAttribute.class) != null
-                    && !StringUtils.isEmpty(method.getAnnotation(DynamoDBVersionAttribute.class).attributeName())) {
-                return method.getAnnotation(DynamoDBVersionAttribute.class).attributeName();
-            }
+            // Note: SDK v2 key annotations don't support attribute name overrides like SDK v1
+            // Attribute names are derived from property names
         }
         return null;
 
@@ -226,114 +215,47 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
 
         Method method = findMethod(propertyName);
         if (method != null) {
-            if (method.getAnnotation(DynamoDBAttribute.class) != null
-                    && !StringUtils.isEmpty(method.getAnnotation(DynamoDBAttribute.class).attributeName())) {
-                return Optional.of(method.getAnnotation(DynamoDBAttribute.class).attributeName());
+            // In SDK v2, @DynamoDbAttribute is used to override attribute names
+            if (method.getAnnotation(DynamoDbAttribute.class) != null
+                    && StringUtils.hasText(method.getAnnotation(DynamoDbAttribute.class).value())) {
+                return Optional.of(method.getAnnotation(DynamoDbAttribute.class).value());
             }
-            if (method.getAnnotation(DynamoDBHashKey.class) != null
-                    && !StringUtils.isEmpty(method.getAnnotation(DynamoDBHashKey.class).attributeName())) {
-                return Optional.of(method.getAnnotation(DynamoDBHashKey.class).attributeName());
-            }
-            if (method.getAnnotation(DynamoDBRangeKey.class) != null
-                    && !StringUtils.isEmpty(method.getAnnotation(DynamoDBRangeKey.class).attributeName())) {
-                return Optional.of(method.getAnnotation(DynamoDBRangeKey.class).attributeName());
-            }
-            if (method.getAnnotation(DynamoDBIndexRangeKey.class) != null
-                    && !StringUtils.isEmpty(method.getAnnotation(DynamoDBIndexRangeKey.class).attributeName())) {
-                return Optional.of(method.getAnnotation(DynamoDBIndexRangeKey.class).attributeName());
-            }
-            if (method.getAnnotation(DynamoDBIndexHashKey.class) != null
-                    && !StringUtils.isEmpty(method.getAnnotation(DynamoDBIndexHashKey.class).attributeName())) {
-                return Optional.of(method.getAnnotation(DynamoDBIndexHashKey.class).attributeName());
-            }
-            if (method.getAnnotation(DynamoDBVersionAttribute.class) != null
-                    && !StringUtils.isEmpty(method.getAnnotation(DynamoDBVersionAttribute.class).attributeName())) {
-                return Optional.of(method.getAnnotation(DynamoDBVersionAttribute.class).attributeName());
-            }
+            // Note: SDK v2 key annotations don't support attribute name overrides like SDK v1
         }
 
         Field field = findField(propertyName);
         if (field != null) {
-            if (field.getAnnotation(DynamoDBAttribute.class) != null
-                    && !StringUtils.isEmpty(field.getAnnotation(DynamoDBAttribute.class).attributeName())) {
-                return Optional.of(field.getAnnotation(DynamoDBAttribute.class).attributeName());
+            // In SDK v2, @DynamoDbAttribute is used to override attribute names
+            if (field.getAnnotation(DynamoDbAttribute.class) != null
+                    && StringUtils.hasText(field.getAnnotation(DynamoDbAttribute.class).value())) {
+                return Optional.of(field.getAnnotation(DynamoDbAttribute.class).value());
             }
-            if (field.getAnnotation(DynamoDBHashKey.class) != null
-                    && !StringUtils.isEmpty(field.getAnnotation(DynamoDBHashKey.class).attributeName())) {
-                return Optional.of(field.getAnnotation(DynamoDBHashKey.class).attributeName());
-            }
-            if (field.getAnnotation(DynamoDBRangeKey.class) != null
-                    && !StringUtils.isEmpty(field.getAnnotation(DynamoDBRangeKey.class).attributeName())) {
-                return Optional.of(field.getAnnotation(DynamoDBRangeKey.class).attributeName());
-            }
-            if (field.getAnnotation(DynamoDBIndexRangeKey.class) != null
-                    && !StringUtils.isEmpty(field.getAnnotation(DynamoDBIndexRangeKey.class).attributeName())) {
-                return Optional.of(field.getAnnotation(DynamoDBIndexRangeKey.class).attributeName());
-            }
-            if (field.getAnnotation(DynamoDBIndexHashKey.class) != null
-                    && !StringUtils.isEmpty(field.getAnnotation(DynamoDBIndexHashKey.class).attributeName())) {
-                return Optional.of(field.getAnnotation(DynamoDBIndexHashKey.class).attributeName());
-            }
-            if (field.getAnnotation(DynamoDBVersionAttribute.class) != null
-                    && !StringUtils.isEmpty(field.getAnnotation(DynamoDBVersionAttribute.class).attributeName())) {
-                return Optional.of(field.getAnnotation(DynamoDBVersionAttribute.class).attributeName());
-            }
+            // Note: SDK v2 key annotations don't support attribute name overrides like SDK v1
         }
         return Optional.empty();
 
     }
 
     @Override
-    @SuppressWarnings("deprecation")
-    public <V extends DynamoDBMarshaller<?>> V getMarshallerForProperty(final String propertyName) {
-        // TODO #28
-        DynamoDBMarshalling annotation = null;
+    public AttributeConverter<?> getAttributeConverterForProperty(final String propertyName) {
+        // SDK v2 uses @DynamoDbConvertedBy annotation for custom converters
+        DynamoDbConvertedBy annotation = null;
 
         Method method = findMethod(propertyName);
         if (method != null) {
-            annotation = method.getAnnotation(DynamoDBMarshalling.class);
+            annotation = method.getAnnotation(DynamoDbConvertedBy.class);
         }
 
         if (annotation == null) {
             Field field = findField(propertyName);
             if (field != null) {
-                annotation = field.getAnnotation(DynamoDBMarshalling.class);
+                annotation = field.getAnnotation(DynamoDbConvertedBy.class);
             }
         }
 
         if (annotation != null) {
             try {
-                @SuppressWarnings("unchecked")
-                Class<V> marshallerClazz = (Class<V>) annotation.marshallerClass();
-                return marshallerClazz.getDeclaredConstructor().newInstance();
-            } catch (InstantiationException | IllegalAccessException | NoSuchMethodException
-                    | InvocationTargetException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        return null;
-    }
-
-    @Override
-    public DynamoDBTypeConverter<?, ?> getTypeConverterForProperty(final String propertyName) {
-        DynamoDBTypeConverted annotation = null;
-
-        Method method = findMethod(propertyName);
-        if (method != null) {
-            annotation = method.getAnnotation(DynamoDBTypeConverted.class);
-        }
-
-        if (annotation == null) {
-            Field field = findField(propertyName);
-            if (field != null) {
-                annotation = field.getAnnotation(DynamoDBTypeConverted.class);
-            }
-        }
-
-        if (annotation != null) {
-            try {
-                return annotation.converter().getDeclaredConstructor().newInstance();
+                return annotation.value().getDeclaredConstructor().newInstance();
             } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
                     | InvocationTargetException | NoSuchMethodException | SecurityException e) {
                 throw new RuntimeException(e);
@@ -367,91 +289,53 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
         return hashKeyPropertyName;
     }
 
-    private void addGlobalSecondaryIndexNames(Method method, DynamoDBIndexRangeKey dynamoDBIndexRangeKey) {
+    private void addGlobalSecondaryIndexNames(Method method, DynamoDbSecondarySortKey dynamoDBSecondarySortKey) {
 
-        if (dynamoDBIndexRangeKey.globalSecondaryIndexNames() != null
-                && dynamoDBIndexRangeKey.globalSecondaryIndexNames().length > 0) {
+        // SDK v2 uses indexNames() which returns array of index names for both GSI and LSI
+        if (dynamoDBSecondarySortKey.indexNames() != null
+                && dynamoDBSecondarySortKey.indexNames().length > 0) {
             String propertyName = getPropertyNameForAccessorMethod(method);
 
-            globalSecondaryIndexNames.put(propertyName,
-                    method.getAnnotation(DynamoDBIndexRangeKey.class).globalSecondaryIndexNames());
+            globalSecondaryIndexNames.put(propertyName, dynamoDBSecondarySortKey.indexNames());
             globalIndexRangeKeyPropertyNames.add(propertyName);
-
-        }
-        if (dynamoDBIndexRangeKey.globalSecondaryIndexName() != null
-                && dynamoDBIndexRangeKey.globalSecondaryIndexName().trim().length() > 0) {
-            String propertyName = getPropertyNameForAccessorMethod(method);
-            globalSecondaryIndexNames.put(propertyName,
-                    new String[] { method.getAnnotation(DynamoDBIndexRangeKey.class).globalSecondaryIndexName() });
-            globalIndexRangeKeyPropertyNames.add(propertyName);
-
         }
 
     }
 
-    private void addGlobalSecondaryIndexNames(Field field, DynamoDBIndexRangeKey dynamoDBIndexRangeKey) {
+    private void addGlobalSecondaryIndexNames(Field field, DynamoDbSecondarySortKey dynamoDBSecondarySortKey) {
 
-        if (dynamoDBIndexRangeKey.globalSecondaryIndexNames() != null
-                && dynamoDBIndexRangeKey.globalSecondaryIndexNames().length > 0) {
+        // SDK v2 uses indexNames() which returns array of index names for both GSI and LSI
+        if (dynamoDBSecondarySortKey.indexNames() != null
+                && dynamoDBSecondarySortKey.indexNames().length > 0) {
             String propertyName = getPropertyNameForField(field);
 
-            globalSecondaryIndexNames.put(propertyName,
-                    field.getAnnotation(DynamoDBIndexRangeKey.class).globalSecondaryIndexNames());
+            globalSecondaryIndexNames.put(propertyName, dynamoDBSecondarySortKey.indexNames());
             globalIndexRangeKeyPropertyNames.add(propertyName);
-
-        }
-        if (dynamoDBIndexRangeKey.globalSecondaryIndexName() != null
-                && dynamoDBIndexRangeKey.globalSecondaryIndexName().trim().length() > 0) {
-            String propertyName = getPropertyNameForField(field);
-            globalSecondaryIndexNames.put(propertyName,
-                    new String[] { field.getAnnotation(DynamoDBIndexRangeKey.class).globalSecondaryIndexName() });
-            globalIndexRangeKeyPropertyNames.add(propertyName);
-
         }
 
     }
 
-    private void addGlobalSecondaryIndexNames(Method method, DynamoDBIndexHashKey dynamoDBIndexHashKey) {
+    private void addGlobalSecondaryIndexNames(Method method, DynamoDbSecondaryPartitionKey dynamoDBSecondaryPartitionKey) {
 
-        if (dynamoDBIndexHashKey.globalSecondaryIndexNames() != null
-                && dynamoDBIndexHashKey.globalSecondaryIndexNames().length > 0) {
+        // SDK v2 uses indexNames() which returns array of index names for GSI
+        if (dynamoDBSecondaryPartitionKey.indexNames() != null
+                && dynamoDBSecondaryPartitionKey.indexNames().length > 0) {
             String propertyName = getPropertyNameForAccessorMethod(method);
 
-            globalSecondaryIndexNames.put(propertyName,
-                    method.getAnnotation(DynamoDBIndexHashKey.class).globalSecondaryIndexNames());
+            globalSecondaryIndexNames.put(propertyName, dynamoDBSecondaryPartitionKey.indexNames());
             globalIndexHashKeyPropertyNames.add(propertyName);
-
-        }
-        if (dynamoDBIndexHashKey.globalSecondaryIndexName() != null
-                && dynamoDBIndexHashKey.globalSecondaryIndexName().trim().length() > 0) {
-            String propertyName = getPropertyNameForAccessorMethod(method);
-
-            globalSecondaryIndexNames.put(propertyName,
-                    new String[] { method.getAnnotation(DynamoDBIndexHashKey.class).globalSecondaryIndexName() });
-            globalIndexHashKeyPropertyNames.add(propertyName);
-
         }
     }
 
-    private void addGlobalSecondaryIndexNames(Field field, DynamoDBIndexHashKey dynamoDBIndexHashKey) {
+    private void addGlobalSecondaryIndexNames(Field field, DynamoDbSecondaryPartitionKey dynamoDBSecondaryPartitionKey) {
 
-        if (dynamoDBIndexHashKey.globalSecondaryIndexNames() != null
-                && dynamoDBIndexHashKey.globalSecondaryIndexNames().length > 0) {
+        // SDK v2 uses indexNames() which returns array of index names for GSI
+        if (dynamoDBSecondaryPartitionKey.indexNames() != null
+                && dynamoDBSecondaryPartitionKey.indexNames().length > 0) {
             String propertyName = getPropertyNameForField(field);
 
-            globalSecondaryIndexNames.put(propertyName,
-                    field.getAnnotation(DynamoDBIndexHashKey.class).globalSecondaryIndexNames());
+            globalSecondaryIndexNames.put(propertyName, dynamoDBSecondaryPartitionKey.indexNames());
             globalIndexHashKeyPropertyNames.add(propertyName);
-
-        }
-        if (dynamoDBIndexHashKey.globalSecondaryIndexName() != null
-                && dynamoDBIndexHashKey.globalSecondaryIndexName().trim().length() > 0) {
-            String propertyName = getPropertyNameForField(field);
-
-            globalSecondaryIndexNames.put(propertyName,
-                    new String[] { field.getAnnotation(DynamoDBIndexHashKey.class).globalSecondaryIndexName() });
-            globalIndexHashKeyPropertyNames.add(propertyName);
-
         }
     }
 

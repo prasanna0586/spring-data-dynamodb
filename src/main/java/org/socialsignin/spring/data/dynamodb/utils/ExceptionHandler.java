@@ -15,36 +15,116 @@
  */
 package org.socialsignin.spring.data.dynamodb.utils;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
+import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteResult;
+import org.socialsignin.spring.data.dynamodb.exception.BatchDeleteException;
+import org.socialsignin.spring.data.dynamodb.exception.BatchWriteException;
 import org.springframework.dao.DataAccessException;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
-import java.util.stream.Collectors;
 
+/**
+ * Interface for handling exceptions in batch operations (write and delete).
+ *
+ * This interface provides methods to convert SDK v2 batch operation failures
+ * into rich exception objects that expose unprocessed entities for consumer handling.
+ */
 public interface ExceptionHandler {
 
-    default <T extends DataAccessException> T repackageToException(List<DynamoDBMapper.FailedBatch> failedBatches,
+    /**
+     * Repackages batch operation failures into a rich exception with unprocessed entity information.
+     *
+     * This method is called after retry logic has been exhausted. It creates an exception that:
+     * - Exposes unprocessed entities for custom recovery logic
+     * - Includes retry attempt count
+     * - Preserves any thrown exceptions
+     *
+     * Following AWS SDK v2 best practices, unprocessed items are returned to the caller
+     * for custom handling (e.g., dead letter queue, custom retry, alerting).
+     *
+     * Supports both batch write and batch delete operations.
+     *
+     * @param unprocessedEntities List of entity objects that could not be written/deleted after retries
+     * @param retriesAttempted Number of retry attempts that were made
+     * @param cause Original exception if one was thrown, or null if items were just unprocessed
+     * @param targetType The exception class to instantiate (BatchWriteException or BatchDeleteException)
+     * @param <T> Exception type extending DataAccessException
+     * @return Exception instance with full failure context
+     */
+    default <T extends DataAccessException> T repackageToException(
+            List<Object> unprocessedEntities,
+            int retriesAttempted,
+            Throwable cause,
             Class<T> targetType) {
-        // Error handling:
-        Queue<Exception> allExceptions = failedBatches.stream().map(it -> it.getException())
-                .collect(Collectors.toCollection(LinkedList::new));
 
-        // The first exception is hopefully the cause
-        Exception cause = allExceptions.poll();
-        try {
-            Constructor<T> ctor = targetType.getConstructor(String.class, Throwable.class);
-            T e = ctor.newInstance("Processing of entities failed!", cause);
-            // and all other exceptions are 'just' follow-up exceptions
-            allExceptions.stream().forEach(e::addSuppressed);
-            return e;
-        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException
-                | InvocationTargetException e) {
-            assert false; // we should never end up here
-            throw new RuntimeException("Could not repackage '" + failedBatches + "' to " + targetType, e);
+        // SDK v2: After retry exhaustion, expose unprocessed items for consumer handling
+        // Unprocessed items typically indicate persistent throttling, capacity limits, or transaction conflicts
+
+        // Determine operation type based on exception class
+        String operationType = targetType.equals(BatchDeleteException.class) ? "delete" : "write";
+
+        String message;
+        if (cause != null) {
+            // An actual exception was thrown
+            message = String.format(
+                    "Batch %s operation failed with exception: %s. %d entities could not be processed.",
+                    operationType,
+                    cause.getClass().getSimpleName(),
+                    unprocessedEntities.size());
+        } else {
+            // Items remained unprocessed after retries
+            message = String.format(
+                    "Batch %s operation failed with %d unprocessed entities after %d retry attempts. " +
+                    "Items were not processed despite exponential backoff, likely due to persistent throttling, " +
+                    "insufficient provisioned capacity, or transaction conflicts. " +
+                    "Consider increasing table provisioned throughput or adjusting retry configuration.",
+                    operationType,
+                    unprocessedEntities.size(),
+                    retriesAttempted);
+        }
+
+        if (targetType.equals(BatchWriteException.class)) {
+            @SuppressWarnings("unchecked")
+            T exception = (T) new BatchWriteException(message, unprocessedEntities, retriesAttempted, cause);
+            return exception;
+        } else if (targetType.equals(BatchDeleteException.class)) {
+            @SuppressWarnings("unchecked")
+            T exception = (T) new BatchDeleteException(message, unprocessedEntities, retriesAttempted, cause);
+            return exception;
+        } else {
+            throw new IllegalArgumentException(
+                    "targetType must be BatchWriteException or BatchDeleteException for SDK v2. Received: " + targetType.getName());
+        }
+    }
+
+    /**
+     * Legacy method signature maintained for internal compatibility during migration.
+     * This will be removed once DynamoDBTemplate is fully migrated to SDK v2.
+     *
+     * @deprecated Use {@link #repackageToException(List, int, Throwable, Class)} instead
+     */
+    @Deprecated
+    default <T extends DataAccessException> T repackageToException(
+            List<BatchWriteResult> failedBatches,
+            Class<T> targetType) {
+
+        // Temporary implementation until DynamoDBTemplate is migrated
+        // Cannot extract actual unprocessed entities without table references
+        String message = String.format(
+                "Batch write operation failed with %d batch(es) containing unprocessed items. " +
+                "Unable to extract specific entities (requires DynamoDBTemplate migration to SDK v2).",
+                failedBatches.size());
+
+        if (targetType.equals(BatchWriteException.class)) {
+            @SuppressWarnings("unchecked")
+            T exception = (T) new BatchWriteException(
+                    message,
+                    List.of(), // Empty - can't extract without table references
+                    0,
+                    new RuntimeException(message));
+            return exception;
+        } else {
+            throw new IllegalArgumentException(
+                    "targetType must be BatchWriteException for SDK v2. Received: " + targetType.getName());
         }
     }
 }

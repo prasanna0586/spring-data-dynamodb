@@ -15,17 +15,17 @@
  */
 package org.socialsignin.spring.data.dynamodb.mapping.event;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedQueryList;
+import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 
 /**
  * @author Michael Lavelle
  * @author Sebastian Just
  */
-public class AfterQueryEvent<T> extends DynamoDBMappingEvent<PaginatedQueryList<T>> {
+public class AfterQueryEvent<T> extends DynamoDBMappingEvent<PageIterable<T>> {
 
     private static final long serialVersionUID = 1L;
 
-    public AfterQueryEvent(PaginatedQueryList<T> source) {
+    public AfterQueryEvent(PageIterable<T> source) {
         super(source);
     }
 

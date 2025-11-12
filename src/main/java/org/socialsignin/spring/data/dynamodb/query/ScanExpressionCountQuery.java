@@ -15,20 +15,20 @@
  */
 package org.socialsignin.spring.data.dynamodb.query;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
+import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.springframework.util.Assert;
 
 public class ScanExpressionCountQuery<T> extends AbstractSingleEntityQuery<Long> implements Query<Long> {
 
-    private DynamoDBScanExpression scanExpression;
+    private ScanEnhancedRequest scanExpression;
 
     private Class<T> domainClass;
 
     private boolean pageQuery;
 
     public ScanExpressionCountQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz,
-            DynamoDBScanExpression scanExpression, boolean pageQuery) {
+            ScanEnhancedRequest scanExpression, boolean pageQuery) {
         super(dynamoDBOperations, Long.class);
         this.scanExpression = scanExpression;
         this.domainClass = clazz;

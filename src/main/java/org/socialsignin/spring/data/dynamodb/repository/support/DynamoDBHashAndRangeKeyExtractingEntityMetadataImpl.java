@@ -15,8 +15,8 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBIndexRangeKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondarySortKey;
 import org.springframework.data.annotation.Id;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
@@ -43,7 +43,7 @@ public class DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl<T, ID> extends 
         super(domainType);
         this.hashAndRangeKeyMethodExtractor = new DynamoDBHashAndRangeKeyMethodExtractorImpl<T>(getJavaType());
         ReflectionUtils.doWithMethods(domainType, method -> {
-            if (method.getAnnotation(DynamoDBHashKey.class) != null) {
+            if (method.getAnnotation(DynamoDbPartitionKey.class) != null) {
                 String setterMethodName = toSetterMethodNameFromAccessorMethod(method);
                 if (setterMethodName != null) {
                     hashKeySetterMethod = ReflectionUtils.findMethod(domainType, setterMethodName,
@@ -52,7 +52,7 @@ public class DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl<T, ID> extends 
             }
         });
         ReflectionUtils.doWithFields(domainType, field -> {
-            if (field.getAnnotation(DynamoDBHashKey.class) != null) {
+            if (field.getAnnotation(DynamoDbPartitionKey.class) != null) {
 
                 hashKeyField = ReflectionUtils.findField(domainType, field.getName());
 
@@ -79,22 +79,17 @@ public class DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl<T, ID> extends 
     public Set<String> getIndexRangeKeyPropertyNames() {
         final Set<String> propertyNames = new HashSet<>();
         ReflectionUtils.doWithMethods(getJavaType(), method -> {
-            if (method.getAnnotation(DynamoDBIndexRangeKey.class) != null) {
-                if ((method.getAnnotation(DynamoDBIndexRangeKey.class).localSecondaryIndexName() != null && method
-                        .getAnnotation(DynamoDBIndexRangeKey.class).localSecondaryIndexName().trim().length() > 0)
-                        || (method.getAnnotation(DynamoDBIndexRangeKey.class).localSecondaryIndexNames() != null
-                                && method.getAnnotation(DynamoDBIndexRangeKey.class)
-                                        .localSecondaryIndexNames().length > 0)) {
+            if (method.getAnnotation(DynamoDbSecondarySortKey.class) != null) {
+                if (method.getAnnotation(DynamoDbSecondarySortKey.class).indexNames() != null
+                        && method.getAnnotation(DynamoDbSecondarySortKey.class).indexNames().length > 0) {
                     propertyNames.add(getPropertyNameForAccessorMethod(method));
                 }
             }
         });
         ReflectionUtils.doWithFields(getJavaType(), field -> {
-            if (field.getAnnotation(DynamoDBIndexRangeKey.class) != null) {
-                if ((field.getAnnotation(DynamoDBIndexRangeKey.class).localSecondaryIndexName() != null && field
-                        .getAnnotation(DynamoDBIndexRangeKey.class).localSecondaryIndexName().trim().length() > 0)
-                        || (field.getAnnotation(DynamoDBIndexRangeKey.class).localSecondaryIndexNames() != null && field
-                                .getAnnotation(DynamoDBIndexRangeKey.class).localSecondaryIndexNames().length > 0)) {
+            if (field.getAnnotation(DynamoDbSecondarySortKey.class) != null) {
+                if (field.getAnnotation(DynamoDbSecondarySortKey.class).indexNames() != null
+                        && field.getAnnotation(DynamoDbSecondarySortKey.class).indexNames().length > 0) {
                     propertyNames.add(getPropertyNameForField(field));
                 }
             }

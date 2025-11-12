@@ -31,15 +31,14 @@ package org.socialsignin.spring.data.dynamodb.mapping.event;
  * limitations under the License.
  */
 
-import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedQueryList;
-import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedScanList;
+import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.GenericTypeResolver;
 
-import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.StreamSupport;
 
 /**
  * Base class to implement domain class specific {@link ApplicationListener}s.
@@ -82,11 +81,11 @@ public abstract class AbstractDynamoDBEventListener<E> implements ApplicationLis
 
         if (event instanceof AfterScanEvent) {
 
-            publishEachElement((PaginatedScanList<?>) source, this::onAfterScan);
+            publishEachElement((PageIterable<?>) source, this::onAfterScan);
             return;
         } else if (event instanceof AfterQueryEvent) {
 
-            publishEachElement((PaginatedQueryList<?>) source, this::onAfterQuery);
+            publishEachElement((PageIterable<?>) source, this::onAfterQuery);
             return;
         }
         // Check for matching domain type and invoke callbacks
@@ -113,8 +112,11 @@ public abstract class AbstractDynamoDBEventListener<E> implements ApplicationLis
     }
 
     @SuppressWarnings("unchecked")
-    private void publishEachElement(List<?> list, Consumer<E> publishMethod) {
-        list.stream().filter(o -> domainClass.isAssignableFrom(o.getClass())).map(o -> (E) o).forEach(publishMethod);
+    private void publishEachElement(PageIterable<?> pageIterable, Consumer<E> publishMethod) {
+        StreamSupport.stream(pageIterable.items().spliterator(), false)
+                .filter(o -> domainClass.isAssignableFrom(o.getClass()))
+                .map(o -> (E) o)
+                .forEach(publishMethod);
     }
 
     public void onBeforeSave(E source) {

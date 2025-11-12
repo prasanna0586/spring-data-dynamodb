@@ -15,7 +15,7 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
-import com.amazonaws.util.VersionInfoUtils;
+import software.amazon.awssdk.core.SdkClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
@@ -45,7 +45,8 @@ public class DynamoDBRepositoryFactory extends RepositoryFactorySupport {
     static {
         final String DEVELOPMENT = "DEVELOPMENT";
 
-        String awsSdkVersion = VersionInfoUtils.getVersion();
+        // SDK v2: Get version from core SDK package
+        String awsSdkVersion = SdkClient.class.getPackage().getImplementationVersion();
         String springDataVersion = Version.class.getPackage().getImplementationVersion();
 
         String thisSpecVersion = DynamoDBRepositoryFactory.class.getPackage().getSpecificationVersion();
@@ -66,7 +67,7 @@ public class DynamoDBRepositoryFactory extends RepositoryFactorySupport {
         if (!DEVELOPMENT.equals(thisImplVersion) && !isCompatible(springDataVersion, thisSpecVersion)) {
             LOGGER.warn(
                     "This Spring Data DynamoDB implementation might not be compatible with the available Spring Data classes on the classpath!"
-                            + System.getProperty("line.separator")
+                            + System.lineSeparator()
                             + "NoDefClassFoundExceptions or similar might occur!");
         }
     }

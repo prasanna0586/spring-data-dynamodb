@@ -15,8 +15,8 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMarshaller;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverter;
+import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
+import software.amazon.awssdk.enhanced.dynamodb.AttributeConverterProvider;
 import org.springframework.data.repository.core.EntityMetadata;
 
 import java.util.Map;
@@ -24,7 +24,7 @@ import java.util.Optional;
 
 /**
  * Obtains basic hash key-related metadata about a DynamoDBEntity, such as whether properties have overridden attribute
- * names or have custom marshallers assigned, whether a property is a hash key property or a composite id property, and
+ * names or have custom attribute converters assigned, whether a property is a hash key property or a composite id property, and
  * generates a hash key prototype entity given a hash key.
  *
  * @author Michael Lavelle
@@ -34,10 +34,7 @@ public interface DynamoDBHashKeyExtractingEntityMetadata<T> extends EntityMetada
 
     Optional<String> getOverriddenAttributeName(String propertyName);
 
-    @SuppressWarnings("deprecation")
-    <V extends DynamoDBMarshaller<?>> V getMarshallerForProperty(String propertyName);
-
-    DynamoDBTypeConverter<?, ?> getTypeConverterForProperty(String propertyName);
+    AttributeConverter<?> getAttributeConverterForProperty(String propertyName);
 
     boolean isHashKeyProperty(String propertyName);
 
