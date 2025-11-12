@@ -15,9 +15,10 @@
  */
 package org.socialsignin.spring.data.dynamodb.mapping;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbImmutable;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 import org.socialsignin.spring.data.dynamodb.core.MarshallingMode;
 import org.springframework.data.mapping.context.AbstractMappingContext;
 import org.springframework.data.mapping.model.Property;
@@ -97,27 +98,30 @@ public class DynamoDBMappingContext
     @Override
     protected boolean shouldCreatePersistentEntityFor(TypeInformation<?> type) {
 
-        boolean hasHashKey = false;
-        boolean hasRangeKey = false;
+        boolean hasPartitionKey = false;
+        boolean hasSortKey = false;
         for (Method method : type.getType().getMethods()) {
-            if (method.isAnnotationPresent(DynamoDBHashKey.class)) {
-                hasHashKey = true;
+            if (method.isAnnotationPresent(DynamoDbPartitionKey.class)) {
+                hasPartitionKey = true;
             }
-            if (method.isAnnotationPresent(DynamoDBRangeKey.class)) {
-                hasRangeKey = true;
+            if (method.isAnnotationPresent(DynamoDbSortKey.class)) {
+                hasSortKey = true;
             }
 
         }
         for (Field field : type.getType().getFields()) {
-            if (field.isAnnotationPresent(DynamoDBHashKey.class)) {
-                hasHashKey = true;
+            if (field.isAnnotationPresent(DynamoDbPartitionKey.class)) {
+                hasPartitionKey = true;
             }
-            if (field.isAnnotationPresent(DynamoDBRangeKey.class)) {
-                hasRangeKey = true;
+            if (field.isAnnotationPresent(DynamoDbSortKey.class)) {
+                hasSortKey = true;
             }
 
         }
-        return type.getType().isAnnotationPresent(DynamoDBTable.class) || (hasHashKey && hasRangeKey);
+        // SDK v2: Check for @DynamoDbBean or @DynamoDbImmutable annotations
+        return type.getType().isAnnotationPresent(DynamoDbBean.class)
+                || type.getType().isAnnotationPresent(DynamoDbImmutable.class)
+                || (hasPartitionKey && hasSortKey);
     }
 
 }

@@ -15,7 +15,6 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.query;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.*;
 import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
@@ -532,7 +531,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         List<String> list = new ArrayList<String>();
         if (mode == MarshallingMode.SDK_V1_COMPATIBLE) {
             // SDK v1 compatibility: Date marshalled to ISO format string
-            DynamoDBMarshaller<Date> marshaller = new Date2IsoDynamoDBMarshaller();
+            Date2IsoDynamoDBMarshaller marshaller = new Date2IsoDynamoDBMarshaller();
             for (Date date : dateList) {
                 if (date != null) {
                     list.add(marshaller.marshall(date));
@@ -560,7 +559,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         List<String> list = new ArrayList<>();
         if (mode == MarshallingMode.SDK_V1_COMPATIBLE) {
             // SDK v1 compatibility: Instant marshalled to ISO format string with millisecond precision
-            DynamoDBMarshaller<Instant> marshaller = new Instant2IsoDynamoDBMarshaller();
+            Instant2IsoDynamoDBMarshaller marshaller = new Instant2IsoDynamoDBMarshaller();
             for (Instant date : dateList) {
                 if (date != null) {
                     list.add(marshaller.marshall(date));
@@ -702,7 +701,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
             }
         } else {
             throw new RuntimeException("Cannot create condition for type:" + attributeValue.getClass()
-                    + " property conditions must be String,Number or Boolean, or have a DynamoDBMarshaller configured");
+                    + " property conditions must be String,Number or Boolean, or have an AttributeConverter configured");
         }
         attributeValueList.add(attributeValueBuilder.build());
 
