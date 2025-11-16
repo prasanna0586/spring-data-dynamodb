@@ -23,6 +23,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -133,4 +134,15 @@ public interface UserRepository extends CrudRepository<User, String> {
     @EnableScan
     @Override
     long count();
+
+    // Custom marshaller queries - joinYear uses Year2StringAttributeConverter
+    @EnableScan
+    List<User> findByJoinYear(Date joinYear);
+
+    // NOT operator queries
+    @EnableScan
+    List<User> findByNameNot(String name);
+
+    @EnableScan
+    List<User> findByPostCodeNot(String postCode);
 }
