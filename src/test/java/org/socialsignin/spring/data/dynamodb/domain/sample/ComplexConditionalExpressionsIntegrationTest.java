@@ -2,7 +2,6 @@ package org.socialsignin.spring.data.dynamodb.domain.sample;
 
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -20,6 +19,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Comprehensive integration tests for Complex Conditional Expressions in DynamoDB.
+ *
+ * SDK v2 Migration Notes:
+ * - SDK v1: DynamoDBMapper → SDK v2: Not used in this test (uses DynamoDbClient directly)
+ * - SDK v1: new AttributeValue("string") → SDK v2: AttributeValue.fromS("string")
+ * - All conditional expressions use SDK v2 UpdateItemRequest, DeleteItemRequest, TransactWriteItemsRequest
+ * - Conditional expression syntax remains the same between SDKs
  *
  * Tests advanced conditional expression scenarios that combine multiple operators
  * and functions in complex boolean logic.
@@ -53,9 +58,6 @@ public class ComplexConditionalExpressionsIntegrationTest {
     @Autowired
     private DynamoDbClient amazonDynamoDB;
 
-    @Autowired
-    private DynamoDBMapper dynamoDBMapper;
-
     @BeforeEach
     void setUp() {
         userRepository.deleteAll();
@@ -76,7 +78,7 @@ public class ComplexConditionalExpressionsIntegrationTest {
 
         // When - Update only if name exists AND playlists > 3
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("complex-1"));
+        key.put("Id", AttributeValue.fromS("complex-1"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":inc", AttributeValue.builder().n("10")
@@ -117,7 +119,7 @@ public class ComplexConditionalExpressionsIntegrationTest {
 
         // When/Then - Try to update with condition requiring postCode exists
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("complex-2"));
+        key.put("Id", AttributeValue.fromS("complex-2"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":inc", AttributeValue.builder().n("5")
@@ -150,11 +152,11 @@ public class ComplexConditionalExpressionsIntegrationTest {
 
         // When - Update if postCode doesn't exist OR postCode = "12345"
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("complex-3"));
+        key.put("Id", AttributeValue.fromS("complex-3"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":newName", new AttributeValue("Charlie Updated"));
-        expressionAttributeValues.put(":code", new AttributeValue("12345"));
+        expressionAttributeValues.put(":newName", AttributeValue.fromS("Charlie Updated"));
+        expressionAttributeValues.put(":code", AttributeValue.fromS("12345"));
 
         Map<String, String> expressionAttributeNames = new HashMap<>();
         expressionAttributeNames.put("#name", "name");
@@ -191,12 +193,12 @@ public class ComplexConditionalExpressionsIntegrationTest {
 
         // When - Update if (postCode = "12345" OR postCode = "67890") AND playlists < 20
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("complex-4"));
+        key.put("Id", AttributeValue.fromS("complex-4"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":newName", new AttributeValue("David Updated"));
-        expressionAttributeValues.put(":code1", new AttributeValue("12345"));
-        expressionAttributeValues.put(":code2", new AttributeValue("67890"));
+        expressionAttributeValues.put(":newName", AttributeValue.fromS("David Updated"));
+        expressionAttributeValues.put(":code1", AttributeValue.fromS("12345"));
+        expressionAttributeValues.put(":code2", AttributeValue.fromS("67890"));
         expressionAttributeValues.put(":maxPlaylists", AttributeValue.builder().n("20")
                 .build());
 
@@ -232,12 +234,12 @@ public class ComplexConditionalExpressionsIntegrationTest {
 
         // When - Update if NOT (postCode = "12345" OR postCode = "67890")
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("complex-5"));
+        key.put("Id", AttributeValue.fromS("complex-5"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":newName", new AttributeValue("Eve Updated"));
-        expressionAttributeValues.put(":code1", new AttributeValue("12345"));
-        expressionAttributeValues.put(":code2", new AttributeValue("67890"));
+        expressionAttributeValues.put(":newName", AttributeValue.fromS("Eve Updated"));
+        expressionAttributeValues.put(":code1", AttributeValue.fromS("12345"));
+        expressionAttributeValues.put(":code2", AttributeValue.fromS("67890"));
 
         Map<String, String> expressionAttributeNames = new HashMap<>();
         expressionAttributeNames.put("#name", "name");
@@ -272,12 +274,12 @@ public class ComplexConditionalExpressionsIntegrationTest {
 
         // When - (postCode in [12345, 67890]) AND (playlists between 10-20)
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("complex-6"));
+        key.put("Id", AttributeValue.fromS("complex-6"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":newName", new AttributeValue("Frank Updated"));
-        expressionAttributeValues.put(":code1", new AttributeValue("12345"));
-        expressionAttributeValues.put(":code2", new AttributeValue("67890"));
+        expressionAttributeValues.put(":newName", AttributeValue.fromS("Frank Updated"));
+        expressionAttributeValues.put(":code1", AttributeValue.fromS("12345"));
+        expressionAttributeValues.put(":code2", AttributeValue.fromS("67890"));
         expressionAttributeValues.put(":min", AttributeValue.builder().n("10")
                 .build());
         expressionAttributeValues.put(":max", AttributeValue.builder().n("20")
@@ -318,7 +320,7 @@ public class ComplexConditionalExpressionsIntegrationTest {
 
         // When - Update if size(tags) >= 3 AND playlists > 3
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("complex-7"));
+        key.put("Id", AttributeValue.fromS("complex-7"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":inc", AttributeValue.builder().n("10")
@@ -356,10 +358,10 @@ public class ComplexConditionalExpressionsIntegrationTest {
 
         // When/Then - Update if size(tags) >= 3 (should fail)
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("complex-8"));
+        key.put("Id", AttributeValue.fromS("complex-8"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":newName", new AttributeValue("Henry Updated"));
+        expressionAttributeValues.put(":newName", AttributeValue.fromS("Henry Updated"));
         expressionAttributeValues.put(":minTags", AttributeValue.builder().n("3")
                 .build());
 
@@ -395,11 +397,11 @@ public class ComplexConditionalExpressionsIntegrationTest {
 
         // When - Update if postCode begins with "123" AND playlists >= 15
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("complex-9"));
+        key.put("Id", AttributeValue.fromS("complex-9"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":newName", new AttributeValue("Ian Updated"));
-        expressionAttributeValues.put(":prefix", new AttributeValue("123"));
+        expressionAttributeValues.put(":newName", AttributeValue.fromS("Ian Updated"));
+        expressionAttributeValues.put(":prefix", AttributeValue.fromS("123"));
         expressionAttributeValues.put(":minPlaylists", AttributeValue.builder().n("15")
                 .build());
 
@@ -438,7 +440,7 @@ public class ComplexConditionalExpressionsIntegrationTest {
 
         // When - Update if name, postCode, and numberOfPlaylists all exist
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("complex-10"));
+        key.put("Id", AttributeValue.fromS("complex-10"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":inc", AttributeValue.builder().n("5")
@@ -476,10 +478,10 @@ public class ComplexConditionalExpressionsIntegrationTest {
 
         // When - Update if postCode exists OR doesn't exist (always true)
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("complex-11"));
+        key.put("Id", AttributeValue.fromS("complex-11"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":newName", new AttributeValue("Kevin Updated"));
+        expressionAttributeValues.put(":newName", AttributeValue.fromS("Kevin Updated"));
 
         Map<String, String> expressionAttributeNames = new HashMap<>();
         expressionAttributeNames.put("#name", "name");
@@ -516,7 +518,7 @@ public class ComplexConditionalExpressionsIntegrationTest {
 
         // When - Delete only if playlists = 0 AND postCode exists
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("complex-12"));
+        key.put("Id", AttributeValue.fromS("complex-12"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":zero", AttributeValue.builder().n("0")
@@ -548,7 +550,7 @@ public class ComplexConditionalExpressionsIntegrationTest {
 
         // When/Then - Try to delete only if playlists = 0 (should fail)
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("complex-13"));
+        key.put("Id", AttributeValue.fromS("complex-13"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":zero", AttributeValue.builder().n("0")
@@ -584,10 +586,10 @@ public class ComplexConditionalExpressionsIntegrationTest {
 
         // When - Update if playlists between 10-20 AND postCode exists
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("complex-14"));
+        key.put("Id", AttributeValue.fromS("complex-14"));
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":newName", new AttributeValue("Nancy Updated"));
+        expressionAttributeValues.put(":newName", AttributeValue.fromS("Nancy Updated"));
         expressionAttributeValues.put(":min", AttributeValue.builder().n("10")
                 .build());
         expressionAttributeValues.put(":max", AttributeValue.builder().n("20")
@@ -637,7 +639,7 @@ public class ComplexConditionalExpressionsIntegrationTest {
 
         // Update user1 if playlists > 5 AND postCode exists
         Map<String, AttributeValue> key1 = new HashMap<>();
-        key1.put("Id", new AttributeValue("complex-txn-1"));
+        key1.put("Id", AttributeValue.fromS("complex-txn-1"));
         Map<String, AttributeValue> values1 = new HashMap<>();
         values1.put(":inc", AttributeValue.builder().n("10")
                 .build());
@@ -657,7 +659,7 @@ public class ComplexConditionalExpressionsIntegrationTest {
 
         // Update user2
         Map<String, AttributeValue> key2 = new HashMap<>();
-        key2.put("Id", new AttributeValue("complex-txn-2"));
+        key2.put("Id", AttributeValue.fromS("complex-txn-2"));
         Map<String, AttributeValue> values2 = new HashMap<>();
         values2.put(":inc", AttributeValue.builder().n("5")
                 .build());

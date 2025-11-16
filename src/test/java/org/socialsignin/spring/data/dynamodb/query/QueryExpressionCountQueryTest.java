@@ -15,7 +15,7 @@
  */
 package org.socialsignin.spring.data.dynamodb.query;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,12 +29,18 @@ import java.util.concurrent.ThreadLocalRandom;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
+/**
+ * SDK v2 Migration Notes:
+ * - SDK v1: DynamoDBQueryExpression<T> → SDK v2: QueryEnhancedRequest
+ * - QueryEnhancedRequest is used for all query operations in SDK v2
+ * - The QueryExpressionCountQuery class internally handles the SDK v2 conversion
+ */
 @ExtendWith(MockitoExtension.class)
 public class QueryExpressionCountQueryTest {
     @Mock
     private DynamoDBOperations dynamoDBOperations;
     @Mock
-    private DynamoDBQueryExpression<User> queryExpression;
+    private QueryEnhancedRequest queryExpression;
 
     private QueryExpressionCountQuery<User> underTest;
 

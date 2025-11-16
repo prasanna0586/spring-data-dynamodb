@@ -1,6 +1,9 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.*;
+import org.springframework.data.annotation.Id;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 
 import java.util.List;
 import java.util.Map;
@@ -8,11 +11,23 @@ import java.util.Objects;
 
 /**
  * Domain model for testing Map and List attributes in DynamoDB.
+ *
+ * SDK v2 Migration Notes:
+ * - SDK v1: @DynamoDBTable → SDK v2: @DynamoDbBean (table name resolved at runtime)
+ * - SDK v1: @DynamoDBHashKey → SDK v2: @DynamoDbPartitionKey
+ * - SDK v1: @DynamoDBAttribute → SDK v2: @DynamoDbAttribute
+ * - Map and List types are natively supported in SDK v2
+ * - Map<String, String> stored as DynamoDB Map (M) type
+ * - Map<String, Integer> stored as DynamoDB Map (M) type with Number values
+ * - List<String> stored as DynamoDB List (L) type
+ * - List<Double> stored as DynamoDB List (L) type with Number values
  */
-@DynamoDBTable(tableName = "Product")
+@DynamoDbBean
 public class Product {
 
+    @Id
     private String productId;
+
     private String name;
     private Map<String, String> attributes;  // Key-value pairs (color, size, etc.)
     private List<String> categories;         // List of categories
@@ -22,7 +37,8 @@ public class Product {
     public Product() {
     }
 
-    @DynamoDBHashKey(attributeName = "productId")
+    @DynamoDbPartitionKey
+    @DynamoDbAttribute("productId")
     public String getProductId() {
         return productId;
     }
@@ -31,7 +47,7 @@ public class Product {
         this.productId = productId;
     }
 
-    @DynamoDBAttribute(attributeName = "name")
+    @DynamoDbAttribute("name")
     public String getName() {
         return name;
     }
@@ -40,7 +56,11 @@ public class Product {
         this.name = name;
     }
 
-    @DynamoDBAttribute(attributeName = "attributes")
+    /**
+     * Map<String, String> attribute - stored as DynamoDB Map (M) type.
+     * SDK v2 natively supports Map types without custom converters.
+     */
+    @DynamoDbAttribute("attributes")
     public Map<String, String> getAttributes() {
         return attributes;
     }
@@ -49,7 +69,11 @@ public class Product {
         this.attributes = attributes;
     }
 
-    @DynamoDBAttribute(attributeName = "categories")
+    /**
+     * List<String> attribute - stored as DynamoDB List (L) type.
+     * SDK v2 natively supports List types without custom converters.
+     */
+    @DynamoDbAttribute("categories")
     public List<String> getCategories() {
         return categories;
     }
@@ -58,7 +82,11 @@ public class Product {
         this.categories = categories;
     }
 
-    @DynamoDBAttribute(attributeName = "inventory")
+    /**
+     * Map<String, Integer> attribute - stored as DynamoDB Map (M) type with Number values.
+     * SDK v2 automatically converts Integer to DynamoDB Number type.
+     */
+    @DynamoDbAttribute("inventory")
     public Map<String, Integer> getInventory() {
         return inventory;
     }
@@ -67,7 +95,11 @@ public class Product {
         this.inventory = inventory;
     }
 
-    @DynamoDBAttribute(attributeName = "priceHistory")
+    /**
+     * List<Double> attribute - stored as DynamoDB List (L) type with Number values.
+     * SDK v2 automatically converts Double to DynamoDB Number type.
+     */
+    @DynamoDbAttribute("priceHistory")
     public List<Double> getPriceHistory() {
         return priceHistory;
     }

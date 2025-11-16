@@ -15,9 +15,10 @@
  */
 package org.socialsignin.spring.data.dynamodb.utils;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.socialsignin.spring.data.dynamodb.exception.BatchWriteException;
+import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteResult;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,37 +26,94 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Tests for SDK v2 ExceptionHandler functionality.
+ *
+ * SDK v2 Migration Notes:
+ * - SDK v1: Used DynamoDBMapper.FailedBatch with Exception field
+ * - SDK v2: Uses BatchWriteResult with unprocessed items (no exceptions in result)
+ * - SDK v2: Exceptions are passed separately to repackageToException()
+ */
 public class ExceptionHandlerTest {
 
-    private ExceptionHandler underTest = new ExceptionHandler() {
+    private final ExceptionHandler underTest = new ExceptionHandler() {
     };
 
     @Test
     public void testEmpty() {
-        underTest.repackageToException(Collections.emptyList(), BatchWriteException.class);
+        // SDK v2: Test with empty unprocessed entities list
+        BatchWriteException exception = underTest.repackageToException(
+                Collections.emptyList(),  // No unprocessed entities
+                0,                         // No retries attempted
+                null,                      // No exception thrown
+                BatchWriteException.class);
 
-        assertTrue(true);
+        assertNotNull(exception);
+        assertTrue(exception.getMessage().contains("0 unprocessed entities"));
+        assertEquals(0, exception.getUnprocessedEntities().size());
     }
 
     @Test
-    public void testSimple() {
-        List<DynamoDBMapper.FailedBatch> failedBatches = new ArrayList<>();
-        DynamoDBMapper.FailedBatch fb1 = new DynamoDBMapper.FailedBatch();
-        fb1.setException(new Exception("Test Exception"));
-        failedBatches.add(fb1);
-        DynamoDBMapper.FailedBatch fb2 = new DynamoDBMapper.FailedBatch();
-        fb2.setException(new Exception("Followup Exception"));
-        failedBatches.add(fb2);
+    public void testWithUnprocessedEntities() {
+        // SDK v2: Test with unprocessed entities after retries
+        List<Object> unprocessedEntities = new ArrayList<>();
+        unprocessedEntities.add("entity1");
+        unprocessedEntities.add("entity2");
 
-        BatchWriteException actual = underTest.repackageToException(failedBatches, BatchWriteException.class);
+        BatchWriteException actual = underTest.repackageToException(
+                unprocessedEntities,
+                3,                         // 3 retries attempted
+                null,                      // No exception, just unprocessed items
+                BatchWriteException.class);
 
-        assertEquals("Processing of entities failed!", actual.getMessage());
+        assertNotNull(actual);
+        assertTrue(actual.getMessage().contains("2 unprocessed entities"));
+        assertTrue(actual.getMessage().contains("3 retry attempts"));
+        assertTrue(actual.getMessage().contains("persistent throttling"));
+        assertEquals(2, actual.getUnprocessedEntities().size());
+        assertEquals(3, actual.getRetriesAttempted());
+        assertNull(actual.getCause()); // No exception was thrown
+    }
+
+    @Test
+    public void testWithException() {
+        // SDK v2: Test when an actual exception was thrown during batch operation
+        List<Object> unprocessedEntities = new ArrayList<>();
+        unprocessedEntities.add("entity1");
+
+        Exception originalException = new RuntimeException("DynamoDB service error");
+
+        BatchWriteException actual = underTest.repackageToException(
+                unprocessedEntities,
+                2,                         // 2 retries attempted
+                originalException,         // Exception that was thrown
+                BatchWriteException.class);
+
+        assertNotNull(actual);
+        assertTrue(actual.getMessage().contains("failed with exception"));
+        assertTrue(actual.getMessage().contains("RuntimeException"));
+        assertTrue(actual.getMessage().contains("1 entities could not be processed"));
 
         assertNotNull(actual.getCause());
-        assertEquals("Test Exception", actual.getCause().getMessage());
-        assertNull(actual.getCause().getCause());
+        assertEquals("DynamoDB service error", actual.getCause().getMessage());
+        assertEquals(1, actual.getUnprocessedEntities().size());
+        assertEquals(2, actual.getRetriesAttempted());
+    }
 
-        assertEquals(1, actual.getSuppressed().length);
-        assertEquals("Followup Exception", actual.getSuppressed()[0].getMessage());
+    @Test
+    @SuppressWarnings("deprecation")
+    public void testLegacyMethodSignature() {
+        // Test deprecated legacy method signature (for backward compatibility during migration)
+        List<BatchWriteResult> failedBatches = new ArrayList<>();
+        BatchWriteResult mockResult = Mockito.mock(BatchWriteResult.class);
+        failedBatches.add(mockResult);
+
+        BatchWriteException actual = underTest.repackageToException(
+                failedBatches,
+                BatchWriteException.class);
+
+        assertNotNull(actual);
+        assertTrue(actual.getMessage().contains("1 batch"));
+        assertTrue(actual.getMessage().contains("Unable to extract specific entities"));
     }
 }

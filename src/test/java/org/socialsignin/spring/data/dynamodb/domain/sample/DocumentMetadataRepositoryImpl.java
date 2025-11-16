@@ -1,17 +1,19 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
-import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedQueryList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
+import software.amazon.awssdk.enhanced.dynamodb.Expression;
+import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.ComparisonOperator;
-import software.amazon.awssdk.services.dynamodb.model.Condition;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * Custom repository implementation for DocumentMetadata.
@@ -41,21 +43,30 @@ public class DocumentMetadataRepositoryImpl implements DocumentMetadataRepositor
 
                 CompletableFuture.<List<DocumentMetadata>>supplyAsync(() -> {
 
-                DocumentMetadata gsiKey = new DocumentMetadata();
-                gsiKey.setMemberId(memberId);
+                // SDK v2: Build filter expression for GSI query
+                // Query on GSI: memberId (partition key) and documentCategory = category (sort key)
+                Map<String, AttributeValue> expressionValues = new HashMap<>();
+                expressionValues.put(":memberId", AttributeValue.builder().n(memberId.toString()).build());
+                expressionValues.put(":category", AttributeValue.builder().n(category.toString()).build());
 
-                DynamoDBQueryExpression<DocumentMetadata> query = new DynamoDBQueryExpression<DocumentMetadata>()
-                    .withIndexName("memberId-documentCategory-index")
-                    .withConsistentRead(false)
-                    .withHashKeyValues(gsiKey) // Pass the object with memberId as hash key
-                    .withRangeKeyCondition("documentCategory", Condition.builder()
-                        .comparisonOperator(ComparisonOperator.EQ)
-                        .attributeValueList(AttributeValue.builder().n(category.toString())
-                                .build())
-                        .build());
+                Expression filterExpression = Expression.builder()
+                    .expression("memberId = :memberId AND documentCategory = :category")
+                    .expressionValues(expressionValues)
+                    .build();
 
-                PaginatedQueryList<DocumentMetadata> results = dynamoDBOperations.query(DocumentMetadata.class, query);
-                return new ArrayList<>(results);
+                QueryEnhancedRequest query = QueryEnhancedRequest.builder()
+                    .queryConditional(software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional.keyEqualTo(
+                        k -> k.partitionValue(memberId)
+                    ))
+                    .filterExpression(filterExpression)
+                    .consistentRead(false)
+                    .build();
+
+                PageIterable<DocumentMetadata> results = dynamoDBOperations.query(DocumentMetadata.class, query);
+
+                // Convert PageIterable to List
+                return StreamSupport.stream(results.items().spliterator(), false)
+                    .collect(Collectors.toList());
 
             })).toList();
 
@@ -80,21 +91,30 @@ public class DocumentMetadataRepositoryImpl implements DocumentMetadataRepositor
 
                 CompletableFuture.<List<DocumentMetadata>>supplyAsync(() -> {
 
-                DocumentMetadata gsiKey = new DocumentMetadata();
-                gsiKey.setMemberId(memberId);
+                // SDK v2: Build filter expression for GSI query
+                // Query on GSI: memberId (partition key) and documentSubCategory = subCategory (sort key)
+                Map<String, AttributeValue> expressionValues = new HashMap<>();
+                expressionValues.put(":memberId", AttributeValue.builder().n(memberId.toString()).build());
+                expressionValues.put(":subCategory", AttributeValue.builder().n(subCategory.toString()).build());
 
-                DynamoDBQueryExpression<DocumentMetadata> query = new DynamoDBQueryExpression<DocumentMetadata>()
-                    .withIndexName("memberId-documentSubCategory-index")
-                    .withConsistentRead(false)
-                    .withHashKeyValues(gsiKey) // Pass the object with memberId as hash key
-                    .withRangeKeyCondition("documentSubCategory", Condition.builder()
-                        .comparisonOperator(ComparisonOperator.EQ)
-                        .attributeValueList(AttributeValue.builder().n(subCategory.toString())
-                                .build())
-                        .build());
+                Expression filterExpression = Expression.builder()
+                    .expression("memberId = :memberId AND documentSubCategory = :subCategory")
+                    .expressionValues(expressionValues)
+                    .build();
 
-                PaginatedQueryList<DocumentMetadata> results = dynamoDBOperations.query(DocumentMetadata.class, query);
-                return new ArrayList<>(results);
+                QueryEnhancedRequest query = QueryEnhancedRequest.builder()
+                    .queryConditional(software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional.keyEqualTo(
+                        k -> k.partitionValue(memberId)
+                    ))
+                    .filterExpression(filterExpression)
+                    .consistentRead(false)
+                    .build();
+
+                PageIterable<DocumentMetadata> results = dynamoDBOperations.query(DocumentMetadata.class, query);
+
+                // Convert PageIterable to List
+                return StreamSupport.stream(results.items().spliterator(), false)
+                    .collect(Collectors.toList());
 
             })).toList();
 

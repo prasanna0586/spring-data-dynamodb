@@ -2,7 +2,6 @@ package org.socialsignin.spring.data.dynamodb.domain.sample;
 
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -55,9 +54,6 @@ public class UpdateExpressionsIntegrationTest {
     @Autowired
     private DynamoDbClient amazonDynamoDB;
 
-    @Autowired
-    private DynamoDBMapper dynamoDBMapper;
-
     @BeforeEach
     void setUp() {
         userRepository.deleteAll();
@@ -76,10 +72,10 @@ public class UpdateExpressionsIntegrationTest {
 
         // When - Update name using UpdateExpression
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("update-user-1"));
+        key.put("Id", AttributeValue.builder().s("update-user-1").build());
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":newName", new AttributeValue("Updated Name"));
+        expressionAttributeValues.put(":newName", AttributeValue.builder().s("Updated Name").build());
 
         UpdateItemRequest updateRequest = UpdateItemRequest.builder()
                 .tableName("user")
@@ -112,11 +108,11 @@ public class UpdateExpressionsIntegrationTest {
 
         // When - Update multiple attributes
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("update-user-2"));
+        key.put("Id", AttributeValue.builder().s("update-user-2").build());
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":name", new AttributeValue("New Name"));
-        expressionAttributeValues.put(":postCode", new AttributeValue("67890"));
+        expressionAttributeValues.put(":name", AttributeValue.builder().s("New Name").build());
+        expressionAttributeValues.put(":postCode", AttributeValue.builder().s("67890").build());
 
         UpdateItemRequest updateRequest = UpdateItemRequest.builder()
                 .tableName("user")
@@ -148,7 +144,7 @@ public class UpdateExpressionsIntegrationTest {
 
         // When - Increment counter by 5
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("update-user-3"));
+        key.put("Id", AttributeValue.builder().s("update-user-3").build());
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":inc", AttributeValue.builder().n("5")
@@ -182,7 +178,7 @@ public class UpdateExpressionsIntegrationTest {
 
         // When - Decrement by 3 (add negative number)
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("update-user-4"));
+        key.put("Id", AttributeValue.builder().s("update-user-4").build());
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":dec", AttributeValue.builder().n("-3")
@@ -216,7 +212,7 @@ public class UpdateExpressionsIntegrationTest {
 
         // When - Add new tags
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("update-user-5"));
+        key.put("Id", AttributeValue.builder().s("update-user-5").build());
 
         AttributeValue newTags = AttributeValue.builder().ss("tag3", "tag4")
                 .build();
@@ -251,7 +247,7 @@ public class UpdateExpressionsIntegrationTest {
 
         // When - Remove specific tags
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("update-user-6"));
+        key.put("Id", AttributeValue.builder().s("update-user-6").build());
 
         AttributeValue tagsToRemove = AttributeValue.builder().ss("tag2", "tag4")
                 .build();
@@ -286,7 +282,7 @@ public class UpdateExpressionsIntegrationTest {
 
         // When - Remove postCode attribute
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("update-user-7"));
+        key.put("Id", AttributeValue.builder().s("update-user-7").build());
 
         UpdateItemRequest updateRequest = UpdateItemRequest.builder()
                 .tableName("user")
@@ -314,7 +310,7 @@ public class UpdateExpressionsIntegrationTest {
 
         // When - Set numberOfPlaylists only if it doesn't exist
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("update-user-8"));
+        key.put("Id", AttributeValue.builder().s("update-user-8").build());
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":zero", AttributeValue.builder().n("0")
@@ -357,7 +353,7 @@ public class UpdateExpressionsIntegrationTest {
 
         // When - Update only if numberOfPlaylists is 10
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("update-user-9"));
+        key.put("Id", AttributeValue.builder().s("update-user-9").build());
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":newCount", AttributeValue.builder().n("20")
@@ -396,10 +392,10 @@ public class UpdateExpressionsIntegrationTest {
 
         // When - Multiple operations in one update
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("update-user-10"));
+        key.put("Id", AttributeValue.builder().s("update-user-10").build());
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":newName", new AttributeValue("Updated User 10"));
+        expressionAttributeValues.put(":newName", AttributeValue.builder().s("Updated User 10").build());
         expressionAttributeValues.put(":inc", AttributeValue.builder().n("3")
                 .build());
         expressionAttributeValues.put(":newTag", AttributeValue.builder().ss("tag2")
@@ -440,7 +436,7 @@ public class UpdateExpressionsIntegrationTest {
 
         // When - Increment using SET with math operation
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("update-user-11"));
+        key.put("Id", AttributeValue.builder().s("update-user-11").build());
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":inc", AttributeValue.builder().n("5")
@@ -474,7 +470,7 @@ public class UpdateExpressionsIntegrationTest {
 
         // When - Update and return updated values
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("update-user-12"));
+        key.put("Id", AttributeValue.builder().s("update-user-12").build());
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":inc", AttributeValue.builder().n("10")

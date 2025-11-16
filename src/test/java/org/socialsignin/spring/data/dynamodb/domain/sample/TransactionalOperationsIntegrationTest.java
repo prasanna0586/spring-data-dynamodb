@@ -2,7 +2,6 @@ package org.socialsignin.spring.data.dynamodb.domain.sample;
 
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -54,9 +53,6 @@ public class TransactionalOperationsIntegrationTest {
     @Autowired
     private DynamoDbClient amazonDynamoDB;
 
-    @Autowired
-    private DynamoDBMapper dynamoDBMapper;
-
     @BeforeEach
     void setUp() {
         accountRepository.deleteAll();
@@ -74,11 +70,10 @@ public class TransactionalOperationsIntegrationTest {
 
         // Account 1
         Map<String, AttributeValue> item1 = new HashMap<>();
-        item1.put("accountId", new AttributeValue("txn-account-1"));
-        item1.put("accountHolder", new AttributeValue("Alice"));
-        item1.put("balance", AttributeValue.builder().n("1000.0")
-                .build());
-        item1.put("status", new AttributeValue("ACTIVE"));
+        item1.put("accountId", AttributeValue.fromS("txn-account-1"));
+        item1.put("accountHolder", AttributeValue.fromS("Alice"));
+        item1.put("balance", AttributeValue.fromN("1000.0"));
+        item1.put("status", AttributeValue.fromS("ACTIVE"));
         actions.add(TransactWriteItem.builder().put(
                 Put.builder().tableName("BankAccount").item(item1)
                 .build()
@@ -87,11 +82,10 @@ public class TransactionalOperationsIntegrationTest {
 
         // Account 2
         Map<String, AttributeValue> item2 = new HashMap<>();
-        item2.put("accountId", new AttributeValue("txn-account-2"));
-        item2.put("accountHolder", new AttributeValue("Bob"));
-        item2.put("balance", AttributeValue.builder().n("2000.0")
-                .build());
-        item2.put("status", new AttributeValue("ACTIVE"));
+        item2.put("accountId", AttributeValue.fromS("txn-account-2"));
+        item2.put("accountHolder", AttributeValue.fromS("Bob"));
+        item2.put("balance", AttributeValue.fromN("2000.0"));
+        item2.put("status", AttributeValue.fromS("ACTIVE"));
         actions.add(TransactWriteItem.builder().put(
                 Put.builder().tableName("BankAccount").item(item2)
                 .build()
@@ -100,11 +94,10 @@ public class TransactionalOperationsIntegrationTest {
 
         // Account 3
         Map<String, AttributeValue> item3 = new HashMap<>();
-        item3.put("accountId", new AttributeValue("txn-account-3"));
-        item3.put("accountHolder", new AttributeValue("Charlie"));
-        item3.put("balance", AttributeValue.builder().n("3000.0")
-                .build());
-        item3.put("status", new AttributeValue("ACTIVE"));
+        item3.put("accountId", AttributeValue.fromS("txn-account-3"));
+        item3.put("accountHolder", AttributeValue.fromS("Charlie"));
+        item3.put("balance", AttributeValue.fromN("3000.0"));
+        item3.put("status", AttributeValue.fromS("ACTIVE"));
         actions.add(TransactWriteItem.builder().put(
                 Put.builder().tableName("BankAccount").item(item3)
                 .build()
@@ -142,15 +135,14 @@ public class TransactionalOperationsIntegrationTest {
 
         // Debit Alice's account
         Map<String, AttributeValue> key1 = new HashMap<>();
-        key1.put("accountId", new AttributeValue("txn-transfer-1"));
+        key1.put("accountId", AttributeValue.fromS("txn-transfer-1"));
         actions.add(TransactWriteItem.builder().update(
                 Update.builder()
                         .tableName("BankAccount")
                         .key(key1)
                         .updateExpression("SET balance = balance - :amount")
                         .expressionAttributeValues(Collections.singletonMap(
-                                ":amount",  AttributeValue.builder().n("300")
-                                .build()
+                                ":amount",  AttributeValue.fromN("300")
                         ))
                 .build()
         )
@@ -158,15 +150,14 @@ public class TransactionalOperationsIntegrationTest {
 
         // Credit Bob's account
         Map<String, AttributeValue> key2 = new HashMap<>();
-        key2.put("accountId", new AttributeValue("txn-transfer-2"));
+        key2.put("accountId", AttributeValue.fromS("txn-transfer-2"));
         actions.add(TransactWriteItem.builder().update(
                 Update.builder()
                         .tableName("BankAccount")
                         .key(key2)
                         .updateExpression("SET balance = balance + :amount")
                         .expressionAttributeValues(Collections.singletonMap(
-                                ":amount",  AttributeValue.builder().n("300")
-                                .build()
+                                ":amount",  AttributeValue.fromN("300")
                         ))
                 .build()
         )
@@ -199,7 +190,7 @@ public class TransactionalOperationsIntegrationTest {
         Collection<TransactWriteItem> actions = new ArrayList<>();
 
         Map<String, AttributeValue> key1 = new HashMap<>();
-        key1.put("accountId", new AttributeValue("txn-cond-1"));
+        key1.put("accountId", AttributeValue.fromS("txn-cond-1"));
         actions.add(TransactWriteItem.builder().update(
                 Update.builder()
                         .tableName("BankAccount")
@@ -207,23 +198,21 @@ public class TransactionalOperationsIntegrationTest {
                         .updateExpression("SET balance = balance - :amount")
                         .conditionExpression("balance >= :amount")
                         .expressionAttributeValues(Collections.singletonMap(
-                                ":amount",  AttributeValue.builder().n("300")
-                                .build()
+                                ":amount",  AttributeValue.fromN("300")
                         ))
                 .build()
         )
         .build());
 
         Map<String, AttributeValue> key2 = new HashMap<>();
-        key2.put("accountId", new AttributeValue("txn-cond-2"));
+        key2.put("accountId", AttributeValue.fromS("txn-cond-2"));
         actions.add(TransactWriteItem.builder().update(
                 Update.builder()
                         .tableName("BankAccount")
                         .key(key2)
                         .updateExpression("SET balance = balance + :amount")
                         .expressionAttributeValues(Collections.singletonMap(
-                                ":amount",  AttributeValue.builder().n("300")
-                                .build()
+                                ":amount",  AttributeValue.fromN("300")
                         ))
                 .build()
         )
@@ -261,7 +250,7 @@ public class TransactionalOperationsIntegrationTest {
 
         // ConditionCheck - Verify activeAccount is ACTIVE
         Map<String, AttributeValue> checkKey = new HashMap<>();
-        checkKey.put("accountId", new AttributeValue("txn-check-active"));
+        checkKey.put("accountId", AttributeValue.fromS("txn-check-active"));
         actions.add(TransactWriteItem.builder().conditionCheck(
                 ConditionCheck.builder()
                         .tableName("BankAccount")
@@ -269,7 +258,7 @@ public class TransactionalOperationsIntegrationTest {
                         .conditionExpression("#status = :active")
                         .expressionAttributeNames(Collections.singletonMap("#status", "status"))
                         .expressionAttributeValues(Collections.singletonMap(
-                                ":active", new AttributeValue("ACTIVE")
+                                ":active", AttributeValue.fromS("ACTIVE")
                         ))
                 .build()
         )
@@ -277,15 +266,14 @@ public class TransactionalOperationsIntegrationTest {
 
         // Update - Debit the target account
         Map<String, AttributeValue> updateKey = new HashMap<>();
-        updateKey.put("accountId", new AttributeValue("txn-check-1"));
+        updateKey.put("accountId", AttributeValue.fromS("txn-check-1"));
         actions.add(TransactWriteItem.builder().update(
                 Update.builder()
                         .tableName("BankAccount")
                         .key(updateKey)
                         .updateExpression("SET balance = balance - :amount")
                         .expressionAttributeValues(Collections.singletonMap(
-                                ":amount",  AttributeValue.builder().n("200")
-                                .build()
+                                ":amount",  AttributeValue.fromN("200")
                         ))
                 .build()
         )
@@ -314,7 +302,7 @@ public class TransactionalOperationsIntegrationTest {
         Collection<TransactWriteItem> actions = new ArrayList<>();
 
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("accountId", new AttributeValue("txn-frozen-1"));
+        key.put("accountId", AttributeValue.fromS("txn-frozen-1"));
 
         actions.add(TransactWriteItem.builder().conditionCheck(
                 ConditionCheck.builder()
@@ -323,7 +311,7 @@ public class TransactionalOperationsIntegrationTest {
                         .conditionExpression("#status = :active")
                         .expressionAttributeNames(Collections.singletonMap("#status", "status"))
                         .expressionAttributeValues(Collections.singletonMap(
-                                ":active", new AttributeValue("ACTIVE")
+                                ":active", AttributeValue.fromS("ACTIVE")
                         ))
                 .build()
         )
@@ -335,8 +323,7 @@ public class TransactionalOperationsIntegrationTest {
                         .key(key)
                         .updateExpression("SET balance = balance - :amount")
                         .expressionAttributeValues(Collections.singletonMap(
-                                ":amount",  AttributeValue.builder().n("200")
-                                .build()
+                                ":amount",  AttributeValue.fromN("200")
                         ))
                 .build()
         )
@@ -370,7 +357,7 @@ public class TransactionalOperationsIntegrationTest {
 
         // Delete account1
         Map<String, AttributeValue> key1 = new HashMap<>();
-        key1.put("accountId", new AttributeValue("txn-delete-1"));
+        key1.put("accountId", AttributeValue.fromS("txn-delete-1"));
         actions.add(TransactWriteItem.builder().delete(
                 Delete.builder()
                         .tableName("BankAccount")
@@ -381,7 +368,7 @@ public class TransactionalOperationsIntegrationTest {
 
         // Update account2
         Map<String, AttributeValue> key2 = new HashMap<>();
-        key2.put("accountId", new AttributeValue("txn-delete-2"));
+        key2.put("accountId", AttributeValue.fromS("txn-delete-2"));
         actions.add(TransactWriteItem.builder().update(
                 Update.builder()
                         .tableName("BankAccount")
@@ -389,7 +376,7 @@ public class TransactionalOperationsIntegrationTest {
                         .updateExpression("SET #status = :closed")
                         .expressionAttributeNames(Collections.singletonMap("#status", "status"))
                         .expressionAttributeValues(Collections.singletonMap(
-                                ":closed", new AttributeValue("CLOSED")
+                                ":closed", AttributeValue.fromS("CLOSED")
                         ))
                 .build()
         )
@@ -420,11 +407,10 @@ public class TransactionalOperationsIntegrationTest {
 
         // Put - Create new account
         Map<String, AttributeValue> newItem = new HashMap<>();
-        newItem.put("accountId", new AttributeValue("txn-mixed-2"));
-        newItem.put("accountHolder", new AttributeValue("Bob"));
-        newItem.put("balance", AttributeValue.builder().n("1000.0")
-                .build());
-        newItem.put("status", new AttributeValue("ACTIVE"));
+        newItem.put("accountId", AttributeValue.fromS("txn-mixed-2"));
+        newItem.put("accountHolder", AttributeValue.fromS("Bob"));
+        newItem.put("balance", AttributeValue.fromN("1000.0"));
+        newItem.put("status", AttributeValue.fromS("ACTIVE"));
         actions.add(TransactWriteItem.builder().put(
                 Put.builder().tableName("BankAccount").item(newItem)
                 .build()
@@ -433,15 +419,14 @@ public class TransactionalOperationsIntegrationTest {
 
         // Update - Modify existing account
         Map<String, AttributeValue> updateKey = new HashMap<>();
-        updateKey.put("accountId", new AttributeValue("txn-mixed-1"));
+        updateKey.put("accountId", AttributeValue.fromS("txn-mixed-1"));
         actions.add(TransactWriteItem.builder().update(
                 Update.builder()
                         .tableName("BankAccount")
                         .key(updateKey)
                         .updateExpression("SET balance = balance + :amount")
                         .expressionAttributeValues(Collections.singletonMap(
-                                ":amount",  AttributeValue.builder().n("500")
-                                .build()
+                                ":amount",  AttributeValue.fromN("500")
                         ))
                 .build()
         )
@@ -474,7 +459,7 @@ public class TransactionalOperationsIntegrationTest {
         Collection<TransactGetItem> items = new ArrayList<>();
 
         Map<String, AttributeValue> key1 = new HashMap<>();
-        key1.put("accountId", new AttributeValue("txn-get-1"));
+        key1.put("accountId", AttributeValue.fromS("txn-get-1"));
         items.add(TransactGetItem.builder().get(
                 Get.builder().tableName("BankAccount").key(key1)
                 .build()
@@ -482,7 +467,7 @@ public class TransactionalOperationsIntegrationTest {
         .build());
 
         Map<String, AttributeValue> key2 = new HashMap<>();
-        key2.put("accountId", new AttributeValue("txn-get-2"));
+        key2.put("accountId", AttributeValue.fromS("txn-get-2"));
         items.add(TransactGetItem.builder().get(
                 Get.builder().tableName("BankAccount").key(key2)
                 .build()
@@ -490,7 +475,7 @@ public class TransactionalOperationsIntegrationTest {
         .build());
 
         Map<String, AttributeValue> key3 = new HashMap<>();
-        key3.put("accountId", new AttributeValue("txn-get-3"));
+        key3.put("accountId", AttributeValue.fromS("txn-get-3"));
         items.add(TransactGetItem.builder().get(
                 Get.builder().tableName("BankAccount").key(key3)
                 .build()
@@ -532,7 +517,7 @@ public class TransactionalOperationsIntegrationTest {
         Collection<TransactGetItem> items = new ArrayList<>();
 
         Map<String, AttributeValue> accountKey = new HashMap<>();
-        accountKey.put("accountId", new AttributeValue("txn-cross-1"));
+        accountKey.put("accountId", AttributeValue.fromS("txn-cross-1"));
         items.add(TransactGetItem.builder().get(
                 Get.builder().tableName("BankAccount").key(accountKey)
                 .build()
@@ -540,7 +525,7 @@ public class TransactionalOperationsIntegrationTest {
         .build());
 
         Map<String, AttributeValue> userKey = new HashMap<>();
-        userKey.put("Id", new AttributeValue("txn-cross-user-1"));
+        userKey.put("Id", AttributeValue.fromS("txn-cross-user-1"));
         items.add(TransactGetItem.builder().get(
                 Get.builder().tableName("user").key(userKey)
                 .build()
@@ -569,7 +554,7 @@ public class TransactionalOperationsIntegrationTest {
         Collection<TransactGetItem> items = new ArrayList<>();
 
         Map<String, AttributeValue> key1 = new HashMap<>();
-        key1.put("accountId", new AttributeValue("txn-exists-1"));
+        key1.put("accountId", AttributeValue.fromS("txn-exists-1"));
         items.add(TransactGetItem.builder().get(
                 Get.builder().tableName("BankAccount").key(key1)
                 .build()
@@ -577,7 +562,7 @@ public class TransactionalOperationsIntegrationTest {
         .build());
 
         Map<String, AttributeValue> key2 = new HashMap<>();
-        key2.put("accountId", new AttributeValue("non-existent"));
+        key2.put("accountId", AttributeValue.fromS("non-existent"));
         items.add(TransactGetItem.builder().get(
                 Get.builder().tableName("BankAccount").key(key2)
                 .build()
@@ -606,11 +591,10 @@ public class TransactionalOperationsIntegrationTest {
 
         for (int i = 1; i <= 10; i++) {
             Map<String, AttributeValue> item = new HashMap<>();
-            item.put("accountId", new AttributeValue("txn-bulk-" + i));
-            item.put("accountHolder", new AttributeValue("User" + i));
-            item.put("balance", AttributeValue.builder().n(String.valueOf(i * 100.0))
-                    .build());
-            item.put("status", new AttributeValue("ACTIVE"));
+            item.put("accountId", AttributeValue.fromS("txn-bulk-" + i));
+            item.put("accountHolder", AttributeValue.fromS("User" + i));
+            item.put("balance", AttributeValue.fromN(String.valueOf(i * 100.0)));
+            item.put("status", AttributeValue.fromS("ACTIVE"));
 
             actions.add(TransactWriteItem.builder().put(
                     Put.builder().tableName("BankAccount").item(item)
@@ -640,11 +624,10 @@ public class TransactionalOperationsIntegrationTest {
 
         Collection<TransactWriteItem> actions = new ArrayList<>();
         Map<String, AttributeValue> item = new HashMap<>();
-        item.put("accountId", new AttributeValue("txn-idempotent-1"));
-        item.put("accountHolder", new AttributeValue("Alice"));
-        item.put("balance", AttributeValue.builder().n("1000.0")
-                .build());
-        item.put("status", new AttributeValue("ACTIVE"));
+        item.put("accountId", AttributeValue.fromS("txn-idempotent-1"));
+        item.put("accountHolder", AttributeValue.fromS("Alice"));
+        item.put("balance", AttributeValue.fromN("1000.0"));
+        item.put("status", AttributeValue.fromS("ACTIVE"));
 
         actions.add(TransactWriteItem.builder().put(
                 Put.builder().tableName("BankAccount").item(item)
@@ -677,15 +660,14 @@ public class TransactionalOperationsIntegrationTest {
 
         // Valid update
         Map<String, AttributeValue> key1 = new HashMap<>();
-        key1.put("accountId", new AttributeValue("txn-rollback-1"));
+        key1.put("accountId", AttributeValue.fromS("txn-rollback-1"));
         actions.add(TransactWriteItem.builder().update(
                 Update.builder()
                         .tableName("BankAccount")
                         .key(key1)
                         .updateExpression("SET balance = :newBalance")
                         .expressionAttributeValues(Collections.singletonMap(
-                                ":newBalance",  AttributeValue.builder().n("2000.0")
-                                .build()
+                                ":newBalance",  AttributeValue.fromN("2000.0")
                         ))
                 .build()
         )
@@ -693,7 +675,7 @@ public class TransactionalOperationsIntegrationTest {
 
         // Invalid update - non-existent item with condition
         Map<String, AttributeValue> key2 = new HashMap<>();
-        key2.put("accountId", new AttributeValue("non-existent"));
+        key2.put("accountId", AttributeValue.fromS("non-existent"));
         actions.add(TransactWriteItem.builder().update(
                 Update.builder()
                         .tableName("BankAccount")
@@ -701,8 +683,7 @@ public class TransactionalOperationsIntegrationTest {
                         .updateExpression("SET balance = :newBalance")
                         .conditionExpression("attribute_exists(accountId)")
                         .expressionAttributeValues(Collections.singletonMap(
-                                ":newBalance",  AttributeValue.builder().n("500.0")
-                                .build()
+                                ":newBalance",  AttributeValue.fromN("500.0")
                         ))
                 .build()
         )
@@ -729,11 +710,10 @@ public class TransactionalOperationsIntegrationTest {
         Collection<TransactWriteItem> actions = new ArrayList<>();
 
         Map<String, AttributeValue> item = new HashMap<>();
-        item.put("accountId", new AttributeValue("txn-not-exists-1"));
-        item.put("accountHolder", new AttributeValue("Alice"));
-        item.put("balance", AttributeValue.builder().n("1000.0")
-                .build());
-        item.put("status", new AttributeValue("ACTIVE"));
+        item.put("accountId", AttributeValue.fromS("txn-not-exists-1"));
+        item.put("accountHolder", AttributeValue.fromS("Alice"));
+        item.put("balance", AttributeValue.fromN("1000.0"));
+        item.put("status", AttributeValue.fromS("ACTIVE"));
 
         actions.add(TransactWriteItem.builder().put(
                 Put.builder()
@@ -767,7 +747,7 @@ public class TransactionalOperationsIntegrationTest {
         Collection<TransactWriteItem> actions = new ArrayList<>();
 
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("accountId", new AttributeValue("txn-cancel-1"));
+        key.put("accountId", AttributeValue.fromS("txn-cancel-1"));
         actions.add(TransactWriteItem.builder().update(
                 Update.builder()
                         .tableName("BankAccount")
@@ -775,8 +755,7 @@ public class TransactionalOperationsIntegrationTest {
                         .updateExpression("SET balance = balance - :amount")
                         .conditionExpression("balance >= :amount")
                         .expressionAttributeValues(Collections.singletonMap(
-                                ":amount",  AttributeValue.builder().n("500")
-                                .build()
+                                ":amount",  AttributeValue.fromN("500")
                         ))
                 .build()
         )
@@ -814,15 +793,14 @@ public class TransactionalOperationsIntegrationTest {
 
         // Update user
         Map<String, AttributeValue> userKey = new HashMap<>();
-        userKey.put("Id", new AttributeValue("txn-cross-update-1"));
+        userKey.put("Id", AttributeValue.fromS("txn-cross-update-1"));
         actions.add(TransactWriteItem.builder().update(
                 Update.builder()
                         .tableName("user")
                         .key(userKey)
                         .updateExpression("SET numberOfPlaylists = :count")
                         .expressionAttributeValues(Collections.singletonMap(
-                                ":count",  AttributeValue.builder().n("5")
-                                .build()
+                                ":count",  AttributeValue.fromN("5")
                         ))
                 .build()
         )
@@ -830,15 +808,14 @@ public class TransactionalOperationsIntegrationTest {
 
         // Update account
         Map<String, AttributeValue> accountKey = new HashMap<>();
-        accountKey.put("accountId", new AttributeValue("txn-cross-update-1"));
+        accountKey.put("accountId", AttributeValue.fromS("txn-cross-update-1"));
         actions.add(TransactWriteItem.builder().update(
                 Update.builder()
                         .tableName("BankAccount")
                         .key(accountKey)
                         .updateExpression("SET balance = balance + :amount")
                         .expressionAttributeValues(Collections.singletonMap(
-                                ":amount",  AttributeValue.builder().n("100")
-                                .build()
+                                ":amount",  AttributeValue.fromN("100")
                         ))
                 .build()
         )

@@ -2,9 +2,6 @@ package org.socialsignin.spring.data.dynamodb.domain.sample;
 
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -15,7 +12,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +21,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Comprehensive integration tests for DynamoDB Projection Types.
+ *
+ * SDK v2 Migration Notes:
+ * - SDK v1: DynamoDBMapper → SDK v2: Not used in this test (uses low-level DynamoDbClient)
+ * - SDK v1: new AttributeValue("string") → SDK v2: AttributeValue.fromS("string")
+ * - SDK v1: new AttributeDefinition() → SDK v2: AttributeDefinition.builder().build()
+ * - SDK v1: new KeySchemaElement() → SDK v2: KeySchemaElement.builder().build()
+ * - SDK v1: new ProvisionedThroughput() → SDK v2: ProvisionedThroughput.builder().build()
+ * - SDK v1: deleteTable(String) → SDK v2: deleteTable(DeleteTableRequest)
+ * - SDK v1: putItem(String, Map) → SDK v2: putItem(PutItemRequest)
+ * - SDK v1: describeTable(String) → SDK v2: describeTable(DescribeTableRequest)
+ * - SDK v1: String status comparisons → SDK v2: TableStatus/IndexStatus enum comparisons
+ * - All table operations use SDK v2 CreateTableRequest, QueryRequest, etc.
  *
  * DynamoDB supports three projection types for Global and Local Secondary Indexes:
  * 1. KEYS_ONLY - Only projected attributes are the index keys and primary keys
@@ -57,9 +65,6 @@ public class ProjectionTypesIntegrationTest {
     @Autowired
     private DynamoDbClient amazonDynamoDB;
 
-    @Autowired
-    private DynamoDBMapper dynamoDBMapper;
-
     private static final String TABLE_NAME = "ProductCatalog";
 
     @BeforeAll
@@ -76,7 +81,7 @@ public class ProjectionTypesIntegrationTest {
     void tearDown() {
         // Clean up table after each test
         try {
-            amazonDynamoDB.deleteTable(TABLE_NAME);
+            amazonDynamoDB.deleteTable(DeleteTableRequest.builder().tableName(TABLE_NAME).build());
             // Wait for table deletion
             Thread.sleep(1000);
         } catch (Exception e) {
@@ -173,7 +178,7 @@ public class ProjectionTypesIntegrationTest {
                 "Description1", 100.0, 10);
         Map<String, AttributeValue> keysOnlyItem = queryGSI("Electronics").get(0);
         int keysOnlySize = keysOnlyItem.size();
-        amazonDynamoDB.deleteTable(TABLE_NAME);
+        amazonDynamoDB.deleteTable(DeleteTableRequest.builder().tableName(TABLE_NAME).build());
         Thread.sleep(1000);
 
         // Test INCLUDE with 2 attributes
@@ -183,7 +188,7 @@ public class ProjectionTypesIntegrationTest {
                 "Description1", 100.0, 10);
         Map<String, AttributeValue> includeItem = queryGSI("Electronics").get(0);
         int includeSize = includeItem.size();
-        amazonDynamoDB.deleteTable(TABLE_NAME);
+        amazonDynamoDB.deleteTable(DeleteTableRequest.builder().tableName(TABLE_NAME).build());
         Thread.sleep(1000);
 
         // Test ALL
@@ -256,13 +261,13 @@ public class ProjectionTypesIntegrationTest {
                                      List<String> nonKeyAttributes) throws InterruptedException {
         // Define table schema
         List<AttributeDefinition> attributeDefinitions = Arrays.asList(
-                new AttributeDefinition("productId", ScalarAttributeType.S),
-                new AttributeDefinition("category", ScalarAttributeType.S),
-                new AttributeDefinition("price", ScalarAttributeType.N)
+                AttributeDefinition.builder().attributeName("productId").attributeType(ScalarAttributeType.S).build(),
+                AttributeDefinition.builder().attributeName("category").attributeType(ScalarAttributeType.S).build(),
+                AttributeDefinition.builder().attributeName("price").attributeType(ScalarAttributeType.N).build()
         );
 
         List<KeySchemaElement> keySchema = Arrays.asList(
-                new KeySchemaElement("productId", KeyType.HASH)
+                KeySchemaElement.builder().attributeName("productId").keyType(KeyType.HASH).build()
         );
 
         // Define GSI
@@ -275,11 +280,11 @@ public class ProjectionTypesIntegrationTest {
         GlobalSecondaryIndex gsi = GlobalSecondaryIndex.builder()
                 .indexName("category-price-index")
                 .keySchema(
-                        new KeySchemaElement("category", KeyType.HASH),
-                        new KeySchemaElement("price", KeyType.RANGE)
+                        KeySchemaElement.builder().attributeName("category").keyType(KeyType.HASH).build(),
+                        KeySchemaElement.builder().attributeName("price").keyType(KeyType.RANGE).build()
                 )
                 .projection(projection)
-                .provisionedThroughput(new ProvisionedThroughput(5L, 5L))
+                .provisionedThroughput(ProvisionedThroughput.builder().readCapacityUnits(5L).writeCapacityUnits(5L).build())
                 .build();
 
         CreateTableRequest request = CreateTableRequest.builder()
@@ -287,7 +292,7 @@ public class ProjectionTypesIntegrationTest {
                 .attributeDefinitions(attributeDefinitions)
                 .keySchema(keySchema)
                 .globalSecondaryIndexes(gsi)
-                .provisionedThroughput(new ProvisionedThroughput(5L, 5L))
+                .provisionedThroughput(ProvisionedThroughput.builder().readCapacityUnits(5L).writeCapacityUnits(5L).build())
                 .build();
 
         amazonDynamoDB.createTable(request);
@@ -302,16 +307,16 @@ public class ProjectionTypesIntegrationTest {
     private void putItemWithAllAttributes(String productId, String category, String productName,
                                           String description, Double price, Integer stock) {
         Map<String, AttributeValue> item = new HashMap<>();
-        item.put("productId", new AttributeValue(productId));
-        item.put("category", new AttributeValue(category));
-        item.put("productName", new AttributeValue(productName));
-        item.put("description", new AttributeValue(description));
+        item.put("productId", AttributeValue.fromS(productId));
+        item.put("category", AttributeValue.fromS(category));
+        item.put("productName", AttributeValue.fromS(productName));
+        item.put("description", AttributeValue.fromS(description));
         item.put("price", AttributeValue.builder().n(String.valueOf(price))
                 .build());
         item.put("stock", AttributeValue.builder().n(String.valueOf(stock))
                 .build());
 
-        amazonDynamoDB.putItem(TABLE_NAME, item);
+        amazonDynamoDB.putItem(PutItemRequest.builder().tableName(TABLE_NAME).item(item).build());
     }
 
     /**
@@ -319,7 +324,7 @@ public class ProjectionTypesIntegrationTest {
      */
     private List<Map<String, AttributeValue>> queryGSI(String category) {
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":category", new AttributeValue(category));
+        expressionAttributeValues.put(":category", AttributeValue.fromS(category));
 
         QueryRequest queryRequest = QueryRequest.builder()
                 .tableName(TABLE_NAME)
@@ -341,14 +346,14 @@ public class ProjectionTypesIntegrationTest {
 
         while (attempt < maxAttempts) {
             try {
-                DescribeTableResponse result = amazonDynamoDB.describeTable(TABLE_NAME);
-                String status = result.table().tableStatus();
+                DescribeTableResponse result = amazonDynamoDB.describeTable(DescribeTableRequest.builder().tableName(TABLE_NAME).build());
+                TableStatus status = result.table().tableStatus();
 
-                if ("ACTIVE".equals(status)) {
+                if (TableStatus.ACTIVE.equals(status)) {
                     // Also check GSI status
                     if (result.table().globalSecondaryIndexes() != null) {
                         boolean allGsiActive = result.table().globalSecondaryIndexes().stream()
-                                .allMatch(gsi -> "ACTIVE".equals(gsi.indexStatus()));
+                                .allMatch(gsi -> IndexStatus.ACTIVE.equals(gsi.indexStatus()));
                         if (allGsiActive) {
                             return;
                         }

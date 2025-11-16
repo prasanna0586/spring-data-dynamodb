@@ -2,7 +2,6 @@ package org.socialsignin.spring.data.dynamodb.domain.sample;
 
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -76,20 +75,62 @@ public class DocumentMetadataRepositoryIntegrationTest {
 
     private void createTableIfNotExists() {
         try {
-            amazonDynamoDB.describeTable("DocumentMetadata");
+            amazonDynamoDB.describeTable(DescribeTableRequest.builder()
+                    .tableName("DocumentMetadata")
+                    .build());
         } catch (ResourceNotFoundException e) {
-            CreateTableRequest createTableRequest = new DynamoDBMapper(amazonDynamoDB)
-                    .generateCreateTableRequest(DocumentMetadata.class);
-
-            createTableRequest = createTableRequest.toBuilder().provisionedThroughput(new ProvisionedThroughput(5L, 5L)).build();
-
-            if (createTableRequest.globalSecondaryIndexes() != null) {
-                for (GlobalSecondaryIndex gsi : createTableRequest.globalSecondaryIndexes()) {
-                    gsi = gsi.toBuilder().provisionedThroughput(new ProvisionedThroughput(5L, 5L)).build();
-                    gsi = gsi.toBuilder().projection(Projection.builder().projectionType(ProjectionType.ALL)
-                            .build()).build();
-                }
-            }
+            // SDK v2: Build CreateTableRequest manually
+            // Primary key: uniqueDocumentId (String)
+            // GSI: idx_memberId_createdAt with memberId (hash) and createdAt (range)
+            CreateTableRequest createTableRequest = CreateTableRequest.builder()
+                    .tableName("DocumentMetadata")
+                    .keySchema(
+                            KeySchemaElement.builder()
+                                    .attributeName("uniqueDocumentId")
+                                    .keyType(KeyType.HASH)
+                                    .build()
+                    )
+                    .attributeDefinitions(
+                            AttributeDefinition.builder()
+                                    .attributeName("uniqueDocumentId")
+                                    .attributeType(ScalarAttributeType.S)
+                                    .build(),
+                            AttributeDefinition.builder()
+                                    .attributeName("memberId")
+                                    .attributeType(ScalarAttributeType.N)
+                                    .build(),
+                            AttributeDefinition.builder()
+                                    .attributeName("createdAt")
+                                    .attributeType(ScalarAttributeType.S)
+                                    .build()
+                    )
+                    .provisionedThroughput(ProvisionedThroughput.builder()
+                            .readCapacityUnits(5L)
+                            .writeCapacityUnits(5L)
+                            .build())
+                    .globalSecondaryIndexes(
+                            GlobalSecondaryIndex.builder()
+                                    .indexName("idx_memberId_createdAt")
+                                    .keySchema(
+                                            KeySchemaElement.builder()
+                                                    .attributeName("memberId")
+                                                    .keyType(KeyType.HASH)
+                                                    .build(),
+                                            KeySchemaElement.builder()
+                                                    .attributeName("createdAt")
+                                                    .keyType(KeyType.RANGE)
+                                                    .build()
+                                    )
+                                    .projection(Projection.builder()
+                                            .projectionType(ProjectionType.ALL)
+                                            .build())
+                                    .provisionedThroughput(ProvisionedThroughput.builder()
+                                            .readCapacityUnits(5L)
+                                            .writeCapacityUnits(5L)
+                                            .build())
+                                    .build()
+                    )
+                    .build();
 
             amazonDynamoDB.createTable(createTableRequest);
 

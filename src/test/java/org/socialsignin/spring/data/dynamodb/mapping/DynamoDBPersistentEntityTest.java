@@ -15,7 +15,7 @@
  */
 package org.socialsignin.spring.data.dynamodb.mapping;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,11 +31,16 @@ import java.util.Comparator;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * SDK v2 Migration Notes:
+ * - SDK v1: @DynamoDBHashKey → SDK v2: @DynamoDbPartitionKey
+ * - The DynamoDBPersistentEntity implementation remains compatible with both annotations
+ * - Test validates that the persistent entity can identify ID properties correctly
+ */
 @ExtendWith(MockitoExtension.class)
 public class DynamoDBPersistentEntityTest {
 
     static class DynamoDBPersistentEntity {
-        @DynamoDBHashKey
         private String id;
 
         @Id
@@ -43,6 +48,15 @@ public class DynamoDBPersistentEntityTest {
 
         @SuppressWarnings("unused")
         private String name;
+
+        @DynamoDbPartitionKey
+        public String getId() {
+            return id;
+        }
+
+        public void setId(String id) {
+            this.id = id;
+        }
     }
 
     @Mock

@@ -1,8 +1,5 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBSaveExpression;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBDeleteExpression;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -12,11 +9,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.Expression;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.model.DeleteItemEnhancedRequest;
+import software.amazon.awssdk.enhanced.dynamodb.model.PutItemEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
-import software.amazon.awssdk.services.dynamodb.model.ExpectedAttributeValue;
 
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,6 +41,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * - Complex multi-attribute conditions
  * - Expected value matching
  * - Condition failure handling
+ *
+ * SDK v2 Migration Notes:
+ * - SDK v1: DynamoDBMapper with DynamoDBSaveExpression/DynamoDBDeleteExpression
+ * - SDK v2: DynamoDBTemplate with Expression and condition expression strings
+ * - SDK v1: ExpectedAttributeValue with comparison operators (EQ, LE, GE, etc.)
+ * - SDK v2: Expression with condition expressions and attribute value maps
+ * - Condition syntax changed from ComparisonOperator to condition expression strings
  */
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {DynamoDBLocalResource.class, ConditionalExpressionsIntegrationTest.TestAppConfig.class})
@@ -57,10 +65,15 @@ public class ConditionalExpressionsIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
-    private DynamoDBMapper dynamoDBMapper;
+    private DynamoDbEnhancedClient enhancedClient;
+
+    private DynamoDbTable<User> userTable;
 
     @BeforeEach
     void setUp() {
+        // Initialize the DynamoDB table for User entity
+        userTable = enhancedClient.table("User", TableSchema.fromBean(User.class));
+
         // Clear all data before each test
         userRepository.deleteAll();
     }
@@ -85,18 +98,22 @@ public class ConditionalExpressionsIntegrationTest {
         user.setName("Updated User 5");
         user.setNumberOfPlaylists(20);
 
-        DynamoDBSaveExpression saveExpression = new DynamoDBSaveExpression();
-        Map<String, ExpectedAttributeValue> expected = new HashMap<>();
-        expected.put("numberOfPlaylists",
-                ExpectedAttributeValue.builder()
-                        .value(AttributeValue.builder().n("10")
-                                .build())
-                        .comparisonOperator("EQ")
-                .build());
-        saveExpression.setExpected(expected);
+        // SDK v2: Use Enhanced Client with PutItemEnhancedRequest and condition expression
+        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
+        expressionAttributeValues.put(":val", AttributeValue.builder().n("10").build());
+
+        Expression conditionExpression = Expression.builder()
+                .expression("numberOfPlaylists = :val")
+                .expressionValues(expressionAttributeValues)
+                .build();
+
+        PutItemEnhancedRequest<User> putRequest = PutItemEnhancedRequest.builder(User.class)
+                .item(user)
+                .conditionExpression(conditionExpression)
+                .build();
 
         // Should succeed since numberOfPlaylists is 10
-        dynamoDBMapper.save(user, saveExpression);
+        userTable.putItem(putRequest);
 
         // Then - Verify update succeeded
         User updatedUser = userRepository.findById("cond-user-5").orElse(null);
@@ -120,18 +137,22 @@ public class ConditionalExpressionsIntegrationTest {
         user.setName("Should Fail");
         user.setNumberOfPlaylists(20);
 
-        DynamoDBSaveExpression saveExpression = new DynamoDBSaveExpression();
-        Map<String, ExpectedAttributeValue> expected = new HashMap<>();
-        expected.put("numberOfPlaylists",
-                ExpectedAttributeValue.builder()
-                        .value(AttributeValue.builder().n("999")
-                                .build())
-                        .comparisonOperator("EQ")
-                .build());
-        saveExpression.setExpected(expected);
+        // SDK v2: Condition expression expecting wrong value
+        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
+        expressionAttributeValues.put(":val", AttributeValue.builder().n("999").build());
+
+        Expression conditionExpression = Expression.builder()
+                .expression("numberOfPlaylists = :val")
+                .expressionValues(expressionAttributeValues)
+                .build();
+
+        PutItemEnhancedRequest<User> putRequest = PutItemEnhancedRequest.builder(User.class)
+                .item(user)
+                .conditionExpression(conditionExpression)
+                .build();
 
         // Should throw ConditionalCheckFailedException
-        assertThatThrownBy(() -> dynamoDBMapper.save(user, saveExpression))
+        assertThatThrownBy(() -> userTable.putItem(putRequest))
                 .isInstanceOf(ConditionalCheckFailedException.class);
 
         // Verify original data unchanged
@@ -155,18 +176,21 @@ public class ConditionalExpressionsIntegrationTest {
         userRepository.save(user);
 
         // When - Delete only if numberOfPlaylists is 10
-        DynamoDBDeleteExpression deleteExpression = new DynamoDBDeleteExpression();
-        Map<String, ExpectedAttributeValue> expected = new HashMap<>();
-        expected.put("numberOfPlaylists",
-                ExpectedAttributeValue.builder()
-                        .value(AttributeValue.builder().n("10")
-                                .build())
-                        .comparisonOperator("EQ")
-                .build());
-        deleteExpression.setExpected(expected);
+        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
+        expressionAttributeValues.put(":val", AttributeValue.builder().n("10").build());
+
+        Expression conditionExpression = Expression.builder()
+                .expression("numberOfPlaylists = :val")
+                .expressionValues(expressionAttributeValues)
+                .build();
+
+        DeleteItemEnhancedRequest deleteRequest = DeleteItemEnhancedRequest.builder()
+                .key(k -> k.partitionValue(user.getId()))
+                .conditionExpression(conditionExpression)
+                .build();
 
         // Should succeed
-        dynamoDBMapper.delete(user, deleteExpression);
+        userTable.deleteItem(deleteRequest);
 
         // Then - Verify deletion
         boolean exists = userRepository.existsById("cond-user-7");
@@ -185,18 +209,21 @@ public class ConditionalExpressionsIntegrationTest {
         userRepository.save(user);
 
         // When/Then - Attempt to delete with wrong expected value (expecting 999)
-        DynamoDBDeleteExpression deleteExpression = new DynamoDBDeleteExpression();
-        Map<String, ExpectedAttributeValue> expected = new HashMap<>();
-        expected.put("numberOfPlaylists",
-                ExpectedAttributeValue.builder()
-                        .value(AttributeValue.builder().n("999")
-                                .build())
-                        .comparisonOperator("EQ")
-                .build());
-        deleteExpression.setExpected(expected);
+        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
+        expressionAttributeValues.put(":val", AttributeValue.builder().n("999").build());
+
+        Expression conditionExpression = Expression.builder()
+                .expression("numberOfPlaylists = :val")
+                .expressionValues(expressionAttributeValues)
+                .build();
+
+        DeleteItemEnhancedRequest deleteRequest = DeleteItemEnhancedRequest.builder()
+                .key(k -> k.partitionValue(user.getId()))
+                .conditionExpression(conditionExpression)
+                .build();
 
         // Should throw ConditionalCheckFailedException
-        assertThatThrownBy(() -> dynamoDBMapper.delete(user, deleteExpression))
+        assertThatThrownBy(() -> userTable.deleteItem(deleteRequest))
                 .isInstanceOf(ConditionalCheckFailedException.class);
 
         // Verify item still exists
@@ -222,29 +249,24 @@ public class ConditionalExpressionsIntegrationTest {
         user.setName("Updated User 9");
         user.setNumberOfPlaylists(20);
 
-        DynamoDBSaveExpression saveExpression = new DynamoDBSaveExpression();
-        Map<String, ExpectedAttributeValue> expected = new HashMap<>();
+        // SDK v2: Multiple conditions with AND operator
+        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
+        expressionAttributeValues.put(":playlistVal", AttributeValue.builder().n("10").build());
+        expressionAttributeValues.put(":nameVal", AttributeValue.builder().s("User 9").build());
 
-        // Condition 1: numberOfPlaylists must be 10
-        expected.put("numberOfPlaylists",
-                ExpectedAttributeValue.builder()
-                        .value(AttributeValue.builder().n("10")
-                                .build())
-                        .comparisonOperator("EQ")
-                .build());
+        Expression conditionExpression = Expression.builder()
+                .expression("numberOfPlaylists = :playlistVal AND #name = :nameVal")
+                .expressionValues(expressionAttributeValues)
+                .putExpressionName("#name", "name")  // name is a reserved word in DynamoDB
+                .build();
 
-        // Condition 2: name must be "User 9"
-        expected.put("name",
-                ExpectedAttributeValue.builder()
-                        .value(AttributeValue.builder().s("User 9")
-                                .build())
-                        .comparisonOperator("EQ")
-                .build());
-
-        saveExpression.setExpected(expected);
+        PutItemEnhancedRequest<User> putRequest = PutItemEnhancedRequest.builder(User.class)
+                .item(user)
+                .conditionExpression(conditionExpression)
+                .build();
 
         // Should succeed since both conditions match
-        dynamoDBMapper.save(user, saveExpression);
+        userTable.putItem(putRequest);
 
         // Then - Verify update succeeded
         User updatedUser = userRepository.findById("cond-user-9").orElse(null);
@@ -267,29 +289,24 @@ public class ConditionalExpressionsIntegrationTest {
         // When/Then - Update with one correct and one incorrect condition
         user.setName("Should Fail");
 
-        DynamoDBSaveExpression saveExpression = new DynamoDBSaveExpression();
-        Map<String, ExpectedAttributeValue> expected = new HashMap<>();
+        // SDK v2: One condition is correct, one is incorrect
+        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
+        expressionAttributeValues.put(":playlistVal", AttributeValue.builder().n("10").build());
+        expressionAttributeValues.put(":nameVal", AttributeValue.builder().s("Wrong Name").build());
 
-        // Condition 1: numberOfPlaylists must be 10 (CORRECT)
-        expected.put("numberOfPlaylists",
-                ExpectedAttributeValue.builder()
-                        .value(AttributeValue.builder().n("10")
-                                .build())
-                        .comparisonOperator("EQ")
-                .build());
+        Expression conditionExpression = Expression.builder()
+                .expression("numberOfPlaylists = :playlistVal AND #name = :nameVal")
+                .expressionValues(expressionAttributeValues)
+                .putExpressionName("#name", "name")
+                .build();
 
-        // Condition 2: name must be "Wrong Name" (INCORRECT)
-        expected.put("name",
-                ExpectedAttributeValue.builder()
-                        .value(AttributeValue.builder().s("Wrong Name")
-                                .build())
-                        .comparisonOperator("EQ")
-                .build());
-
-        saveExpression.setExpected(expected);
+        PutItemEnhancedRequest<User> putRequest = PutItemEnhancedRequest.builder(User.class)
+                .item(user)
+                .conditionExpression(conditionExpression)
+                .build();
 
         // Should fail because name doesn't match
-        assertThatThrownBy(() -> dynamoDBMapper.save(user, saveExpression))
+        assertThatThrownBy(() -> userTable.putItem(putRequest))
                 .isInstanceOf(ConditionalCheckFailedException.class);
 
         // Verify original data unchanged
@@ -314,18 +331,22 @@ public class ConditionalExpressionsIntegrationTest {
         // When - Update only if numberOfPlaylists <= 15
         user.setNumberOfPlaylists(12);
 
-        DynamoDBSaveExpression saveExpression = new DynamoDBSaveExpression();
-        Map<String, ExpectedAttributeValue> expected = new HashMap<>();
-        expected.put("numberOfPlaylists",
-                ExpectedAttributeValue.builder()
-                        .value(AttributeValue.builder().n("15")
-                                .build())
-                        .comparisonOperator("LE")
-                .build()); // Less than or equal
-        saveExpression.setExpected(expected);
+        // SDK v2: Use <= operator in condition expression
+        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
+        expressionAttributeValues.put(":val", AttributeValue.builder().n("15").build());
+
+        Expression conditionExpression = Expression.builder()
+                .expression("numberOfPlaylists <= :val")
+                .expressionValues(expressionAttributeValues)
+                .build();
+
+        PutItemEnhancedRequest<User> putRequest = PutItemEnhancedRequest.builder(User.class)
+                .item(user)
+                .conditionExpression(conditionExpression)
+                .build();
 
         // Should succeed since 10 <= 15
-        dynamoDBMapper.save(user, saveExpression);
+        userTable.putItem(putRequest);
 
         // Then - Verify update
         User updatedUser = userRepository.findById("cond-user-13").orElse(null);
@@ -347,18 +368,22 @@ public class ConditionalExpressionsIntegrationTest {
         // When - Update only if numberOfPlaylists >= 50
         user.setNumberOfPlaylists(110);
 
-        DynamoDBSaveExpression saveExpression = new DynamoDBSaveExpression();
-        Map<String, ExpectedAttributeValue> expected = new HashMap<>();
-        expected.put("numberOfPlaylists",
-                ExpectedAttributeValue.builder()
-                        .value(AttributeValue.builder().n("50")
-                                .build())
-                        .comparisonOperator("GE")
-                .build()); // Greater than or equal
-        saveExpression.setExpected(expected);
+        // SDK v2: Use >= operator in condition expression
+        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
+        expressionAttributeValues.put(":val", AttributeValue.builder().n("50").build());
+
+        Expression conditionExpression = Expression.builder()
+                .expression("numberOfPlaylists >= :val")
+                .expressionValues(expressionAttributeValues)
+                .build();
+
+        PutItemEnhancedRequest<User> putRequest = PutItemEnhancedRequest.builder(User.class)
+                .item(user)
+                .conditionExpression(conditionExpression)
+                .build();
 
         // Should succeed since 100 >= 50
-        dynamoDBMapper.save(user, saveExpression);
+        userTable.putItem(putRequest);
 
         // Then - Verify update
         User updatedUser = userRepository.findById("cond-user-14").orElse(null);
@@ -384,18 +409,22 @@ public class ConditionalExpressionsIntegrationTest {
         int currentValue = userToUpdate.getNumberOfPlaylists();
         userToUpdate.setNumberOfPlaylists(currentValue + 1);
 
-        DynamoDBSaveExpression saveExpression = new DynamoDBSaveExpression();
-        Map<String, ExpectedAttributeValue> expected = new HashMap<>();
-        expected.put("numberOfPlaylists",
-                ExpectedAttributeValue.builder()
-                        .value(AttributeValue.builder().n(String.valueOf(currentValue))
-                                .build())
-                        .comparisonOperator("EQ")
-                .build());
-        saveExpression.setExpected(expected);
+        // SDK v2: Condition to ensure we're updating from the expected value
+        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
+        expressionAttributeValues.put(":val", AttributeValue.builder().n(String.valueOf(currentValue)).build());
+
+        Expression conditionExpression = Expression.builder()
+                .expression("numberOfPlaylists = :val")
+                .expressionValues(expressionAttributeValues)
+                .build();
+
+        PutItemEnhancedRequest<User> putRequest = PutItemEnhancedRequest.builder(User.class)
+                .item(userToUpdate)
+                .conditionExpression(conditionExpression)
+                .build();
 
         // Should succeed
-        dynamoDBMapper.save(userToUpdate, saveExpression);
+        userTable.putItem(putRequest);
 
         // Then - Verify increment
         User updatedUser = userRepository.findById("cond-user-15").orElse(null);
@@ -408,8 +437,13 @@ public class ConditionalExpressionsIntegrationTest {
         staleUser.setName("User 15");
         staleUser.setNumberOfPlaylists(currentValue + 1); // Still thinks it's 5
 
+        PutItemEnhancedRequest<User> stalePutRequest = PutItemEnhancedRequest.builder(User.class)
+                .item(staleUser)
+                .conditionExpression(conditionExpression)
+                .build();
+
         // Should fail because current value is now 6, not 5
-        assertThatThrownBy(() -> dynamoDBMapper.save(staleUser, saveExpression))
+        assertThatThrownBy(() -> userTable.putItem(stalePutRequest))
                 .isInstanceOf(ConditionalCheckFailedException.class);
     }
 }

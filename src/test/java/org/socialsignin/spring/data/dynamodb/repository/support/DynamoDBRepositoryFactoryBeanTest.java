@@ -15,7 +15,6 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,8 +39,6 @@ public class DynamoDBRepositoryFactoryBeanTest {
     private ApplicationContext applicationContext;
     @Mock
     private DynamoDBOperations dynamoDBOperations;
-    @Mock
-    private DynamoDBMapperConfig dynamoDBMapperConfig;
     @Mock
     private DynamoDbClient amazonDynamoDB;
     @Mock

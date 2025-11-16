@@ -15,7 +15,7 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMarshaller;
+import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,6 +30,12 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * SDK v2 Migration Notes:
+ * - SDK v1: DynamoDBMarshaller → SDK v2: AttributeConverter
+ * - SDK v1: getMarshallerForProperty() → SDK v2: getAttributeConverterForProperty()
+ * - All other methods and behavior remain the same
+ */
 @ExtendWith(MockitoExtension.class)
 public class DynamoDBIdIsHashAndRangeKeyEntityInformationImplUnitTest {
 
@@ -60,9 +66,8 @@ public class DynamoDBIdIsHashAndRangeKeyEntityInformationImplUnitTest {
     @Mock
     private PlaylistId mockPlaylistId;
 
-    @SuppressWarnings("deprecation")
     @Mock
-    private DynamoDBMarshaller<Object> mockPropertyMarshaller;
+    private AttributeConverter<?> mockPropertyConverter;
 
     @SuppressWarnings("unchecked")
     @BeforeEach
@@ -172,14 +177,14 @@ public class DynamoDBIdIsHashAndRangeKeyEntityInformationImplUnitTest {
     }
 
     @Test
-    public void testGetMarshallerForProperty_DelegatesToEntityMetadata_IrrespectiveOfEntityInformationSetup() {
-        Mockito.when(mockPlaylistEntityMetadata.getMarshallerForProperty("marshalledProperty"))
-                .thenReturn(mockPropertyMarshaller);
+    @SuppressWarnings("unchecked")
+    public void testGetAttributeConverterForProperty_DelegatesToEntityMetadata_IrrespectiveOfEntityInformationSetup() {
+        Mockito.when(mockPlaylistEntityMetadata.getAttributeConverterForProperty("convertedProperty"))
+                .thenReturn((AttributeConverter) mockPropertyConverter);
 
-        @SuppressWarnings("deprecation")
-        DynamoDBMarshaller<?> marshaller1 = dynamoDBPlaylistEntityInformation
-                .getMarshallerForProperty("marshalledProperty");
-        assertEquals(mockPropertyMarshaller, marshaller1);
+        AttributeConverter<?> converter1 = dynamoDBPlaylistEntityInformation
+                .getAttributeConverterForProperty("convertedProperty");
+        assertEquals(mockPropertyConverter, converter1);
 
     }
 

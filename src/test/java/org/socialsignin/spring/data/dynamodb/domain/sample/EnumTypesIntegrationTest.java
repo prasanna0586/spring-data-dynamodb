@@ -1,8 +1,11 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -51,10 +54,15 @@ public class EnumTypesIntegrationTest {
     private DynamoDbClient amazonDynamoDB;
 
     @Autowired
-    private DynamoDBMapper dynamoDBMapper;
+    private DynamoDbEnhancedClient enhancedClient;
+
+    private DynamoDbTable<Task> taskTable;
 
     @BeforeEach
     void setUp() {
+        // Initialize the DynamoDB table for Task entity
+        taskTable = enhancedClient.table("Task", TableSchema.fromBean(Task.class));
+
         taskRepository.deleteAll();
     }
 
@@ -91,7 +99,7 @@ public class EnumTypesIntegrationTest {
 
         // When - Read raw item from DynamoDB
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("taskId", new AttributeValue("task-002"));
+        key.put("taskId", AttributeValue.builder().s("task-002").build());
 
         GetItemRequest request = GetItemRequest.builder()
                 .tableName("Task")
@@ -266,11 +274,11 @@ public class EnumTypesIntegrationTest {
 
         // When - Update status using DynamoDB API
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("taskId", new AttributeValue("task-update-2"));
+        key.put("taskId", AttributeValue.builder().s("task-update-2").build());
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":newStatus", new AttributeValue("COMPLETED"));
-        expressionAttributeValues.put(":newPriority", new AttributeValue("URGENT"));
+        expressionAttributeValues.put(":newStatus", AttributeValue.builder().s("COMPLETED").build());
+        expressionAttributeValues.put(":newPriority", AttributeValue.builder().s("URGENT").build());
 
         UpdateItemRequest updateRequest = UpdateItemRequest.builder()
                 .tableName("Task")
@@ -302,7 +310,7 @@ public class EnumTypesIntegrationTest {
 
         // When - Scan for completed tasks
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":status", new AttributeValue("COMPLETED"));
+        expressionAttributeValues.put(":status", AttributeValue.builder().s("COMPLETED").build());
 
         ScanRequest scanRequest = ScanRequest.builder()
                 .tableName("Task")
@@ -329,8 +337,8 @@ public class EnumTypesIntegrationTest {
 
         // When - Find tasks with status IN (PENDING, IN_PROGRESS)
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":status1", new AttributeValue("PENDING"));
-        expressionAttributeValues.put(":status2", new AttributeValue("IN_PROGRESS"));
+        expressionAttributeValues.put(":status1", AttributeValue.builder().s("PENDING").build());
+        expressionAttributeValues.put(":status2", AttributeValue.builder().s("IN_PROGRESS").build());
 
         ScanRequest scanRequest = ScanRequest.builder()
                 .tableName("Task")
@@ -357,11 +365,11 @@ public class EnumTypesIntegrationTest {
 
         // When - Only update if status is PENDING
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("taskId", new AttributeValue("task-cond-1"));
+        key.put("taskId", AttributeValue.builder().s("task-cond-1").build());
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":newStatus", new AttributeValue("IN_PROGRESS"));
-        expressionAttributeValues.put(":expectedStatus", new AttributeValue("PENDING"));
+        expressionAttributeValues.put(":newStatus", AttributeValue.builder().s("IN_PROGRESS").build());
+        expressionAttributeValues.put(":expectedStatus", AttributeValue.builder().s("PENDING").build());
 
         UpdateItemRequest updateRequest = UpdateItemRequest.builder()
                 .tableName("Task")
@@ -389,11 +397,11 @@ public class EnumTypesIntegrationTest {
 
         // When - Try to update but expect PENDING (actual is COMPLETED)
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("taskId", new AttributeValue("task-cond-2"));
+        key.put("taskId", AttributeValue.builder().s("task-cond-2").build());
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":newStatus", new AttributeValue("IN_PROGRESS"));
-        expressionAttributeValues.put(":expectedStatus", new AttributeValue("PENDING"));
+        expressionAttributeValues.put(":newStatus", AttributeValue.builder().s("IN_PROGRESS").build());
+        expressionAttributeValues.put(":expectedStatus", AttributeValue.builder().s("PENDING").build());
 
         UpdateItemRequest updateRequest = UpdateItemRequest.builder()
                 .tableName("Task")
@@ -453,7 +461,7 @@ public class EnumTypesIntegrationTest {
 
         // When - Try to query with wrong case (should not match)
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":status", new AttributeValue("in_progress")); // lowercase
+        expressionAttributeValues.put(":status", AttributeValue.builder().s("in_progress").build()); // lowercase
 
         ScanRequest scanRequest = ScanRequest.builder()
                 .tableName("Task")
@@ -493,16 +501,17 @@ public class EnumTypesIntegrationTest {
 
     @Test
     @org.junit.jupiter.api.Order(18)
-    @DisplayName("Test 18: DynamoDBMapper with enum")
-    void testDynamoDBMapperWithEnum() {
+    @DisplayName("Test 18: DynamoDbEnhancedClient with enum")
+    void testEnhancedClientWithEnum() {
         // Given
-        Task task = new Task("task-mapper-1", "Task via Mapper", TaskStatus.IN_PROGRESS, Priority.URGENT);
+        Task task = new Task("task-mapper-1", "Task via Enhanced Client", TaskStatus.IN_PROGRESS, Priority.URGENT);
 
-        // When - Save using DynamoDBMapper
-        dynamoDBMapper.save(task);
+        // When - Save using DynamoDbEnhancedClient
+        taskTable.putItem(task);
 
-        // Then - Load using DynamoDBMapper
-        Task loaded = dynamoDBMapper.load(Task.class, "task-mapper-1");
+        // Then - Load using DynamoDbEnhancedClient
+        Key key = Key.builder().partitionValue("task-mapper-1").build();
+        Task loaded = taskTable.getItem(key);
         assertThat(loaded).isNotNull();
         assertThat(loaded.getStatus()).isEqualTo(TaskStatus.IN_PROGRESS);
         assertThat(loaded.getPriority()).isEqualTo(Priority.URGENT);

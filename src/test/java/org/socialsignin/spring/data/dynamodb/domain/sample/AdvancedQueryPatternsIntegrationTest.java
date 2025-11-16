@@ -2,9 +2,6 @@ package org.socialsignin.spring.data.dynamodb.domain.sample;
 
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -15,13 +12,19 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.time.Instant;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Comprehensive integration tests for advanced query patterns and complex filter expressions.
+ *
+ * SDK v2 Migration Notes:
+ * - SDK v1: DynamoDBMapper → SDK v2: DynamoDbEnhancedClient (not used in this test)
+ * - SDK v1: DynamoDBQueryExpression/DynamoDBScanExpression → SDK v2: Direct scan/query with DynamoDbClient
+ * - SDK v1: new AttributeValue("string") → SDK v2: AttributeValue.fromS("string")
+ * - All scan operations use SDK v2 ScanRequest and ScanResponse
+ * - Filter expressions use the same syntax in both SDKs
  *
  * Coverage:
  * - Complex filter expressions (AND, OR, NOT)
@@ -53,9 +56,6 @@ public class AdvancedQueryPatternsIntegrationTest {
 
     @Autowired
     private DynamoDbClient amazonDynamoDB;
-
-    @Autowired
-    private DynamoDBMapper dynamoDBMapper;
 
     @BeforeEach
     void setUp() {
@@ -133,8 +133,8 @@ public class AdvancedQueryPatternsIntegrationTest {
     void testFilterExpressionIn() {
         // When - Scan with IN filter
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":code1", new AttributeValue("12345"));
-        expressionAttributeValues.put(":code2", new AttributeValue("67890"));
+        expressionAttributeValues.put(":code1", AttributeValue.fromS("12345"));
+        expressionAttributeValues.put(":code2", AttributeValue.fromS("67890"));
 
         ScanRequest scanRequest = ScanRequest.builder()
                 .tableName("user")
@@ -154,7 +154,7 @@ public class AdvancedQueryPatternsIntegrationTest {
     void testFilterExpressionBeginsWith() {
         // When - Scan for names beginning with "Alice"
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":prefix", new AttributeValue("Alice"));
+        expressionAttributeValues.put(":prefix", AttributeValue.fromS("Alice"));
 
         Map<String, String> expressionAttributeNames = new HashMap<>();
         expressionAttributeNames.put("#n", "name");
@@ -178,7 +178,7 @@ public class AdvancedQueryPatternsIntegrationTest {
     void testFilterExpressionContains() {
         // When - Scan for names containing "Brown"
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":substring", new AttributeValue("Brown"));
+        expressionAttributeValues.put(":substring", AttributeValue.fromS("Brown"));
 
         Map<String, String> expressionAttributeNames = new HashMap<>();
         expressionAttributeNames.put("#n", "name");
@@ -202,7 +202,7 @@ public class AdvancedQueryPatternsIntegrationTest {
     void testFilterExpressionAnd() {
         // When - Scan with multiple AND conditions
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":postCode", new AttributeValue("12345"));
+        expressionAttributeValues.put(":postCode", AttributeValue.fromS("12345"));
         expressionAttributeValues.put(":minPlaylists", AttributeValue.builder().n("8")
                 .build());
 
@@ -247,7 +247,7 @@ public class AdvancedQueryPatternsIntegrationTest {
     void testFilterExpressionNot() {
         // When - Scan with NOT condition
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":code", new AttributeValue("12345"));
+        expressionAttributeValues.put(":code", AttributeValue.fromS("12345"));
 
         ScanRequest scanRequest = ScanRequest.builder()
                 .tableName("user")
@@ -320,11 +320,11 @@ public class AdvancedQueryPatternsIntegrationTest {
     void testComplexFilterExpression() {
         // When - Complex filter: (postCode=12345 OR postCode=67890) AND playlists > 5 AND name begins with A
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":code1", new AttributeValue("12345"));
-        expressionAttributeValues.put(":code2", new AttributeValue("67890"));
+        expressionAttributeValues.put(":code1", AttributeValue.fromS("12345"));
+        expressionAttributeValues.put(":code2", AttributeValue.fromS("67890"));
         expressionAttributeValues.put(":minPlaylists", AttributeValue.builder().n("5")
                 .build());
-        expressionAttributeValues.put(":prefix", new AttributeValue("A"));
+        expressionAttributeValues.put(":prefix", AttributeValue.fromS("A"));
 
         Map<String, String> expressionAttributeNames = new HashMap<>();
         expressionAttributeNames.put("#n", "name");
