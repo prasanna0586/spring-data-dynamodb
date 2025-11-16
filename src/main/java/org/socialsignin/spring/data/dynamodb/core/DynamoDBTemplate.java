@@ -303,29 +303,56 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
 
         List<BatchWriteResult> results = new ArrayList<>();
 
-        // Create batch write request
-        BatchWriteItemEnhancedRequest.Builder requestBuilder = BatchWriteItemEnhancedRequest.builder();
-
-        for (Map.Entry<Class<?>, List<Object>> entry : entitiesByClass.entrySet()) {
-            @SuppressWarnings("unchecked")
-            Class<Object> domainClass = (Class<Object>) entry.getKey();
-            List<Object> classEntities = entry.getValue();
-
-            DynamoDbTable<Object> table = getTable(domainClass);
-
-            WriteBatch.Builder<Object> batchBuilder = WriteBatch.builder(domainClass)
-                    .mappedTableResource(table);
-
-            for (Object entity : classEntities) {
-                batchBuilder.addPutItem(entity);
-            }
-
-            requestBuilder.addWriteBatch(batchBuilder.build());
+        // If no entities to save, return empty results
+        if (entitiesByClass.isEmpty()) {
+            return results;
         }
 
-        // Execute batch write
-        BatchWriteResult result = enhancedClient.batchWriteItem(requestBuilder.build());
-        results.add(result);
+        // DynamoDB has a limit of 25 items per batch write request
+        // We need to split entities into chunks and process them separately
+        final int BATCH_WRITE_MAX_SIZE = 25;
+
+        // Collect all entities into a flat list for batching
+        List<Object> allEntities = new ArrayList<>();
+        for (List<Object> classEntities : entitiesByClass.values()) {
+            allEntities.addAll(classEntities);
+        }
+
+        // Process in chunks of 25
+        for (int i = 0; i < allEntities.size(); i += BATCH_WRITE_MAX_SIZE) {
+            int endIndex = Math.min(i + BATCH_WRITE_MAX_SIZE, allEntities.size());
+            List<Object> chunk = allEntities.subList(i, endIndex);
+
+            // Re-group this chunk by class
+            Map<Class<?>, List<Object>> chunkByClass = new HashMap<>();
+            for (Object entity : chunk) {
+                chunkByClass.computeIfAbsent(entity.getClass(), k -> new ArrayList<>()).add(entity);
+            }
+
+            // Create batch write request for this chunk
+            BatchWriteItemEnhancedRequest.Builder requestBuilder = BatchWriteItemEnhancedRequest.builder();
+
+            for (Map.Entry<Class<?>, List<Object>> entry : chunkByClass.entrySet()) {
+                @SuppressWarnings("unchecked")
+                Class<Object> domainClass = (Class<Object>) entry.getKey();
+                List<Object> classEntities = entry.getValue();
+
+                DynamoDbTable<Object> table = getTable(domainClass);
+
+                WriteBatch.Builder<Object> batchBuilder = WriteBatch.builder(domainClass)
+                        .mappedTableResource(table);
+
+                for (Object entity : classEntities) {
+                    batchBuilder.addPutItem(entity);
+                }
+
+                requestBuilder.addWriteBatch(batchBuilder.build());
+            }
+
+            // Execute batch write for this chunk
+            BatchWriteResult result = enhancedClient.batchWriteItem(requestBuilder.build());
+            results.add(result);
+        }
 
         entities.forEach(it -> maybeEmitEvent(it, AfterSaveEvent::new));
         return results;
@@ -355,29 +382,56 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
 
         List<BatchWriteResult> results = new ArrayList<>();
 
-        // Create batch write request
-        BatchWriteItemEnhancedRequest.Builder requestBuilder = BatchWriteItemEnhancedRequest.builder();
-
-        for (Map.Entry<Class<?>, List<Object>> entry : entitiesByClass.entrySet()) {
-            @SuppressWarnings("unchecked")
-            Class<Object> domainClass = (Class<Object>) entry.getKey();
-            List<Object> classEntities = entry.getValue();
-
-            DynamoDbTable<Object> table = getTable(domainClass);
-
-            WriteBatch.Builder<Object> batchBuilder = WriteBatch.builder(domainClass)
-                    .mappedTableResource(table);
-
-            for (Object entity : classEntities) {
-                batchBuilder.addDeleteItem(entity);
-            }
-
-            requestBuilder.addWriteBatch(batchBuilder.build());
+        // If no entities to delete, return empty results
+        if (entitiesByClass.isEmpty()) {
+            return results;
         }
 
-        // Execute batch write
-        BatchWriteResult result = enhancedClient.batchWriteItem(requestBuilder.build());
-        results.add(result);
+        // DynamoDB has a limit of 25 items per batch write request
+        // We need to split entities into chunks and process them separately
+        final int BATCH_WRITE_MAX_SIZE = 25;
+
+        // Collect all entities into a flat list for batching
+        List<Object> allEntities = new ArrayList<>();
+        for (List<Object> classEntities : entitiesByClass.values()) {
+            allEntities.addAll(classEntities);
+        }
+
+        // Process in chunks of 25
+        for (int i = 0; i < allEntities.size(); i += BATCH_WRITE_MAX_SIZE) {
+            int endIndex = Math.min(i + BATCH_WRITE_MAX_SIZE, allEntities.size());
+            List<Object> chunk = allEntities.subList(i, endIndex);
+
+            // Re-group this chunk by class
+            Map<Class<?>, List<Object>> chunkByClass = new HashMap<>();
+            for (Object entity : chunk) {
+                chunkByClass.computeIfAbsent(entity.getClass(), k -> new ArrayList<>()).add(entity);
+            }
+
+            // Create batch write request for this chunk
+            BatchWriteItemEnhancedRequest.Builder requestBuilder = BatchWriteItemEnhancedRequest.builder();
+
+            for (Map.Entry<Class<?>, List<Object>> entry : chunkByClass.entrySet()) {
+                @SuppressWarnings("unchecked")
+                Class<Object> domainClass = (Class<Object>) entry.getKey();
+                List<Object> classEntities = entry.getValue();
+
+                DynamoDbTable<Object> table = getTable(domainClass);
+
+                WriteBatch.Builder<Object> batchBuilder = WriteBatch.builder(domainClass)
+                        .mappedTableResource(table);
+
+                for (Object entity : classEntities) {
+                    batchBuilder.addDeleteItem(entity);
+                }
+
+                requestBuilder.addWriteBatch(batchBuilder.build());
+            }
+
+            // Execute batch write for this chunk
+            BatchWriteResult result = enhancedClient.batchWriteItem(requestBuilder.build());
+            results.add(result);
+        }
 
         entities.forEach(it -> maybeEmitEvent(it, AfterDeleteEvent::new));
         return results;

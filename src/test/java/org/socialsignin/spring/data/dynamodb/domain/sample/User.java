@@ -52,6 +52,7 @@ public class User {
         this.testSet = testSet;
     }
 
+    @software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbConvertedBy(org.socialsignin.spring.data.dynamodb.marshaller.Date2IsoAttributeConverter.class)
     public Date getJoinDate() {
         return joinDate;
     }

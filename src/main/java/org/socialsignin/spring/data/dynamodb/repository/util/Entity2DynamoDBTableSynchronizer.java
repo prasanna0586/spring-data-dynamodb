@@ -17,8 +17,11 @@ package org.socialsignin.spring.data.dynamodb.repository.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.socialsignin.spring.data.dynamodb.core.TableSchemaFactory;
+import org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext;
 import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBEntityInformation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ApplicationContextEvent;
@@ -26,6 +29,9 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.ContextStoppedEvent;
 import org.springframework.data.repository.core.support.RepositoryProxyPostProcessor;
 import org.springframework.util.ReflectionUtils;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
@@ -56,35 +62,43 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
     private static final String CONFIGURATION_KEY_entity2ddl_writeCapacity = "${spring.data.dynamodb.entity2ddl.writeCapacity:1}";
 
     private final DynamoDbClient amazonDynamoDB;
+    private final DynamoDbEnhancedClient enhancedClient;
+    private final DynamoDBMappingContext mappingContext;
 
     private final Entity2DDL mode;
     private final ProjectionType gsiProjectionType;
     private final ProjectionType lsiProjectionType;
-    private final ProvisionedThroughput pt;
+    private final long readCapacity;
+    private final long writeCapacity;
 
     private final Collection<DynamoDBEntityInformation<T, ID>> registeredEntities = new ArrayList<>();
 
-    public Entity2DynamoDBTableSynchronizer(DynamoDbClient amazonDynamoDB, Entity2DDL mode) {
-        this(amazonDynamoDB, mode.getConfigurationValue(), ProjectionType.ALL.name(), ProjectionType.ALL.name(),
-                10L, 10L);
+    public Entity2DynamoDBTableSynchronizer(DynamoDbClient amazonDynamoDB,
+            DynamoDbEnhancedClient enhancedClient,
+            DynamoDBMappingContext mappingContext,
+            Entity2DDL mode) {
+        this(amazonDynamoDB, enhancedClient, mappingContext, mode.getConfigurationValue(),
+                ProjectionType.ALL.name(), ProjectionType.ALL.name(), 10L, 10L);
     }
 
     @Autowired
     public Entity2DynamoDBTableSynchronizer(DynamoDbClient amazonDynamoDB,
+            @Qualifier("dynamoDbEnhancedClient") DynamoDbEnhancedClient enhancedClient,
+            @Qualifier("dynamoDBMappingContext") DynamoDBMappingContext mappingContext,
             @Value(CONFIGURATION_KEY_entity2ddl_auto) String mode,
             @Value(CONFIGURATION_KEY_entity2ddl_gsiProjectionType) String gsiProjectionType,
             @Value(CONFIGURATION_KEY_entity2ddl_lsiProjectionType) String lsiProjectionType,
             @Value(CONFIGURATION_KEY_entity2ddl_readCapacity) long readCapacity,
             @Value(CONFIGURATION_KEY_entity2ddl_writeCapacity) long writeCapacity) {
         this.amazonDynamoDB = amazonDynamoDB;
+        this.enhancedClient = enhancedClient;
+        this.mappingContext = mappingContext;
 
         this.mode = Entity2DDL.fromValue(mode);
-        this.pt = ProvisionedThroughput.builder()
-                .readCapacityUnits(readCapacity)
-                .writeCapacityUnits(writeCapacity)
-                .build();
         this.gsiProjectionType = ProjectionType.fromValue(gsiProjectionType);
         this.lsiProjectionType = ProjectionType.fromValue(lsiProjectionType);
+        this.readCapacity = readCapacity;
+        this.writeCapacity = writeCapacity;
     }
 
     @Override
@@ -151,29 +165,69 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
 
     }
 
+    /**
+     * Creates a DynamoDB table using the Enhanced Client.
+     *
+     * <p>Uses AWS SDK v2 Enhanced Client's automatic schema generation from annotations.
+     * This approach automatically handles:
+     * <ul>
+     *   <li>Key schema creation (partition and sort keys)</li>
+     *   <li>Attribute definitions</li>
+     *   <li>Local Secondary Index (LSI) creation</li>
+     *   <li>Global Secondary Index (GSI) creation</li>
+     *   <li>Correct key ordering</li>
+     * </ul>
+     *
+     * @param entityInformation Entity metadata
+     * @return true if table was created, false if already exists
+     * @throws InterruptedException if waiting for table creation is interrupted
+     */
     private boolean performCreate(DynamoDBEntityInformation<T, ID> entityInformation)
             throws InterruptedException {
         Class<T> domainType = entityInformation.getJavaType();
+        String tableName = entityInformation.getDynamoDBTableName();
 
-        CreateTableRequest ctr = generateCreateTableRequest(domainType);
-        LOGGER.trace("Creating table {} for entity {}", ctr.tableName(), domainType);
+        LOGGER.info("Creating table {} for entity {} using Enhanced Client",
+                tableName, domainType.getSimpleName());
 
         try {
-            amazonDynamoDB.createTable(ctr);
-            LOGGER.debug("Table creation initiated for {}", ctr.tableName());
+            // Create table schema using factory (respects marshalling mode)
+            TableSchema<T> schema = TableSchemaFactory.createTableSchema(
+                    domainType,
+                    mappingContext.getMarshallingMode());
+
+            // Get table reference from Enhanced Client
+            DynamoDbTable<T> table = enhancedClient.table(tableName, schema);
+
+            // Create table with configuration for provisioned throughput
+            // Note: Since SDK v2.20.86+, indexes are automatically created from annotations
+            // with ALL projection type and default throughput (can be customized if needed)
+            table.createTable(builder -> builder
+                    .provisionedThroughput(b -> b
+                            .readCapacityUnits(readCapacity)
+                            .writeCapacityUnits(writeCapacity)));
+
+            LOGGER.info("Table {} created successfully for entity {}",
+                    tableName, domainType.getSimpleName());
 
             // Wait for table to become active
             try (DynamoDbWaiter waiter = DynamoDbWaiter.builder().client(amazonDynamoDB).build()) {
                 DescribeTableRequest describeRequest = DescribeTableRequest.builder()
-                        .tableName(ctr.tableName())
+                        .tableName(tableName)
                         .build();
                 waiter.waitUntilTableExists(describeRequest);
-                LOGGER.debug("Created table {} for entity {}", ctr.tableName(), domainType);
+                LOGGER.debug("Table {} is now active", tableName);
             }
+
             return true;
+
         } catch (ResourceInUseException e) {
-            LOGGER.debug("Table {} already exists", ctr.tableName());
+            LOGGER.debug("Table {} already exists", tableName);
             return false;
+        } catch (DynamoDbException e) {
+            LOGGER.error("Failed to create table {} for entity {}. Error: {}",
+                    tableName, domainType.getSimpleName(), e.getMessage(), e);
+            throw e;
         }
     }
 
@@ -271,6 +325,9 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
         findPartitionKey(domainType, keySchema, attributeTypes);
         findSortKey(domainType, keySchema, attributeTypes);
 
+        // SDK v2 REQUIRES Hash Key BEFORE Range Key in keySchema list
+        sortKeySchemaElements(keySchema);
+
         // Find GSIs
         List<GlobalSecondaryIndex> globalSecondaryIndexes = findGlobalSecondaryIndexes(domainType, attributeTypes);
 
@@ -289,7 +346,10 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
                 .tableName(tableName)
                 .keySchema(keySchema)
                 .attributeDefinitions(attributeDefinitions)
-                .provisionedThroughput(pt);
+                .provisionedThroughput(ProvisionedThroughput.builder()
+                        .readCapacityUnits(readCapacity)
+                        .writeCapacityUnits(writeCapacity)
+                        .build());
 
         if (!globalSecondaryIndexes.isEmpty()) {
             builder.globalSecondaryIndexes(globalSecondaryIndexes);
@@ -308,6 +368,9 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
         // For custom table names, users should use TableNameResolver
         return domainType.getSimpleName();
     }
+
+    // Note: The following introspection methods are kept for performValidate() but are deprecated.
+    // TODO: Consider using Enhanced Client's TableSchema for validation in a future update.
 
     private void findPartitionKey(Class<T> domainType, List<KeySchemaElement> keySchema,
                                    Map<String, ScalarAttributeType> attributeTypes) {
@@ -375,7 +438,10 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
                                 k -> GlobalSecondaryIndex.builder()
                                         .indexName(indexName)
                                         .projection(Projection.builder().projectionType(gsiProjectionType).build())
-                                        .provisionedThroughput(pt));
+                                        .provisionedThroughput(ProvisionedThroughput.builder()
+                                                .readCapacityUnits(readCapacity)
+                                                .writeCapacityUnits(writeCapacity)
+                                                .build()));
 
                         List<KeySchemaElement> keySchema = new ArrayList<>(gsiBuilder.build().keySchema());
                         keySchema.add(KeySchemaElement.builder()
@@ -398,7 +464,10 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
                                 k -> GlobalSecondaryIndex.builder()
                                         .indexName(indexName)
                                         .projection(Projection.builder().projectionType(gsiProjectionType).build())
-                                        .provisionedThroughput(pt));
+                                        .provisionedThroughput(ProvisionedThroughput.builder()
+                                                .readCapacityUnits(readCapacity)
+                                                .writeCapacityUnits(writeCapacity)
+                                                .build()));
 
                         List<KeySchemaElement> keySchema = new ArrayList<>(gsiBuilder.build().keySchema());
                         keySchema.add(KeySchemaElement.builder()
@@ -424,7 +493,10 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
                                 k -> GlobalSecondaryIndex.builder()
                                         .indexName(indexName)
                                         .projection(Projection.builder().projectionType(gsiProjectionType).build())
-                                        .provisionedThroughput(pt));
+                                        .provisionedThroughput(ProvisionedThroughput.builder()
+                                                .readCapacityUnits(readCapacity)
+                                                .writeCapacityUnits(writeCapacity)
+                                                .build()));
 
                         List<KeySchemaElement> keySchema = new ArrayList<>(gsiBuilder.build().keySchema());
                         keySchema.add(KeySchemaElement.builder()
@@ -447,7 +519,10 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
                                 k -> GlobalSecondaryIndex.builder()
                                         .indexName(indexName)
                                         .projection(Projection.builder().projectionType(gsiProjectionType).build())
-                                        .provisionedThroughput(pt));
+                                        .provisionedThroughput(ProvisionedThroughput.builder()
+                                                .readCapacityUnits(readCapacity)
+                                                .writeCapacityUnits(writeCapacity)
+                                                .build()));
 
                         List<KeySchemaElement> keySchema = new ArrayList<>(gsiBuilder.build().keySchema());
                         keySchema.add(KeySchemaElement.builder()
@@ -461,17 +536,21 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
             }
         });
 
+        // Sort keySchema for each GSI to ensure HASH before RANGE
         return gsiBuilders.values().stream()
-                .map(GlobalSecondaryIndex.Builder::build)
+                .map(builder -> {
+                    GlobalSecondaryIndex gsi = builder.build();
+                    List<KeySchemaElement> sortedKeySchema = new ArrayList<>(gsi.keySchema());
+                    sortKeySchemaElements(sortedKeySchema);
+                    return builder.keySchema(sortedKeySchema).build();
+                })
                 .collect(Collectors.toList());
     }
 
     private List<LocalSecondaryIndex> findLocalSecondaryIndexes(Class<T> domainType,
                                                                   Map<String, ScalarAttributeType> attributeTypes) {
-        // LSIs use the same partition key as the table and only differ in sort key
-        // They are marked with @DynamoDbSecondarySortKey where the GSI flag is not set
-        // For simplicity, we'll treat all @DynamoDbSecondarySortKey as GSI in this implementation
-        // A full implementation would check the annotation's properties to differentiate LSI vs GSI
+        // Note: LSI creation is now handled automatically by Enhanced Client
+        // This method is kept only for validation purposes
         return Collections.emptyList();
     }
 
@@ -509,6 +588,17 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
         }
         // Default to String for complex types
         return ScalarAttributeType.S;
+    }
+
+    /**
+     * Sorts KeySchemaElement list to ensure HASH key comes before RANGE key.
+     * AWS SDK v2 requires this specific order in CreateTableRequest.
+     */
+    private void sortKeySchemaElements(List<KeySchemaElement> keySchema) {
+        keySchema.sort((k1, k2) -> {
+            if (k1.keyType() == k2.keyType()) return 0;
+            return k1.keyType() == KeyType.HASH ? -1 : 1;
+        });
     }
 
 }

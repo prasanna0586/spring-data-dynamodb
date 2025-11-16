@@ -31,12 +31,15 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteriaUnitTest
 
     @Mock
     private DynamoDBIdIsHashAndRangeKeyEntityInformation<Playlist, String> entityInformation;
+    @Mock
+    private org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext mappingContext;
 
     @BeforeEach
     public void setUp() {
         Mockito.when(entityInformation.getHashKeyPropertyName()).thenReturn("userName");
         Mockito.when(entityInformation.getRangeKeyPropertyName()).thenReturn("playlistName");
-        criteria = new DynamoDBEntityWithHashAndRangeKeyCriteria<>(entityInformation, null, null);
+        Mockito.when(mappingContext.getMarshallingMode()).thenReturn(org.socialsignin.spring.data.dynamodb.core.MarshallingMode.SDK_V2_NATIVE);
+        criteria = new DynamoDBEntityWithHashAndRangeKeyCriteria<>(entityInformation, null, mappingContext);
     }
 
     @Test

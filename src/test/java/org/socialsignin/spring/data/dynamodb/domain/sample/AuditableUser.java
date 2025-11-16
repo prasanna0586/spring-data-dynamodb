@@ -93,6 +93,7 @@ public class AuditableUser {
         this.createdBy = createdBy;
     }
 
+    @software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbConvertedBy(org.socialsignin.spring.data.dynamodb.marshaller.Date2IsoAttributeConverter.class)
     public Date getCreatedAt() {
         return createdAt;
     }
@@ -109,6 +110,7 @@ public class AuditableUser {
         this.lastModifiedBy = lastModifiedBy;
     }
 
+    @software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbConvertedBy(org.socialsignin.spring.data.dynamodb.marshaller.Date2IsoAttributeConverter.class)
     public Date getLastModifiedAt() {
         return lastModifiedAt;
     }

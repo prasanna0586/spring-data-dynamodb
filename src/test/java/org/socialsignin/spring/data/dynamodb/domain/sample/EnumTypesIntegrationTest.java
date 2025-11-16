@@ -54,6 +54,7 @@ public class EnumTypesIntegrationTest {
     private DynamoDbClient amazonDynamoDB;
 
     @Autowired
+    @org.springframework.beans.factory.annotation.Qualifier("dynamoDbEnhancedClient")
     private DynamoDbEnhancedClient enhancedClient;
 
     private DynamoDbTable<Task> taskTable;

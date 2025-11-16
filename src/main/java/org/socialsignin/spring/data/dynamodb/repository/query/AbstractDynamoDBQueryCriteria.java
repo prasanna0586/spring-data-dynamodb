@@ -127,6 +127,34 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
             }
 
             queryRequest = applySortIfSpecified(queryRequest, new ArrayList<>(new HashSet<>(allowedSortProperties)));
+        } else {
+            // For non-GSI queries (regular table queries or local index queries),
+            // allow sorting by range keys and index range keys THAT ARE PART OF THE QUERY
+            List<String> allowedSortProperties = new ArrayList<>();
+
+            // Always allow sorting by the table's range key if present
+            if (rangeKeyPropertyName != null) {
+                allowedSortProperties.add(rangeKeyPropertyName);
+            }
+
+            // Allow sorting by index range key properties that are part of query conditions
+            if (entityInformation instanceof org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBHashAndRangeKeyExtractingEntityMetadata) {
+                org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBHashAndRangeKeyExtractingEntityMetadata<?, ?> compositeKeyEntityInfo =
+                    (org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBHashAndRangeKeyExtractingEntityMetadata<?, ?>) entityInformation;
+                Set<String> indexRangeKeyPropertyNames = compositeKeyEntityInfo.getIndexRangeKeyPropertyNames();
+                if (indexRangeKeyPropertyNames != null) {
+                    // Only add index range keys that are actually being queried
+                    for (String indexRangeKeyPropertyName : indexRangeKeyPropertyNames) {
+                        // Check if this property is in the query conditions
+                        if (propertyConditions.containsKey(indexRangeKeyPropertyName) ||
+                            attributeConditions.containsKey(getAttributeName(indexRangeKeyPropertyName))) {
+                            allowedSortProperties.add(indexRangeKeyPropertyName);
+                        }
+                    }
+                }
+            }
+
+            queryRequest = applySortIfSpecified(queryRequest, allowedSortProperties);
         }
 
         queryRequest = applyConsistentReads(queryRequest);
@@ -432,6 +460,18 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         }
         return attributeName;
 
+    }
+
+    protected String getPropertyNameForAttribute(String attributeName) {
+        // First check if we have this in our cached mapping (reverse lookup)
+        for (Entry<String, String> entry : attributeNamesByPropertyName.entrySet()) {
+            if (entry.getValue().equals(attributeName)) {
+                return entry.getKey();
+            }
+        }
+        // If not found in cache, the property name is likely the same as attribute name
+        // (no override), so return the attribute name as the property name
+        return attributeName;
     }
 
     @Override

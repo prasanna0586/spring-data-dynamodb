@@ -63,6 +63,7 @@ public class Installation implements Serializable {
     }
 
     @DynamoDbSecondarySortKey(indexNames = "idx-global-systemid")
+    @software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbConvertedBy(org.socialsignin.spring.data.dynamodb.marshaller.Date2IsoAttributeConverter.class)
     public Date getUpdatedAt() {
         return updatedAt;
     }

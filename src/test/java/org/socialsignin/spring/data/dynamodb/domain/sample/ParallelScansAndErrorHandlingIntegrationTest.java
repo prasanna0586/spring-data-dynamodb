@@ -55,6 +55,7 @@ public class ParallelScansAndErrorHandlingIntegrationTest {
     private DynamoDbClient amazonDynamoDB;
 
     @Autowired
+    @org.springframework.beans.factory.annotation.Qualifier("dynamoDbEnhancedClient")
     private DynamoDbEnhancedClient dynamoDbEnhancedClient;
 
     private DynamoDbTable<User> userTable;

@@ -65,7 +65,10 @@ public class DynamoDBTemplateTest {
     @BeforeEach
     public void setUp() {
         // Setup mapping context with default marshalling mode
-        when(mappingContext.getMarshallingMode()).thenReturn(MarshallingMode.SDK_V2_NATIVE);
+        lenient().when(mappingContext.getMarshallingMode()).thenReturn(MarshallingMode.SDK_V2_NATIVE);
+
+        // Setup tableNameResolver to return the provided table name by default (no override)
+        lenient().when(tableNameResolver.resolveTableName(any(), anyString())).thenAnswer(invocation -> invocation.getArgument(1));
 
         this.dynamoDBTemplate = new DynamoDBTemplate(dynamoDB, enhancedClient, tableNameResolver, mappingContext);
         this.dynamoDBTemplate.setApplicationContext(applicationContext);

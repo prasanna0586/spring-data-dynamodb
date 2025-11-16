@@ -94,6 +94,7 @@ public class FeedUser {
      * Date attribute - SDK v2 stores as epoch milliseconds (Number type) by default.
      */
     @DynamoDbAttribute("feedRegDate")
+    @software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbConvertedBy(org.socialsignin.spring.data.dynamodb.marshaller.Date2IsoAttributeConverter.class)
     public Date getFeedRegDate() {
         return feedRegDate;
     }

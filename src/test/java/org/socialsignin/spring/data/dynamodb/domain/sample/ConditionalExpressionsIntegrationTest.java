@@ -65,6 +65,7 @@ public class ConditionalExpressionsIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
+    @org.springframework.beans.factory.annotation.Qualifier("dynamoDbEnhancedClient")
     private DynamoDbEnhancedClient enhancedClient;
 
     private DynamoDbTable<User> userTable;

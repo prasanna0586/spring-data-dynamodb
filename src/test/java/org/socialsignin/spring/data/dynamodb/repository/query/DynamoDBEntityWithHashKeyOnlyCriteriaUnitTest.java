@@ -33,11 +33,14 @@ public class DynamoDBEntityWithHashKeyOnlyCriteriaUnitTest
 
     @Mock
     private DynamoDBEntityInformation<User, String> entityInformation;
+    @Mock
+    private org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext mappingContext;
 
     @BeforeEach
     public void setUp() {
         Mockito.when(entityInformation.getHashKeyPropertyName()).thenReturn("id");
-        criteria = new DynamoDBEntityWithHashKeyOnlyCriteria<>(entityInformation, null, null);
+        Mockito.when(mappingContext.getMarshallingMode()).thenReturn(org.socialsignin.spring.data.dynamodb.core.MarshallingMode.SDK_V2_NATIVE);
+        criteria = new DynamoDBEntityWithHashKeyOnlyCriteria<>(entityInformation, null, mappingContext);
     }
 
     @Test
