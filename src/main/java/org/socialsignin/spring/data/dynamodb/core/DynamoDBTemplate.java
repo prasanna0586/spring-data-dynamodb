@@ -437,6 +437,88 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
         return results;
     }
 
+    /**
+     * Extracts unprocessed put items (saves) from batch write results.
+     *
+     * This method is used to extract the actual entity objects that failed to be written
+     * after batch save operations, so they can be included in BatchWriteException for
+     * consumer handling (retry, DLQ, alerting, etc.).
+     *
+     * @param results List of BatchWriteResult from batch save operations
+     * @param entitiesByClass Original entities grouped by class (used to get table references)
+     * @return List of unprocessed entity objects that failed to be saved
+     */
+    public List<Object> extractUnprocessedPutItems(
+            List<BatchWriteResult> results,
+            Map<Class<?>, List<Object>> entitiesByClass) {
+
+        List<Object> unprocessedEntities = new ArrayList<>();
+
+        for (BatchWriteResult result : results) {
+            // Check each table we attempted to write to
+            for (Map.Entry<Class<?>, List<Object>> entry : entitiesByClass.entrySet()) {
+                @SuppressWarnings("unchecked")
+                Class<Object> domainClass = (Class<Object>) entry.getKey();
+                DynamoDbTable<Object> table = getTable(domainClass);
+
+                // Extract unprocessed put items for this table
+                List<Object> unprocessedPuts = result.unprocessedPutItemsForTable(table);
+                if (unprocessedPuts != null && !unprocessedPuts.isEmpty()) {
+                    unprocessedEntities.addAll(unprocessedPuts);
+                }
+            }
+        }
+
+        return unprocessedEntities;
+    }
+
+    /**
+     * Extracts unprocessed delete items from batch write results.
+     *
+     * This method extracts the entity objects that failed to be deleted after batch
+     * delete operations. Note that for deletes, SDK v2 returns Key objects, so we
+     * reconstruct the entities from the original list.
+     *
+     * @param results List of BatchWriteResult from batch delete operations
+     * @param entitiesByClass Original entities grouped by class (used to get table references and match keys)
+     * @return List of unprocessed entity objects that failed to be deleted
+     */
+    public List<Object> extractUnprocessedDeleteItems(
+            List<BatchWriteResult> results,
+            Map<Class<?>, List<Object>> entitiesByClass) {
+
+        List<Object> unprocessedEntities = new ArrayList<>();
+
+        for (BatchWriteResult result : results) {
+            // Check each table we attempted to delete from
+            for (Map.Entry<Class<?>, List<Object>> entry : entitiesByClass.entrySet()) {
+                @SuppressWarnings("unchecked")
+                Class<Object> domainClass = (Class<Object>) entry.getKey();
+                DynamoDbTable<Object> table = getTable(domainClass);
+
+                // Extract unprocessed delete keys for this table
+                List<Key> unprocessedKeys = result.unprocessedDeleteItemsForTable(table);
+                if (unprocessedKeys != null && !unprocessedKeys.isEmpty()) {
+                    // Convert keys back to entities by matching against original entities
+                    // This is necessary because delete returns keys, not full items
+                    List<Object> originalEntities = entry.getValue();
+                    for (Key key : unprocessedKeys) {
+                        // Find the matching entity from the original list
+                        for (Object originalEntity : originalEntities) {
+                            Key entityKey = table.keyFrom(originalEntity);
+                            if (entityKey.equals(key)) {
+                                unprocessedEntities.add(originalEntity);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return unprocessedEntities;
+    }
+
     @Override
     public <T> PageIterable<T> query(Class<T> clazz, QueryRequest queryRequest) {
         DynamoDbTable<T> table = getTable(clazz);

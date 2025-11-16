@@ -58,6 +58,38 @@ public interface DynamoDBOperations {
 
     List<BatchWriteResult> batchDelete(Iterable<?> entities);
 
+    /**
+     * Extracts unprocessed put items (saves) from batch write results.
+     *
+     * This method is used to extract the actual entity objects that failed to be written
+     * after batch save operations, so they can be included in BatchWriteException for
+     * consumer handling (retry, DLQ, alerting, etc.).
+     *
+     * @param results List of BatchWriteResult from batch save operations
+     * @param entitiesByClass Original entities grouped by class (used to get table references)
+     * @return List of unprocessed entity objects that failed to be saved
+     * @since 7.0.0
+     */
+    List<Object> extractUnprocessedPutItems(
+            List<BatchWriteResult> results,
+            Map<Class<?>, List<Object>> entitiesByClass);
+
+    /**
+     * Extracts unprocessed delete items from batch write results.
+     *
+     * This method extracts the entity objects that failed to be deleted after batch
+     * delete operations. Note that for deletes, SDK v2 returns Key objects, so we
+     * reconstruct the entities from the original list.
+     *
+     * @param results List of BatchWriteResult from batch delete operations
+     * @param entitiesByClass Original entities grouped by class (used to get table references and match keys)
+     * @return List of unprocessed entity objects that failed to be deleted
+     * @since 7.0.0
+     */
+    List<Object> extractUnprocessedDeleteItems(
+            List<BatchWriteResult> results,
+            Map<Class<?>, List<Object>> entitiesByClass);
+
     <T> String getOverriddenTableName(Class<T> domainClass, String tableName);
 
     /**

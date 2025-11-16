@@ -28,7 +28,9 @@ import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteResult;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -147,14 +149,29 @@ public class SimpleDynamoDBCrudRepository<T, ID>
             throws BatchWriteException, IllegalArgumentException {
 
         Assert.notNull(entities, "The given Iterable of entities not be null!");
-        List<BatchWriteResult> failedBatches = dynamoDBOperations.batchSave(entities);
 
-        if (failedBatches.isEmpty()) {
-            // Happy path
+        // Group entities by class for extraction if needed
+        Map<Class<?>, List<Object>> entitiesByClass = new HashMap<>();
+        for (S entity : entities) {
+            entitiesByClass.computeIfAbsent(entity.getClass(), k -> new ArrayList<>()).add(entity);
+        }
+
+        List<BatchWriteResult> batchResults = dynamoDBOperations.batchSave(entities);
+
+        // Extract unprocessed entities using SDK v2 extraction
+        List<Object> unprocessedEntities = dynamoDBOperations.extractUnprocessedPutItems(
+                batchResults, entitiesByClass);
+
+        if (unprocessedEntities.isEmpty()) {
+            // Happy path - all entities were successfully saved
             return entities;
         } else {
-            // Error handling:
-            throw repackageToException(failedBatches, BatchWriteException.class);
+            // Throw exception with actual unprocessed entities
+            throw repackageToException(
+                    unprocessedEntities,
+                    0, // SDK v2 client handles retries internally
+                    null, // No exception, just unprocessed items
+                    BatchWriteException.class);
         }
     }
 

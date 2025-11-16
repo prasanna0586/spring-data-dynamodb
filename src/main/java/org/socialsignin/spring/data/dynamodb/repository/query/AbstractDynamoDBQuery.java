@@ -29,8 +29,10 @@ import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteResult;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Michael Lavelle
@@ -260,11 +262,29 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
         @Override
         public Object execute(AbstractDynamoDBQuery<T, ID> dynamoDBQuery, Object[] values) throws BatchDeleteException {
             List<T> entities = dynamoDBQuery.doCreateQueryWithPermissions(values).getResultList();
-            List<BatchWriteResult> failedBatches = dynamoDBOperations.batchDelete(entities);
-            if (failedBatches.isEmpty()) {
+
+            // Group entities by class for extraction if needed
+            Map<Class<?>, List<Object>> entitiesByClass = new HashMap<>();
+            for (T entity : entities) {
+                entitiesByClass.computeIfAbsent(entity.getClass(), k -> new ArrayList<>()).add(entity);
+            }
+
+            List<BatchWriteResult> batchResults = dynamoDBOperations.batchDelete(entities);
+
+            // Extract unprocessed entities using SDK v2 extraction
+            List<Object> unprocessedEntities = dynamoDBOperations.extractUnprocessedDeleteItems(
+                    batchResults, entitiesByClass);
+
+            if (unprocessedEntities.isEmpty()) {
+                // All entities were successfully deleted
                 return entities;
             } else {
-                throw repackageToException(failedBatches, BatchDeleteException.class);
+                // Throw exception with actual unprocessed entities
+                throw repackageToException(
+                        unprocessedEntities,
+                        0, // SDK v2 client handles retries internally
+                        null, // No exception, just unprocessed items
+                        BatchDeleteException.class);
             }
         }
     }
