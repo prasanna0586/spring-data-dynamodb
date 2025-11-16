@@ -167,10 +167,10 @@ public class MapListAttributesIntegrationTest {
 
         // When - Add new attribute using UpdateExpression
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("productId", new AttributeValue("prod-005"));
+        key.put("productId", AttributeValue.builder().s("prod-005").build());
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":size", new AttributeValue("42"));
+        expressionAttributeValues.put(":size", AttributeValue.builder().s("42").build());
 
         UpdateItemRequest updateRequest = UpdateItemRequest.builder()
                 .tableName("Product")
@@ -206,10 +206,10 @@ public class MapListAttributesIntegrationTest {
 
         // When - Change color
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("productId", new AttributeValue("prod-006"));
+        key.put("productId", AttributeValue.builder().s("prod-006").build());
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":newColor", new AttributeValue("blue"));
+        expressionAttributeValues.put(":newColor", AttributeValue.builder().s("blue").build());
 
         UpdateItemRequest updateRequest = UpdateItemRequest.builder()
                 .tableName("Product")
@@ -244,7 +244,7 @@ public class MapListAttributesIntegrationTest {
 
         // When - Remove material attribute
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("productId", new AttributeValue("prod-007"));
+        key.put("productId", AttributeValue.builder().s("prod-007").build());
 
         UpdateItemRequest updateRequest = UpdateItemRequest.builder()
                 .tableName("Product")
@@ -275,10 +275,10 @@ public class MapListAttributesIntegrationTest {
 
         // When - Append new categories
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("productId", new AttributeValue("prod-008"));
+        key.put("productId", AttributeValue.builder().s("prod-008").build());
 
         AttributeValue newCategories = AttributeValue.builder()
-                .l(new AttributeValue("Photography"), new AttributeValue("Professional"))
+                .l(AttributeValue.builder().s("Photography").build(), AttributeValue.builder().s("Professional").build())
                 .build();
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
@@ -313,10 +313,10 @@ public class MapListAttributesIntegrationTest {
 
         // When - Prepend new category
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("productId", new AttributeValue("prod-009"));
+        key.put("productId", AttributeValue.builder().s("prod-009").build());
 
         AttributeValue newCategories = AttributeValue.builder()
-                .l(new AttributeValue("Electronics"))
+                .l(AttributeValue.builder().s("Electronics").build())
                 .build();
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
@@ -351,7 +351,7 @@ public class MapListAttributesIntegrationTest {
 
         // When - Update second element (index 1)
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("productId", new AttributeValue("prod-010"));
+        key.put("productId", AttributeValue.builder().s("prod-010").build());
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":newPrice", AttributeValue.builder().n("449.99")
@@ -385,7 +385,7 @@ public class MapListAttributesIntegrationTest {
 
         // When - Remove middle element (index 1)
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("productId", new AttributeValue("prod-011"));
+        key.put("productId", AttributeValue.builder().s("prod-011").build());
 
         UpdateItemRequest updateRequest = UpdateItemRequest.builder()
                 .tableName("Product")

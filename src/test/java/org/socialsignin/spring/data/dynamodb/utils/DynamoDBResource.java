@@ -20,9 +20,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.util.Assert;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-import software.amazon.awssdk.awscore.client.builder.AwsSyncClientBuilder;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClientBuilder;
+
+import java.net.URI;
 
 /**
  * Clue {@link Configuration} class for all integration tests. It exposes the {@link DynamoDbClient} pre-configured to
@@ -37,11 +39,10 @@ public class DynamoDBResource {
     public DynamoDbClient amazonDynamoDB() {
         Assert.notNull(PORT, "System property '" + DYNAMODB_PORT_PROPERTY + " not set!");
 
-        DynamoDbClientBuilder builder = DynamoDbClient.builder();
-        builder.credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("AWS-Key", "")));
-        builder.endpointOverride(
-                new AwsSyncClientBuilder.EndpointConfiguration(String.format("http://localhost:%s", PORT), "us-east-1"));
-
-        return builder.build();
+        return DynamoDbClient.builder()
+                .endpointOverride(URI.create(String.format("http://localhost:%s", PORT)))
+                .region(Region.US_EAST_1)
+                .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("AWS-Key", "")))
+                .build();
     }
 }

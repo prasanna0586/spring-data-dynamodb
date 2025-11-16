@@ -151,17 +151,17 @@ public class DynamoDBIdIsHashKeyEntityInformationImplUnitTest {
 
     @Test
     public void testGetMarshallerForProperty_DelegatesToEntityMetadata_IrrespectiveOfEntityInformationSetup() {
-        Mockito.when(mockUserEntityMetadata.getMarshallerForProperty("marshalledProperty"))
+        Mockito.<AttributeConverter<?>>when(mockUserEntityMetadata.getAttributeConverterForProperty("marshalledProperty"))
                 .thenReturn(mockPropertyMarshaller);
-        Mockito.when(mockPlaylistEntityMetadata.getMarshallerForProperty("marshalledProperty"))
+        Mockito.<AttributeConverter<?>>when(mockPlaylistEntityMetadata.getAttributeConverterForProperty("marshalledProperty"))
                 .thenReturn(mockPropertyMarshaller);
 
         AttributeConverter<?> marshaller1 = dynamoDBPlaylistEntityInformation
-                .getMarshallerForProperty("marshalledProperty");
+                .getAttributeConverterForProperty("marshalledProperty");
         assertEquals(mockPropertyMarshaller, marshaller1);
 
         AttributeConverter<?> marshaller2 = dynamoDBUserEntityInformation
-                .getMarshallerForProperty("marshalledProperty");
+                .getAttributeConverterForProperty("marshalledProperty");
         assertEquals(mockPropertyMarshaller, marshaller2);
     }
 

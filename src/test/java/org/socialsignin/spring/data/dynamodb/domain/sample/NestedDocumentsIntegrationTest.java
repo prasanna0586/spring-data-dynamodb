@@ -192,10 +192,10 @@ public class NestedDocumentsIntegrationTest {
 
         // When - Update shipping address city
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("orderId", new AttributeValue("order-005"));
+        key.put("orderId", AttributeValue.builder().s("order-005").build());
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":newCity", new AttributeValue("Fort Lauderdale"));
+        expressionAttributeValues.put(":newCity", AttributeValue.builder().s("Fort Lauderdale").build());
 
         UpdateItemRequest updateRequest = UpdateItemRequest.builder()
                 .tableName("CustomerOrder")
@@ -231,7 +231,7 @@ public class NestedDocumentsIntegrationTest {
 
         // When - Update quantity of first item
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("orderId", new AttributeValue("order-006"));
+        key.put("orderId", AttributeValue.builder().s("order-006").build());
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":newQty", AttributeValue.builder().n("2")
@@ -270,12 +270,12 @@ public class NestedDocumentsIntegrationTest {
 
         // When - Append new item
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("orderId", new AttributeValue("order-007"));
+        key.put("orderId", AttributeValue.builder().s("order-007").build());
 
         // Create new OrderItem as Map
         Map<String, AttributeValue> newItemMap = new HashMap<>();
-        newItemMap.put("productId", new AttributeValue("prod-009"));
-        newItemMap.put("productName", new AttributeValue("Stylus"));
+        newItemMap.put("productId", AttributeValue.builder().s("prod-009").build());
+        newItemMap.put("productName", AttributeValue.builder().s("Stylus").build());
         newItemMap.put("quantity", AttributeValue.builder().n("1")
                 .build());
         newItemMap.put("price", AttributeValue.builder().n("79.99")
@@ -363,14 +363,14 @@ public class NestedDocumentsIntegrationTest {
 
         // When - Replace entire shipping address
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("orderId", new AttributeValue("order-010"));
+        key.put("orderId", AttributeValue.builder().s("order-010").build());
 
         Map<String, AttributeValue> newAddressMap = new HashMap<>();
-        newAddressMap.put("street", new AttributeValue("555 Fifth Plaza"));
-        newAddressMap.put("city", new AttributeValue("Boulder"));
-        newAddressMap.put("state", new AttributeValue("CO"));
-        newAddressMap.put("zipCode", new AttributeValue("80301"));
-        newAddressMap.put("country", new AttributeValue("USA"));
+        newAddressMap.put("street", AttributeValue.builder().s("555 Fifth Plaza").build());
+        newAddressMap.put("city", AttributeValue.builder().s("Boulder").build());
+        newAddressMap.put("state", AttributeValue.builder().s("CO").build());
+        newAddressMap.put("zipCode", AttributeValue.builder().s("80301").build());
+        newAddressMap.put("country", AttributeValue.builder().s("USA").build());
 
         Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
         expressionAttributeValues.put(":newAddress", AttributeValue.builder().m(newAddressMap)

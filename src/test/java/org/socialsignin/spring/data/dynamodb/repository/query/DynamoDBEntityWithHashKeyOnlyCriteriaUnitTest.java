@@ -37,7 +37,7 @@ public class DynamoDBEntityWithHashKeyOnlyCriteriaUnitTest
     @BeforeEach
     public void setUp() {
         Mockito.when(entityInformation.getHashKeyPropertyName()).thenReturn("id");
-        criteria = new DynamoDBEntityWithHashKeyOnlyCriteria<>(entityInformation, null);
+        criteria = new DynamoDBEntityWithHashKeyOnlyCriteria<>(entityInformation, null, null);
     }
 
     @Test

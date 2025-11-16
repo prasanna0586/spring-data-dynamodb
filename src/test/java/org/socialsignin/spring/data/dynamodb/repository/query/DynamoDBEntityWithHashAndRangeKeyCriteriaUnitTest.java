@@ -36,7 +36,7 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteriaUnitTest
     public void setUp() {
         Mockito.when(entityInformation.getHashKeyPropertyName()).thenReturn("userName");
         Mockito.when(entityInformation.getRangeKeyPropertyName()).thenReturn("playlistName");
-        criteria = new DynamoDBEntityWithHashAndRangeKeyCriteria<>(entityInformation, null);
+        criteria = new DynamoDBEntityWithHashAndRangeKeyCriteria<>(entityInformation, null, null);
     }
 
     @Test
