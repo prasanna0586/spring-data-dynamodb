@@ -91,6 +91,8 @@ public class PartTreeDynamoDBQueryUnitTest {
     @Mock
     private software.amazon.awssdk.enhanced.dynamodb.model.Page<Playlist> mockPlaylistPage;
 
+    @Mock
+    private org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext mockMappingContext;
 
     // Mock out specific DynamoDBOperations behavior expected by this method
     ArgumentCaptor<software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest> queryEnhancedCaptor;
@@ -108,6 +110,10 @@ public class PartTreeDynamoDBQueryUnitTest {
         playlistClassCaptor = ArgumentCaptor.forClass(Class.class);
         userClassCaptor = ArgumentCaptor.forClass(Class.class);
         scanEnhancedCaptor = ArgumentCaptor.forClass(software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.class);
+
+        // Setup MappingContext mock for tests that use Date parameters with custom marshallers (Category #6 fix)
+        Mockito.lenient().when(mockDynamoDBOperations.getMappingContext()).thenReturn(mockMappingContext);
+        Mockito.lenient().when(mockMappingContext.getMarshallingMode()).thenReturn(org.socialsignin.spring.data.dynamodb.core.MarshallingMode.SDK_V1_COMPATIBLE);
 
         // Setup PageIterable.items() to return SdkIterable mocks for single entity queries
         // Use lenient() because not all tests use all mocks
@@ -947,6 +953,11 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
             Mockito.when(mockPlaylistEntityMetadata.getHashKeyPropotypeEntityForHashKey("someUserName"))
                     .thenReturn(prototypeHashKey);
 
+            Mockito.lenient().when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest.class)))
+                    .thenReturn(mockPlaylistQueryResults);
+            Mockito.lenient().when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class)))
+                    .thenReturn(mockPlaylistQueryResults);
+
             // Mock out specific DynamoDBOperations behavior expected by this method
             // ArgumentCaptor<DynamoDBQueryExpression<Playlist>> queryCaptor =
             // ArgumentCaptor.forClass(DynamoDBQueryExpression.class);
@@ -1015,6 +1026,11 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
             prototypeHashKey.setUserName("someUserName");
             Mockito.when(mockPlaylistEntityMetadata.getHashKeyPropotypeEntityForHashKey("someUserName"))
                     .thenReturn(prototypeHashKey);
+
+            Mockito.lenient().when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest.class)))
+                    .thenReturn(mockPlaylistQueryResults);
+            Mockito.lenient().when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class)))
+                    .thenReturn(mockPlaylistQueryResults);
 
             // Mock out specific DynamoDBOperations behavior expected by this method
             // ArgumentCaptor<DynamoDBQueryExpression<Playlist>> queryCaptor =
@@ -1092,7 +1108,8 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockPlaylistEntityMetadata.getOverriddenAttributeName("displayName"))
                 .thenReturn(Optional.of("DisplayName"));
 
-        //        //        Mockito.lenient().when(mockDynamoDBOperations.scan(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.class)))
+        Mockito.lenient().when(mockDynamoDBOperations.scan(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.class)))
+                .thenReturn(mockPlaylistScanResults);
 
         // Execute the query
         Object[] parameters = new Object[] { playlistId, "someDisplayName" };
@@ -1157,7 +1174,8 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockPlaylistEntityMetadata.getOverriddenAttributeName("displayName"))
                 .thenReturn(Optional.of("DisplayName"));
 
-        //        //        Mockito.lenient().when(mockDynamoDBOperations.scan(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.class)))
+        Mockito.lenient().when(mockDynamoDBOperations.scan(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.class)))
+                .thenReturn(mockPlaylistScanResults);
 
         // Execute the query
         Object[] parameters = new Object[] { playlistId, "someDisplayName" };
@@ -1213,7 +1231,8 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockDynamoDBPlaylistQueryMethod.isCollectionQuery()).thenReturn(true);
 
-        //        //        Mockito.lenient().when(mockDynamoDBOperations.scan(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.class)))
+        Mockito.lenient().when(mockDynamoDBOperations.scan(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.class)))
+                .thenReturn(mockPlaylistScanResults);
 
         // Execute the query
         Object[] parameters = new Object[] { "someUserName", "somePlaylistName" };
@@ -1282,7 +1301,8 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockPlaylistEntityMetadata.getOverriddenAttributeName("displayName"))
                 .thenReturn(Optional.of("DisplayName"));
 
-        //        //        Mockito.lenient().when(mockDynamoDBOperations.scan(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.class)))
+        Mockito.lenient().when(mockDynamoDBOperations.scan(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.class)))
+                .thenReturn(mockPlaylistScanResults);
 
         // Execute the query
         Object[] parameters = new Object[] { playlistId, "someDisplayName" };
@@ -3330,7 +3350,8 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockDynamoDBUserQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockUserEntityMetadata.getOverriddenAttributeName("name")).thenReturn(Optional.of("Name"));
 
-        //        Mockito.lenient().when(mockDynamoDBOperations.scan(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.class)))
+        Mockito.lenient().when(mockDynamoDBOperations.scan(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.class)))
+                .thenReturn(mockUserScanResults);
 
         // Execute the query
         Object[] parameters = new Object[] { "someName" };
@@ -3379,7 +3400,8 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockDynamoDBUserQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockUserEntityMetadata.getOverriddenAttributeName("name")).thenReturn(Optional.of("Name"));
 
-        //        //        Mockito.lenient().when(mockDynamoDBOperations.scan(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.class)))
+        Mockito.lenient().when(mockDynamoDBOperations.scan(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.class)))
+                .thenReturn(mockUserScanResults);
 
         // Execute the query
         Object[] parameters = new Object[] { "someName" };
@@ -3429,7 +3451,8 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockDynamoDBUserQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockUserEntityMetadata.getOverriddenAttributeName("name")).thenReturn(Optional.of("Name"));
 
-        //        //        //        Mockito.lenient().when(mockDynamoDBOperations.scan(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.class)))
+        Mockito.lenient().when(mockDynamoDBOperations.scan(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.class)))
+                .thenReturn(mockUserScanResults);
 
         // Execute the query
         Object[] parameters = new Object[] { "someName" };
@@ -3479,7 +3502,8 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockDynamoDBUserQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockUserEntityMetadata.getOverriddenAttributeName("name")).thenReturn(Optional.of("Name"));
 
-        //        Mockito.lenient().when(mockDynamoDBOperations.scan(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.class)))
+        Mockito.lenient().when(mockDynamoDBOperations.scan(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.class)))
+                .thenReturn(mockUserScanResults);
 
         // Execute the query
         Object[] parameters = new Object[] { "someName" };
@@ -3528,7 +3552,8 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockDynamoDBUserQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockUserEntityMetadata.getOverriddenAttributeName("name")).thenReturn(Optional.of("Name"));
 
-        //        //        Mockito.lenient().when(mockDynamoDBOperations.scan(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.class)))
+        Mockito.lenient().when(mockDynamoDBOperations.scan(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.class)))
+                .thenReturn(mockUserScanResults);
 
         // Execute the query
         Object[] parameters = new Object[] { "someName" };
