@@ -17,7 +17,6 @@ package org.socialsignin.spring.data.dynamodb.repository.util;
 
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,8 +41,6 @@ public class Entity2DynamoDBTableSynchronizerTest<T, ID> {
     @Mock
     private DynamoDbClient amazonDynamoDB;
     @Mock
-    private DynamoDBMapper mapper;
-    @Mock
     private ProxyFactory factory;
     @Mock
     private RepositoryInformation repositoryInformation;
@@ -66,23 +63,20 @@ public class Entity2DynamoDBTableSynchronizerTest<T, ID> {
     }
 
     private void setupCreateTableMocks() {
-        CreateTableRequest ctr = mock(CreateTableRequest.class);
-        when(mapper.generateCreateTableRequest(any())).thenReturn(ctr);
-
         DescribeTableResponse describeResult = mock(DescribeTableResponse.class);
         TableDescription description = mock(TableDescription.class);
-        when(description.tableStatus()).thenReturn(TableStatus.ACTIVE.toString());
+        when(description.tableStatus()).thenReturn(TableStatus.ACTIVE);
         when(describeResult.table()).thenReturn(description);
         when(amazonDynamoDB.describeTable(any(DescribeTableRequest.class))).thenReturn(describeResult);
     }
 
     private void setupDeleteTableMocks() {
-        DeleteTableRequest dtr = mock(DeleteTableRequest.class);
-        when(mapper.generateDeleteTableRequest(any())).thenReturn(dtr);
+        // SDK v2: No need to setup delete mocks separately
+        // The implementation generates requests internally
     }
 
     public void setUp(Entity2DDL mode) {
-        underTest = new Entity2DynamoDBTableSynchronizer<>(amazonDynamoDB, mapper, mode);
+        underTest = new Entity2DynamoDBTableSynchronizer<>(amazonDynamoDB, mode);
         underTest.postProcess(factory, repositoryInformation);
     }
 
@@ -101,7 +95,7 @@ public class Entity2DynamoDBTableSynchronizerTest<T, ID> {
         underTest.onApplicationEvent(new ContextClosedEvent(applicationContext));
 
         verify(factory).getTargetSource();
-        verifyNoMoreInteractions(amazonDynamoDB, mapper, factory, repositoryInformation, applicationContext);
+        verifyNoMoreInteractions(amazonDynamoDB, factory, repositoryInformation, applicationContext);
     }
 
     @Test
@@ -113,7 +107,7 @@ public class Entity2DynamoDBTableSynchronizerTest<T, ID> {
         runContextStop();
 
         verify(factory).getTargetSource();
-        verifyNoMoreInteractions(amazonDynamoDB, mapper, factory, repositoryInformation, applicationContext);
+        verifyNoMoreInteractions(amazonDynamoDB, factory, repositoryInformation, applicationContext);
 
     }
 
@@ -125,7 +119,7 @@ public class Entity2DynamoDBTableSynchronizerTest<T, ID> {
 
         runContextStart();
         verify(amazonDynamoDB).deleteTable(any(DeleteTableRequest.class));
-        verify(amazonDynamoDB).createTable(any());
+        verify(amazonDynamoDB).createTable(any(CreateTableRequest.class));
         verify(amazonDynamoDB).describeTable(any(DescribeTableRequest.class));
 
         runContextStop();
@@ -150,7 +144,7 @@ public class Entity2DynamoDBTableSynchronizerTest<T, ID> {
         setUp(Entity2DDL.CREATE_ONLY);
 
         runContextStart();
-        verify(amazonDynamoDB).createTable(any());
+        verify(amazonDynamoDB).createTable(any(CreateTableRequest.class));
         verify(amazonDynamoDB).describeTable(any(DescribeTableRequest.class));
 
         runContextStop();

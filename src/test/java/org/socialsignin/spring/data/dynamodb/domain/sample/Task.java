@@ -1,6 +1,9 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.*;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbConvertedBy;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -9,7 +12,7 @@ import java.util.Objects;
  * Domain model for testing enum type handling.
  * Demonstrates various enum storage strategies.
  */
-@DynamoDBTable(tableName = "Task")
+@DynamoDbBean
 public class Task {
 
     private String taskId;
@@ -32,7 +35,8 @@ public class Task {
         this.createdAt = Instant.now();
     }
 
-    @DynamoDBHashKey(attributeName = "taskId")
+    @DynamoDbPartitionKey
+    @DynamoDbAttribute("taskId")
     public String getTaskId() {
         return taskId;
     }
@@ -41,7 +45,7 @@ public class Task {
         this.taskId = taskId;
     }
 
-    @DynamoDBAttribute(attributeName = "title")
+    @DynamoDbAttribute("title")
     public String getTitle() {
         return title;
     }
@@ -50,7 +54,7 @@ public class Task {
         this.title = title;
     }
 
-    @DynamoDBAttribute(attributeName = "description")
+    @DynamoDbAttribute("description")
     public String getDescription() {
         return description;
     }
@@ -59,8 +63,7 @@ public class Task {
         this.description = description;
     }
 
-    @DynamoDBAttribute(attributeName = "status")
-    @DynamoDBTypeConvertedEnum
+    @DynamoDbAttribute("status")
     public TaskStatus getStatus() {
         return status;
     }
@@ -69,8 +72,7 @@ public class Task {
         this.status = status;
     }
 
-    @DynamoDBAttribute(attributeName = "priority")
-    @DynamoDBTypeConvertedEnum
+    @DynamoDbAttribute("priority")
     public Priority getPriority() {
         return priority;
     }
@@ -79,7 +81,7 @@ public class Task {
         this.priority = priority;
     }
 
-    @DynamoDBAttribute(attributeName = "assignedTo")
+    @DynamoDbAttribute("assignedTo")
     public String getAssignedTo() {
         return assignedTo;
     }
@@ -88,8 +90,8 @@ public class Task {
         this.assignedTo = assignedTo;
     }
 
-    @DynamoDBAttribute(attributeName = "createdAt")
-    @DynamoDBTypeConverted(converter = InstantConverter.class)
+    @DynamoDbAttribute("createdAt")
+    @DynamoDbConvertedBy(InstantConverter.class)
     public Instant getCreatedAt() {
         return createdAt;
     }
@@ -98,8 +100,8 @@ public class Task {
         this.createdAt = createdAt;
     }
 
-    @DynamoDBAttribute(attributeName = "dueDate")
-    @DynamoDBTypeConverted(converter = InstantConverter.class)
+    @DynamoDbAttribute("dueDate")
+    @DynamoDbConvertedBy(InstantConverter.class)
     public Instant getDueDate() {
         return dueDate;
     }

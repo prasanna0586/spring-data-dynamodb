@@ -15,28 +15,38 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.config;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.FactoryBean;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
-public class DynamoDBMapperFactory implements FactoryBean<DynamoDBMapper>, BeanFactoryAware {
+/**
+ * Factory bean for creating DynamoDbEnhancedClient instances.
+ *
+ * <p>Migrated to AWS SDK v2. Creates DynamoDbEnhancedClient from DynamoDbClient.
+ * This replaces the SDK v1 DynamoDBMapper factory.
+ *
+ * @author Michael Lavelle
+ * @author Sebastian Just
+ * @since 7.0.0
+ */
+public class DynamoDBMapperFactory implements FactoryBean<DynamoDbEnhancedClient>, BeanFactoryAware {
 
     private BeanFactory beanFactory;
 
     @Override
-    public DynamoDBMapper getObject() throws Exception {
-        DynamoDbClient amazonDynamoDB = beanFactory.getBean(DynamoDbClient.class);
-        DynamoDBMapperConfig dynamoDBMapperConfig = beanFactory.getBean(DynamoDBMapperConfig.class);
-        return new DynamoDBMapper(amazonDynamoDB, dynamoDBMapperConfig);
+    public DynamoDbEnhancedClient getObject() throws Exception {
+        DynamoDbClient dynamoDbClient = beanFactory.getBean(DynamoDbClient.class);
+        return DynamoDbEnhancedClient.builder()
+                .dynamoDbClient(dynamoDbClient)
+                .build();
     }
 
     @Override
     public Class<?> getObjectType() {
-        return DynamoDBMapper.class;
+        return DynamoDbEnhancedClient.class;
     }
 
     @Override

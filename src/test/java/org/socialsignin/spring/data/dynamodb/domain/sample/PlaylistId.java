@@ -15,8 +15,8 @@
  */
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 
 import java.io.Serializable;
 
@@ -38,7 +38,7 @@ public class PlaylistId implements Serializable {
         this.playlistName = playlistName;
     }
 
-    @DynamoDBHashKey
+    @DynamoDbPartitionKey
     public String getUserName() {
         return userName;
     }
@@ -47,7 +47,7 @@ public class PlaylistId implements Serializable {
         this.userName = userName;
     }
 
-    @DynamoDBRangeKey
+    @DynamoDbSortKey
     public String getPlaylistName() {
         return playlistName;
     }

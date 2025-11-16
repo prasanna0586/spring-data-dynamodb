@@ -15,25 +15,41 @@
  */
 package org.socialsignin.spring.data.dynamodb.marshaller;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMarshaller;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverter;
 import org.springframework.util.StringUtils;
 
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Date;
 
-@SuppressWarnings("deprecation")
-public abstract class DateDynamoDBMarshaller implements DynamoDBTypeConverter<String, Date>, DynamoDBMarshaller<Date> {
+/**
+ * Abstract base class for Date marshalling.
+ * Provides conversion between Date objects and String representations.
+ *
+ * @deprecated This class was created for SDK v1 compatibility. For new code using SDK v2,
+ *             consider using AttributeConverter instead.
+ * @since 1.0.0
+ */
+@Deprecated
+public abstract class DateDynamoDBMarshaller {
 
     public abstract DateFormat getDateFormat();
 
-    @Override
+    /**
+     * Converts a Date to String representation.
+     *
+     * @param object the Date to convert
+     * @return String representation of the date
+     */
     public String convert(Date object) {
         return marshall(object);
     }
 
-    @Override
+    /**
+     * Marshalls a Date to String format.
+     *
+     * @param getterReturnResult the Date to marshall
+     * @return String representation of the date
+     */
     public String marshall(Date getterReturnResult) {
         if (getterReturnResult == null) {
             return null;
@@ -42,12 +58,23 @@ public abstract class DateDynamoDBMarshaller implements DynamoDBTypeConverter<St
         }
     }
 
-    @Override
+    /**
+     * Converts a String back to Date.
+     *
+     * @param object the String to convert
+     * @return Date object
+     */
     public Date unconvert(String object) {
         return unmarshall(Date.class, object);
     }
 
-    @Override
+    /**
+     * Unmarshalls a String to Date.
+     *
+     * @param clazz the Date class
+     * @param obj   the String to unmarshall
+     * @return Date object
+     */
     public Date unmarshall(Class<Date> clazz, String obj) {
         if (StringUtils.isEmpty(obj)) {
             return null;

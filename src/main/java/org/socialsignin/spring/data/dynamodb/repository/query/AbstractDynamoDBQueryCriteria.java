@@ -126,34 +126,51 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
                 queryRequest = queryRequest.toBuilder().select(Select.ALL_PROJECTED_ATTRIBUTES).build();
             }
 
-            applySortIfSpecified(queryRequest, new ArrayList<>(new HashSet<>(allowedSortProperties)));
+            queryRequest = applySortIfSpecified(queryRequest, new ArrayList<>(new HashSet<>(allowedSortProperties)));
         }
 
-        applyConsistentReads(queryRequest);
+        queryRequest = applyConsistentReads(queryRequest);
 
-        limit.ifPresent(queryRequest::setLimit);
+        // SDK v2: Use builder pattern for setting limit
+        if (limit.isPresent()) {
+            queryRequest = queryRequest.toBuilder().limit(limit.get()).build();
+        }
 
         if (filterExpression.isPresent()) {
             String filter = filterExpression.get();
             if (!StringUtils.isEmpty(filter)) {
                 queryRequest = queryRequest.toBuilder().filterExpression(filter).build();
+
+                // SDK v2: Build expression attribute names map
                 if (expressionAttributeNames != null && expressionAttributeNames.length > 0) {
+                    Map<String, String> attributeNamesMap = new HashMap<>();
                     for (ExpressionAttribute attribute : expressionAttributeNames) {
-                        if (!StringUtils.isEmpty(attribute.key()))
-                            queryRequest.addExpressionAttributeNamesEntry(attribute.key(), attribute.value());
+                        if (!StringUtils.isEmpty(attribute.key())) {
+                            attributeNamesMap.put(attribute.key(), attribute.value());
+                        }
+                    }
+                    if (!attributeNamesMap.isEmpty()) {
+                        queryRequest = queryRequest.toBuilder().expressionAttributeNames(attributeNamesMap).build();
                     }
                 }
+
+                // SDK v2: Build expression attribute values map
                 if (expressionAttributeValues != null && expressionAttributeValues.length > 0) {
+                    Map<String, AttributeValue> attributeValuesMap = new HashMap<>();
                     for (ExpressionAttribute value : expressionAttributeValues) {
                         if (!StringUtils.isEmpty(value.key())) {
+                            String stringValue;
                             if (mappedExpressionValues.containsKey(value.parameterName())) {
-                                queryRequest.addExpressionAttributeValuesEntry(value.key(),
-                                        new AttributeValue(mappedExpressionValues.get(value.parameterName())));
+                                stringValue = mappedExpressionValues.get(value.parameterName());
                             } else {
-                                queryRequest.addExpressionAttributeValuesEntry(value.key(),
-                                        new AttributeValue(value.value()));
+                                stringValue = value.value();
                             }
+                            // SDK v2: Use builder pattern for AttributeValue
+                            attributeValuesMap.put(value.key(), AttributeValue.builder().s(stringValue).build());
                         }
+                    }
+                    if (!attributeValuesMap.isEmpty()) {
+                        queryRequest = queryRequest.toBuilder().expressionAttributeValues(attributeValuesMap).build();
                     }
                 }
             }
@@ -161,20 +178,18 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return queryRequest;
     }
 
-    protected void applyConsistentReads(QueryRequest queryRequest) {
+    protected QueryRequest applyConsistentReads(QueryRequest queryRequest) {
         switch (consistentReads) {
             case CONSISTENT:
-                queryRequest = queryRequest.toBuilder().consistentRead(true).build();
-                break;
+                return queryRequest.toBuilder().consistentRead(true).build();
             case EVENTUAL:
-                queryRequest = queryRequest.toBuilder().consistentRead(false).build();
-                break;
+                return queryRequest.toBuilder().consistentRead(false).build();
             default:
-                break;
+                return queryRequest;
         }
     }
 
-    protected void applySortIfSpecified(QueryRequest queryRequest, List<String> permittedPropertyNames) {
+    protected QueryRequest applySortIfSpecified(QueryRequest queryRequest, List<String> permittedPropertyNames) {
         if (permittedPropertyNames.size() > 2) {
             throw new UnsupportedOperationException("Can only sort by at most a single global hash and range key");
         }
@@ -198,6 +213,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
                         + " for the criteria specified and not for " + order.getProperty());
             }
         }
+        return queryRequest;
     }
 
     public boolean comparisonOperatorsPermittedForQuery() {

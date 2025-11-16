@@ -2,7 +2,6 @@ package org.socialsignin.spring.data.dynamodb.domain.sample;
 
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -53,9 +52,6 @@ public class ErrorRecoveryIntegrationTest {
     @Autowired
     private DynamoDbClient amazonDynamoDB;
 
-    @Autowired
-    private DynamoDBMapper dynamoDBMapper;
-
     @BeforeEach
     void setUp() {
         userRepository.deleteAll();
@@ -73,15 +69,15 @@ public class ErrorRecoveryIntegrationTest {
 
         // Two items with same key
         Map<String, AttributeValue> item1 = new HashMap<>();
-        item1.put("Id", new AttributeValue("duplicate-key"));
-        item1.put("name", new AttributeValue("Item 1"));
+        item1.put("Id", AttributeValue.builder().s("duplicate-key").build());
+        item1.put("name", AttributeValue.builder().s("Item 1").build());
         writeRequests.add(WriteRequest.builder().putRequest(PutRequest.builder().item(item1)
                 .build())
                 .build());
 
         Map<String, AttributeValue> item2 = new HashMap<>();
-        item2.put("Id", new AttributeValue("duplicate-key"));
-        item2.put("name", new AttributeValue("Item 2"));
+        item2.put("Id", AttributeValue.builder().s("duplicate-key").build());
+        item2.put("name", AttributeValue.builder().s("Item 2").build());
         writeRequests.add(WriteRequest.builder().putRequest(PutRequest.builder().item(item2)
                 .build())
                 .build());
@@ -146,9 +142,9 @@ public class ErrorRecoveryIntegrationTest {
         Map<String, KeysAndAttributes> requestItems = new HashMap<>();
 
         List<Map<String, AttributeValue>> keys = Arrays.asList(
-                Collections.singletonMap("Id", new AttributeValue("exists-1")),
-                Collections.singletonMap("Id", new AttributeValue("non-existent")),
-                Collections.singletonMap("Id", new AttributeValue("exists-2"))
+                Collections.singletonMap("Id", AttributeValue.builder().s("exists-1").build()),
+                Collections.singletonMap("Id", AttributeValue.builder().s("non-existent").build()),
+                Collections.singletonMap("Id", AttributeValue.builder().s("exists-2").build())
         );
 
         requestItems.put("user", KeysAndAttributes.builder().keys(keys)
@@ -200,7 +196,7 @@ public class ErrorRecoveryIntegrationTest {
 
         // Update account 1 (will succeed)
         Map<String, AttributeValue> key1 = new HashMap<>();
-        key1.put("accountId", new AttributeValue("txn-err-1"));
+        key1.put("accountId", AttributeValue.builder().s("txn-err-1").build());
         actions.add(TransactWriteItem.builder().update(
                 Update.builder()
                         .tableName("BankAccount")
@@ -216,7 +212,7 @@ public class ErrorRecoveryIntegrationTest {
 
         // Update account 2 with impossible condition (will fail)
         Map<String, AttributeValue> key2 = new HashMap<>();
-        key2.put("accountId", new AttributeValue("txn-err-2"));
+        key2.put("accountId", AttributeValue.builder().s("txn-err-2").build());
         actions.add(TransactWriteItem.builder().update(
                 Update.builder()
                         .tableName("BankAccount")
@@ -259,7 +255,7 @@ public class ErrorRecoveryIntegrationTest {
         Collection<TransactWriteItem> actions = new ArrayList<>();
 
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("accountId", new AttributeValue("txn-reason-1"));
+        key.put("accountId", AttributeValue.builder().s("txn-reason-1").build());
         actions.add(TransactWriteItem.builder().update(
                 Update.builder()
                         .tableName("BankAccount")
@@ -314,7 +310,7 @@ public class ErrorRecoveryIntegrationTest {
 
         // When/Then - Invalid UpdateExpression
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("validation-test"));
+        key.put("Id", AttributeValue.builder().s("validation-test").build());
 
         UpdateItemRequest request = UpdateItemRequest.builder()
                 .tableName("user")
@@ -340,7 +336,7 @@ public class ErrorRecoveryIntegrationTest {
 
         // When - First update with wrong condition (fails)
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("recover-1"));
+        key.put("Id", AttributeValue.builder().s("recover-1").build());
 
         UpdateItemRequest failingRequest = UpdateItemRequest.builder()
                 .tableName("user")

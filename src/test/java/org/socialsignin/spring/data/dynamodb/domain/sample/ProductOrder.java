@@ -1,7 +1,7 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.*;
 import org.springframework.data.annotation.Id;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -17,11 +17,10 @@ import java.util.Objects;
  * - LSI 2: customerId + status (range key)
  * - LSI 3: customerId + totalAmount (range key)
  */
-@DynamoDBTable(tableName = "ProductOrder")
+@DynamoDbBean
 public class ProductOrder {
 
     @Id
-    @DynamoDBIgnore
     private ProductOrderId productOrderId;
     private Instant orderDate;
     private String status;
@@ -42,6 +41,7 @@ public class ProductOrder {
         this.quantity = quantity;
     }
 
+    @DynamoDbIgnore
     public ProductOrderId getProductOrderId() {
         return productOrderId;
     }
@@ -50,7 +50,8 @@ public class ProductOrder {
         this.productOrderId = productOrderId;
     }
 
-    @DynamoDBHashKey(attributeName = "customerId")
+    @DynamoDbPartitionKey
+    @DynamoDbAttribute("customerId")
     public String getCustomerId() {
         return productOrderId != null ? productOrderId.getCustomerId() : null;
     }
@@ -62,7 +63,8 @@ public class ProductOrder {
         productOrderId.setCustomerId(customerId);
     }
 
-    @DynamoDBRangeKey(attributeName = "orderId")
+    @DynamoDbSortKey
+    @DynamoDbAttribute("orderId")
     public String getOrderId() {
         return productOrderId != null ? productOrderId.getOrderId() : null;
     }
@@ -77,8 +79,9 @@ public class ProductOrder {
     /**
      * LSI 1: Query orders by date for a customer
      */
-    @DynamoDBIndexRangeKey(localSecondaryIndexName = "customerId-orderDate-index", attributeName = "orderDate")
-    @DynamoDBTypeConverted(converter = InstantConverter.class)
+    @DynamoDbSecondarySortKey(indexNames = "customerId-orderDate-index")
+    @DynamoDbAttribute("orderDate")
+    @DynamoDbConvertedBy(InstantConverter.class)
     public Instant getOrderDate() {
         return orderDate;
     }
@@ -90,7 +93,8 @@ public class ProductOrder {
     /**
      * LSI 2: Query orders by status for a customer
      */
-    @DynamoDBIndexRangeKey(localSecondaryIndexName = "customerId-status-index", attributeName = "status")
+    @DynamoDbSecondarySortKey(indexNames = "customerId-status-index")
+    @DynamoDbAttribute("status")
     public String getStatus() {
         return status;
     }
@@ -102,7 +106,8 @@ public class ProductOrder {
     /**
      * LSI 3: Query orders by total amount for a customer
      */
-    @DynamoDBIndexRangeKey(localSecondaryIndexName = "customerId-totalAmount-index", attributeName = "totalAmount")
+    @DynamoDbSecondarySortKey(indexNames = "customerId-totalAmount-index")
+    @DynamoDbAttribute("totalAmount")
     public Double getTotalAmount() {
         return totalAmount;
     }
@@ -111,7 +116,7 @@ public class ProductOrder {
         this.totalAmount = totalAmount;
     }
 
-    @DynamoDBAttribute(attributeName = "productName")
+    @DynamoDbAttribute("productName")
     public String getProductName() {
         return productName;
     }
@@ -120,7 +125,7 @@ public class ProductOrder {
         this.productName = productName;
     }
 
-    @DynamoDBAttribute(attributeName = "quantity")
+    @DynamoDbAttribute("quantity")
     public Integer getQuantity() {
         return quantity;
     }

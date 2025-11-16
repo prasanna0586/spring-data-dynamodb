@@ -2,7 +2,6 @@ package org.socialsignin.spring.data.dynamodb.domain.sample;
 
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -55,59 +54,21 @@ public class DocumentMetadataServiceIntegrationTest {
     private DocumentMetadataService documentMetadataService;
 
     @Autowired
+    private DocumentMetadataRepository repository;
+
+    @Autowired
     private DynamoDbClient amazonDynamoDB;
 
-    private static boolean tableCreated = false;
     private static final List<String> testDocumentIds = new ArrayList<>();
 
-    @BeforeEach
-    void setUp() {
-        if (!tableCreated) {
-            createTableIfNotExists();
-            tableCreated = true;
-        }
-    }
-
     @AfterAll
-    static void cleanup(@Autowired DynamoDbClient amazonDynamoDB) {
+    static void cleanup(@Autowired DocumentMetadataRepository repository) {
         // Clean up all test documents
         for (String docId : testDocumentIds) {
             try {
-                amazonDynamoDB.deleteItem(DeleteItemRequest.builder()
-                        .tableName("DocumentMetadata")
-                        .key(java.util.Collections.singletonMap(
-                                "uniqueDocumentId",
-                                new AttributeValue(docId)))
-                        .build());
+                repository.deleteById(docId);
             } catch (Exception e) {
                 // Ignore cleanup errors
-            }
-        }
-    }
-
-    private void createTableIfNotExists() {
-        try {
-            amazonDynamoDB.describeTable("DocumentMetadata");
-        } catch (ResourceNotFoundException e) {
-            CreateTableRequest createTableRequest = new DynamoDBMapper(amazonDynamoDB)
-                    .generateCreateTableRequest(DocumentMetadata.class);
-
-            createTableRequest = createTableRequest.toBuilder().provisionedThroughput(new ProvisionedThroughput(5L, 5L)).build();
-
-            if (createTableRequest.globalSecondaryIndexes() != null) {
-                for (GlobalSecondaryIndex gsi : createTableRequest.globalSecondaryIndexes()) {
-                    gsi = gsi.toBuilder().provisionedThroughput(new ProvisionedThroughput(5L, 5L)).build();
-                    gsi = gsi.toBuilder().projection(Projection.builder().projectionType(ProjectionType.ALL)
-                            .build()).build();
-                }
-            }
-
-            amazonDynamoDB.createTable(createTableRequest);
-
-            try {
-                Thread.sleep(2000);
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
             }
         }
     }

@@ -15,10 +15,10 @@
  */
 package org.socialsignin.spring.data.dynamodb.core;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.*;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper.FailedBatch;
 import org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext;
 import org.socialsignin.spring.data.dynamodb.mapping.event.*;
+import org.socialsignin.spring.data.dynamodb.marshaller.Date2IsoDynamoDBMarshaller;
+import org.socialsignin.spring.data.dynamodb.marshaller.Instant2IsoDynamoDBMarshaller;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -26,46 +26,53 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import software.amazon.awssdk.core.pagination.sync.SdkIterable;
+import software.amazon.awssdk.enhanced.dynamodb.*;
+import software.amazon.awssdk.enhanced.dynamodb.model.*;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
 import software.amazon.awssdk.services.dynamodb.model.QueryResponse;
 import software.amazon.awssdk.services.dynamodb.model.Select;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextAware {
-    private final DynamoDBMapper dynamoDBMapper;
+    private final DynamoDbEnhancedClient enhancedClient;
     private final DynamoDbClient amazonDynamoDB;
-    private final DynamoDBMapperConfig dynamoDBMapperConfig;
+    private final TableNameResolver tableNameResolver;
     private final DynamoDBMappingContext mappingContext;
+    private final Map<Class<?>, DynamoDbTable<?>> tableCache = new ConcurrentHashMap<>();
     private ApplicationEventPublisher eventPublisher;
 
     /**
-     * Initializes a new {@code DynamoDBTemplate}. The following combinations are valid:
+     * Initializes a new {@code DynamoDBTemplate} using AWS SDK v2.
      *
      * @param amazonDynamoDB
-     *            must not be {@code null}
-     * @param dynamoDBMapperConfig
-     *            can be {@code null} - {@link DynamoDBMapperConfig#DEFAULT} is used if {@code null} is passed in
-     * @param dynamoDBMapper
-     *            can be {@code null} - {@link DynamoDBMapper#DynamoDBMapper(DynamoDbClient, DynamoDBMapperConfig)} is
-     *            used if {@code null} is passed in
+     *            The low-level DynamoDB client for direct operations, must not be {@code null}
+     * @param enhancedClient
+     *            The DynamoDB Enhanced Client for object mapping, must not be {@code null}
+     * @param tableNameResolver
+     *            Optional resolver for table name overrides/prefixes, can be {@code null}
      * @param mappingContext
-     *            the DynamoDB mapping context (uses default SDK_V2_NATIVE if null)
+     *            The DynamoDB mapping context (uses default SDK_V2_NATIVE if null)
+     * @since 7.0.0
      */
     @Autowired
-    public DynamoDBTemplate(DynamoDbClient amazonDynamoDB, DynamoDBMapper dynamoDBMapper,
-            DynamoDBMapperConfig dynamoDBMapperConfig, DynamoDBMappingContext mappingContext) {
+    public DynamoDBTemplate(DynamoDbClient amazonDynamoDB,
+                           DynamoDbEnhancedClient enhancedClient,
+                           @Nullable TableNameResolver tableNameResolver,
+                           @Nullable DynamoDBMappingContext mappingContext) {
         Assert.notNull(amazonDynamoDB, "amazonDynamoDB must not be null!");
-        Assert.notNull(dynamoDBMapper, "dynamoDBMapper must not be null!");
-        Assert.notNull(dynamoDBMapperConfig, "dynamoDBMapperConfig must not be null!");
+        Assert.notNull(enhancedClient, "enhancedClient must not be null!");
 
         this.amazonDynamoDB = amazonDynamoDB;
-        this.dynamoDBMapper = dynamoDBMapper;
-        this.dynamoDBMapperConfig = dynamoDBMapperConfig;
+        this.enhancedClient = enhancedClient;
+        this.tableNameResolver = tableNameResolver;
         this.mappingContext = mappingContext != null ? mappingContext : new DynamoDBMappingContext();
     }
 
@@ -74,26 +81,134 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
         this.eventPublisher = applicationContext;
     }
 
-    @Override
-    public <T> int count(Class<T> domainClass, DynamoDBQueryExpression<T> queryExpression) {
-        return dynamoDBMapper.count(domainClass, queryExpression);
+    /**
+     * Gets or creates a DynamoDbTable instance for the given domain class.
+     * Tables are cached for performance.
+     *
+     * <p>The TableSchema is created based on the marshalling mode configured in the mapping context:
+     * <ul>
+     * <li>SDK_V2_NATIVE: Uses standard SDK v2 type mappings</li>
+     * <li>SDK_V1_COMPATIBLE: Supports SDK v1-compatible attribute converters (requires @DynamoDbConvertedBy annotations)</li>
+     * </ul>
+     *
+     * @param <T>         The domain class type
+     * @param domainClass The domain class
+     * @return The DynamoDbTable instance for the given class
+     */
+    @SuppressWarnings("unchecked")
+    private <T> DynamoDbTable<T> getTable(Class<T> domainClass) {
+        return (DynamoDbTable<T>) tableCache.computeIfAbsent(domainClass, clazz -> {
+            MarshallingMode mode = mappingContext.getMarshallingMode();
+            TableSchema<T> schema = TableSchemaFactory.createTableSchema(domainClass, mode);
+            String tableName = resolveTableName(domainClass);
+            return enhancedClient.table(tableName, schema);
+        });
     }
 
-    @Override
-    public <T> PaginatedQueryList<T> query(Class<T> domainClass, DynamoDBQueryExpression<T> queryExpression) {
-        PaginatedQueryList<T> results = dynamoDBMapper.query(domainClass, queryExpression);
-        maybeEmitEvent(results, AfterQueryEvent::new);
-        return results;
+    /**
+     * Resolves the table name for the given domain class, applying any configured overrides.
+     *
+     * @param <T>         The domain class type
+     * @param domainClass The domain class
+     * @return The resolved table name
+     */
+    private <T> String resolveTableName(Class<T> domainClass) {
+        // Use class simple name as base table name
+        // In SDK v2, the table name is not stored in the @DynamoDbBean annotation
+        // It must be explicitly provided when creating the table or via TableNameResolver
+        String baseTableName = domainClass.getSimpleName();
+
+        // Apply resolver if configured
+        if (tableNameResolver != null) {
+            return tableNameResolver.resolveTableName(domainClass, baseTableName);
+        }
+
+        return baseTableName;
     }
 
-    @Override
-    public <T> int count(Class<T> domainClass, DynamoDBScanExpression scanExpression) {
-        return dynamoDBMapper.count(domainClass, scanExpression);
+    /**
+     * Builds a Key object for SDK v2 operations.
+     *
+     * @param hashKeyValue  The partition key value
+     * @param rangeKeyValue The sort key value (can be null for hash-key-only tables)
+     * @return The constructed Key
+     */
+    private Key buildKey(Object hashKeyValue, @Nullable Object rangeKeyValue) {
+        Key.Builder keyBuilder = Key.builder()
+                .partitionValue(toAttributeValue(hashKeyValue));
+
+        if (rangeKeyValue != null) {
+            keyBuilder.sortValue(toAttributeValue(rangeKeyValue));
+        }
+
+        return keyBuilder.build();
+    }
+
+    /**
+     * Converts a Java object to SDK v2 AttributeValue.
+     * Marshalling behavior depends on the configured MarshallingMode.
+     *
+     * @param value The Java object to convert
+     * @return The SDK v2 AttributeValue
+     */
+    private AttributeValue toAttributeValue(Object value) {
+        if (value == null) {
+            return AttributeValue.builder().nul(true).build();
+        }
+
+        if (value instanceof AttributeValue) {
+            return (AttributeValue) value;
+        }
+
+        if (value instanceof String) {
+            return AttributeValue.builder().s((String) value).build();
+        } else if (value instanceof Number) {
+            return AttributeValue.builder().n(value.toString()).build();
+        } else if (value instanceof Boolean) {
+            if (mappingContext.getMarshallingMode() == MarshallingMode.SDK_V1_COMPATIBLE) {
+                // SDK v1 compatibility: Boolean stored as "1" or "0" in Number format
+                boolean boolValue = ((Boolean) value).booleanValue();
+                return AttributeValue.builder().n(boolValue ? "1" : "0").build();
+            } else {
+                // SDK v2 native: Boolean stored as BOOL type
+                return AttributeValue.builder().bool((Boolean) value).build();
+            }
+        } else if (value instanceof java.util.Date) {
+            if (mappingContext.getMarshallingMode() == MarshallingMode.SDK_V1_COMPATIBLE) {
+                // SDK v1 compatibility: Date marshalled to ISO format string
+                java.util.Date date = (java.util.Date) value;
+                String marshalledDate = new Date2IsoDynamoDBMarshaller().marshall(date);
+                return AttributeValue.builder().s(marshalledDate).build();
+            } else {
+                // SDK v2 native: Date as epoch milliseconds in Number format
+                return AttributeValue.builder().n(String.valueOf(((java.util.Date) value).getTime())).build();
+            }
+        } else if (value instanceof java.time.Instant) {
+            // Both SDK v1 and v2 store Instant as String (ISO-8601 format)
+            // AWS SDK v2 uses InstantAsStringAttributeConverter by default
+            java.time.Instant instant = (java.time.Instant) value;
+            if (mappingContext.getMarshallingMode() == MarshallingMode.SDK_V1_COMPATIBLE) {
+                // SDK v1 compatibility: Instant marshalled to ISO format string with millisecond precision
+                String marshalledDate = new Instant2IsoDynamoDBMarshaller().marshall(instant);
+                return AttributeValue.builder().s(marshalledDate).build();
+            } else {
+                // SDK v2 native: Instant as ISO-8601 string (matches AWS SDK v2 InstantAsStringAttributeConverter)
+                // Format: ISO-8601 with nanosecond precision, e.g., "1970-01-01T00:00:00.001Z"
+                return AttributeValue.builder().s(instant.toString()).build();
+            }
+        } else if (value instanceof byte[]) {
+            return AttributeValue.builder().b(software.amazon.awssdk.core.SdkBytes.fromByteArray((byte[]) value)).build();
+        } else {
+            // Fallback: convert to string
+            return AttributeValue.builder().s(value.toString()).build();
+        }
     }
 
     @Override
     public <T> T load(Class<T> domainClass, Object hashKey, Object rangeKey) {
-        T entity = dynamoDBMapper.load(domainClass, hashKey, rangeKey);
+        DynamoDbTable<T> table = getTable(domainClass);
+        Key key = buildKey(hashKey, rangeKey);
+        T entity = table.getItem(key);
         maybeEmitEvent(entity, AfterLoadEvent::new);
 
         return entity;
@@ -101,80 +216,234 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
 
     @Override
     public <T> T load(Class<T> domainClass, Object hashKey) {
-        T entity = dynamoDBMapper.load(domainClass, hashKey);
+        DynamoDbTable<T> table = getTable(domainClass);
+        Key key = buildKey(hashKey, null);
+        T entity = table.getItem(key);
         maybeEmitEvent(entity, AfterLoadEvent::new);
 
         return entity;
     }
 
-    @Override
-    public <T> PaginatedScanList<T> scan(Class<T> domainClass, DynamoDBScanExpression scanExpression) {
-        PaginatedScanList<T> results = dynamoDBMapper.scan(domainClass, scanExpression);
-        maybeEmitEvent(results, AfterScanEvent::new);
-        return results;
-    }
-
     @SuppressWarnings("unchecked")
     @Override
-    public <T> List<T> batchLoad(Map<Class<?>, List<KeyPair>> itemsToGet) {
-        return dynamoDBMapper.batchLoad(itemsToGet).values().stream().flatMap(v -> v.stream()).map(e -> (T) e)
-                .map(entity -> {
+    public <T> List<T> batchLoad(Map<Class<?>, List<Key>> itemsToGet) {
+        List<T> results = new ArrayList<>();
+
+        // SDK v2 Enhanced Client requires separate batch requests per table
+        for (Map.Entry<Class<?>, List<Key>> entry : itemsToGet.entrySet()) {
+            @SuppressWarnings("unchecked")
+            Class<Object> domainClass = (Class<Object>) entry.getKey();
+            List<Key> keys = entry.getValue();
+
+            if (keys.isEmpty()) {
+                continue;
+            }
+
+            DynamoDbTable<Object> table = getTable(domainClass);
+
+            // Create batch get request
+            BatchGetItemEnhancedRequest.Builder requestBuilder = BatchGetItemEnhancedRequest.builder();
+
+            ReadBatch.Builder<Object> batchBuilder = ReadBatch.builder(domainClass)
+                    .mappedTableResource(table);
+
+            for (Key key : keys) {
+                batchBuilder.addGetItem(key);
+            }
+
+            requestBuilder.addReadBatch(batchBuilder.build());
+
+            // Execute batch get
+            BatchGetResultPageIterable resultPages = enhancedClient.batchGetItem(requestBuilder.build());
+
+            // Collect results
+            for (BatchGetResultPage page : resultPages) {
+                List<?> pageResults = page.resultsForTable(table);
+                for (Object entity : pageResults) {
                     maybeEmitEvent(entity, AfterLoadEvent::new);
-                    return entity;
-                }).collect(Collectors.toList());
+                    results.add((T) entity);
+                }
+            }
+        }
+
+        return results;
     }
 
     @Override
     public <T> T save(T entity) {
+        // Process auto-generated keys for SDK_V1_COMPATIBLE mode
+        if (mappingContext.getMarshallingMode() == MarshallingMode.SDK_V1_COMPATIBLE) {
+            AutoGeneratedKeyHelper.processAutoGeneratedKeys(entity);
+        }
+
         maybeEmitEvent(entity, BeforeSaveEvent::new);
-        dynamoDBMapper.save(entity);
+
+        @SuppressWarnings("unchecked")
+        DynamoDbTable<T> table = (DynamoDbTable<T>) getTable(entity.getClass());
+        table.putItem(entity);
+
         maybeEmitEvent(entity, AfterSaveEvent::new);
         return entity;
-
     }
 
     @Override
-    public List<FailedBatch> batchSave(Iterable<?> entities) {
+    public List<BatchWriteResult> batchSave(Iterable<?> entities) {
+        // Process auto-generated keys for SDK_V1_COMPATIBLE mode
+        if (mappingContext.getMarshallingMode() == MarshallingMode.SDK_V1_COMPATIBLE) {
+            entities.forEach(AutoGeneratedKeyHelper::processAutoGeneratedKeys);
+        }
+
         entities.forEach(it -> maybeEmitEvent(it, BeforeSaveEvent::new));
 
-        List<FailedBatch> result = dynamoDBMapper.batchSave(entities);
+        // Group entities by class
+        Map<Class<?>, List<Object>> entitiesByClass = new HashMap<>();
+        for (Object entity : entities) {
+            entitiesByClass.computeIfAbsent(entity.getClass(), k -> new ArrayList<>()).add(entity);
+        }
+
+        List<BatchWriteResult> results = new ArrayList<>();
+
+        // Create batch write request
+        BatchWriteItemEnhancedRequest.Builder requestBuilder = BatchWriteItemEnhancedRequest.builder();
+
+        for (Map.Entry<Class<?>, List<Object>> entry : entitiesByClass.entrySet()) {
+            @SuppressWarnings("unchecked")
+            Class<Object> domainClass = (Class<Object>) entry.getKey();
+            List<Object> classEntities = entry.getValue();
+
+            DynamoDbTable<Object> table = getTable(domainClass);
+
+            WriteBatch.Builder<Object> batchBuilder = WriteBatch.builder(domainClass)
+                    .mappedTableResource(table);
+
+            for (Object entity : classEntities) {
+                batchBuilder.addPutItem(entity);
+            }
+
+            requestBuilder.addWriteBatch(batchBuilder.build());
+        }
+
+        // Execute batch write
+        BatchWriteResult result = enhancedClient.batchWriteItem(requestBuilder.build());
+        results.add(result);
 
         entities.forEach(it -> maybeEmitEvent(it, AfterSaveEvent::new));
-        return result;
+        return results;
     }
 
     @Override
     public <T> T delete(T entity) {
         maybeEmitEvent(entity, BeforeDeleteEvent::new);
-        dynamoDBMapper.delete(entity);
+
+        @SuppressWarnings("unchecked")
+        DynamoDbTable<T> table = (DynamoDbTable<T>) getTable(entity.getClass());
+        table.deleteItem(entity);
+
         maybeEmitEvent(entity, AfterDeleteEvent::new);
         return entity;
     }
 
     @Override
-    public List<FailedBatch> batchDelete(Iterable<?> entities) {
+    public List<BatchWriteResult> batchDelete(Iterable<?> entities) {
         entities.forEach(it -> maybeEmitEvent(it, BeforeDeleteEvent::new));
 
-        List<FailedBatch> result = dynamoDBMapper.batchDelete(entities);
+        // Group entities by class
+        Map<Class<?>, List<Object>> entitiesByClass = new HashMap<>();
+        for (Object entity : entities) {
+            entitiesByClass.computeIfAbsent(entity.getClass(), k -> new ArrayList<>()).add(entity);
+        }
+
+        List<BatchWriteResult> results = new ArrayList<>();
+
+        // Create batch write request
+        BatchWriteItemEnhancedRequest.Builder requestBuilder = BatchWriteItemEnhancedRequest.builder();
+
+        for (Map.Entry<Class<?>, List<Object>> entry : entitiesByClass.entrySet()) {
+            @SuppressWarnings("unchecked")
+            Class<Object> domainClass = (Class<Object>) entry.getKey();
+            List<Object> classEntities = entry.getValue();
+
+            DynamoDbTable<Object> table = getTable(domainClass);
+
+            WriteBatch.Builder<Object> batchBuilder = WriteBatch.builder(domainClass)
+                    .mappedTableResource(table);
+
+            for (Object entity : classEntities) {
+                batchBuilder.addDeleteItem(entity);
+            }
+
+            requestBuilder.addWriteBatch(batchBuilder.build());
+        }
+
+        // Execute batch write
+        BatchWriteResult result = enhancedClient.batchWriteItem(requestBuilder.build());
+        results.add(result);
 
         entities.forEach(it -> maybeEmitEvent(it, AfterDeleteEvent::new));
-        return result;
+        return results;
     }
 
     @Override
-    public <T> PaginatedQueryList<T> query(Class<T> clazz, QueryRequest queryRequest) {
-        QueryResponse queryResult = amazonDynamoDB.query(queryRequest);
+    public <T> PageIterable<T> query(Class<T> clazz, QueryRequest queryRequest) {
+        DynamoDbTable<T> table = getTable(clazz);
 
-        // If a limit is set, deactivate lazy loading of (matching) items after the
-        // limit
-        // via
-        // com.amazonaws.services.dynamodbv2.datamodeling.PaginatedQueryList.atEndOfResults()
-        if (queryRequest.limit() != null) {
-            queryResult = queryResult.toBuilder().lastEvaluatedKey(null).build();
+        // Use the low-level query API and convert to PageIterable
+        SdkIterable<QueryResponse> queryResponses = amazonDynamoDB.queryPaginator(queryRequest);
+
+        // Convert QueryResponse pages to entity pages
+        SdkIterable<Page<T>> pages = () -> queryResponses.stream().map(response -> {
+            // Convert items from the response to entities
+            List<T> items = response.items().stream()
+                    .map(itemMap -> table.tableSchema().mapToItem(itemMap))
+                    .collect(Collectors.toList());
+
+            // Create a Page with the items
+            return Page.create(items);
+        }).iterator();
+
+        return PageIterable.create(pages);
+    }
+
+    @Override
+    public <T> PageIterable<T> query(Class<T> domainClass, QueryEnhancedRequest queryRequest) {
+        DynamoDbTable<T> table = getTable(domainClass);
+        PageIterable<T> results = table.query(queryRequest);
+        maybeEmitEvent(results, AfterQueryEvent::new);
+        return results;
+    }
+
+    @Override
+    public <T> PageIterable<T> scan(Class<T> domainClass, ScanEnhancedRequest scanRequest) {
+        DynamoDbTable<T> table = getTable(domainClass);
+        PageIterable<T> results = table.scan(scanRequest);
+        maybeEmitEvent(results, AfterScanEvent::new);
+        return results;
+    }
+
+    @Override
+    public <T> int count(Class<T> domainClass, QueryEnhancedRequest queryRequest) {
+        DynamoDbTable<T> table = getTable(domainClass);
+        PageIterable<T> results = table.query(queryRequest);
+
+        // Count all items across all pages
+        int count = 0;
+        for (Page<T> page : results) {
+            count += page.items().size();
         }
+        return count;
+    }
 
-        return new PaginatedQueryList<T>(dynamoDBMapper, clazz, amazonDynamoDB, queryRequest, queryResult,
-                dynamoDBMapperConfig.getPaginationLoadingStrategy(), dynamoDBMapperConfig);
+    @Override
+    public <T> int count(Class<T> domainClass, ScanEnhancedRequest scanRequest) {
+        DynamoDbTable<T> table = getTable(domainClass);
+        PageIterable<T> results = table.scan(scanRequest);
+
+        // Count all items across all pages
+        int count = 0;
+        for (Page<T> page : results) {
+            count += page.items().size();
+        }
+        return count;
     }
 
     @Override
@@ -195,16 +464,9 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
 
     @Override
     public <T> String getOverriddenTableName(Class<T> domainClass, String tableName) {
-        if (dynamoDBMapperConfig.getTableNameOverride() != null) {
-            if (dynamoDBMapperConfig.getTableNameOverride().getTableName() != null) {
-                tableName = dynamoDBMapperConfig.getTableNameOverride().getTableName();
-            } else {
-                tableName = dynamoDBMapperConfig.getTableNameOverride().getTableNamePrefix() + tableName;
-            }
-        } else if (dynamoDBMapperConfig.getTableNameResolver() != null) {
-            tableName = dynamoDBMapperConfig.getTableNameResolver().getTableName(domainClass, dynamoDBMapperConfig);
+        if (tableNameResolver != null) {
+            return tableNameResolver.resolveTableName(domainClass, tableName);
         }
-
         return tableName;
     }
 
@@ -212,8 +474,8 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
      * {@inheritDoc}
      */
     @Override
-    public <T> DynamoDBMapperTableModel<T> getTableModel(Class<T> domainClass) {
-        return dynamoDBMapper.getTableModel(domainClass, dynamoDBMapperConfig);
+    public <T> TableSchema<T> getTableModel(Class<T> domainClass) {
+        return TableSchema.fromBean(domainClass);
     }
 
     /**

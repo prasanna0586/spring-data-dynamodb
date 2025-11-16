@@ -15,9 +15,9 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
-import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
 import org.springframework.util.Assert;
+import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 
 import java.util.Map;
 import java.util.Optional;
@@ -27,7 +27,7 @@ import java.util.Optional;
  * - getRangeKey(ID id) will always return null Delegates to wrapped DynamoDBHashKeyExtractingEntityMetadata component
  * for many operations - it is the responsibility of calling clients to ensure they pass in a valid
  * DynamoDBHashKeyExtractingEntityMetadata implementation for this entity. Entities of type T must have a public getter
- * method of return type ID annotated with @DynamoDBHashKey to ensure correct behavior
+ * method of return type ID annotated with @DynamoDbPartitionKey to ensure correct behavior
  *
  * @author Michael Lavelle
  * @author Sebastian Just
@@ -42,7 +42,7 @@ public class DynamoDBIdIsHashKeyEntityInformationImpl<T, ID> extends FieldAndGet
 
     public DynamoDBIdIsHashKeyEntityInformationImpl(Class<T> domainClass,
             DynamoDBHashKeyExtractingEntityMetadata<T> metadata) {
-        super(domainClass, DynamoDBHashKey.class);
+        super(domainClass, DynamoDbPartitionKey.class);
         this.metadata = metadata;
         this.hashKeyExtractor = new HashKeyIsIdHashKeyExtractor<ID>(getIdType());
     }

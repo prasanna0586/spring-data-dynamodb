@@ -1,14 +1,14 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBDocument;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 
 import java.util.Objects;
 
 /**
  * Nested document representing an order item.
  */
-@DynamoDBDocument
+@DynamoDbBean
 public class OrderItem {
 
     private String productId;
@@ -28,7 +28,7 @@ public class OrderItem {
         this.totalPrice = quantity * price;
     }
 
-    @DynamoDBAttribute
+    @DynamoDbAttribute("productId")
     public String getProductId() {
         return productId;
     }
@@ -37,7 +37,7 @@ public class OrderItem {
         this.productId = productId;
     }
 
-    @DynamoDBAttribute
+    @DynamoDbAttribute("productName")
     public String getProductName() {
         return productName;
     }
@@ -46,7 +46,7 @@ public class OrderItem {
         this.productName = productName;
     }
 
-    @DynamoDBAttribute
+    @DynamoDbAttribute("quantity")
     public Integer getQuantity() {
         return quantity;
     }
@@ -55,7 +55,7 @@ public class OrderItem {
         this.quantity = quantity;
     }
 
-    @DynamoDBAttribute
+    @DynamoDbAttribute("price")
     public Double getPrice() {
         return price;
     }
@@ -64,7 +64,7 @@ public class OrderItem {
         this.price = price;
     }
 
-    @DynamoDBAttribute
+    @DynamoDbAttribute("totalPrice")
     public Double getTotalPrice() {
         return totalPrice;
     }

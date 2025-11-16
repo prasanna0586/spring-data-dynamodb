@@ -1,9 +1,11 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.Expression;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBSaveExpression;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -53,11 +55,14 @@ public class ParallelScansAndErrorHandlingIntegrationTest {
     private DynamoDbClient amazonDynamoDB;
 
     @Autowired
-    private DynamoDBMapper dynamoDBMapper;
+    private DynamoDbEnhancedClient dynamoDbEnhancedClient;
+
+    private DynamoDbTable<User> userTable;
 
     @BeforeEach
     void setUp() {
         userRepository.deleteAll();
+        userTable = dynamoDbEnhancedClient.table("user", TableSchema.fromBean(User.class));
     }
 
     // ==================== Parallel Scans ====================
@@ -151,22 +156,22 @@ public class ParallelScansAndErrorHandlingIntegrationTest {
                 expressionAttributeValues.put(":threshold", AttributeValue.builder().n("50")
                         .build());
 
-                ScanRequest scanRequest = ScanRequest.builder()
-                        .tableName("user")
-                        .segment(currentSegment)
-                        .totalSegments(totalSegments)
-                        .filterExpression("numberOfPlaylists > :threshold")
-                        .expressionAttributeValues(expressionAttributeValues)
-                        .build();
-
                 List<Map<String, AttributeValue>> segmentItems = new ArrayList<>();
-                Map<String, AttributeValue> lastKey;
+                Map<String, AttributeValue> lastKey = null;
                 do {
+                    ScanRequest scanRequest = ScanRequest.builder()
+                            .tableName("user")
+                            .segment(currentSegment)
+                            .totalSegments(totalSegments)
+                            .filterExpression("numberOfPlaylists > :threshold")
+                            .expressionAttributeValues(expressionAttributeValues)
+                            .exclusiveStartKey(lastKey)
+                            .build();
+
                     ScanResponse result = amazonDynamoDB.scan(scanRequest);
                     segmentItems.addAll(result.items());
                     lastKey = result.lastEvaluatedKey();
-                    scanRequest.setExclusiveStartKey(lastKey);
-                } while (lastKey != null);
+                } while (lastKey != null && !lastKey.isEmpty());
 
                 return segmentItems.size();
             }));
@@ -196,19 +201,19 @@ public class ParallelScansAndErrorHandlingIntegrationTest {
         userRepository.save(user);
 
         // When/Then - Conditional update with wrong condition
-        DynamoDBSaveExpression saveExpression = new DynamoDBSaveExpression();
-        Map<String, ExpectedAttributeValue> expected = new HashMap<>();
-        expected.put("numberOfPlaylists",
-                ExpectedAttributeValue.builder()
-                        .value(AttributeValue.builder().n("999")
-                                .build()) // Wrong value
-                        .comparisonOperator("EQ")
-                .build());
-        saveExpression.setExpected(expected);
+        Map<String, AttributeValue> expressionValues = new HashMap<>();
+        expressionValues.put(":expected", AttributeValue.builder().n("999").build());
+
+        Expression conditionExpression = Expression.builder()
+                .expression("numberOfPlaylists = :expected")
+                .expressionValues(expressionValues)
+                .build();
 
         user.setName("Updated Name");
 
-        assertThatThrownBy(() -> dynamoDBMapper.save(user, saveExpression))
+        assertThatThrownBy(() -> userTable.putItem(builder -> builder
+                .item(user)
+                .conditionExpression(conditionExpression)))
                 .isInstanceOf(ConditionalCheckFailedException.class);
     }
 
@@ -235,7 +240,7 @@ public class ParallelScansAndErrorHandlingIntegrationTest {
 
         // When/Then - Invalid update expression
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("error-user-2"));
+        key.put("Id", AttributeValue.builder().s("error-user-2").build());
 
         UpdateItemRequest updateRequest = UpdateItemRequest.builder()
                 .tableName("user")
@@ -258,7 +263,7 @@ public class ParallelScansAndErrorHandlingIntegrationTest {
 
         // When/Then - Update expression references :value but doesn't provide it
         Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", new AttributeValue("error-user-3"));
+        key.put("Id", AttributeValue.builder().s("error-user-3").build());
 
         UpdateItemRequest updateRequest = UpdateItemRequest.builder()
                 .tableName("user")
@@ -306,15 +311,15 @@ public class ParallelScansAndErrorHandlingIntegrationTest {
 
         List<WriteRequest> writeRequests = new ArrayList<>();
         Map<String, AttributeValue> item1 = new HashMap<>();
-        item1.put("Id", new AttributeValue("duplicate-id"));
-        item1.put("name", new AttributeValue("User 1"));
+        item1.put("Id", AttributeValue.builder().s("duplicate-id").build());
+        item1.put("name", AttributeValue.builder().s("User 1").build());
         writeRequests.add(WriteRequest.builder().putRequest(PutRequest.builder().item(item1)
                 .build())
                 .build());
 
         Map<String, AttributeValue> item2 = new HashMap<>();
-        item2.put("Id", new AttributeValue("duplicate-id"));
-        item2.put("name", new AttributeValue("User 2"));
+        item2.put("Id", AttributeValue.builder().s("duplicate-id").build());
+        item2.put("name", AttributeValue.builder().s("User 2").build());
         writeRequests.add(WriteRequest.builder().putRequest(PutRequest.builder().item(item2)
                 .build())
                 .build());
@@ -371,7 +376,7 @@ public class ParallelScansAndErrorHandlingIntegrationTest {
             ScanResponse result = amazonDynamoDB.scan(scanRequest);
             items.addAll(result.items());
             lastEvaluatedKey = result.lastEvaluatedKey();
-        } while (lastEvaluatedKey != null);
+        } while (lastEvaluatedKey != null && !lastEvaluatedKey.isEmpty());
 
         return items;
     }

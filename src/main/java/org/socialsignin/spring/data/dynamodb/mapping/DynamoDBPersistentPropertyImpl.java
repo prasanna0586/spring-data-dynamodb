@@ -15,9 +15,6 @@
  */
 package org.socialsignin.spring.data.dynamodb.mapping;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBIgnore;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBVersionAttribute;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Reference;
 import org.springframework.data.annotation.Transient;
@@ -25,6 +22,8 @@ import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbIgnore;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 
 import java.lang.annotation.Annotation;
 import java.util.Collection;
@@ -53,7 +52,7 @@ class DynamoDBPersistentPropertyImpl extends AnnotationBasedPersistentProperty<D
 
         annotations = new HashSet<>();
         annotations.add(Id.class);
-        annotations.add(DynamoDBHashKey.class);
+        annotations.add(DynamoDbPartitionKey.class);
         ID_ANNOTATIONS = annotations;
     }
 
@@ -75,11 +74,11 @@ class DynamoDBPersistentPropertyImpl extends AnnotationBasedPersistentProperty<D
 
     @Override
     public boolean isWritable() {
-        return !isAnnotationPresent(DynamoDBIgnore.class);
+        return !isAnnotationPresent(DynamoDbIgnore.class);
     }
 
     public boolean isHashKeyProperty() {
-        return isAnnotationPresent(DynamoDBHashKey.class);
+        return isAnnotationPresent(DynamoDbPartitionKey.class);
     }
 
     public boolean isCompositeIdProperty() {
@@ -145,12 +144,14 @@ class DynamoDBPersistentPropertyImpl extends AnnotationBasedPersistentProperty<D
      */
     @Override
     public boolean isTransient() {
-        return isAnnotationPresent(Transient.class) || super.isTransient() || isAnnotationPresent(DynamoDBIgnore.class);
+        return isAnnotationPresent(Transient.class) || super.isTransient() || isAnnotationPresent(DynamoDbIgnore.class);
     }
 
     @Override
     public boolean isVersionProperty() {
-        return super.isVersionProperty() || isAnnotationPresent(DynamoDBVersionAttribute.class);
+        // SDK v2 does not have a direct equivalent to DynamoDBVersionAttribute
+        // Version tracking should be handled via Spring Data's @Version annotation
+        return super.isVersionProperty();
     }
 
     /*

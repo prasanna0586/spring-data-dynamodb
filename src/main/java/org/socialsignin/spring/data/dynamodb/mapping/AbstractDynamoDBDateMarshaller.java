@@ -15,8 +15,6 @@
  */
 package org.socialsignin.spring.data.dynamodb.mapping;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMarshaller;
-
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Date;
@@ -25,16 +23,14 @@ import java.util.Date;
  * @author Michael Lavelle
  * @author Sebastian Just
  *
- * @deprecated According to
- *             {@code com.amazonaws.services.dynamodbv2.datamodeling.marshallers.CustomMarshaller.marshall(Object)} at
- *             some point {@link DynamoDBMarshaller} might be cached - whereas {@link DateFormat} is not thread-safe.
+ * @deprecated This class was created for SDK v1 compatibility. {@link DateFormat} is not thread-safe.
  *             <br>
- *             Use {@link org.socialsignin.spring.data.dynamodb.marshaller.DateDynamoDBMarshaller} instead.
+ *             For new code using SDK v2, use {@link org.socialsignin.spring.data.dynamodb.marshaller.DateDynamoDBMarshaller} instead.
  *
  * @see org.socialsignin.spring.data.dynamodb.marshaller.DateDynamoDBMarshaller
  */
 @Deprecated
-public class AbstractDynamoDBDateMarshaller implements DynamoDBMarshaller<Date> {
+public class AbstractDynamoDBDateMarshaller {
 
     private DateFormat dateFormat;
 
@@ -42,7 +38,12 @@ public class AbstractDynamoDBDateMarshaller implements DynamoDBMarshaller<Date> 
         this.dateFormat = dateFormat;
     }
 
-    @Override
+    /**
+     * Marshalls a Date to String format.
+     *
+     * @param getterReturnResult the Date to marshall
+     * @return String representation of the date
+     */
     public String marshall(Date getterReturnResult) {
         if (getterReturnResult == null) {
             return null;
@@ -51,7 +52,14 @@ public class AbstractDynamoDBDateMarshaller implements DynamoDBMarshaller<Date> 
         }
     }
 
-    @Override
+    /**
+     * Unmarshalls a String to Date.
+     *
+     * @param clazz the Date class
+     * @param obj   the String to unmarshall
+     * @return Date object
+     * @throws IllegalArgumentException if parsing fails
+     */
     public Date unmarshall(Class<Date> clazz, String obj) throws IllegalArgumentException {
         if (obj == null) {
             return null;

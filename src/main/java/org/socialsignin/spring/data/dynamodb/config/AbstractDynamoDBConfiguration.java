@@ -15,7 +15,6 @@
  */
 package org.socialsignin.spring.data.dynamodb.config;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext;
@@ -27,6 +26,7 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 import software.amazon.awssdk.auth.credentials.AwsCredentials;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.util.HashSet;
@@ -47,12 +47,12 @@ public abstract class AbstractDynamoDBConfiguration {
     public abstract AwsCredentials amazonAWSCredentials();
 
     /**
-     * Return the base packages to scan for mapped {@link DynamoDBTable}s. Will return the package name of the
+     * Return the base packages to scan for mapped {@link DynamoDbBean}s. Will return the package name of the
      * configuration class' (the concrete class, not this one here) by default. So if you have a
      * {@code com.acme.AppConfig} extending {@link AbstractDynamoDBConfiguration} the base package will be considered
      * {@code com.acme} unless the method is overriden to implement alternate behaviour.
      *
-     * @return the base package to scan for mapped {@link DynamoDBTable} classes or {@literal null} to not enable
+     * @return the base package to scan for mapped {@link DynamoDbBean} classes or {@literal null} to not enable
      *         scanning for entities.
      */
     protected String[] getMappingBasePackages() {
@@ -71,7 +71,7 @@ public abstract class AbstractDynamoDBConfiguration {
      * @return A newly created {@link DynamoDBMappingContext}
      *
      * @throws ClassNotFoundException
-     *             if the class with {@link DynamoDBTable} annotation can't be loaded
+     *             if the class with {@link DynamoDbBean} annotation can't be loaded
      */
     @Bean
     public DynamoDBMappingContext dynamoDBMappingContext() throws ClassNotFoundException {
@@ -83,14 +83,14 @@ public abstract class AbstractDynamoDBConfiguration {
     }
 
     /**
-     * Scans the mapping base package for classes annotated with {@link DynamoDBTable}.
+     * Scans the mapping base package for classes annotated with {@link DynamoDbBean}.
      *
      * @see #getMappingBasePackages()
      *
-     * @return All classes with {@link DynamoDBTable} annotation
+     * @return All classes with {@link DynamoDbBean} annotation
      *
      * @throws ClassNotFoundException
-     *             if the class with {@link DynamoDBTable} annotation can't be loaded
+     *             if the class with {@link DynamoDbBean} annotation can't be loaded
      */
     protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
 
@@ -104,7 +104,7 @@ public abstract class AbstractDynamoDBConfiguration {
             if (StringUtils.hasText(basePackage)) {
                 ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(
                         false);
-                componentProvider.addIncludeFilter(new AnnotationTypeFilter(DynamoDBTable.class));
+                componentProvider.addIncludeFilter(new AnnotationTypeFilter(DynamoDbBean.class));
 
                 for (BeanDefinition candidate : componentProvider.findCandidateComponents(basePackage)) {
                     String candidateClass = candidate.getBeanClassName();

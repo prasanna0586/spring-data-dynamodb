@@ -15,8 +15,9 @@
  */
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 
 import java.io.Serializable;
 
@@ -26,7 +27,8 @@ public class CustomerHistoryId implements Serializable {
     private String customerId;
     private String createDt;
 
-    @DynamoDBHashKey(attributeName = "customerId")
+    @DynamoDbPartitionKey
+    @DynamoDbAttribute("customerId")
     public String getCustomerId() {
         return customerId;
     }
@@ -35,7 +37,8 @@ public class CustomerHistoryId implements Serializable {
         this.customerId = customerId;
     }
 
-    @DynamoDBRangeKey(attributeName = "createDt")
+    @DynamoDbSortKey
+    @DynamoDbAttribute("createDt")
     public String getCreateDt() {
         return createDt;
     }

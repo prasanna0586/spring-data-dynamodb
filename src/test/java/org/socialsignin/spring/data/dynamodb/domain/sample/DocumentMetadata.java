@@ -1,11 +1,12 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.*;
+import software.amazon.awssdk.enhanced.dynamodb.extensions.annotations.DynamoDbVersionAttribute;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
 import java.time.Instant;
 import java.util.Objects;
 
-@DynamoDBTable(tableName = "DocumentMetadata")
+@DynamoDbBean
 public class DocumentMetadata {
 
     private String uniqueDocumentId;
@@ -37,7 +38,8 @@ public class DocumentMetadata {
         this.version = version;
     }
 
-    @DynamoDBHashKey(attributeName = "uniqueDocumentId")
+    @DynamoDbPartitionKey
+    @DynamoDbAttribute("uniqueDocumentId")
     public String getUniqueDocumentId() {
         return uniqueDocumentId;
     }
@@ -46,11 +48,12 @@ public class DocumentMetadata {
         this.uniqueDocumentId = uniqueDocumentId;
     }
 
-    @DynamoDBIndexHashKey(globalSecondaryIndexNames = {
+    @DynamoDbSecondaryPartitionKey(indexNames = {
             "memberId-documentCategory-index",
             "memberId-documentSubCategory-index",
             "memberId-createdAt-index"
-    }, attributeName = "memberId")
+    })
+    @DynamoDbAttribute("memberId")
     public Integer getMemberId() {
         return memberId;
     }
@@ -59,7 +62,8 @@ public class DocumentMetadata {
         this.memberId = memberId;
     }
 
-    @DynamoDBIndexRangeKey(globalSecondaryIndexName = "memberId-documentCategory-index", attributeName = "documentCategory")
+    @DynamoDbSecondarySortKey(indexNames = "memberId-documentCategory-index")
+    @DynamoDbAttribute("documentCategory")
     public Integer getDocumentCategory() {
         return documentCategory;
     }
@@ -68,7 +72,8 @@ public class DocumentMetadata {
         this.documentCategory = documentCategory;
     }
 
-    @DynamoDBIndexRangeKey(globalSecondaryIndexName = "memberId-documentSubCategory-index", attributeName = "documentSubCategory")
+    @DynamoDbSecondarySortKey(indexNames = "memberId-documentSubCategory-index")
+    @DynamoDbAttribute("documentSubCategory")
     public Integer getDocumentSubCategory() {
         return documentSubCategory;
     }
@@ -77,8 +82,9 @@ public class DocumentMetadata {
         this.documentSubCategory = documentSubCategory;
     }
 
-    @DynamoDBIndexRangeKey(globalSecondaryIndexName = "memberId-createdAt-index", attributeName = "createdAt")
-    @DynamoDBTypeConverted(converter = InstantConverter.class)
+    @DynamoDbSecondarySortKey(indexNames = "memberId-createdAt-index")
+    @DynamoDbAttribute("createdAt")
+    @DynamoDbConvertedBy(InstantConverter.class)
     public Instant getCreatedAt() {
         return createdAt;
     }
@@ -87,8 +93,7 @@ public class DocumentMetadata {
         this.createdAt = createdAt;
     }
 
-    @DynamoDBAttribute(attributeName = "updatedAt")
-    @DynamoDBTypeConverted(converter = InstantConverter.class)
+    @DynamoDbConvertedBy(InstantConverter.class)
     public Instant getUpdatedAt() {
         return updatedAt;
     }
@@ -97,7 +102,6 @@ public class DocumentMetadata {
         this.updatedAt = updatedAt;
     }
 
-    @DynamoDBAttribute(attributeName = "createdBy")
     public String getCreatedBy() {
         return createdBy;
     }
@@ -106,7 +110,6 @@ public class DocumentMetadata {
         this.createdBy = createdBy;
     }
 
-    @DynamoDBAttribute(attributeName = "updatedBy")
     public String getUpdatedBy() {
         return updatedBy;
     }
@@ -115,7 +118,6 @@ public class DocumentMetadata {
         this.updatedBy = updatedBy;
     }
 
-    @DynamoDBAttribute(attributeName = "notes")
     public String getNotes() {
         return notes;
     }
@@ -124,7 +126,7 @@ public class DocumentMetadata {
         this.notes = notes;
     }
 
-    @DynamoDBVersionAttribute
+    @DynamoDbVersionAttribute
     public Long getVersion() {
         return version;
     }

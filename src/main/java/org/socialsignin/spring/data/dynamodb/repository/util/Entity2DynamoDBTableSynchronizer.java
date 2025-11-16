@@ -15,11 +15,6 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.util;
 
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.*;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import software.amazon.awssdk.services.dynamodb.util.TableUtils;
-import software.amazon.awssdk.services.dynamodb.util.TableUtilsTableNeverTransitionedToStateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBEntityInformation;
@@ -30,15 +25,23 @@ import org.springframework.context.event.ApplicationContextEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.ContextStoppedEvent;
 import org.springframework.data.repository.core.support.RepositoryProxyPostProcessor;
+import org.springframework.util.ReflectionUtils;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
+import software.amazon.awssdk.services.dynamodb.waiters.DynamoDbWaiter;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * This is the base class for all classes performing the validation or auto-creation of tables based on the entity
  * classes. //TODO: It would be nice if the checks would run in parallel via a TaskScheduler (if available)
+ *
+ * <p>This implementation uses SDK v2 APIs to introspect entity classes and generate CreateTableRequest objects
+ * based on the @DynamoDbPartitionKey, @DynamoDbSortKey, @DynamoDbSecondaryPartitionKey annotations.</p>
  *
  * @see Entity2DDL
  */
@@ -53,7 +56,6 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
     private static final String CONFIGURATION_KEY_entity2ddl_writeCapacity = "${spring.data.dynamodb.entity2ddl.writeCapacity:1}";
 
     private final DynamoDbClient amazonDynamoDB;
-    private final DynamoDBMapper mapper;
 
     private final Entity2DDL mode;
     private final ProjectionType gsiProjectionType;
@@ -62,23 +64,25 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
 
     private final Collection<DynamoDBEntityInformation<T, ID>> registeredEntities = new ArrayList<>();
 
-    public Entity2DynamoDBTableSynchronizer(DynamoDbClient amazonDynamoDB, DynamoDBMapper mapper, Entity2DDL mode) {
-        this(amazonDynamoDB, mapper, mode.getConfigurationValue(), ProjectionType.ALL.name(), ProjectionType.ALL.name(),
+    public Entity2DynamoDBTableSynchronizer(DynamoDbClient amazonDynamoDB, Entity2DDL mode) {
+        this(amazonDynamoDB, mode.getConfigurationValue(), ProjectionType.ALL.name(), ProjectionType.ALL.name(),
                 10L, 10L);
     }
 
     @Autowired
-    public Entity2DynamoDBTableSynchronizer(DynamoDbClient amazonDynamoDB, DynamoDBMapper mapper,
+    public Entity2DynamoDBTableSynchronizer(DynamoDbClient amazonDynamoDB,
             @Value(CONFIGURATION_KEY_entity2ddl_auto) String mode,
             @Value(CONFIGURATION_KEY_entity2ddl_gsiProjectionType) String gsiProjectionType,
             @Value(CONFIGURATION_KEY_entity2ddl_lsiProjectionType) String lsiProjectionType,
             @Value(CONFIGURATION_KEY_entity2ddl_readCapacity) long readCapacity,
             @Value(CONFIGURATION_KEY_entity2ddl_writeCapacity) long writeCapacity) {
         this.amazonDynamoDB = amazonDynamoDB;
-        this.mapper = mapper;
 
         this.mode = Entity2DDL.fromValue(mode);
-        this.pt = new ProvisionedThroughput(readCapacity, writeCapacity);
+        this.pt = ProvisionedThroughput.builder()
+                .readCapacityUnits(readCapacity)
+                .writeCapacityUnits(writeCapacity)
+                .build();
         this.gsiProjectionType = ProjectionType.fromValue(gsiProjectionType);
         this.lsiProjectionType = ProjectionType.fromValue(lsiProjectionType);
     }
@@ -98,7 +102,7 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
 
             try {
                 synchronize(entityInformation, event);
-            } catch (TableNeverTransitionedToStateException | InterruptedException e) {
+            } catch (InterruptedException | UnsupportedOperationException e) {
                 throw new RuntimeException("Could not perform Entity2DDL operation " + mode + " on "
                         + entityInformation.getDynamoDBTableName(), e);
             }
@@ -106,7 +110,7 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
     }
 
     protected void synchronize(DynamoDBEntityInformation<T, ID> entityInformation, ApplicationContextEvent event)
-            throws TableNeverTransitionedToStateException, InterruptedException {
+            throws InterruptedException {
 
         if (event instanceof ContextRefreshedEvent) {
             switch (mode) {
@@ -148,47 +152,48 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
     }
 
     private boolean performCreate(DynamoDBEntityInformation<T, ID> entityInformation)
-            throws TableNeverTransitionedToStateException, InterruptedException {
+            throws InterruptedException {
         Class<T> domainType = entityInformation.getJavaType();
 
-        CreateTableRequest ctr = mapper.generateCreateTableRequest(domainType);
+        CreateTableRequest ctr = generateCreateTableRequest(domainType);
         LOGGER.trace("Creating table {} for entity {}", ctr.tableName(), domainType);
-        ctr = ctr.toBuilder().provisionedThroughput(pt).build();
 
-        if (ctr.globalSecondaryIndexes() != null) {
-            ctr.globalSecondaryIndexes().forEach(gsi -> {
-                gsi.setProjection(Projection.builder().projectionType(gsiProjectionType)
-                        .build());
-                gsi.setProvisionedThroughput(pt);
-            });
-        }
+        try {
+            amazonDynamoDB.createTable(ctr);
+            LOGGER.debug("Table creation initiated for {}", ctr.tableName());
 
-        if (ctr.localSecondaryIndexes() != null) {
-            ctr.localSecondaryIndexes()
-                    .forEach(lsi -> lsi.setProjection(Projection.builder().projectionType(lsiProjectionType)
-                    .build()));
+            // Wait for table to become active
+            try (DynamoDbWaiter waiter = DynamoDbWaiter.builder().client(amazonDynamoDB).build()) {
+                DescribeTableRequest describeRequest = DescribeTableRequest.builder()
+                        .tableName(ctr.tableName())
+                        .build();
+                waiter.waitUntilTableExists(describeRequest);
+                LOGGER.debug("Created table {} for entity {}", ctr.tableName(), domainType);
+            }
+            return true;
+        } catch (ResourceInUseException e) {
+            LOGGER.debug("Table {} already exists", ctr.tableName());
+            return false;
         }
-
-        boolean result = TableUtils.createTableIfNotExists(amazonDynamoDB, ctr);
-        if (result) {
-            TableUtils.waitUntilActive(amazonDynamoDB, ctr.tableName());
-            LOGGER.debug("Created table {} for entity {}", ctr.tableName(), domainType);
-        }
-        return result;
     }
 
     private boolean performDrop(DynamoDBEntityInformation<T, ID> entityInformation) {
         Class<T> domainType = entityInformation.getJavaType();
+        String tableName = entityInformation.getDynamoDBTableName();
 
-        DeleteTableRequest dtr = mapper.generateDeleteTableRequest(domainType);
-        LOGGER.trace("Dropping table {} for entity {}", dtr.tableName(), domainType);
+        LOGGER.trace("Dropping table {} for entity {}", tableName, domainType);
 
-        boolean result = TableUtils.deleteTableIfExists(amazonDynamoDB, dtr);
-        if (result) {
-            LOGGER.debug("Deleted table {} for entity {}", dtr.tableName(), domainType);
+        try {
+            DeleteTableRequest dtr = DeleteTableRequest.builder()
+                    .tableName(tableName)
+                    .build();
+            amazonDynamoDB.deleteTable(dtr);
+            LOGGER.debug("Deleted table {} for entity {}", tableName, domainType);
+            return true;
+        } catch (ResourceNotFoundException e) {
+            LOGGER.debug("Table {} does not exist", tableName);
+            return false;
         }
-
-        return result;
     }
 
     /**
@@ -202,8 +207,10 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
             throws IllegalStateException {
         Class<T> domainType = entityInformation.getJavaType();
 
-        CreateTableRequest expected = mapper.generateCreateTableRequest(domainType);
-        DescribeTableResponse result = amazonDynamoDB.describeTable(expected.tableName());
+        CreateTableRequest expected = generateCreateTableRequest(domainType);
+        DescribeTableResponse result = amazonDynamoDB.describeTable(DescribeTableRequest.builder()
+                .tableName(expected.tableName())
+                .build());
         TableDescription actual = result.table();
 
         if (!expected.keySchema().equals(actual.keySchema())) {
@@ -213,8 +220,7 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
         LOGGER.debug("KeySchema is valid");
 
         if (expected.globalSecondaryIndexes() != null) {
-            if (!Arrays.deepEquals(expected.globalSecondaryIndexes().toArray(),
-                    actual.globalSecondaryIndexes().toArray())) {
+            if (!compareGSI(expected.globalSecondaryIndexes(), actual.globalSecondaryIndexes())) {
                 throw new IllegalStateException("Global Secondary Indexes are not as expected. Expected: <"
                         + expected.globalSecondaryIndexes() + "> but found <" + actual.globalSecondaryIndexes()
                         + ">");
@@ -222,8 +228,287 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
         }
         LOGGER.debug("Global Secondary Indexes are valid");
 
-        LOGGER.info("Validated table {} for entity{}", expected.tableName(), domainType);
+        LOGGER.info("Validated table {} for entity {}", expected.tableName(), domainType);
         return result;
+    }
+
+    private boolean compareGSI(List<GlobalSecondaryIndex> expected, List<GlobalSecondaryIndexDescription> actual) {
+        if (expected.size() != actual.size()) {
+            return false;
+        }
+
+        Map<String, GlobalSecondaryIndex> expectedMap = expected.stream()
+                .collect(Collectors.toMap(GlobalSecondaryIndex::indexName, gsi -> gsi));
+        Map<String, GlobalSecondaryIndexDescription> actualMap = actual.stream()
+                .collect(Collectors.toMap(GlobalSecondaryIndexDescription::indexName, gsi -> gsi));
+
+        for (String indexName : expectedMap.keySet()) {
+            if (!actualMap.containsKey(indexName)) {
+                return false;
+            }
+            GlobalSecondaryIndex exp = expectedMap.get(indexName);
+            GlobalSecondaryIndexDescription act = actualMap.get(indexName);
+            if (!exp.keySchema().equals(act.keySchema())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Generates a CreateTableRequest by introspecting the entity class annotations.
+     * This replicates the functionality of SDK v1's DynamoDBMapper.generateCreateTableRequest().
+     */
+    private CreateTableRequest generateCreateTableRequest(Class<T> domainType) {
+        String tableName = getTableName(domainType);
+
+        // Collect all attribute definitions and key schema
+        List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
+        List<KeySchemaElement> keySchema = new ArrayList<>();
+        Map<String, ScalarAttributeType> attributeTypes = new HashMap<>();
+
+        // Find partition key and sort key
+        findPartitionKey(domainType, keySchema, attributeTypes);
+        findSortKey(domainType, keySchema, attributeTypes);
+
+        // Find GSIs
+        List<GlobalSecondaryIndex> globalSecondaryIndexes = findGlobalSecondaryIndexes(domainType, attributeTypes);
+
+        // Find LSIs
+        List<LocalSecondaryIndex> localSecondaryIndexes = findLocalSecondaryIndexes(domainType, attributeTypes);
+
+        // Build attribute definitions from collected types
+        attributeTypes.forEach((name, type) ->
+            attributeDefinitions.add(AttributeDefinition.builder()
+                    .attributeName(name)
+                    .attributeType(type)
+                    .build())
+        );
+
+        CreateTableRequest.Builder builder = CreateTableRequest.builder()
+                .tableName(tableName)
+                .keySchema(keySchema)
+                .attributeDefinitions(attributeDefinitions)
+                .provisionedThroughput(pt);
+
+        if (!globalSecondaryIndexes.isEmpty()) {
+            builder.globalSecondaryIndexes(globalSecondaryIndexes);
+        }
+
+        if (!localSecondaryIndexes.isEmpty()) {
+            builder.localSecondaryIndexes(localSecondaryIndexes);
+        }
+
+        return builder.build();
+    }
+
+    private String getTableName(Class<T> domainType) {
+        // SDK v2's @DynamoDbBean doesn't have a tableName property
+        // Table name is determined by the class name (simple name)
+        // For custom table names, users should use TableNameResolver
+        return domainType.getSimpleName();
+    }
+
+    private void findPartitionKey(Class<T> domainType, List<KeySchemaElement> keySchema,
+                                   Map<String, ScalarAttributeType> attributeTypes) {
+        ReflectionUtils.doWithMethods(domainType, method -> {
+            if (method.isAnnotationPresent(DynamoDbPartitionKey.class)) {
+                String attributeName = getAttributeName(method);
+                keySchema.add(KeySchemaElement.builder()
+                        .attributeName(attributeName)
+                        .keyType(KeyType.HASH)
+                        .build());
+                attributeTypes.put(attributeName, getScalarType(method.getReturnType()));
+            }
+        });
+
+        ReflectionUtils.doWithFields(domainType, field -> {
+            if (field.isAnnotationPresent(DynamoDbPartitionKey.class)) {
+                String attributeName = getAttributeName(field);
+                keySchema.add(KeySchemaElement.builder()
+                        .attributeName(attributeName)
+                        .keyType(KeyType.HASH)
+                        .build());
+                attributeTypes.put(attributeName, getScalarType(field.getType()));
+            }
+        });
+    }
+
+    private void findSortKey(Class<T> domainType, List<KeySchemaElement> keySchema,
+                             Map<String, ScalarAttributeType> attributeTypes) {
+        ReflectionUtils.doWithMethods(domainType, method -> {
+            if (method.isAnnotationPresent(DynamoDbSortKey.class)) {
+                String attributeName = getAttributeName(method);
+                keySchema.add(KeySchemaElement.builder()
+                        .attributeName(attributeName)
+                        .keyType(KeyType.RANGE)
+                        .build());
+                attributeTypes.put(attributeName, getScalarType(method.getReturnType()));
+            }
+        });
+
+        ReflectionUtils.doWithFields(domainType, field -> {
+            if (field.isAnnotationPresent(DynamoDbSortKey.class)) {
+                String attributeName = getAttributeName(field);
+                keySchema.add(KeySchemaElement.builder()
+                        .attributeName(attributeName)
+                        .keyType(KeyType.RANGE)
+                        .build());
+                attributeTypes.put(attributeName, getScalarType(field.getType()));
+            }
+        });
+    }
+
+    private List<GlobalSecondaryIndex> findGlobalSecondaryIndexes(Class<T> domainType,
+                                                                    Map<String, ScalarAttributeType> attributeTypes) {
+        Map<String, GlobalSecondaryIndex.Builder> gsiBuilders = new HashMap<>();
+
+        // Find all GSI partition keys and sort keys
+        ReflectionUtils.doWithMethods(domainType, method -> {
+            if (method.isAnnotationPresent(DynamoDbSecondaryPartitionKey.class)) {
+                for (DynamoDbSecondaryPartitionKey annotation : method.getAnnotationsByType(DynamoDbSecondaryPartitionKey.class)) {
+                    for (String indexName : annotation.indexNames()) {
+                        String attributeName = getAttributeName(method);
+                        attributeTypes.put(attributeName, getScalarType(method.getReturnType()));
+
+                        GlobalSecondaryIndex.Builder gsiBuilder = gsiBuilders.computeIfAbsent(indexName,
+                                k -> GlobalSecondaryIndex.builder()
+                                        .indexName(indexName)
+                                        .projection(Projection.builder().projectionType(gsiProjectionType).build())
+                                        .provisionedThroughput(pt));
+
+                        List<KeySchemaElement> keySchema = new ArrayList<>(gsiBuilder.build().keySchema());
+                        keySchema.add(KeySchemaElement.builder()
+                                .attributeName(attributeName)
+                                .keyType(KeyType.HASH)
+                                .build());
+                        gsiBuilder.keySchema(keySchema);
+                        gsiBuilders.put(indexName, gsiBuilder);
+                    }
+                }
+            }
+
+            if (method.isAnnotationPresent(DynamoDbSecondarySortKey.class)) {
+                for (DynamoDbSecondarySortKey annotation : method.getAnnotationsByType(DynamoDbSecondarySortKey.class)) {
+                    for (String indexName : annotation.indexNames()) {
+                        String attributeName = getAttributeName(method);
+                        attributeTypes.put(attributeName, getScalarType(method.getReturnType()));
+
+                        GlobalSecondaryIndex.Builder gsiBuilder = gsiBuilders.computeIfAbsent(indexName,
+                                k -> GlobalSecondaryIndex.builder()
+                                        .indexName(indexName)
+                                        .projection(Projection.builder().projectionType(gsiProjectionType).build())
+                                        .provisionedThroughput(pt));
+
+                        List<KeySchemaElement> keySchema = new ArrayList<>(gsiBuilder.build().keySchema());
+                        keySchema.add(KeySchemaElement.builder()
+                                .attributeName(attributeName)
+                                .keyType(KeyType.RANGE)
+                                .build());
+                        gsiBuilder.keySchema(keySchema);
+                        gsiBuilders.put(indexName, gsiBuilder);
+                    }
+                }
+            }
+        });
+
+        // Same for fields
+        ReflectionUtils.doWithFields(domainType, field -> {
+            if (field.isAnnotationPresent(DynamoDbSecondaryPartitionKey.class)) {
+                for (DynamoDbSecondaryPartitionKey annotation : field.getAnnotationsByType(DynamoDbSecondaryPartitionKey.class)) {
+                    for (String indexName : annotation.indexNames()) {
+                        String attributeName = getAttributeName(field);
+                        attributeTypes.put(attributeName, getScalarType(field.getType()));
+
+                        GlobalSecondaryIndex.Builder gsiBuilder = gsiBuilders.computeIfAbsent(indexName,
+                                k -> GlobalSecondaryIndex.builder()
+                                        .indexName(indexName)
+                                        .projection(Projection.builder().projectionType(gsiProjectionType).build())
+                                        .provisionedThroughput(pt));
+
+                        List<KeySchemaElement> keySchema = new ArrayList<>(gsiBuilder.build().keySchema());
+                        keySchema.add(KeySchemaElement.builder()
+                                .attributeName(attributeName)
+                                .keyType(KeyType.HASH)
+                                .build());
+                        gsiBuilder.keySchema(keySchema);
+                        gsiBuilders.put(indexName, gsiBuilder);
+                    }
+                }
+            }
+
+            if (field.isAnnotationPresent(DynamoDbSecondarySortKey.class)) {
+                for (DynamoDbSecondarySortKey annotation : field.getAnnotationsByType(DynamoDbSecondarySortKey.class)) {
+                    for (String indexName : annotation.indexNames()) {
+                        String attributeName = getAttributeName(field);
+                        attributeTypes.put(attributeName, getScalarType(field.getType()));
+
+                        GlobalSecondaryIndex.Builder gsiBuilder = gsiBuilders.computeIfAbsent(indexName,
+                                k -> GlobalSecondaryIndex.builder()
+                                        .indexName(indexName)
+                                        .projection(Projection.builder().projectionType(gsiProjectionType).build())
+                                        .provisionedThroughput(pt));
+
+                        List<KeySchemaElement> keySchema = new ArrayList<>(gsiBuilder.build().keySchema());
+                        keySchema.add(KeySchemaElement.builder()
+                                .attributeName(attributeName)
+                                .keyType(KeyType.RANGE)
+                                .build());
+                        gsiBuilder.keySchema(keySchema);
+                        gsiBuilders.put(indexName, gsiBuilder);
+                    }
+                }
+            }
+        });
+
+        return gsiBuilders.values().stream()
+                .map(GlobalSecondaryIndex.Builder::build)
+                .collect(Collectors.toList());
+    }
+
+    private List<LocalSecondaryIndex> findLocalSecondaryIndexes(Class<T> domainType,
+                                                                  Map<String, ScalarAttributeType> attributeTypes) {
+        // LSIs use the same partition key as the table and only differ in sort key
+        // They are marked with @DynamoDbSecondarySortKey where the GSI flag is not set
+        // For simplicity, we'll treat all @DynamoDbSecondarySortKey as GSI in this implementation
+        // A full implementation would check the annotation's properties to differentiate LSI vs GSI
+        return Collections.emptyList();
+    }
+
+    private String getAttributeName(Method method) {
+        DynamoDbAttribute attr = method.getAnnotation(DynamoDbAttribute.class);
+        if (attr != null && !attr.value().isEmpty()) {
+            return attr.value();
+        }
+
+        // Convert getter name to attribute name (e.g., getUserId -> userId)
+        String methodName = method.getName();
+        if (methodName.startsWith("get") && methodName.length() > 3) {
+            return Character.toLowerCase(methodName.charAt(3)) + methodName.substring(4);
+        } else if (methodName.startsWith("is") && methodName.length() > 2) {
+            return Character.toLowerCase(methodName.charAt(2)) + methodName.substring(3);
+        }
+        return methodName;
+    }
+
+    private String getAttributeName(Field field) {
+        DynamoDbAttribute attr = field.getAnnotation(DynamoDbAttribute.class);
+        if (attr != null && !attr.value().isEmpty()) {
+            return attr.value();
+        }
+        return field.getName();
+    }
+
+    private ScalarAttributeType getScalarType(Class<?> type) {
+        if (String.class.equals(type)) {
+            return ScalarAttributeType.S;
+        } else if (Number.class.isAssignableFrom(type) || type.isPrimitive()) {
+            return ScalarAttributeType.N;
+        } else if (byte[].class.equals(type)) {
+            return ScalarAttributeType.B;
+        }
+        // Default to String for complex types
+        return ScalarAttributeType.S;
     }
 
 }

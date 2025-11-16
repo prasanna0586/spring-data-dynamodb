@@ -15,17 +15,22 @@
  */
 package org.socialsignin.spring.data.dynamodb.marshaller;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMarshaller;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverter;
 import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 
-@SuppressWarnings("deprecation")
-public class Instant2IsoDynamoDBMarshaller
-        implements DynamoDBTypeConverter<String, Instant>, DynamoDBMarshaller<Instant> {
+/**
+ * Marshaller for converting Instant to ISO-8601 String format with millisecond precision.
+ * Format: "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+ *
+ * @deprecated This class was created for SDK v1 compatibility. For new code using SDK v2,
+ *             consider using AttributeConverter instead.
+ * @since 1.0.0
+ */
+@Deprecated
+public class Instant2IsoDynamoDBMarshaller {
 
     private static final String PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
@@ -33,12 +38,22 @@ public class Instant2IsoDynamoDBMarshaller
         return DateTimeFormatter.ofPattern(PATTERN).withZone(ZoneOffset.UTC);
     }
 
-    @Override
+    /**
+     * Converts an Instant to String representation.
+     *
+     * @param object the Instant to convert
+     * @return ISO-8601 String representation
+     */
     public String convert(Instant object) {
         return marshall(object);
     }
 
-    @Override
+    /**
+     * Marshalls an Instant to ISO-8601 String format.
+     *
+     * @param getterReturnResult the Instant to marshall
+     * @return ISO-8601 String representation
+     */
     public String marshall(Instant getterReturnResult) {
         if (getterReturnResult == null) {
             return null;
@@ -47,12 +62,23 @@ public class Instant2IsoDynamoDBMarshaller
         }
     }
 
-    @Override
+    /**
+     * Converts a String back to Instant.
+     *
+     * @param object the String to convert
+     * @return Instant object
+     */
     public Instant unconvert(String object) {
         return unmarshall(Instant.class, object);
     }
 
-    @Override
+    /**
+     * Unmarshalls a String to Instant.
+     *
+     * @param clazz the Instant class
+     * @param obj   the String to unmarshall
+     * @return Instant object
+     */
     public Instant unmarshall(Class<Instant> clazz, String obj) {
         if (StringUtils.isEmpty(obj)) {
             return null;

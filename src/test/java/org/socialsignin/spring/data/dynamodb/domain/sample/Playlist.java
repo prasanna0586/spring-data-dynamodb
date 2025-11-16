@@ -15,13 +15,13 @@
  */
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 import org.springframework.data.annotation.Id;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 
-@DynamoDBTable(tableName = "playlist")
+@DynamoDbBean
 public class Playlist {
 
     @Id
@@ -35,7 +35,7 @@ public class Playlist {
         this.playlistId = playlistId;
     }
 
-    @DynamoDBAttribute(attributeName = "DisplayName")
+    @DynamoDbAttribute("DisplayName")
     public String getDisplayName() {
         return displayName;
     }
@@ -44,7 +44,8 @@ public class Playlist {
         this.displayName = displayName;
     }
 
-    @DynamoDBHashKey(attributeName = "UserName")
+    @DynamoDbPartitionKey
+    @DynamoDbAttribute("UserName")
     public String getUserName() {
         return playlistId != null ? playlistId.getUserName() : null;
     }
@@ -56,7 +57,8 @@ public class Playlist {
         playlistId.setUserName(userName);
     }
 
-    @DynamoDBRangeKey(attributeName = "PlaylistName")
+    @DynamoDbSortKey
+    @DynamoDbAttribute("PlaylistName")
     public String getPlaylistName() {
         return playlistId != null ? playlistId.getPlaylistName() : null;
     }

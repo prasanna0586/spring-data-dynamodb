@@ -15,18 +15,23 @@
  */
 package org.socialsignin.spring.data.dynamodb.utils;
 
+import org.socialsignin.spring.data.dynamodb.config.AbstractDynamoDBConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.TestExecutionListener;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-import software.amazon.awssdk.awscore.client.builder.AwsSyncClientBuilder;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
+import java.net.URI;
+
 @Configuration
-public class DynamoDBLocalResource implements TestExecutionListener {
+public class DynamoDBLocalResource extends AbstractDynamoDBConfiguration implements TestExecutionListener {
 
     private static final GenericContainer<?> dynamoDBContainer;
 
@@ -38,16 +43,35 @@ public class DynamoDBLocalResource implements TestExecutionListener {
     }
 
     @Bean
+    @Override
     public DynamoDbClient amazonDynamoDB() {
         String endpoint = String.format("http://%s:%d",
                 dynamoDBContainer.getHost(),
                 dynamoDBContainer.getMappedPort(8000));
 
         return DynamoDbClient.builder()
-                .endpointOverride(
-                        new AwsSyncClientBuilder.EndpointConfiguration(endpoint, "us-east-1"))
+                .endpointOverride(URI.create(endpoint))
+                .region(Region.US_EAST_1)
                 .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("dummy", "dummy")))
                 .build();
+    }
+
+    @Bean
+    @Override
+    public AwsCredentials amazonAWSCredentials() {
+        return AwsBasicCredentials.create("dummy", "dummy");
+    }
+
+    @Bean
+    public DynamoDbEnhancedClient dynamoDbEnhancedClient(DynamoDbClient amazonDynamoDB) {
+        return DynamoDbEnhancedClient.builder()
+                .dynamoDbClient(amazonDynamoDB)
+                .build();
+    }
+
+    @Override
+    protected String[] getMappingBasePackages() {
+        return new String[]{"org.socialsignin.spring.data.dynamodb.domain.sample"};
     }
 
 }

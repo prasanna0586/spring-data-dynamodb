@@ -1,6 +1,9 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.*;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbConvertedBy;
 
 import java.time.Instant;
 import java.util.List;
@@ -10,7 +13,7 @@ import java.util.Objects;
  * Domain model demonstrating nested documents in DynamoDB.
  * Contains nested Address and List<OrderItem>.
  */
-@DynamoDBTable(tableName = "CustomerOrder")
+@DynamoDbBean
 public class CustomerOrder {
 
     private String orderId;
@@ -25,7 +28,8 @@ public class CustomerOrder {
     public CustomerOrder() {
     }
 
-    @DynamoDBHashKey(attributeName = "orderId")
+    @DynamoDbPartitionKey
+    @DynamoDbAttribute("orderId")
     public String getOrderId() {
         return orderId;
     }
@@ -34,7 +38,7 @@ public class CustomerOrder {
         this.orderId = orderId;
     }
 
-    @DynamoDBAttribute(attributeName = "customerId")
+    @DynamoDbAttribute("customerId")
     public String getCustomerId() {
         return customerId;
     }
@@ -43,8 +47,8 @@ public class CustomerOrder {
         this.customerId = customerId;
     }
 
-    @DynamoDBAttribute(attributeName = "orderDate")
-    @DynamoDBTypeConverted(converter = InstantConverter.class)
+    @DynamoDbAttribute("orderDate")
+    @DynamoDbConvertedBy(InstantConverter.class)
     public Instant getOrderDate() {
         return orderDate;
     }
@@ -53,7 +57,7 @@ public class CustomerOrder {
         this.orderDate = orderDate;
     }
 
-    @DynamoDBAttribute(attributeName = "shippingAddress")
+    @DynamoDbAttribute("shippingAddress")
     public Address getShippingAddress() {
         return shippingAddress;
     }
@@ -62,7 +66,7 @@ public class CustomerOrder {
         this.shippingAddress = shippingAddress;
     }
 
-    @DynamoDBAttribute(attributeName = "billingAddress")
+    @DynamoDbAttribute("billingAddress")
     public Address getBillingAddress() {
         return billingAddress;
     }
@@ -71,7 +75,7 @@ public class CustomerOrder {
         this.billingAddress = billingAddress;
     }
 
-    @DynamoDBAttribute(attributeName = "items")
+    @DynamoDbAttribute("items")
     public List<OrderItem> getItems() {
         return items;
     }
@@ -80,7 +84,7 @@ public class CustomerOrder {
         this.items = items;
     }
 
-    @DynamoDBAttribute(attributeName = "totalAmount")
+    @DynamoDbAttribute("totalAmount")
     public Double getTotalAmount() {
         return totalAmount;
     }
@@ -89,7 +93,7 @@ public class CustomerOrder {
         this.totalAmount = totalAmount;
     }
 
-    @DynamoDBAttribute(attributeName = "status")
+    @DynamoDbAttribute("status")
     public String getStatus() {
         return status;
     }

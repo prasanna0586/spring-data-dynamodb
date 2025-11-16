@@ -15,22 +15,37 @@
  */
 package org.socialsignin.spring.data.dynamodb.marshaller;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMarshaller;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverter;
 import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 
-@SuppressWarnings("deprecation")
-public class Instant2EpocheDynamoDBMarshaller
-        implements DynamoDBTypeConverter<String, Instant>, DynamoDBMarshaller<Instant> {
+/**
+ * Marshaller for converting Instant to epoch milliseconds stored as String.
+ * Format: String representation of milliseconds since Unix epoch (1970-01-01T00:00:00Z)
+ *
+ * @deprecated This class was created for SDK v1 compatibility. For new code using SDK v2,
+ *             consider using AttributeConverter instead.
+ * @since 1.0.0
+ */
+@Deprecated
+public class Instant2EpocheDynamoDBMarshaller {
 
-    @Override
+    /**
+     * Converts an Instant to String representation.
+     *
+     * @param object the Instant to convert
+     * @return String representation of epoch milliseconds
+     */
     public String convert(Instant object) {
         return marshall(object);
     }
 
-    @Override
+    /**
+     * Marshalls an Instant to epoch milliseconds String format.
+     *
+     * @param getterReturnResult the Instant to marshall
+     * @return String representation of epoch milliseconds
+     */
     public String marshall(Instant getterReturnResult) {
         if (getterReturnResult == null) {
             return null;
@@ -39,12 +54,23 @@ public class Instant2EpocheDynamoDBMarshaller
         }
     }
 
-    @Override
+    /**
+     * Converts a String back to Instant.
+     *
+     * @param object the String to convert
+     * @return Instant object
+     */
     public Instant unconvert(String object) {
         return unmarshall(Instant.class, object);
     }
 
-    @Override
+    /**
+     * Unmarshalls a String to Instant.
+     *
+     * @param clazz the Instant class
+     * @param obj   the String to unmarshall (epoch milliseconds)
+     * @return Instant object
+     */
     public Instant unmarshall(Class<Instant> clazz, String obj) {
         if (StringUtils.isEmpty(obj)) {
             return null;

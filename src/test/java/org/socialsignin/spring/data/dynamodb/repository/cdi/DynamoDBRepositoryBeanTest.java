@@ -15,8 +15,6 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.cdi;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
 import jakarta.enterprise.context.spi.CreationalContext;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.BeanManager;
@@ -28,6 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.socialsignin.spring.data.dynamodb.domain.sample.User;
 import org.springframework.data.repository.Repository;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.lang.annotation.Annotation;
@@ -51,16 +50,16 @@ public class DynamoDBRepositoryBeanTest {
     @Mock
     private BeanManager beanManager;
     @Mock
-    private Bean<DynamoDbClient> amazonDynamoDBBean;
+    private Bean<DynamoDbClient> dynamoDbClientBean;
     @Mock
-    private DynamoDbClient amazonDynamoDB;
+    private DynamoDbClient dynamoDbClient;
     @Mock
-    private jakarta.enterprise.inject.spi.Bean<DynamoDBMapperConfig> dynamoDBMapperConfigBean;
+    private Bean<DynamoDbEnhancedClient> enhancedClientBean;
+    @Mock
+    private DynamoDbEnhancedClient enhancedClient;
     @Mock
     private Bean<DynamoDBOperations> dynamoDBOperationsBean;
 
-    @Mock
-    private Bean<DynamoDBMapper> dynamoDBMapperBean;
     private Set<Annotation> qualifiers = Collections.emptySet();
     private Class<SampleRepository> repositoryType = SampleRepository.class;
 
@@ -68,16 +67,18 @@ public class DynamoDBRepositoryBeanTest {
     public void setUp() {
     }
 
-    private void setupAmazonDynamoDBBeanStubs() {
-        when(beanManager.createCreationalContext(amazonDynamoDBBean)).thenReturn(creationalContext);
-        when(beanManager.getReference(amazonDynamoDBBean, DynamoDbClient.class, creationalContext))
-                .thenReturn(amazonDynamoDB);
+    private void setupDynamoDBBeanStubs() {
+        when(beanManager.createCreationalContext(dynamoDbClientBean)).thenReturn(creationalContext);
+        when(beanManager.getReference(dynamoDbClientBean, DynamoDbClient.class, creationalContext))
+                .thenReturn(dynamoDbClient);
+        when(beanManager.getReference(enhancedClientBean, DynamoDbEnhancedClient.class, creationalContext))
+                .thenReturn(enhancedClient);
     }
 
     @Test
     public void testNullOperationsOk() {
         DynamoDBRepositoryBean<SampleRepository> underTest = new DynamoDBRepositoryBean<>(beanManager,
-                amazonDynamoDBBean, dynamoDBMapperConfigBean, null, dynamoDBMapperBean, qualifiers, repositoryType);
+                dynamoDbClientBean, enhancedClientBean, null, qualifiers, repositoryType);
 
         assertNotNull(underTest);
     }
@@ -85,17 +86,16 @@ public class DynamoDBRepositoryBeanTest {
     @Test
     public void testNullOperationFail() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            new DynamoDBRepositoryBean<>(beanManager, null, dynamoDBMapperConfigBean, null, null, qualifiers,
-                    repositoryType);
+            new DynamoDBRepositoryBean<>(beanManager, null, enhancedClientBean, null, qualifiers, repositoryType);
         });
 
-        assertTrue(exception.getMessage().contains("amazonDynamoDBBean must not be null!"));
+        assertTrue(exception.getMessage().contains("dynamoDbClientBean must not be null!"));
     }
 
     @Test
     public void testSetOperationOk1() {
         DynamoDBRepositoryBean<SampleRepository> underTest = new DynamoDBRepositoryBean<>(beanManager, null, null,
-                dynamoDBOperationsBean, dynamoDBMapperBean, qualifiers, repositoryType);
+                dynamoDBOperationsBean, qualifiers, repositoryType);
 
         assertNotNull(underTest);
     }
@@ -103,31 +103,31 @@ public class DynamoDBRepositoryBeanTest {
     @Test
     public void testSetOperationFail1() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            new DynamoDBRepositoryBean<>(beanManager, null, dynamoDBMapperConfigBean, dynamoDBOperationsBean,
-                    dynamoDBMapperBean, qualifiers, repositoryType);
+            new DynamoDBRepositoryBean<>(beanManager, null, enhancedClientBean, dynamoDBOperationsBean,
+                    qualifiers, repositoryType);
         });
 
         assertTrue(exception.getMessage().contains(
-                "Cannot specify both dynamoDBMapperConfigBean bean and dynamoDBOperationsBean in repository configuration"));
+                "Cannot specify both enhancedClient bean and dynamoDBOperationsBean in repository configuration"));
     }
 
     @Test
     public void testSetOperationFail2() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            new DynamoDBRepositoryBean<>(beanManager, amazonDynamoDBBean, null, dynamoDBOperationsBean, dynamoDBMapperBean,
+            new DynamoDBRepositoryBean<>(beanManager, dynamoDbClientBean, null, dynamoDBOperationsBean,
                     qualifiers, repositoryType);
         });
 
         assertTrue(exception.getMessage().contains(
-                "Cannot specify both amazonDynamoDB bean and dynamoDBOperationsBean in repository configuration"));
+                "Cannot specify both dynamoDbClient bean and dynamoDBOperationsBean in repository configuration"));
     }
 
     @Test
     public void testCreateRepostiory() {
-        setupAmazonDynamoDBBeanStubs();
+        setupDynamoDBBeanStubs();
 
         DynamoDBRepositoryBean<SampleRepository> underTest = new DynamoDBRepositoryBean<>(beanManager,
-                amazonDynamoDBBean, dynamoDBMapperConfigBean, null, dynamoDBMapperBean, qualifiers, repositoryType);
+                dynamoDbClientBean, enhancedClientBean, null, qualifiers, repositoryType);
 
         SampleRepository actual = underTest.create(repoCreationalContext, SampleRepository.class);
         assertNotNull(actual);

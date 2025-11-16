@@ -15,12 +15,13 @@
  */
 package org.socialsignin.spring.data.dynamodb.mapping;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBIgnore;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.socialsignin.spring.data.dynamodb.core.MarshallingMode;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbIgnore;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -40,7 +41,7 @@ public class DynamoDBPersistentPropertyImplUnitTest {
     @BeforeEach
     public void setUp() {
 
-        context = new DynamoDBMappingContext();
+        context = new DynamoDBMappingContext(MarshallingMode.SDK_V2_NATIVE);
         entity = context.getPersistentEntity(Sample.class);
     }
 
@@ -62,7 +63,7 @@ public class DynamoDBPersistentPropertyImplUnitTest {
         assertThat(entity.getPersistentProperty("ignoredProp"), is(nullValue()));
     }
 
-    @DynamoDBTable(tableName = "sample")
+    @DynamoDbBean
     static class Sample {
 
         private String ignoredProp = "ignored";
@@ -76,7 +77,7 @@ public class DynamoDBPersistentPropertyImplUnitTest {
             this.otherProp = otherProp;
         }
 
-        @DynamoDBIgnore
+        @DynamoDbIgnore
         public String getIgnoredProp() {
             return ignoredProp;
         }

@@ -19,6 +19,15 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
+/**
+ * Marshaller for converting Date to ISO-8601 String format with millisecond precision.
+ * Format: "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'" in UTC timezone
+ *
+ * @deprecated This class was created for SDK v1 compatibility. For new code using SDK v2,
+ *             consider using AttributeConverter instead.
+ * @since 1.0.0
+ */
+@Deprecated
 public class Date2IsoDynamoDBMarshaller extends DateDynamoDBMarshaller {
 
     private static final String PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";

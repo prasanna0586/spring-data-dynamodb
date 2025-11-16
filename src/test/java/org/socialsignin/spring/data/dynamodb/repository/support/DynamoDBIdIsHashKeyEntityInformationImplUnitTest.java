@@ -15,7 +15,6 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMarshaller;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.socialsignin.spring.data.dynamodb.domain.sample.Playlist;
 import org.socialsignin.spring.data.dynamodb.domain.sample.PlaylistId;
 import org.socialsignin.spring.data.dynamodb.domain.sample.User;
+import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
 
 import java.util.Optional;
 
@@ -53,9 +53,8 @@ public class DynamoDBIdIsHashKeyEntityInformationImplUnitTest {
     @Mock
     private Playlist mockPlaylistPrototype;
 
-    @SuppressWarnings("deprecation")
     @Mock
-    private DynamoDBMarshaller<Object> mockPropertyMarshaller;
+    private AttributeConverter<Object> mockPropertyMarshaller;
 
     @BeforeEach
     public void setup() {
@@ -157,13 +156,11 @@ public class DynamoDBIdIsHashKeyEntityInformationImplUnitTest {
         Mockito.when(mockPlaylistEntityMetadata.getMarshallerForProperty("marshalledProperty"))
                 .thenReturn(mockPropertyMarshaller);
 
-        @SuppressWarnings("deprecation")
-        DynamoDBMarshaller<?> marshaller1 = dynamoDBPlaylistEntityInformation
+        AttributeConverter<?> marshaller1 = dynamoDBPlaylistEntityInformation
                 .getMarshallerForProperty("marshalledProperty");
         assertEquals(mockPropertyMarshaller, marshaller1);
 
-        @SuppressWarnings("deprecation")
-        DynamoDBMarshaller<?> marshaller2 = dynamoDBUserEntityInformation
+        AttributeConverter<?> marshaller2 = dynamoDBUserEntityInformation
                 .getMarshallerForProperty("marshalledProperty");
         assertEquals(mockPropertyMarshaller, marshaller2);
     }

@@ -15,13 +15,14 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 
 import java.io.Serializable;
 
 /**
- * Default implementation of a DynamoDB composite key, comprising of both a hash and a range key.
+ * Default implementation of a DynamoDB composite key, comprising both a partition key (hash key)
+ * and a sort key (range key).
  *
  * @author Michael Lavelle
  * @author Sebastian Just
@@ -44,7 +45,7 @@ public class DynamoDBHashAndRangeKey implements Serializable {
     private Object hashKey;
     private Object rangeKey;
 
-    @DynamoDBHashKey
+    @DynamoDbPartitionKey
     public Object getHashKey() {
         return hashKey;
     }
@@ -53,7 +54,7 @@ public class DynamoDBHashAndRangeKey implements Serializable {
         this.hashKey = hashKey;
     }
 
-    @DynamoDBRangeKey
+    @DynamoDbSortKey
     public Object getRangeKey() {
         return rangeKey;
     }

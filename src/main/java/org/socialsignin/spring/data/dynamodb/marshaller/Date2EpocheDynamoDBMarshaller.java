@@ -20,6 +20,15 @@ import java.text.FieldPosition;
 import java.text.ParsePosition;
 import java.util.Date;
 
+/**
+ * Marshaller for converting Date to epoch milliseconds stored as String.
+ * Format: String representation of milliseconds since Unix epoch (1970-01-01T00:00:00Z)
+ *
+ * @deprecated This class was created for SDK v1 compatibility. For new code using SDK v2,
+ *             consider using AttributeConverter instead.
+ * @since 1.0.0
+ */
+@Deprecated
 public class Date2EpocheDynamoDBMarshaller extends DateDynamoDBMarshaller {
 
     private static final class EpcoheDateFormat extends DateFormat {

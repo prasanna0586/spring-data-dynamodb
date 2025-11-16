@@ -15,9 +15,6 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper.FailedBatch;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
-import com.amazonaws.services.dynamodbv2.datamodeling.KeyPair;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.socialsignin.spring.data.dynamodb.exception.BatchWriteException;
 import org.socialsignin.spring.data.dynamodb.repository.DynamoDBCrudRepository;
@@ -26,6 +23,10 @@ import org.socialsignin.spring.data.dynamodb.utils.SortHandler;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
+import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteResult;
+import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.util.Collections;
 import java.util.List;
@@ -64,6 +65,27 @@ public class SimpleDynamoDBCrudRepository<T, ID>
         this.enableScanPermissions = enableScanPermissions;
     }
 
+    /**
+     * Converts a Java object to SDK v2 AttributeValue for Key construction.
+     *
+     * @param value The value to convert
+     * @return The AttributeValue representation
+     */
+    private AttributeValue toAttributeValue(Object value) {
+        if (value == null) {
+            return AttributeValue.builder().nul(true).build();
+        }
+
+        if (value instanceof String) {
+            return AttributeValue.builder().s((String) value).build();
+        } else if (value instanceof Number) {
+            return AttributeValue.builder().n(value.toString()).build();
+        } else {
+            // Fallback: convert to string
+            return AttributeValue.builder().s(value.toString()).build();
+        }
+    }
+
     @Override
     public Optional<T> findById(ID id) {
 
@@ -87,21 +109,24 @@ public class SimpleDynamoDBCrudRepository<T, ID>
 
         // Works only with non-parallel streams!
         AtomicInteger idx = new AtomicInteger();
-        List<KeyPair> keyPairs = StreamSupport.stream(ids.spliterator(), false).map(id -> {
+        List<Key> keys = StreamSupport.stream(ids.spliterator(), false).map(id -> {
 
             Assert.notNull(id, "The given id at position " + idx.getAndIncrement() + " must not be null!");
 
             if (entityInformation.isRangeKeyAware()) {
-                return new KeyPair().withHashKey(entityInformation.getHashKey(id))
-                        .withRangeKey(entityInformation.getRangeKey(id));
+                return Key.builder()
+                        .partitionValue(toAttributeValue(entityInformation.getHashKey(id)))
+                        .sortValue(toAttributeValue(entityInformation.getRangeKey(id)))
+                        .build();
             } else {
-                return new KeyPair().withHashKey(id);
+                return Key.builder()
+                        .partitionValue(toAttributeValue(id))
+                        .build();
             }
         }).toList();
 
-        Map<Class<?>, List<KeyPair>> keyPairsMap = Collections.<Class<?>, List<KeyPair>> singletonMap(domainType,
-                keyPairs);
-        return dynamoDBOperations.batchLoad(keyPairsMap);
+        Map<Class<?>, List<Key>> keysMap = Collections.<Class<?>, List<Key>> singletonMap(domainType, keys);
+        return dynamoDBOperations.batchLoad(keysMap);
     }
 
     @Override
@@ -122,7 +147,7 @@ public class SimpleDynamoDBCrudRepository<T, ID>
             throws BatchWriteException, IllegalArgumentException {
 
         Assert.notNull(entities, "The given Iterable of entities not be null!");
-        List<FailedBatch> failedBatches = dynamoDBOperations.batchSave(entities);
+        List<BatchWriteResult> failedBatches = dynamoDBOperations.batchSave(entities);
 
         if (failedBatches.isEmpty()) {
             // Happy path
@@ -151,15 +176,15 @@ public class SimpleDynamoDBCrudRepository<T, ID>
     public List<T> findAll() {
 
         assertScanEnabled(enableScanPermissions.isFindAllUnpaginatedScanEnabled(), "findAll");
-        DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
-        return dynamoDBOperations.scan(domainType, scanExpression);
+        ScanEnhancedRequest scanRequest = ScanEnhancedRequest.builder().build();
+        return dynamoDBOperations.scan(domainType, scanRequest).items().stream().toList();
     }
 
     @Override
     public long count() {
         assertScanEnabled(enableScanPermissions.isCountUnpaginatedScanEnabled(), "count");
-        final DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
-        return dynamoDBOperations.count(domainType, scanExpression);
+        final ScanEnhancedRequest scanRequest = ScanEnhancedRequest.builder().build();
+        return dynamoDBOperations.count(domainType, scanRequest);
     }
 
     @Override
