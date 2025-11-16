@@ -829,7 +829,8 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
             Mockito.when(mockDynamoDBPlaylistQueryMethod.isCollectionQuery()).thenReturn(true);
             Playlist prototypeHashKey = new Playlist();
             prototypeHashKey.setUserName("someUserName");
-            Mockito.when(mockPlaylistEntityMetadata.getHashKeyPropotypeEntityForHashKey("someUserName"))
+            // This stubbing is not used as the test expects UnsupportedOperationException before it's reached
+            Mockito.lenient().when(mockPlaylistEntityMetadata.getHashKeyPropotypeEntityForHashKey("someUserName"))
                     .thenReturn(prototypeHashKey);
             Mockito.when(mockPlaylistEntityMetadata.getHashKey(playlistId)).thenReturn("someUserName");
             Mockito.when(mockPlaylistEntityMetadata.getRangeKey(playlistId)).thenReturn(null);
@@ -1475,16 +1476,16 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         // Assert that all other attribute value types other than String type
         // are null
-        // assertNull(nameFilterCondition.attributeValueList().get(0).ss());
+        // assertTrue(nameFilterCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         // assertNull(nameFilterCondition.attributeValueList().get(0).n());
-        // assertNull(nameFilterCondition.attributeValueList().get(0).ns());
-        // assertNull(nameFilterCondition.attributeValueList().get(0).b().asByteBuffer());
-        // assertNull(nameFilterCondition.attributeValueList().get(0).bs());
-        // assertNull(idFilterCondition.attributeValueList().get(0).ss());
+        // assertTrue(nameFilterCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        // assertNull(nameFilterCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        // assertTrue(nameFilterCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
+        // assertTrue(idFilterCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         // assertNull(idFilterCondition.attributeValueList().get(0).n());
-        // assertNull(idFilterCondition.attributeValueList().get(0).ns());
-        // assertNull(idFilterCondition.attributeValueList().get(0).b().asByteBuffer());
-        // assertNull(idFilterCondition.attributeValueList().get(0).bs());
+        // assertTrue(idFilterCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        // assertNull(idFilterCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        // assertTrue(idFilterCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.capture(), scanEnhancedCaptor.capture());
@@ -1539,9 +1540,9 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         // are null
         // assertNull(testSetFilterCondition.attributeValueList().get(0).s());
         // assertNull(testSetFilterCondition.attributeValueList().get(0).n());
-        // assertNull(testSetFilterCondition.attributeValueList().get(0).ns());
-        // assertNull(testSetFilterCondition.attributeValueList().get(0).b().asByteBuffer());
-        // assertNull(testSetFilterCondition.attributeValueList().get(0).bs());
+        // assertTrue(testSetFilterCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        // assertNull(testSetFilterCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        // assertTrue(testSetFilterCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.capture(), scanEnhancedCaptor.capture());
@@ -1590,16 +1591,16 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         // Assert that all other attribute value types other than String type
         // are null
-        // assertNull(nameFilterCondition.attributeValueList().get(0).ss());
+        // assertTrue(nameFilterCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         // assertNull(nameFilterCondition.attributeValueList().get(0).n());
-        // assertNull(nameFilterCondition.attributeValueList().get(0).ns());
-        // assertNull(nameFilterCondition.attributeValueList().get(0).b().asByteBuffer());
-        // assertNull(nameFilterCondition.attributeValueList().get(0).bs());
-        // assertNull(idFilterCondition.attributeValueList().get(0).ss());
+        // assertTrue(nameFilterCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        // assertNull(nameFilterCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        // assertTrue(nameFilterCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
+        // assertTrue(idFilterCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         // assertNull(idFilterCondition.attributeValueList().get(0).n());
-        // assertNull(idFilterCondition.attributeValueList().get(0).ns());
-        // assertNull(idFilterCondition.attributeValueList().get(0).b().asByteBuffer());
-        // assertNull(idFilterCondition.attributeValueList().get(0).bs());
+        // assertTrue(idFilterCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        // assertNull(idFilterCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        // assertTrue(idFilterCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.capture(), scanEnhancedCaptor.capture());
@@ -1618,7 +1619,9 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected list of results
-        assertEquals(o, mockUserScanResults);
+        // SDK v2: CollectionExecution.execute() calls getResultList() which converts PageIterable to List
+        List<User> expected = Arrays.asList(mockUser);
+        assertEquals(expected, o);
 
         // Assert that the list of results contains the correct elements
         // Assert that we scanned DynamoDB for the correct class
@@ -1716,7 +1719,9 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected list of results
-        assertEquals(o, mockUserScanResults);
+        // SDK v2: CollectionExecution.execute() calls getResultList() which converts PageIterable to List
+        List<User> expected = Arrays.asList(mockUser);
+        assertEquals(expected, o);
 
         // Assert that the list of results contains the correct elements
         // Assert that we scanned DynamoDB for the correct class
@@ -1769,7 +1774,9 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected list of results
-        assertEquals(o, mockUserScanResults);
+        // SDK v2: CollectionExecution.execute() calls getResultList() which converts PageIterable to List
+        List<User> expected = Arrays.asList(mockUser);
+        assertEquals(expected, o);
 
         // Assert that the list of results contains the correct elements
         // Assert that we scanned DynamoDB for the correct class
@@ -1826,7 +1833,9 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected list of results
-        assertEquals(o, mockUserScanResults);
+        // SDK v2: CollectionExecution.execute() calls getResultList() which converts PageIterable to List
+        List<User> expected = Arrays.asList(mockUser);
+        assertEquals(expected, o);
 
         // Assert that the list of results contains the correct elements
         // Assert that we scanned DynamoDB for the correct class
@@ -1885,7 +1894,9 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected list of results
-        assertEquals(o, mockUserScanResults);
+        // SDK v2: CollectionExecution.execute() calls getResultList() which converts PageIterable to List
+        List<User> expected = Arrays.asList(mockUser);
+        assertEquals(expected, o);
 
         // Assert that the list of results contains the correct elements
         // Assert that we scanned DynamoDB for the correct class
@@ -1980,11 +1991,11 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(condition.attributeValueList().get(0).ss());
+        assertTrue(condition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         assertNull(condition.attributeValueList().get(0).n());
-        assertNull(condition.attributeValueList().get(0).ns());
-        assertNull(condition.attributeValueList().get(0).b().asByteBuffer());
-        assertNull(condition.attributeValueList().get(0).bs());
+        assertTrue(condition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        assertNull(condition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        assertTrue(condition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
         // Verify that the expected DynamoDBOperations method was called
     }
@@ -2057,16 +2068,16 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(yearCondition.attributeValueList().get(0).ss());
+        assertTrue(yearCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         assertNull(yearCondition.attributeValueList().get(0).n());
-        assertNull(yearCondition.attributeValueList().get(0).ns());
-        assertNull(yearCondition.attributeValueList().get(0).b().asByteBuffer());
-        assertNull(yearCondition.attributeValueList().get(0).bs());
-        assertNull(postCodeCondition.attributeValueList().get(0).ss());
+        assertTrue(yearCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        assertNull(yearCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        assertTrue(yearCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
+        assertTrue(postCodeCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         assertNull(postCodeCondition.attributeValueList().get(0).n());
-        assertNull(postCodeCondition.attributeValueList().get(0).ns());
-        assertNull(postCodeCondition.attributeValueList().get(0).b().asByteBuffer());
-        assertNull(postCodeCondition.attributeValueList().get(0).bs());
+        assertTrue(postCodeCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        assertNull(postCodeCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        assertTrue(postCodeCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
         // Verify that the expected DynamoDBOperations method was called
     }
@@ -2124,11 +2135,11 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(condition.attributeValueList().get(0).ss());
+        assertTrue(condition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         assertNull(condition.attributeValueList().get(0).n());
-        assertNull(condition.attributeValueList().get(0).ns());
-        assertNull(condition.attributeValueList().get(0).b().asByteBuffer());
-        assertNull(condition.attributeValueList().get(0).bs());
+        assertTrue(condition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        assertNull(condition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        assertTrue(condition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
         // Verify that the expected DynamoDBOperations method was called
     }
@@ -2184,11 +2195,11 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(condition.attributeValueList().get(0).ss());
+        assertTrue(condition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         assertNull(condition.attributeValueList().get(0).n());
-        assertNull(condition.attributeValueList().get(0).ns());
-        assertNull(condition.attributeValueList().get(0).b().asByteBuffer());
-        assertNull(condition.attributeValueList().get(0).bs());
+        assertTrue(condition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        assertNull(condition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        assertTrue(condition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
         // Verify that the expected DynamoDBOperations method was called
     }
@@ -2254,17 +2265,17 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ss());
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         assertNull(globalRangeKeyCondition.attributeValueList().get(0).n());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ns());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b().asByteBuffer());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).bs());
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).ss());
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         assertNull(globalHashKeyCondition.attributeValueList().get(0).n());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).ns());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).b().asByteBuffer());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).bs());
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
         // Verify that the expected DynamoDBOperations method was called
     }
@@ -2329,17 +2340,17 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ss());
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         assertNull(globalRangeKeyCondition.attributeValueList().get(0).n());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ns());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b().asByteBuffer());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).bs());
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).ss());
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         assertNull(globalHashKeyCondition.attributeValueList().get(0).n());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).ns());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).b().asByteBuffer());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).bs());
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
         // Verify that the expected DynamoDBOperations method was called
     }
@@ -2405,17 +2416,17 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ss());
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         assertNull(globalRangeKeyCondition.attributeValueList().get(0).n());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ns());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b().asByteBuffer());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).bs());
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).ss());
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         assertNull(globalHashKeyCondition.attributeValueList().get(0).n());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).ns());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).b().asByteBuffer());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).bs());
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
         // Verify that the expected DynamoDBOperations method was called
     }
@@ -2481,17 +2492,17 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ss());
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         assertNull(globalRangeKeyCondition.attributeValueList().get(0).n());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ns());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b().asByteBuffer());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).bs());
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).ss());
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         assertNull(globalHashKeyCondition.attributeValueList().get(0).n());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).ns());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).b().asByteBuffer());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).bs());
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
         // Verify that the expected DynamoDBOperations method was called
     }
@@ -2557,17 +2568,17 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ss());
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         assertNull(globalRangeKeyCondition.attributeValueList().get(0).n());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ns());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b().asByteBuffer());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).bs());
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).ss());
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         assertNull(globalHashKeyCondition.attributeValueList().get(0).n());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).ns());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).b().asByteBuffer());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).bs());
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
         // Verify that the expected DynamoDBOperations method was called
     }
@@ -2633,17 +2644,17 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ss());
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         assertNull(globalRangeKeyCondition.attributeValueList().get(0).n());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ns());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b().asByteBuffer());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).bs());
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).ss());
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         assertNull(globalHashKeyCondition.attributeValueList().get(0).n());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).ns());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).b().asByteBuffer());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).bs());
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
         // Verify that the expected DynamoDBOperations method was called
     }
@@ -2708,17 +2719,17 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ss());
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         assertNull(globalRangeKeyCondition.attributeValueList().get(0).n());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ns());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b().asByteBuffer());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).bs());
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).ss());
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         assertNull(globalHashKeyCondition.attributeValueList().get(0).n());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).ns());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).b().asByteBuffer());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).bs());
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
         // Verify that the expected DynamoDBOperations method was called
     }
@@ -2787,17 +2798,17 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ss());
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         assertNull(globalRangeKeyCondition.attributeValueList().get(0).n());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ns());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b().asByteBuffer());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).bs());
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).ss());
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         assertNull(globalHashKeyCondition.attributeValueList().get(0).n());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).ns());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).b().asByteBuffer());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).bs());
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
         // Verify that the expected DynamoDBOperations method was called
     }
@@ -2866,17 +2877,17 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ss());
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         assertNull(globalRangeKeyCondition.attributeValueList().get(0).n());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ns());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b().asByteBuffer());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).bs());
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).ss());
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         assertNull(globalHashKeyCondition.attributeValueList().get(0).n());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).ns());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).b().asByteBuffer());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).bs());
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
         // Verify that the expected DynamoDBOperations method was called
     }
@@ -2945,17 +2956,17 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         // Assert that all other attribute value types other than String type
         // are null
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ss());
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         assertNull(globalRangeKeyCondition.attributeValueList().get(0).n());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).ns());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b().asByteBuffer());
-        assertNull(globalRangeKeyCondition.attributeValueList().get(0).bs());
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        assertNull(globalRangeKeyCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        assertTrue(globalRangeKeyCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).ss());
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         assertNull(globalHashKeyCondition.attributeValueList().get(0).n());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).ns());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).b().asByteBuffer());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).bs());
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
         // Verify that the expected DynamoDBOperations method was called
     }
@@ -3018,11 +3029,11 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         // assertEquals(1, globalHashKeyCondition.attributeValueList().size());
         assertEquals("SomeName", globalHashKeyCondition.attributeValueList().get(0).s());
 
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).ss());
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         assertNull(globalHashKeyCondition.attributeValueList().get(0).n());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).ns());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).b().asByteBuffer());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).bs());
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
         // Verify that the expected DynamoDBOperations method was called
     }
@@ -3085,11 +3096,11 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         // assertEquals(1, globalHashKeyCondition.attributeValueList().size());
         assertEquals("SomeName", globalHashKeyCondition.attributeValueList().get(0).s());
 
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).ss());
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).ss().isEmpty()); // SDK v2: returns empty list instead of null
         assertNull(globalHashKeyCondition.attributeValueList().get(0).n());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).ns());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).b().asByteBuffer());
-        assertNull(globalHashKeyCondition.attributeValueList().get(0).bs());
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).ns().isEmpty()); // SDK v2: returns empty list instead of null
+        assertNull(globalHashKeyCondition.attributeValueList().get(0).b()); // SDK v2: b() returns null when not set
+        assertTrue(globalHashKeyCondition.attributeValueList().get(0).bs().isEmpty()); // SDK v2: returns empty list instead of null
 
         // Verify that the expected DynamoDBOperations method was called
     }
@@ -3115,7 +3126,9 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected list of results
-        assertEquals(o, mockUserScanResults);
+        // SDK v2: CollectionExecution.execute() calls getResultList() which converts PageIterable to List
+        List<User> expected = Arrays.asList(mockUser);
+        assertEquals(expected, o);
 
         // Assert that the list of results contains the correct elements
         // Assert that we scanned DynamoDB for the correct class
@@ -3167,7 +3180,9 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected list of results
-        assertEquals(o, mockUserScanResults);
+        // SDK v2: CollectionExecution.execute() calls getResultList() which converts PageIterable to List
+        List<User> expected = Arrays.asList(mockUser);
+        assertEquals(expected, o);
 
         // Assert that the list of results contains the correct elements
         // Assert that we scanned DynamoDB for the correct class
@@ -3217,7 +3232,9 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected list of results
-        assertEquals(o, mockUserScanResults);
+        // SDK v2: CollectionExecution.execute() calls getResultList() which converts PageIterable to List
+        List<User> expected = Arrays.asList(mockUser);
+        assertEquals(expected, o);
 
         // Assert that the list of results contains the correct elements
         // Assert that we scanned DynamoDB for the correct class
@@ -3267,7 +3284,9 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected list of results
-        assertEquals(o, mockUserScanResults);
+        // SDK v2: CollectionExecution.execute() calls getResultList() which converts PageIterable to List
+        List<User> expected = Arrays.asList(mockUser);
+        assertEquals(expected, o);
 
         // Assert that the list of results contains the correct elements
         // Assert that we scanned DynamoDB for the correct class
