@@ -109,7 +109,10 @@ public class AbstractDynamoDBEventListenerTest {
     public void testAfterQuery() {
         List<User> queryList = new ArrayList<>();
         queryList.add(sampleEntity);
-        when(sampleQueryList.items()).thenAnswer(invocation -> queryList);
+        // PageIterable.items() should return SdkIterable, not List
+        software.amazon.awssdk.core.pagination.sync.SdkIterable<User> sdkIterable =
+            () -> queryList.iterator();
+        when(sampleQueryList.items()).thenReturn(sdkIterable);
 
         underTest.onApplicationEvent(new AfterQueryEvent<>(sampleQueryList));
 
@@ -139,7 +142,10 @@ public class AbstractDynamoDBEventListenerTest {
     public void testAfterScan() {
         List<User> scanList = new ArrayList<>();
         scanList.add(sampleEntity);
-        when(sampleScanList.items()).thenAnswer(invocation -> scanList);
+        // PageIterable.items() should return SdkIterable, not List
+        software.amazon.awssdk.core.pagination.sync.SdkIterable<User> sdkIterable =
+            () -> scanList.iterator();
+        when(sampleScanList.items()).thenReturn(sdkIterable);
 
         underTest.onApplicationEvent(new AfterScanEvent<>(sampleScanList));
 

@@ -127,22 +127,43 @@ public class SimpleDynamoDBCrudRepositoryTest {
 
     @Test
     public void deleteAll() {
+        // SDK v2: deleteAll() calls findAll() which calls .items().stream().toList()
+        List<User> usersToDelete = new ArrayList<>();
+        usersToDelete.add(testUser);
+
+        software.amazon.awssdk.core.pagination.sync.SdkIterable<User> sdkIterable =
+            () -> usersToDelete.iterator();
+
         when(mockEnableScanPermissions.isDeleteAllUnpaginatedScanEnabled()).thenReturn(true);
         when(mockEnableScanPermissions.isFindAllUnpaginatedScanEnabled()).thenReturn(true);
-        when(dynamoDBOperations.scan(eq(User.class), any(ScanEnhancedRequest.class))).thenAnswer(invocation -> findAllResultMock);
+        when(dynamoDBOperations.scan(eq(User.class), any(ScanEnhancedRequest.class))).thenReturn(findAllResultMock);
+        when(findAllResultMock.items()).thenReturn(sdkIterable);
 
         repoForEntityWithOnlyHashKey.deleteAll();
-        verify(dynamoDBOperations).batchDelete(findAllResultMock);
+
+        // Verify batchDelete was called with the list of users (not PageIterable)
+        ArgumentCaptor<List<User>> captor = ArgumentCaptor.forClass(List.class);
+        verify(dynamoDBOperations).batchDelete(captor.capture());
+        assertEquals(usersToDelete.size(), captor.getValue().size());
     }
 
     @Test
     public void testFindAll() {
+        // SDK v2: findAll() calls .items().stream().toList() on the PageIterable
+        List<User> expectedUsers = new ArrayList<>();
+        expectedUsers.add(testUser);
+
+        software.amazon.awssdk.core.pagination.sync.SdkIterable<User> sdkIterable =
+            () -> expectedUsers.iterator();
+
         when(mockEnableScanPermissions.isFindAllUnpaginatedScanEnabled()).thenReturn(true);
-        when(dynamoDBOperations.scan(eq(User.class), any(ScanEnhancedRequest.class))).thenAnswer(invocation -> findAllResultMock);
+        when(dynamoDBOperations.scan(eq(User.class), any(ScanEnhancedRequest.class))).thenReturn(findAllResultMock);
+        when(findAllResultMock.items()).thenReturn(sdkIterable);
 
         List<User> actual = repoForEntityWithOnlyHashKey.findAll();
 
-        assertSame(actual, findAllResultMock);
+        assertEquals(expectedUsers.size(), actual.size());
+        assertEquals(testUser, actual.get(0));
     }
 
     /**

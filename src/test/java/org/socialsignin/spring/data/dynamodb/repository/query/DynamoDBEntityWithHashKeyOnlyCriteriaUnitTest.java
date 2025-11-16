@@ -39,7 +39,8 @@ public class DynamoDBEntityWithHashKeyOnlyCriteriaUnitTest
     @BeforeEach
     public void setUp() {
         Mockito.when(entityInformation.getHashKeyPropertyName()).thenReturn("id");
-        Mockito.when(mappingContext.getMarshallingMode()).thenReturn(org.socialsignin.spring.data.dynamodb.core.MarshallingMode.SDK_V2_NATIVE);
+        // Use SDK_V1_COMPATIBLE mode for date tests that expect ISO string format
+        Mockito.when(mappingContext.getMarshallingMode()).thenReturn(org.socialsignin.spring.data.dynamodb.core.MarshallingMode.SDK_V1_COMPATIBLE);
         criteria = new DynamoDBEntityWithHashKeyOnlyCriteria<>(entityInformation, null, mappingContext);
     }
 

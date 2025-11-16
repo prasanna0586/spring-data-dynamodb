@@ -70,12 +70,12 @@ public class LoggingEventListenerTest {
 
     @Test
     public void testAfterQuery() {
-        // SDK v2: PageIterable.items() returns SdkIterable which has stream() method
+        // SDK v2: PageIterable.items() returns SdkIterable which has spliterator() method
         List<User> queryList = new ArrayList<>();
         queryList.add(sampleEntity);
 
         when(sampleQueryList.items()).thenReturn(sampleQueryItems);
-        when(sampleQueryItems.stream()).thenReturn(queryList.stream());
+        when(sampleQueryItems.spliterator()).thenReturn(queryList.spliterator());
 
         underTest.onApplicationEvent(new AfterQueryEvent<>(sampleQueryList));
 
@@ -91,12 +91,12 @@ public class LoggingEventListenerTest {
 
     @Test
     public void testAfterScan() {
-        // SDK v2: PageIterable.items() returns SdkIterable which has stream() method
+        // SDK v2: PageIterable.items() returns SdkIterable which has spliterator() method
         List<User> scanList = new ArrayList<>();
         scanList.add(sampleEntity);
 
         when(sampleScanList.items()).thenReturn(sampleScanItems);
-        when(sampleScanItems.stream()).thenReturn(scanList.stream());
+        when(sampleScanItems.spliterator()).thenReturn(scanList.spliterator());
 
         underTest.onApplicationEvent(new AfterScanEvent<>(sampleScanList));
 

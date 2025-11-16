@@ -38,7 +38,8 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteriaUnitTest
     public void setUp() {
         Mockito.when(entityInformation.getHashKeyPropertyName()).thenReturn("userName");
         Mockito.when(entityInformation.getRangeKeyPropertyName()).thenReturn("playlistName");
-        Mockito.when(mappingContext.getMarshallingMode()).thenReturn(org.socialsignin.spring.data.dynamodb.core.MarshallingMode.SDK_V2_NATIVE);
+        // Use SDK_V1_COMPATIBLE mode for date tests that expect ISO string format
+        Mockito.when(mappingContext.getMarshallingMode()).thenReturn(org.socialsignin.spring.data.dynamodb.core.MarshallingMode.SDK_V1_COMPATIBLE);
         criteria = new DynamoDBEntityWithHashAndRangeKeyCriteria<>(entityInformation, null, mappingContext);
     }
 
