@@ -187,25 +187,46 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
         Class<T> domainType = entityInformation.getJavaType();
         String tableName = entityInformation.getDynamoDBTableName();
 
-        LOGGER.info("Creating table {} for entity {} using Enhanced Client",
+        LOGGER.info("Creating table {} for entity {}",
                 tableName, domainType.getSimpleName());
 
         try {
-            // Create table schema using factory (respects marshalling mode)
-            TableSchema<T> schema = TableSchemaFactory.createTableSchema(
-                    domainType,
-                    mappingContext.getMarshallingMode());
+            // Generate CreateTableRequest with manual GSI/LSI introspection
+            // This is necessary because Enhanced Client's automatic table creation
+            // doesn't properly handle @DynamoDbSecondaryPartitionKey with multiple index names
+            CreateTableRequest createTableRequest = generateCreateTableRequest(domainType, tableName);
 
-            // Get table reference from Enhanced Client
-            DynamoDbTable<T> table = enhancedClient.table(tableName, schema);
+            // Apply GSI projection type and throughput
+            CreateTableRequest.Builder builder = createTableRequest.toBuilder();
+            if (createTableRequest.hasGlobalSecondaryIndexes()) {
+                List<GlobalSecondaryIndex> gsis = createTableRequest.globalSecondaryIndexes().stream()
+                        .map(gsi -> gsi.toBuilder()
+                                .projection(Projection.builder()
+                                        .projectionType(gsiProjectionType)
+                                        .build())
+                                .provisionedThroughput(ProvisionedThroughput.builder()
+                                        .readCapacityUnits(readCapacity)
+                                        .writeCapacityUnits(writeCapacity)
+                                        .build())
+                                .build())
+                        .collect(Collectors.toList());
+                builder.globalSecondaryIndexes(gsis);
+            }
 
-            // Create table with configuration for provisioned throughput
-            // Note: Since SDK v2.20.86+, indexes are automatically created from annotations
-            // with ALL projection type and default throughput (can be customized if needed)
-            table.createTable(builder -> builder
-                    .provisionedThroughput(b -> b
-                            .readCapacityUnits(readCapacity)
-                            .writeCapacityUnits(writeCapacity)));
+            // Apply LSI projection type
+            if (createTableRequest.hasLocalSecondaryIndexes()) {
+                List<LocalSecondaryIndex> lsis = createTableRequest.localSecondaryIndexes().stream()
+                        .map(lsi -> lsi.toBuilder()
+                                .projection(Projection.builder()
+                                        .projectionType(lsiProjectionType)
+                                        .build())
+                                .build())
+                        .collect(Collectors.toList());
+                builder.localSecondaryIndexes(lsis);
+            }
+
+            // Create the table using low-level client
+            amazonDynamoDB.createTable(builder.build());
 
             LOGGER.info("Table {} created successfully for entity {}",
                     tableName, domainType.getSimpleName());
@@ -260,8 +281,9 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
     private DescribeTableResponse performValidate(DynamoDBEntityInformation<T, ID> entityInformation)
             throws IllegalStateException {
         Class<T> domainType = entityInformation.getJavaType();
+        String tableName = entityInformation.getDynamoDBTableName();
 
-        CreateTableRequest expected = generateCreateTableRequest(domainType);
+        CreateTableRequest expected = generateCreateTableRequest(domainType, tableName);
         DescribeTableResponse result = amazonDynamoDB.describeTable(DescribeTableRequest.builder()
                 .tableName(expected.tableName())
                 .build());
@@ -313,8 +335,7 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
      * Generates a CreateTableRequest by introspecting the entity class annotations.
      * This replicates the functionality of SDK v1's DynamoDBMapper.generateCreateTableRequest().
      */
-    private CreateTableRequest generateCreateTableRequest(Class<T> domainType) {
-        String tableName = getTableName(domainType);
+    private CreateTableRequest generateCreateTableRequest(Class<T> domainType, String tableName) {
 
         // Collect all attribute definitions and key schema
         List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
@@ -333,6 +354,55 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
 
         // Find LSIs
         List<LocalSecondaryIndex> localSecondaryIndexes = findLocalSecondaryIndexes(domainType, attributeTypes);
+
+        // EC-7.1: Validate GSI count limit (DynamoDB allows max 20 GSIs per table)
+        if (globalSecondaryIndexes.size() > 20) {
+            throw new IllegalStateException(String.format(
+                "Invalid table configuration for entity %s: Table has %d Global Secondary Indexes, but DynamoDB allows a maximum of 20 GSIs per table.",
+                domainType.getSimpleName(), globalSecondaryIndexes.size()));
+        }
+
+        // EC-7.2: Validate LSI count limit (DynamoDB allows max 5 LSIs per table)
+        if (localSecondaryIndexes.size() > 5) {
+            throw new IllegalStateException(String.format(
+                "Invalid table configuration for entity %s: Table has %d Local Secondary Indexes, but DynamoDB allows a maximum of 5 LSIs per table.",
+                domainType.getSimpleName(), localSecondaryIndexes.size()));
+        }
+
+        // EC-4.1: Validate no GSI/LSI name conflicts
+        Set<String> gsiNames = globalSecondaryIndexes.stream()
+            .map(GlobalSecondaryIndex::indexName)
+            .collect(Collectors.toSet());
+        Set<String> lsiNames = localSecondaryIndexes.stream()
+            .map(LocalSecondaryIndex::indexName)
+            .collect(Collectors.toSet());
+
+        Set<String> commonNames = new HashSet<>(gsiNames);
+        commonNames.retainAll(lsiNames);
+
+        if (!commonNames.isEmpty()) {
+            throw new IllegalStateException(String.format(
+                "Invalid index configuration for entity %s: The following index names are used for both GSI and LSI: %s. " +
+                "Global Secondary Indexes and Local Secondary Indexes must have different names.",
+                domainType.getSimpleName(), commonNames));
+        }
+
+        // EC-7.3: Validate index name lengths (DynamoDB max 255 characters)
+        for (GlobalSecondaryIndex gsi : globalSecondaryIndexes) {
+            if (gsi.indexName().length() > 255) {
+                throw new IllegalStateException(String.format(
+                    "Invalid GSI configuration for entity %s: Index name '%s' is %d characters long, but DynamoDB allows a maximum of 255 characters.",
+                    domainType.getSimpleName(), gsi.indexName(), gsi.indexName().length()));
+            }
+        }
+
+        for (LocalSecondaryIndex lsi : localSecondaryIndexes) {
+            if (lsi.indexName().length() > 255) {
+                throw new IllegalStateException(String.format(
+                    "Invalid LSI configuration for entity %s: Index name '%s' is %d characters long, but DynamoDB allows a maximum of 255 characters.",
+                    domainType.getSimpleName(), lsi.indexName(), lsi.indexName().length()));
+            }
+        }
 
         // Build attribute definitions from collected types
         attributeTypes.forEach((name, type) ->
@@ -374,9 +444,12 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
 
     private void findPartitionKey(Class<T> domainType, List<KeySchemaElement> keySchema,
                                    Map<String, ScalarAttributeType> attributeTypes) {
+        Set<String> partitionKeys = new HashSet<>();
+
         ReflectionUtils.doWithMethods(domainType, method -> {
             if (method.isAnnotationPresent(DynamoDbPartitionKey.class)) {
                 String attributeName = getAttributeName(method);
+                partitionKeys.add(attributeName);
                 keySchema.add(KeySchemaElement.builder()
                         .attributeName(attributeName)
                         .keyType(KeyType.HASH)
@@ -388,6 +461,7 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
         ReflectionUtils.doWithFields(domainType, field -> {
             if (field.isAnnotationPresent(DynamoDbPartitionKey.class)) {
                 String attributeName = getAttributeName(field);
+                partitionKeys.add(attributeName);
                 keySchema.add(KeySchemaElement.builder()
                         .attributeName(attributeName)
                         .keyType(KeyType.HASH)
@@ -395,13 +469,32 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
                 attributeTypes.put(attributeName, getScalarType(field.getType()));
             }
         });
+
+        // EC-1.1: Validate table has partition key
+        if (partitionKeys.isEmpty()) {
+            throw new IllegalStateException(String.format(
+                "Invalid table configuration for entity %s: Table must have a partition key. " +
+                "Add @DynamoDbPartitionKey annotation to one attribute.",
+                domainType.getSimpleName()));
+        }
+
+        // EC-1.2: Validate only one partition key
+        if (partitionKeys.size() > 1) {
+            throw new IllegalStateException(String.format(
+                "Invalid table configuration for entity %s: Table has multiple partition keys: %s. " +
+                "A table can only have one partition key.",
+                domainType.getSimpleName(), partitionKeys));
+        }
     }
 
     private void findSortKey(Class<T> domainType, List<KeySchemaElement> keySchema,
                              Map<String, ScalarAttributeType> attributeTypes) {
+        Set<String> sortKeys = new HashSet<>();
+
         ReflectionUtils.doWithMethods(domainType, method -> {
             if (method.isAnnotationPresent(DynamoDbSortKey.class)) {
                 String attributeName = getAttributeName(method);
+                sortKeys.add(attributeName);
                 keySchema.add(KeySchemaElement.builder()
                         .attributeName(attributeName)
                         .keyType(KeyType.RANGE)
@@ -413,6 +506,7 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
         ReflectionUtils.doWithFields(domainType, field -> {
             if (field.isAnnotationPresent(DynamoDbSortKey.class)) {
                 String attributeName = getAttributeName(field);
+                sortKeys.add(attributeName);
                 keySchema.add(KeySchemaElement.builder()
                         .attributeName(attributeName)
                         .keyType(KeyType.RANGE)
@@ -420,18 +514,54 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
                 attributeTypes.put(attributeName, getScalarType(field.getType()));
             }
         });
+
+        // EC-1.3: Validate only one sort key
+        if (sortKeys.size() > 1) {
+            throw new IllegalStateException(String.format(
+                "Invalid table configuration for entity %s: Table has multiple sort keys: %s. " +
+                "A table can only have one sort key.",
+                domainType.getSimpleName(), sortKeys));
+        }
     }
 
     private List<GlobalSecondaryIndex> findGlobalSecondaryIndexes(Class<T> domainType,
                                                                     Map<String, ScalarAttributeType> attributeTypes) {
         Map<String, GlobalSecondaryIndex.Builder> gsiBuilders = new HashMap<>();
 
+        // Track partition and sort keys per index for validation
+        Map<String, String> indexPartitionKeys = new HashMap<>();
+        Map<String, String> indexSortKeys = new HashMap<>();
+
+        // First, find all index names that have a partition key (these are GSIs)
+        Set<String> gsiIndexNames = findGsiIndexNames(domainType);
+
         // Find all GSI partition keys and sort keys
         ReflectionUtils.doWithMethods(domainType, method -> {
             if (method.isAnnotationPresent(DynamoDbSecondaryPartitionKey.class)) {
                 for (DynamoDbSecondaryPartitionKey annotation : method.getAnnotationsByType(DynamoDbSecondaryPartitionKey.class)) {
                     for (String indexName : annotation.indexNames()) {
+                        // EC-5.2: Validate index name is non-empty
+                        if (indexName == null || indexName.trim().isEmpty()) {
+                            throw new IllegalStateException(String.format(
+                                "Invalid GSI configuration for entity %s: Index name cannot be null or empty. " +
+                                "Check @DynamoDbSecondaryPartitionKey annotation on method '%s'.",
+                                domainType.getSimpleName(), method.getName()));
+                        }
+
                         String attributeName = getAttributeName(method);
+
+                        // Validate: Check for duplicate partition keys
+                        if (indexPartitionKeys.containsKey(indexName)) {
+                            String existing = indexPartitionKeys.get(indexName);
+                            if (!existing.equals(attributeName)) {
+                                throw new IllegalStateException(String.format(
+                                    "Invalid GSI configuration for entity %s: Index '%s' has multiple partition keys: '%s' and '%s'. " +
+                                    "Each Global Secondary Index can only have one partition key.",
+                                    domainType.getSimpleName(), indexName, existing, attributeName));
+                            }
+                        }
+                        indexPartitionKeys.put(indexName, attributeName);
+
                         attributeTypes.put(attributeName, getScalarType(method.getReturnType()));
 
                         GlobalSecondaryIndex.Builder gsiBuilder = gsiBuilders.computeIfAbsent(indexName,
@@ -457,7 +587,25 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
             if (method.isAnnotationPresent(DynamoDbSecondarySortKey.class)) {
                 for (DynamoDbSecondarySortKey annotation : method.getAnnotationsByType(DynamoDbSecondarySortKey.class)) {
                     for (String indexName : annotation.indexNames()) {
+                        // Only process if this index is a GSI (has a partition key)
+                        if (!gsiIndexNames.contains(indexName)) {
+                            continue;
+                        }
+
                         String attributeName = getAttributeName(method);
+
+                        // Validate: Check for duplicate sort keys
+                        if (indexSortKeys.containsKey(indexName)) {
+                            String existing = indexSortKeys.get(indexName);
+                            if (!existing.equals(attributeName)) {
+                                throw new IllegalStateException(String.format(
+                                    "Invalid GSI configuration for entity %s: Index '%s' has multiple sort keys: '%s' and '%s'. " +
+                                    "Each Global Secondary Index can only have one sort key.",
+                                    domainType.getSimpleName(), indexName, existing, attributeName));
+                            }
+                        }
+                        indexSortKeys.put(indexName, attributeName);
+
                         attributeTypes.put(attributeName, getScalarType(method.getReturnType()));
 
                         GlobalSecondaryIndex.Builder gsiBuilder = gsiBuilders.computeIfAbsent(indexName,
@@ -486,7 +634,28 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
             if (field.isAnnotationPresent(DynamoDbSecondaryPartitionKey.class)) {
                 for (DynamoDbSecondaryPartitionKey annotation : field.getAnnotationsByType(DynamoDbSecondaryPartitionKey.class)) {
                     for (String indexName : annotation.indexNames()) {
+                        // EC-5.2: Validate index name is non-empty
+                        if (indexName == null || indexName.trim().isEmpty()) {
+                            throw new IllegalStateException(String.format(
+                                "Invalid GSI configuration for entity %s: Index name cannot be null or empty. " +
+                                "Check @DynamoDbSecondaryPartitionKey annotation on field '%s'.",
+                                domainType.getSimpleName(), field.getName()));
+                        }
+
                         String attributeName = getAttributeName(field);
+
+                        // Validate: Check for duplicate partition keys
+                        if (indexPartitionKeys.containsKey(indexName)) {
+                            String existing = indexPartitionKeys.get(indexName);
+                            if (!existing.equals(attributeName)) {
+                                throw new IllegalStateException(String.format(
+                                    "Invalid GSI configuration for entity %s: Index '%s' has multiple partition keys: '%s' and '%s'. " +
+                                    "Each Global Secondary Index can only have one partition key.",
+                                    domainType.getSimpleName(), indexName, existing, attributeName));
+                            }
+                        }
+                        indexPartitionKeys.put(indexName, attributeName);
+
                         attributeTypes.put(attributeName, getScalarType(field.getType()));
 
                         GlobalSecondaryIndex.Builder gsiBuilder = gsiBuilders.computeIfAbsent(indexName,
@@ -512,7 +681,25 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
             if (field.isAnnotationPresent(DynamoDbSecondarySortKey.class)) {
                 for (DynamoDbSecondarySortKey annotation : field.getAnnotationsByType(DynamoDbSecondarySortKey.class)) {
                     for (String indexName : annotation.indexNames()) {
+                        // Only process if this index is a GSI (has a partition key)
+                        if (!gsiIndexNames.contains(indexName)) {
+                            continue;
+                        }
+
                         String attributeName = getAttributeName(field);
+
+                        // Validate: Check for duplicate sort keys
+                        if (indexSortKeys.containsKey(indexName)) {
+                            String existing = indexSortKeys.get(indexName);
+                            if (!existing.equals(attributeName)) {
+                                throw new IllegalStateException(String.format(
+                                    "Invalid GSI configuration for entity %s: Index '%s' has multiple sort keys: '%s' and '%s'. " +
+                                    "Each Global Secondary Index can only have one sort key.",
+                                    domainType.getSimpleName(), indexName, existing, attributeName));
+                            }
+                        }
+                        indexSortKeys.put(indexName, attributeName);
+
                         attributeTypes.put(attributeName, getScalarType(field.getType()));
 
                         GlobalSecondaryIndex.Builder gsiBuilder = gsiBuilders.computeIfAbsent(indexName,
@@ -536,6 +723,30 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
             }
         });
 
+        // EC-2.3: Validate each GSI has a partition key
+        // EC-2.4: Validate GSI is not empty
+        for (Map.Entry<String, GlobalSecondaryIndex.Builder> entry : gsiBuilders.entrySet()) {
+            String indexName = entry.getKey();
+            GlobalSecondaryIndex gsi = entry.getValue().build();
+
+            if (gsi.keySchema() == null || gsi.keySchema().isEmpty()) {
+                throw new IllegalStateException(String.format(
+                    "Invalid GSI configuration for entity %s: Index '%s' has no keys defined. " +
+                    "Each Global Secondary Index must have at least a partition key.",
+                    domainType.getSimpleName(), indexName));
+            }
+
+            boolean hasPartitionKey = gsi.keySchema().stream()
+                .anyMatch(key -> key.keyType() == KeyType.HASH);
+
+            if (!hasPartitionKey) {
+                throw new IllegalStateException(String.format(
+                    "Invalid GSI configuration for entity %s: Index '%s' has no partition key. " +
+                    "Each Global Secondary Index must have a partition key (@DynamoDbSecondaryPartitionKey).",
+                    domainType.getSimpleName(), indexName));
+            }
+        }
+
         // Sort keySchema for each GSI to ensure HASH before RANGE
         return gsiBuilders.values().stream()
                 .map(builder -> {
@@ -549,9 +760,230 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
 
     private List<LocalSecondaryIndex> findLocalSecondaryIndexes(Class<T> domainType,
                                                                   Map<String, ScalarAttributeType> attributeTypes) {
-        // Note: LSI creation is now handled automatically by Enhanced Client
-        // This method is kept only for validation purposes
-        return Collections.emptyList();
+        Map<String, LocalSecondaryIndex.Builder> lsiBuilders = new HashMap<>();
+
+        // Track sort keys per LSI for validation
+        Map<String, String> lsiSortKeys = new HashMap<>();
+
+        // First, find the table's partition key attribute name (needed for LSI key schema)
+        String tablePartitionKeyAttributeName = findTablePartitionKeyAttributeName(domainType);
+        if (tablePartitionKeyAttributeName == null) {
+            return Collections.emptyList();
+        }
+
+        // EC-3.2: Check if table has a sort key (required for LSIs)
+        String tableSortKeyAttributeName = findTableSortKeyAttributeName(domainType);
+
+        // Find all LSI sort keys
+        // LSI is identified by @DynamoDbSecondarySortKey annotations that don't have a corresponding
+        // @DynamoDbSecondaryPartitionKey for the same index name
+        Set<String> gsiIndexNames = findGsiIndexNames(domainType);
+
+        ReflectionUtils.doWithMethods(domainType, method -> {
+            if (method.isAnnotationPresent(DynamoDbSecondarySortKey.class)) {
+                for (DynamoDbSecondarySortKey annotation : method.getAnnotationsByType(DynamoDbSecondarySortKey.class)) {
+                    for (String indexName : annotation.indexNames()) {
+                        // If this index is also a GSI, skip it (it's not an LSI)
+                        if (gsiIndexNames.contains(indexName)) {
+                            continue;
+                        }
+
+                        // EC-5.2: Validate index name is non-empty
+                        if (indexName == null || indexName.trim().isEmpty()) {
+                            throw new IllegalStateException(String.format(
+                                "Invalid LSI configuration for entity %s: Index name cannot be null or empty. " +
+                                "Check @DynamoDbSecondarySortKey annotation on method '%s'.",
+                                domainType.getSimpleName(), method.getName()));
+                        }
+
+                        // EC-3.2: Validate table has sort key (LSIs require composite primary key)
+                        if (tableSortKeyAttributeName == null) {
+                            throw new IllegalStateException(String.format(
+                                "Invalid LSI configuration for entity %s: Index '%s' cannot be created because the table does not have a sort key. " +
+                                "Local Secondary Indexes can only be created on tables with a composite primary key (partition key + sort key). " +
+                                "Add @DynamoDbSortKey annotation to one attribute or use a Global Secondary Index instead.",
+                                domainType.getSimpleName(), indexName));
+                        }
+
+                        String attributeName = getAttributeName(method);
+
+                        // Validate: Check for duplicate sort keys in LSI
+                        if (lsiSortKeys.containsKey(indexName)) {
+                            String existing = lsiSortKeys.get(indexName);
+                            if (!existing.equals(attributeName)) {
+                                throw new IllegalStateException(String.format(
+                                    "Invalid LSI configuration for entity %s: Index '%s' has multiple sort keys: '%s' and '%s'. " +
+                                    "Each Local Secondary Index can only have one sort key.",
+                                    domainType.getSimpleName(), indexName, existing, attributeName));
+                            }
+                        }
+                        lsiSortKeys.put(indexName, attributeName);
+
+                        attributeTypes.put(attributeName, getScalarType(method.getReturnType()));
+
+                        LocalSecondaryIndex.Builder lsiBuilder = lsiBuilders.computeIfAbsent(indexName,
+                                k -> LocalSecondaryIndex.builder()
+                                        .indexName(indexName)
+                                        .projection(Projection.builder().projectionType(lsiProjectionType).build()));
+
+                        // LSI key schema: table's partition key + LSI's sort key
+                        List<KeySchemaElement> keySchema = new ArrayList<>();
+                        keySchema.add(KeySchemaElement.builder()
+                                .attributeName(tablePartitionKeyAttributeName)
+                                .keyType(KeyType.HASH)
+                                .build());
+                        keySchema.add(KeySchemaElement.builder()
+                                .attributeName(attributeName)
+                                .keyType(KeyType.RANGE)
+                                .build());
+
+                        lsiBuilder.keySchema(keySchema);
+                        lsiBuilders.put(indexName, lsiBuilder);
+                    }
+                }
+            }
+        });
+
+        // Same for fields
+        ReflectionUtils.doWithFields(domainType, field -> {
+            if (field.isAnnotationPresent(DynamoDbSecondarySortKey.class)) {
+                for (DynamoDbSecondarySortKey annotation : field.getAnnotationsByType(DynamoDbSecondarySortKey.class)) {
+                    for (String indexName : annotation.indexNames()) {
+                        // If this index is also a GSI, skip it (it's not an LSI)
+                        if (gsiIndexNames.contains(indexName)) {
+                            continue;
+                        }
+
+                        // EC-5.2: Validate index name is non-empty
+                        if (indexName == null || indexName.trim().isEmpty()) {
+                            throw new IllegalStateException(String.format(
+                                "Invalid LSI configuration for entity %s: Index name cannot be null or empty. " +
+                                "Check @DynamoDbSecondarySortKey annotation on field '%s'.",
+                                domainType.getSimpleName(), field.getName()));
+                        }
+
+                        // EC-3.2: Validate table has sort key (LSIs require composite primary key)
+                        if (tableSortKeyAttributeName == null) {
+                            throw new IllegalStateException(String.format(
+                                "Invalid LSI configuration for entity %s: Index '%s' cannot be created because the table does not have a sort key. " +
+                                "Local Secondary Indexes can only be created on tables with a composite primary key (partition key + sort key). " +
+                                "Add @DynamoDbSortKey annotation to one attribute or use a Global Secondary Index instead.",
+                                domainType.getSimpleName(), indexName));
+                        }
+
+                        String attributeName = getAttributeName(field);
+
+                        // Validate: Check for duplicate sort keys in LSI
+                        if (lsiSortKeys.containsKey(indexName)) {
+                            String existing = lsiSortKeys.get(indexName);
+                            if (!existing.equals(attributeName)) {
+                                throw new IllegalStateException(String.format(
+                                    "Invalid LSI configuration for entity %s: Index '%s' has multiple sort keys: '%s' and '%s'. " +
+                                    "Each Local Secondary Index can only have one sort key.",
+                                    domainType.getSimpleName(), indexName, existing, attributeName));
+                            }
+                        }
+                        lsiSortKeys.put(indexName, attributeName);
+
+                        attributeTypes.put(attributeName, getScalarType(field.getType()));
+
+                        LocalSecondaryIndex.Builder lsiBuilder = lsiBuilders.computeIfAbsent(indexName,
+                                k -> LocalSecondaryIndex.builder()
+                                        .indexName(indexName)
+                                        .projection(Projection.builder().projectionType(lsiProjectionType).build()));
+
+                        // LSI key schema: table's partition key + LSI's sort key
+                        List<KeySchemaElement> keySchema = new ArrayList<>();
+                        keySchema.add(KeySchemaElement.builder()
+                                .attributeName(tablePartitionKeyAttributeName)
+                                .keyType(KeyType.HASH)
+                                .build());
+                        keySchema.add(KeySchemaElement.builder()
+                                .attributeName(attributeName)
+                                .keyType(KeyType.RANGE)
+                                .build());
+
+                        lsiBuilder.keySchema(keySchema);
+                        lsiBuilders.put(indexName, lsiBuilder);
+                    }
+                }
+            }
+        });
+
+        return lsiBuilders.values().stream()
+                .map(LocalSecondaryIndex.Builder::build)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Find the table's partition key attribute name.
+     */
+    private String findTablePartitionKeyAttributeName(Class<T> domainType) {
+        String[] result = new String[1];
+
+        ReflectionUtils.doWithMethods(domainType, method -> {
+            if (method.isAnnotationPresent(DynamoDbPartitionKey.class) && result[0] == null) {
+                result[0] = getAttributeName(method);
+            }
+        });
+
+        if (result[0] == null) {
+            ReflectionUtils.doWithFields(domainType, field -> {
+                if (field.isAnnotationPresent(DynamoDbPartitionKey.class) && result[0] == null) {
+                    result[0] = getAttributeName(field);
+                }
+            });
+        }
+
+        return result[0];
+    }
+
+    /**
+     * Find the table's sort key attribute name.
+     */
+    private String findTableSortKeyAttributeName(Class<T> domainType) {
+        String[] result = new String[1];
+
+        ReflectionUtils.doWithMethods(domainType, method -> {
+            if (method.isAnnotationPresent(DynamoDbSortKey.class) && result[0] == null) {
+                result[0] = getAttributeName(method);
+            }
+        });
+
+        if (result[0] == null) {
+            ReflectionUtils.doWithFields(domainType, field -> {
+                if (field.isAnnotationPresent(DynamoDbSortKey.class) && result[0] == null) {
+                    result[0] = getAttributeName(field);
+                }
+            });
+        }
+
+        return result[0];
+    }
+
+    /**
+     * Find all GSI index names to distinguish them from LSIs.
+     */
+    private Set<String> findGsiIndexNames(Class<T> domainType) {
+        Set<String> gsiNames = new HashSet<>();
+
+        ReflectionUtils.doWithMethods(domainType, method -> {
+            if (method.isAnnotationPresent(DynamoDbSecondaryPartitionKey.class)) {
+                for (DynamoDbSecondaryPartitionKey annotation : method.getAnnotationsByType(DynamoDbSecondaryPartitionKey.class)) {
+                    gsiNames.addAll(Arrays.asList(annotation.indexNames()));
+                }
+            }
+        });
+
+        ReflectionUtils.doWithFields(domainType, field -> {
+            if (field.isAnnotationPresent(DynamoDbSecondaryPartitionKey.class)) {
+                for (DynamoDbSecondaryPartitionKey annotation : field.getAnnotationsByType(DynamoDbSecondaryPartitionKey.class)) {
+                    gsiNames.addAll(Arrays.asList(annotation.indexNames()));
+                }
+            }
+        });
+
+        return gsiNames;
     }
 
     private String getAttributeName(Method method) {
