@@ -454,7 +454,8 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
                         .attributeName(attributeName)
                         .keyType(KeyType.HASH)
                         .build());
-                attributeTypes.put(attributeName, getScalarType(method.getReturnType()));
+                addAttributeType(domainType, attributeName, getScalarType(method.getReturnType()),
+                    attributeTypes, "partition key on method '" + method.getName() + "'");
             }
         });
 
@@ -466,7 +467,8 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
                         .attributeName(attributeName)
                         .keyType(KeyType.HASH)
                         .build());
-                attributeTypes.put(attributeName, getScalarType(field.getType()));
+                addAttributeType(domainType, attributeName, getScalarType(field.getType()),
+                    attributeTypes, "partition key on field '" + field.getName() + "'");
             }
         });
 
@@ -499,7 +501,8 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
                         .attributeName(attributeName)
                         .keyType(KeyType.RANGE)
                         .build());
-                attributeTypes.put(attributeName, getScalarType(method.getReturnType()));
+                addAttributeType(domainType, attributeName, getScalarType(method.getReturnType()),
+                    attributeTypes, "sort key on method '" + method.getName() + "'");
             }
         });
 
@@ -511,7 +514,8 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
                         .attributeName(attributeName)
                         .keyType(KeyType.RANGE)
                         .build());
-                attributeTypes.put(attributeName, getScalarType(field.getType()));
+                addAttributeType(domainType, attributeName, getScalarType(field.getType()),
+                    attributeTypes, "sort key on field '" + field.getName() + "'");
             }
         });
 
@@ -562,7 +566,8 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
                         }
                         indexPartitionKeys.put(indexName, attributeName);
 
-                        attributeTypes.put(attributeName, getScalarType(method.getReturnType()));
+                        addAttributeType(domainType, attributeName, getScalarType(method.getReturnType()),
+                            attributeTypes, "GSI '" + indexName + "' partition key on method '" + method.getName() + "'");
 
                         GlobalSecondaryIndex.Builder gsiBuilder = gsiBuilders.computeIfAbsent(indexName,
                                 k -> GlobalSecondaryIndex.builder()
@@ -606,7 +611,8 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
                         }
                         indexSortKeys.put(indexName, attributeName);
 
-                        attributeTypes.put(attributeName, getScalarType(method.getReturnType()));
+                        addAttributeType(domainType, attributeName, getScalarType(method.getReturnType()),
+                            attributeTypes, "GSI '" + indexName + "' sort key on method '" + method.getName() + "'");
 
                         GlobalSecondaryIndex.Builder gsiBuilder = gsiBuilders.computeIfAbsent(indexName,
                                 k -> GlobalSecondaryIndex.builder()
@@ -656,7 +662,8 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
                         }
                         indexPartitionKeys.put(indexName, attributeName);
 
-                        attributeTypes.put(attributeName, getScalarType(field.getType()));
+                        addAttributeType(domainType, attributeName, getScalarType(field.getType()),
+                            attributeTypes, "GSI '" + indexName + "' partition key on field '" + field.getName() + "'");
 
                         GlobalSecondaryIndex.Builder gsiBuilder = gsiBuilders.computeIfAbsent(indexName,
                                 k -> GlobalSecondaryIndex.builder()
@@ -700,7 +707,8 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
                         }
                         indexSortKeys.put(indexName, attributeName);
 
-                        attributeTypes.put(attributeName, getScalarType(field.getType()));
+                        addAttributeType(domainType, attributeName, getScalarType(field.getType()),
+                            attributeTypes, "GSI '" + indexName + "' sort key on field '" + field.getName() + "'");
 
                         GlobalSecondaryIndex.Builder gsiBuilder = gsiBuilders.computeIfAbsent(indexName,
                                 k -> GlobalSecondaryIndex.builder()
@@ -807,6 +815,13 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
 
                         String attributeName = getAttributeName(method);
 
+                        // EC-3.3: Warn if LSI sort key is same as table sort key (redundant but valid)
+                        if (tableSortKeyAttributeName != null && tableSortKeyAttributeName.equals(attributeName)) {
+                            LOGGER.warn("LSI configuration for entity {}: Index '{}' uses '{}' as sort key, " +
+                                "which is the same as the table's sort key. This LSI is redundant and provides no benefit.",
+                                domainType.getSimpleName(), indexName, attributeName);
+                        }
+
                         // Validate: Check for duplicate sort keys in LSI
                         if (lsiSortKeys.containsKey(indexName)) {
                             String existing = lsiSortKeys.get(indexName);
@@ -819,7 +834,8 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
                         }
                         lsiSortKeys.put(indexName, attributeName);
 
-                        attributeTypes.put(attributeName, getScalarType(method.getReturnType()));
+                        addAttributeType(domainType, attributeName, getScalarType(method.getReturnType()),
+                            attributeTypes, "LSI '" + indexName + "' sort key on method '" + method.getName() + "'");
 
                         LocalSecondaryIndex.Builder lsiBuilder = lsiBuilders.computeIfAbsent(indexName,
                                 k -> LocalSecondaryIndex.builder()
@@ -873,6 +889,13 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
 
                         String attributeName = getAttributeName(field);
 
+                        // EC-3.3: Warn if LSI sort key is same as table sort key (redundant but valid)
+                        if (tableSortKeyAttributeName != null && tableSortKeyAttributeName.equals(attributeName)) {
+                            LOGGER.warn("LSI configuration for entity {}: Index '{}' uses '{}' as sort key, " +
+                                "which is the same as the table's sort key. This LSI is redundant and provides no benefit.",
+                                domainType.getSimpleName(), indexName, attributeName);
+                        }
+
                         // Validate: Check for duplicate sort keys in LSI
                         if (lsiSortKeys.containsKey(indexName)) {
                             String existing = lsiSortKeys.get(indexName);
@@ -885,7 +908,8 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
                         }
                         lsiSortKeys.put(indexName, attributeName);
 
-                        attributeTypes.put(attributeName, getScalarType(field.getType()));
+                        addAttributeType(domainType, attributeName, getScalarType(field.getType()),
+                            attributeTypes, "LSI '" + indexName + "' sort key on field '" + field.getName() + "'");
 
                         LocalSecondaryIndex.Builder lsiBuilder = lsiBuilders.computeIfAbsent(indexName,
                                 k -> LocalSecondaryIndex.builder()
@@ -1020,6 +1044,26 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
         }
         // Default to String for complex types
         return ScalarAttributeType.S;
+    }
+
+    /**
+     * EC-5.3: Add attribute type to map with validation for consistency.
+     * Ensures that if the same attribute name is defined multiple times (e.g., on method and field),
+     * they have the same type.
+     */
+    private void addAttributeType(Class<T> domainType, String attributeName, ScalarAttributeType type,
+                                   Map<String, ScalarAttributeType> attributeTypes, String location) {
+        if (attributeTypes.containsKey(attributeName)) {
+            ScalarAttributeType existingType = attributeTypes.get(attributeName);
+            if (existingType != type) {
+                throw new IllegalStateException(String.format(
+                    "Invalid attribute configuration for entity %s: Attribute '%s' has conflicting types. " +
+                    "Found type '%s' at %s, but previously defined as type '%s'. " +
+                    "Ensure the same attribute has consistent types across all annotations.",
+                    domainType.getSimpleName(), attributeName, type, location, existingType));
+            }
+        }
+        attributeTypes.put(attributeName, type);
     }
 
     /**

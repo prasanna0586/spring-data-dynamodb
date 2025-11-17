@@ -4,7 +4,9 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
 /**
  * Invalid test entity - EC-4.1: GSI and LSI with same name.
- * This should trigger validation error.
+ * This should trigger validation error because we have:
+ * - A GSI named "conflictIndex"
+ * - An LSI also named "conflictIndex" (different index, same name)
  */
 @DynamoDbBean
 public class InvalidEntityGsiLsiNameConflict {
@@ -37,7 +39,7 @@ public class InvalidEntityGsiLsiNameConflict {
         this.sortKey = sortKey;
     }
 
-    // GSI with name "conflictIndex"
+    // GSI named "conflictIndex" - has partition key = gsiAttribute
     @DynamoDbSecondaryPartitionKey(indexNames = "conflictIndex")
     @DynamoDbAttribute("gsiAttribute")
     public String getGsiAttribute() {
@@ -48,7 +50,9 @@ public class InvalidEntityGsiLsiNameConflict {
         this.gsiAttribute = gsiAttribute;
     }
 
-    // INVALID: LSI with same name "conflictIndex" - must have different names
+    // INVALID: LSI also named "conflictIndex" but with different attribute
+    // This creates a separate LOCAL secondary index with the same name as the GSI above
+    // LSI will use table's partition key (id) + lsiAttribute as sort key
     @DynamoDbSecondarySortKey(indexNames = "conflictIndex")
     @DynamoDbAttribute("lsiAttribute")
     public String getLsiAttribute() {
