@@ -2,7 +2,7 @@ package org.socialsignin.spring.data.dynamodb.repository.util;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.socialsignin.spring.data.dynamodb.domain.sample.*;
+import org.socialsignin.spring.data.dynamodb.domain.validation.*;
 import org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext;
 import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBEntityInformation;
 import org.springframework.beans.factory.annotation.Autowired;

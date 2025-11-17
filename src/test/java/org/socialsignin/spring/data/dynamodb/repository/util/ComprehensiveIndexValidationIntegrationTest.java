@@ -2,7 +2,7 @@ package org.socialsignin.spring.data.dynamodb.repository.util;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.socialsignin.spring.data.dynamodb.domain.sample.*;
+import org.socialsignin.spring.data.dynamodb.domain.validation.*;
 import org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;

@@ -1,4 +1,4 @@
-package org.socialsignin.spring.data.dynamodb.domain.sample;
+package org.socialsignin.spring.data.dynamodb.domain.validation;
 
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 

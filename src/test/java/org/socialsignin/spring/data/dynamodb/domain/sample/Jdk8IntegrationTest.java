@@ -49,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class Jdk8IntegrationTest {
 
     @Configuration
-    @EnableDynamoDBRepositories(basePackages = "org.socialsignin.spring.data.dynamodb.domain.sample")
+    @EnableDynamoDBRepositories(basePackages = "org.socialsignin.spring.data.dynamodb.domain.sample", marshallingMode = org.socialsignin.spring.data.dynamodb.core.MarshallingMode.SDK_V1_COMPATIBLE)
     public static class TestAppConfig {
     }
 

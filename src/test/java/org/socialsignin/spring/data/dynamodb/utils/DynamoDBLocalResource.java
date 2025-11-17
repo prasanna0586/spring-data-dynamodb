@@ -16,8 +16,13 @@
 package org.socialsignin.spring.data.dynamodb.utils;
 
 import org.socialsignin.spring.data.dynamodb.config.AbstractDynamoDBConfiguration;
+import org.socialsignin.spring.data.dynamodb.core.MarshallingMode;
+import org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.test.context.TestExecutionListener;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
@@ -72,6 +77,41 @@ public class DynamoDBLocalResource extends AbstractDynamoDBConfiguration impleme
     @Override
     protected String[] getMappingBasePackages() {
         return new String[]{"org.socialsignin.spring.data.dynamodb.domain.sample"};
+    }
+
+    @Bean
+    @Override
+    public DynamoDBMappingContext dynamoDBMappingContext() {
+        DynamoDBMappingContext mappingContext = new DynamoDBMappingContext();
+        // Explicitly set initial entity set to exclude validation package
+        // This prevents Spring from scanning invalid test entities
+        try {
+            mappingContext.setInitialEntitySet(getInitialEntitySet());
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException("Failed to initialize DynamoDBMappingContext", e);
+        }
+        return mappingContext;
+    }
+
+    @Override
+    protected java.util.Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+        java.util.Set<Class<?>> entitySet = new java.util.HashSet<>();
+        // Scan only the sample package, excluding validation package
+        String[] packages = getMappingBasePackages();
+        for (String packageName : packages) {
+            org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider scanner =
+                new org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider(false);
+            scanner.addIncludeFilter(new org.springframework.core.type.filter.AnnotationTypeFilter(
+                software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean.class));
+            // Exclude validation package
+            scanner.addExcludeFilter(new org.springframework.core.type.filter.RegexPatternTypeFilter(
+                java.util.regex.Pattern.compile(".*\\.validation\\..*")));
+
+            for (org.springframework.beans.factory.config.BeanDefinition bd : scanner.findCandidateComponents(packageName)) {
+                entitySet.add(Class.forName(bd.getBeanClassName()));
+            }
+        }
+        return entitySet;
     }
 
 }

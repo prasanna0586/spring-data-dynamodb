@@ -523,21 +523,35 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
     public <T> PageIterable<T> query(Class<T> clazz, QueryRequest queryRequest) {
         DynamoDbTable<T> table = getTable(clazz);
 
-        // Use the low-level query API and convert to PageIterable
-        SdkIterable<QueryResponse> queryResponses = amazonDynamoDB.queryPaginator(queryRequest);
+        // Manually paginate through query results to avoid infinite iterator issue
+        List<Page<T>> allPages = new ArrayList<>();
+        QueryResponse queryResult = null;
+        QueryRequest mutableQueryRequest = queryRequest;
 
-        // Convert QueryResponse pages to entity pages
-        SdkIterable<Page<T>> pages = () -> queryResponses.stream().map(response -> {
+        do {
+            queryResult = amazonDynamoDB.query(mutableQueryRequest);
+
             // Convert items from the response to entities
-            List<T> items = response.items().stream()
+            List<T> items = queryResult.items().stream()
                     .map(itemMap -> table.tableSchema().mapToItem(itemMap))
                     .collect(Collectors.toList());
 
-            // Create a Page with the items
-            return Page.create(items);
-        }).iterator();
+            // Create a Page with the items and add to results
+            allPages.add(Page.create(items));
 
-        return PageIterable.create(pages);
+            // Check if there are more pages - lastEvaluatedKey can be empty map {} instead of null
+            if (queryResult.lastEvaluatedKey() == null || queryResult.lastEvaluatedKey().isEmpty()) {
+                break;
+            }
+
+            // Set up the next request with the lastEvaluatedKey
+            mutableQueryRequest = mutableQueryRequest.toBuilder()
+                    .exclusiveStartKey(queryResult.lastEvaluatedKey())
+                    .build();
+        } while (true);
+
+        // Convert List<Page<T>> to PageIterable<T>
+        return PageIterable.create(() -> allPages.iterator());
     }
 
     @Override
@@ -572,13 +586,49 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
     @Override
     public <T> int count(Class<T> domainClass, ScanEnhancedRequest scanRequest) {
         DynamoDbTable<T> table = getTable(domainClass);
-        PageIterable<T> results = table.scan(scanRequest);
+        String tableName = table.tableName();
 
-        // Count all items across all pages
-        int count = 0;
-        for (Page<T> page : results) {
-            count += page.items().size();
+        // Convert ScanEnhancedRequest to low-level ScanRequest with SELECT COUNT
+        software.amazon.awssdk.services.dynamodb.model.ScanRequest.Builder scanBuilder =
+            software.amazon.awssdk.services.dynamodb.model.ScanRequest.builder()
+                .tableName(tableName)
+                .select(software.amazon.awssdk.services.dynamodb.model.Select.COUNT);
+
+        // Copy filter expression if present
+        if (scanRequest.filterExpression() != null) {
+            scanBuilder.filterExpression(scanRequest.filterExpression().expression());
+            if (scanRequest.filterExpression().expressionValues() != null) {
+                scanBuilder.expressionAttributeValues(scanRequest.filterExpression().expressionValues());
+            }
+            if (scanRequest.filterExpression().expressionNames() != null) {
+                scanBuilder.expressionAttributeNames(scanRequest.filterExpression().expressionNames());
+            }
         }
+
+        // Copy limit if present
+        if (scanRequest.limit() != null) {
+            scanBuilder.limit(scanRequest.limit());
+        }
+
+        // Paginate through scan results counting items
+        int count = 0;
+        software.amazon.awssdk.services.dynamodb.model.ScanResponse scanResult = null;
+        software.amazon.awssdk.services.dynamodb.model.ScanRequest mutableScanRequest = scanBuilder.build();
+
+        do {
+            scanResult = amazonDynamoDB.scan(mutableScanRequest);
+            count += scanResult.count();
+
+            // Check if there are more pages to scan
+            if (scanResult.lastEvaluatedKey() == null || scanResult.lastEvaluatedKey().isEmpty()) {
+                break;
+            }
+
+            mutableScanRequest = mutableScanRequest.toBuilder()
+                .exclusiveStartKey(scanResult.lastEvaluatedKey())
+                .build();
+        } while (true);
+
         return count;
     }
 
@@ -592,8 +642,14 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
         do {
             queryResult = amazonDynamoDB.query(mutableQueryRequest);
             count += queryResult.count();
+
+            // Check if there are more pages - lastEvaluatedKey can be empty map {} instead of null
+            if (queryResult.lastEvaluatedKey() == null || queryResult.lastEvaluatedKey().isEmpty()) {
+                break;
+            }
+
             mutableQueryRequest = mutableQueryRequest.toBuilder().exclusiveStartKey(queryResult.lastEvaluatedKey()).build();
-        } while (queryResult.lastEvaluatedKey() != null);
+        } while (true);
 
         return count;
     }
