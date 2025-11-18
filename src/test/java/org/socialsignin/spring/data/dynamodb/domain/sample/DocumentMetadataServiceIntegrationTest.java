@@ -56,9 +56,6 @@ public class DocumentMetadataServiceIntegrationTest {
     @Autowired
     private DocumentMetadataRepository repository;
 
-    @Autowired
-    private DynamoDbClient amazonDynamoDB;
-
     private static final List<String> testDocumentIds = new ArrayList<>();
 
     @AfterAll

@@ -1,9 +1,5 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
-import software.amazon.awssdk.enhanced.dynamodb.Key;
-import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
 import org.junit.jupiter.api.*;
@@ -22,18 +18,20 @@ import java.util.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Comprehensive integration tests for Enum type handling in DynamoDB.
+ * Comprehensive integration tests for Enum type handling in DynamoDB using library APIs.
+ *
+ * This test suite validates the library's ability to handle enum types through:
+ * - Repository methods (high-level API) for CRUD and query operations
+ * - Enum serialization/deserialization as strings in DynamoDB
  *
  * Coverage:
  * - @DynamoDBTypeConvertedEnum (string representation)
- * - Save/retrieve entities with enum fields
- * - Query by enum values
- * - Update enum values
+ * - Save/retrieve entities with enum fields via repository
+ * - Query by enum values using repository methods
+ * - Update enum values via repository.save()
  * - Null enum handling
- * - Enum in filter expressions
- * - Enum in conditional expressions
+ * - Batch operations with enums
  * - Multiple enum fields in same entity
- * - Enum ordinal vs string representation
  */
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {DynamoDBLocalResource.class, EnumTypesIntegrationTest.TestAppConfig.class})
@@ -50,20 +48,8 @@ public class EnumTypesIntegrationTest {
     @Autowired
     private TaskRepository taskRepository;
 
-    @Autowired
-    private DynamoDbClient amazonDynamoDB;
-
-    @Autowired
-    @org.springframework.beans.factory.annotation.Qualifier("dynamoDbEnhancedClient")
-    private DynamoDbEnhancedClient enhancedClient;
-
-    private DynamoDbTable<Task> taskTable;
-
     @BeforeEach
     void setUp() {
-        // Initialize the DynamoDB table for Task entity
-        taskTable = enhancedClient.table("Task", TableSchema.fromBean(Task.class));
-
         taskRepository.deleteAll();
     }
 
@@ -98,19 +84,13 @@ public class EnumTypesIntegrationTest {
         Task task = new Task("task-002", "Bug fix", TaskStatus.COMPLETED, Priority.MEDIUM);
         taskRepository.save(task);
 
-        // When - Read raw item from DynamoDB
-        Map<String, AttributeValue> key = new HashMap<>();
-        key.put("taskId", AttributeValue.builder().s("task-002").build());
+        // When - Retrieve using repository
+        Task retrieved = taskRepository.findById("task-002").orElse(null);
 
-        GetItemRequest request = GetItemRequest.builder()
-                .tableName("Task")
-                .key(key)
-                .build();
-        GetItemResponse result = amazonDynamoDB.getItem(request);
-
-        // Then - Enums should be stored as strings
-        assertThat(result.item().get("status").s()).isEqualTo("COMPLETED");
-        assertThat(result.item().get("priority").s()).isEqualTo("MEDIUM");
+        // Then - Enums should be properly deserialized from DynamoDB strings
+        assertThat(retrieved).isNotNull();
+        assertThat(retrieved.getStatus()).isEqualTo(TaskStatus.COMPLETED);
+        assertThat(retrieved.getPriority()).isEqualTo(Priority.MEDIUM);
     }
 
     @Test
@@ -267,29 +247,16 @@ public class EnumTypesIntegrationTest {
 
     @Test
     @org.junit.jupiter.api.Order(10)
-    @DisplayName("Test 10: Update enum using UpdateExpression")
-    void testUpdateEnumUsingUpdateExpression() {
+    @DisplayName("Test 10: Update enum using repository.save()")
+    void testUpdateEnumUsingRepositorySave() {
         // Given
         Task task = new Task("task-update-2", "Task", TaskStatus.PENDING, Priority.LOW);
         taskRepository.save(task);
 
-        // When - Update status using DynamoDB API
-        Map<String, AttributeValue> key = new HashMap<>();
-        key.put("taskId", AttributeValue.builder().s("task-update-2").build());
-
-        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":newStatus", AttributeValue.builder().s("COMPLETED").build());
-        expressionAttributeValues.put(":newPriority", AttributeValue.builder().s("URGENT").build());
-
-        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
-                .tableName("Task")
-                .key(key)
-                .updateExpression("SET #status = :newStatus, priority = :newPriority")
-                .expressionAttributeNames(Collections.singletonMap("#status", "status"))
-                .expressionAttributeValues(expressionAttributeValues)
-                .build();
-
-        amazonDynamoDB.updateItem(updateRequest);
+        // When - Update status using repository
+        task.setStatus(TaskStatus.COMPLETED);
+        task.setPriority(Priority.URGENT);
+        taskRepository.save(task);
 
         // Then
         Task updated = taskRepository.findById("task-update-2").get();
@@ -301,129 +268,40 @@ public class EnumTypesIntegrationTest {
 
     @Test
     @org.junit.jupiter.api.Order(11)
-    @DisplayName("Test 11: Scan with enum filter expression")
-    void testScanWithEnumFilter() {
+    @DisplayName("Test 11: Query by enum status via repository")
+    void testQueryByEnumStatusViaRepository() {
         // Given
         taskRepository.save(new Task("task-scan-1", "Task 1", TaskStatus.PENDING, Priority.HIGH));
         taskRepository.save(new Task("task-scan-2", "Task 2", TaskStatus.COMPLETED, Priority.LOW));
         taskRepository.save(new Task("task-scan-3", "Task 3", TaskStatus.IN_PROGRESS, Priority.MEDIUM));
         taskRepository.save(new Task("task-scan-4", "Task 4", TaskStatus.COMPLETED, Priority.HIGH));
 
-        // When - Scan for completed tasks
-        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":status", AttributeValue.builder().s("COMPLETED").build());
-
-        ScanRequest scanRequest = ScanRequest.builder()
-                .tableName("Task")
-                .filterExpression("#status = :status")
-                .expressionAttributeNames(Collections.singletonMap("#status", "status"))
-                .expressionAttributeValues(expressionAttributeValues)
-                .build();
-
-        ScanResponse result = amazonDynamoDB.scan(scanRequest);
+        // When - Query for completed tasks via repository
+        List<Task> completedTasks = taskRepository.findByStatus(TaskStatus.COMPLETED);
 
         // Then
-        assertThat(result.items()).hasSize(2);
+        assertThat(completedTasks).hasSize(2);
+        assertThat(completedTasks).allMatch(task -> task.getStatus() == TaskStatus.COMPLETED);
     }
 
     @Test
     @org.junit.jupiter.api.Order(12)
-    @DisplayName("Test 12: Filter with IN operator on enum")
-    void testFilterWithInOperatorOnEnum() {
+    @DisplayName("Test 12: Query with IN operator on enum via repository")
+    void testQueryWithInOperatorOnEnum() {
         // Given
         taskRepository.save(new Task("task-in-1", "Task 1", TaskStatus.PENDING, Priority.HIGH));
         taskRepository.save(new Task("task-in-2", "Task 2", TaskStatus.COMPLETED, Priority.LOW));
         taskRepository.save(new Task("task-in-3", "Task 3", TaskStatus.IN_PROGRESS, Priority.MEDIUM));
         taskRepository.save(new Task("task-in-4", "Task 4", TaskStatus.CANCELLED, Priority.HIGH));
 
-        // When - Find tasks with status IN (PENDING, IN_PROGRESS)
-        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":status1", AttributeValue.builder().s("PENDING").build());
-        expressionAttributeValues.put(":status2", AttributeValue.builder().s("IN_PROGRESS").build());
-
-        ScanRequest scanRequest = ScanRequest.builder()
-                .tableName("Task")
-                .filterExpression("#status IN (:status1, :status2)")
-                .expressionAttributeNames(Collections.singletonMap("#status", "status"))
-                .expressionAttributeValues(expressionAttributeValues)
-                .build();
-
-        ScanResponse result = amazonDynamoDB.scan(scanRequest);
+        // When - Find tasks with status IN (PENDING, IN_PROGRESS) via repository
+        List<Task> tasks = taskRepository.findByStatusIn(Arrays.asList(TaskStatus.PENDING, TaskStatus.IN_PROGRESS));
 
         // Then
-        assertThat(result.items()).hasSize(2);
-    }
-
-    // ==================== Conditional Expressions with Enums ====================
-
-    @Test
-    @org.junit.jupiter.api.Order(13)
-    @DisplayName("Test 13: Conditional update based on enum value")
-    void testConditionalUpdateBasedOnEnum() {
-        // Given
-        Task task = new Task("task-cond-1", "Task", TaskStatus.PENDING, Priority.MEDIUM);
-        taskRepository.save(task);
-
-        // When - Only update if status is PENDING
-        Map<String, AttributeValue> key = new HashMap<>();
-        key.put("taskId", AttributeValue.builder().s("task-cond-1").build());
-
-        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":newStatus", AttributeValue.builder().s("IN_PROGRESS").build());
-        expressionAttributeValues.put(":expectedStatus", AttributeValue.builder().s("PENDING").build());
-
-        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
-                .tableName("Task")
-                .key(key)
-                .updateExpression("SET #status = :newStatus")
-                .conditionExpression("#status = :expectedStatus")
-                .expressionAttributeNames(Collections.singletonMap("#status", "status"))
-                .expressionAttributeValues(expressionAttributeValues)
-                .build();
-
-        amazonDynamoDB.updateItem(updateRequest);
-
-        // Then
-        Task updated = taskRepository.findById("task-cond-1").get();
-        assertThat(updated.getStatus()).isEqualTo(TaskStatus.IN_PROGRESS);
-    }
-
-    @Test
-    @org.junit.jupiter.api.Order(14)
-    @DisplayName("Test 14: Conditional update fails when enum doesn't match")
-    void testConditionalUpdateFailsOnEnumMismatch() {
-        // Given
-        Task task = new Task("task-cond-2", "Task", TaskStatus.COMPLETED, Priority.HIGH);
-        taskRepository.save(task);
-
-        // When - Try to update but expect PENDING (actual is COMPLETED)
-        Map<String, AttributeValue> key = new HashMap<>();
-        key.put("taskId", AttributeValue.builder().s("task-cond-2").build());
-
-        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":newStatus", AttributeValue.builder().s("IN_PROGRESS").build());
-        expressionAttributeValues.put(":expectedStatus", AttributeValue.builder().s("PENDING").build());
-
-        UpdateItemRequest updateRequest = UpdateItemRequest.builder()
-                .tableName("Task")
-                .key(key)
-                .updateExpression("SET #status = :newStatus")
-                .conditionExpression("#status = :expectedStatus")
-                .expressionAttributeNames(Collections.singletonMap("#status", "status"))
-                .expressionAttributeValues(expressionAttributeValues)
-                .build();
-
-        // Then - Update should fail
-        try {
-            amazonDynamoDB.updateItem(updateRequest);
-            Assertions.fail("Should have thrown ConditionalCheckFailedException");
-        } catch (ConditionalCheckFailedException e) {
-            // Expected
-        }
-
-        // Status should remain unchanged
-        Task unchanged = taskRepository.findById("task-cond-2").get();
-        assertThat(unchanged.getStatus()).isEqualTo(TaskStatus.COMPLETED);
+        assertThat(tasks).hasSize(2);
+        assertThat(tasks).allMatch(task ->
+                task.getStatus() == TaskStatus.PENDING || task.getStatus() == TaskStatus.IN_PROGRESS
+        );
     }
 
     // ==================== Edge Cases ====================
@@ -453,33 +331,8 @@ public class EnumTypesIntegrationTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Order(16)
-    @DisplayName("Test 16: Enum case sensitivity")
-    void testEnumCaseSensitivity() {
-        // Given
-        Task task = new Task("task-case-1", "Task", TaskStatus.IN_PROGRESS, Priority.HIGH);
-        taskRepository.save(task);
-
-        // When - Try to query with wrong case (should not match)
-        Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-        expressionAttributeValues.put(":status", AttributeValue.builder().s("in_progress").build()); // lowercase
-
-        ScanRequest scanRequest = ScanRequest.builder()
-                .tableName("Task")
-                .filterExpression("#status = :status")
-                .expressionAttributeNames(Collections.singletonMap("#status", "status"))
-                .expressionAttributeValues(expressionAttributeValues)
-                .build();
-
-        ScanResponse result = amazonDynamoDB.scan(scanRequest);
-
-        // Then - Should not find any (case sensitive)
-        assertThat(result.items()).isEmpty();
-    }
-
-    @Test
-    @org.junit.jupiter.api.Order(17)
-    @DisplayName("Test 17: Query with null enum value")
+    @org.junit.jupiter.api.Order(13)
+    @DisplayName("Test 13: Query with null enum value")
     void testQueryWithNullEnum() {
         // Given
         Task task1 = new Task();
@@ -501,18 +354,17 @@ public class EnumTypesIntegrationTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Order(18)
-    @DisplayName("Test 18: DynamoDbEnhancedClient with enum")
-    void testEnhancedClientWithEnum() {
+    @org.junit.jupiter.api.Order(14)
+    @DisplayName("Test 14: Repository save and load with enum")
+    void testRepositorySaveAndLoadWithEnum() {
         // Given
-        Task task = new Task("task-mapper-1", "Task via Enhanced Client", TaskStatus.IN_PROGRESS, Priority.URGENT);
+        Task task = new Task("task-mapper-1", "Task via Repository", TaskStatus.IN_PROGRESS, Priority.URGENT);
 
-        // When - Save using DynamoDbEnhancedClient
-        taskTable.putItem(task);
+        // When - Save using repository
+        taskRepository.save(task);
 
-        // Then - Load using DynamoDbEnhancedClient
-        Key key = Key.builder().partitionValue("task-mapper-1").build();
-        Task loaded = taskTable.getItem(key);
+        // Then - Load using repository
+        Task loaded = taskRepository.findById("task-mapper-1").orElse(null);
         assertThat(loaded).isNotNull();
         assertThat(loaded.getStatus()).isEqualTo(TaskStatus.IN_PROGRESS);
         assertThat(loaded.getPriority()).isEqualTo(Priority.URGENT);

@@ -145,4 +145,27 @@ public interface UserRepository extends CrudRepository<User, String> {
 
     @EnableScan
     List<User> findByPostCodeNot(String postCode);
+
+    // Advanced query pattern methods for AdvancedQueryPatternsIntegrationTest
+    @EnableScan
+    List<User> findByNumberOfPlaylistsBetween(Integer min, Integer max);
+
+    @EnableScan
+    List<User> findByPostCodeIn(List<String> postCodes);
+
+    @EnableScan
+    List<User> findByNameStartingWith(String prefix);
+
+    @EnableScan
+    List<User> findByNameContaining(String substring);
+
+    @EnableScan
+    List<User> findByPostCodeAndNumberOfPlaylistsGreaterThan(String postCode, Integer minPlaylists);
+
+    // DAX pattern methods for DAXIntegrationPatternsTest
+    @EnableScan
+    List<User> findByNumberOfPlaylistsLessThan(Integer maxPlaylists);
+
+    @EnableScan
+    List<User> findByIdStartingWith(String prefix);
 }

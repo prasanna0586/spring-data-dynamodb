@@ -63,7 +63,7 @@ public class Task {
         this.description = description;
     }
 
-    @DynamoDbAttribute("status")
+    @DynamoDbAttribute("taskStatus")
     public TaskStatus getStatus() {
         return status;
     }

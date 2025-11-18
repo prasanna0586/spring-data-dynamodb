@@ -1,7 +1,4 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
-import software.amazon.awssdk.awscore.exception.AwsServiceException;
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -43,9 +40,6 @@ public class ThrottlingAndRetryIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;
-
-    @Autowired
-    private DynamoDbClient amazonDynamoDB;
 
     @BeforeEach
     void setUp() {
@@ -134,27 +128,7 @@ public class ThrottlingAndRetryIntegrationTest {
 
     @Test
     @org.junit.jupiter.api.Order(4)
-    @DisplayName("Test 4: Handle AmazonServiceException gracefully")
-    void testHandleAmazonServiceException() {
-        // When - Invalid table name
-        ScanRequest scanRequest = ScanRequest.builder()
-                .tableName("Invalid@Table#Name")
-                .build();
-
-        // Then - Should throw AmazonServiceException
-        try {
-            amazonDynamoDB.scan(scanRequest);
-            Assertions.fail("Should have thrown exception");
-        } catch (AwsServiceException e) {
-            // Expected - log and handle
-            System.out.println("Caught expected exception: " + e.awsErrorDetails().errorCode());
-            assertThat(e.awsErrorDetails().sdkHttpResponse().statusCode()).isGreaterThanOrEqualTo(400);
-        }
-    }
-
-    @Test
-    @org.junit.jupiter.api.Order(5)
-    @DisplayName("Test 5: Retry pattern for transient failures")
+    @DisplayName("Test 4: Retry pattern for transient failures")
     void testRetryPatternForTransientFailures() {
         // Given - Operation that might fail transiently
         User user = new User();
@@ -192,8 +166,8 @@ public class ThrottlingAndRetryIntegrationTest {
     // ==================== Best Practices ====================
 
     @Test
-    @org.junit.jupiter.api.Order(6)
-    @DisplayName("Test 6: Chunked batch operations to avoid throttling")
+    @org.junit.jupiter.api.Order(5)
+    @DisplayName("Test 5: Chunked batch operations to avoid throttling")
     void testChunkedBatchOperations() {
         // Given - Large dataset
         int totalItems = 250;
@@ -231,8 +205,8 @@ public class ThrottlingAndRetryIntegrationTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Order(7)
-    @DisplayName("Test 7: Parallel write operations")
+    @org.junit.jupiter.api.Order(6)
+    @DisplayName("Test 6: Parallel write operations")
     void testParallelWriteOperations() {
         // Given - Items to write in parallel
         int itemsPerThread = 25;
@@ -269,8 +243,8 @@ public class ThrottlingAndRetryIntegrationTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Order(8)
-    @DisplayName("Test 8: Demonstrate exponential backoff calculation")
+    @org.junit.jupiter.api.Order(7)
+    @DisplayName("Test 7: Demonstrate exponential backoff calculation")
     void testExponentialBackoffCalculation() {
         // Demonstrate exponential backoff intervals
         int maxRetries = 5;
@@ -288,8 +262,8 @@ public class ThrottlingAndRetryIntegrationTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Order(9)
-    @DisplayName("Test 9: Handle batch write with rate limiting")
+    @org.junit.jupiter.api.Order(8)
+    @DisplayName("Test 8: Handle batch write with rate limiting")
     void testBatchWriteWithRateLimiting() {
         // Given - Items to write with rate limiting
         int totalItems = 100;
@@ -328,8 +302,8 @@ public class ThrottlingAndRetryIntegrationTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Order(10)
-    @DisplayName("Test 10: Monitor and log operation durations")
+    @org.junit.jupiter.api.Order(9)
+    @DisplayName("Test 9: Monitor and log operation durations")
     void testMonitorOperationDurations() {
         // Given - Various operations to monitor
         List<Long> durations = new ArrayList<>();

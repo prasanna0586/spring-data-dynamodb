@@ -46,7 +46,6 @@ public class Entity2DynamoDBTableSynchronizerTest<T, ID> {
 
     private Entity2DynamoDBTableSynchronizer<T, ID> underTest;
     private MockedStatic<software.amazon.awssdk.services.dynamodb.waiters.DynamoDbWaiter> waiterMock;
-    private software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable<?> mockTable;
     @Mock
     private DynamoDbClient amazonDynamoDB;
     @Mock
@@ -90,9 +89,9 @@ public class Entity2DynamoDBTableSynchronizerTest<T, ID> {
     }
 
     private void setupCreateTableMocks() {
-        // Mock Enhanced Client table operations
-        mockTable = mock(software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable.class);
-        when(enhancedClient.table(anyString(), any(software.amazon.awssdk.enhanced.dynamodb.TableSchema.class))).thenReturn(mockTable);
+        // Mock createTable response
+        CreateTableResponse createResponse = CreateTableResponse.builder().build();
+        when(amazonDynamoDB.createTable(any(CreateTableRequest.class))).thenReturn(createResponse);
 
         // Mock the waiter static builder
         software.amazon.awssdk.services.dynamodb.waiters.DynamoDbWaiter mockWaiter = mock(software.amazon.awssdk.services.dynamodb.waiters.DynamoDbWaiter.class);
@@ -162,16 +161,21 @@ public class Entity2DynamoDBTableSynchronizerTest<T, ID> {
         setupDeleteTableMocks();
         setUp(Entity2DDL.CREATE);
 
+        // When - Start context (should drop if exists, then create)
         runContextStart();
-        // With Enhanced Client migration, verify Enhanced Client interactions
-        verify(enhancedClient).table(eq("tableName"), any(software.amazon.awssdk.enhanced.dynamodb.TableSchema.class));
-        verify(mockTable).createTable(any(java.util.function.Consumer.class));
+
+        // Then - Verify table creation on startup
+        verify(amazonDynamoDB).createTable(any(CreateTableRequest.class));
         // Note: First deleteTable on startup doesn't actually call amazonDynamoDB.deleteTable()
         // because the table doesn't exist and ResourceNotFoundException is caught
 
+        // When - Stop context (should delete table)
         runContextStop();
-        // Verify deleteTable was called on shutdown
+
+        // Then - Verify table deletion on shutdown
         verify(amazonDynamoDB).deleteTable(any(DeleteTableRequest.class));
+        // CREATE mode should NOT recreate on shutdown
+        verify(amazonDynamoDB, times(1)).createTable(any(CreateTableRequest.class));
     }
 
     @Test
@@ -180,9 +184,19 @@ public class Entity2DynamoDBTableSynchronizerTest<T, ID> {
         setupDeleteTableMocks();
         setUp(Entity2DDL.DROP);
 
+        // When - Start context (DROP mode does nothing on start)
         runContextStart();
 
+        // Then - Verify no operations on startup
+        verify(amazonDynamoDB, never()).createTable(any(CreateTableRequest.class));
+        verify(amazonDynamoDB, never()).deleteTable(any(DeleteTableRequest.class));
+
+        // When - Stop context (DROP mode drops and recreates on shutdown)
         runContextStop();
+
+        // Then - Verify drop and recreate on shutdown
+        verify(amazonDynamoDB).deleteTable(any(DeleteTableRequest.class));
+        verify(amazonDynamoDB).createTable(any(CreateTableRequest.class));
     }
 
     @Test
@@ -190,13 +204,16 @@ public class Entity2DynamoDBTableSynchronizerTest<T, ID> {
         setupCreateTableMocks();
         setUp(Entity2DDL.CREATE_ONLY);
 
+        // When - Start context (CREATE_ONLY creates table)
         runContextStart();
-        // With Enhanced Client migration, verify Enhanced Client interactions
-        verify(enhancedClient).table(eq("tableName"), any(software.amazon.awssdk.enhanced.dynamodb.TableSchema.class));
-        verify(mockTable).createTable(any(java.util.function.Consumer.class));
 
+        // Then - Verify table creation on startup
+        verify(amazonDynamoDB).createTable(any(CreateTableRequest.class));
+
+        // When - Stop context (CREATE_ONLY should NOT delete on shutdown)
         runContextStop();
-        // CREATE_ONLY mode should not delete on shutdown
+
+        // Then - CREATE_ONLY mode should not delete on shutdown
         verify(amazonDynamoDB, never()).deleteTable(any(DeleteTableRequest.class));
     }
 
@@ -206,8 +223,64 @@ public class Entity2DynamoDBTableSynchronizerTest<T, ID> {
         setupDeleteTableMocks();
         setUp(Entity2DDL.CREATE_DROP);
 
+        // When - Start context (CREATE_DROP drops if exists, then creates)
         runContextStart();
 
+        // Then - Verify table creation on startup
+        verify(amazonDynamoDB).createTable(any(CreateTableRequest.class));
+        // Note: First deleteTable on startup throws ResourceNotFoundException (caught), then succeeds on shutdown
+
+        // When - Stop context (CREATE_DROP drops and recreates on shutdown)
         runContextStop();
+
+        // Then - Verify drop and recreate on shutdown
+        // deleteTable is called twice: once on startup (throws exception, caught), once on shutdown (succeeds)
+        verify(amazonDynamoDB, times(2)).deleteTable(any(DeleteTableRequest.class));
+        // Verify createTable was called twice: once on startup, once on shutdown
+        verify(amazonDynamoDB, times(2)).createTable(any(CreateTableRequest.class));
+    }
+
+    @Test
+    public void testValidate() {
+        setUp(Entity2DDL.VALIDATE);
+
+        // Mock describeTable to return a matching table description
+        TableDescription tableDescription = TableDescription.builder()
+                .tableName("tableName")
+                .tableStatus(TableStatus.ACTIVE)
+                .keySchema(
+                        KeySchemaElement.builder()
+                                .attributeName("id")
+                                .keyType(KeyType.HASH)
+                                .build()
+                )
+                .attributeDefinitions(
+                        AttributeDefinition.builder()
+                                .attributeName("id")
+                                .attributeType(ScalarAttributeType.S)
+                                .build()
+                )
+                .build();
+
+        DescribeTableResponse describeResponse = DescribeTableResponse.builder()
+                .table(tableDescription)
+                .build();
+
+        when(amazonDynamoDB.describeTable(any(DescribeTableRequest.class))).thenReturn(describeResponse);
+
+        // When - Start context (VALIDATE mode validates table exists and matches schema)
+        runContextStart();
+
+        // Then - Verify describeTable was called to validate
+        verify(amazonDynamoDB).describeTable(any(DescribeTableRequest.class));
+        // VALIDATE mode should not create or delete tables
+        verify(amazonDynamoDB, never()).createTable(any(CreateTableRequest.class));
+        verify(amazonDynamoDB, never()).deleteTable(any(DeleteTableRequest.class));
+
+        // When - Stop context (VALIDATE mode does nothing on stop)
+        runContextStop();
+
+        // Then - Verify no operations on shutdown (only the one describeTable from startup)
+        verify(amazonDynamoDB, times(1)).describeTable(any(DescribeTableRequest.class));
     }
 }

@@ -34,13 +34,8 @@ import static org.mockito.Mockito.spy;
 
 @ExtendWith(MockitoExtension.class)
 public class DynamoDBRepositoryFactoryBeanTest {
-
-    @Mock
-    private ApplicationContext applicationContext;
     @Mock
     private DynamoDBOperations dynamoDBOperations;
-    @Mock
-    private DynamoDbClient amazonDynamoDB;
     @Mock
     private Entity2DynamoDBTableSynchronizer<User, String> tableSynchronizer;
     @Mock

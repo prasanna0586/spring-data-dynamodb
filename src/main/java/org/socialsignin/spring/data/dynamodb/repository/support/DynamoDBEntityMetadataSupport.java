@@ -262,6 +262,24 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
             }
         }
 
+        // No custom converter annotation found, check if AWS SDK v2 has a default converter for this type
+        // This allows enums and other types to work natively without requiring custom converters
+        Class<?> propertyType = null;
+        if (method != null) {
+            propertyType = method.getReturnType();
+        } else {
+            Field field = findField(propertyName);
+            if (field != null) {
+                propertyType = field.getType();
+            }
+        }
+
+        if (propertyType != null) {
+            software.amazon.awssdk.enhanced.dynamodb.DefaultAttributeConverterProvider defaultProvider =
+                software.amazon.awssdk.enhanced.dynamodb.DefaultAttributeConverterProvider.create();
+            return defaultProvider.converterFor(software.amazon.awssdk.enhanced.dynamodb.EnhancedType.of(propertyType));
+        }
+
         return null;
     }
 

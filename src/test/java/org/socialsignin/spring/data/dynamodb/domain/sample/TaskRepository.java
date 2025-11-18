@@ -23,6 +23,8 @@ public interface TaskRepository extends CrudRepository<Task, String> {
 
     long countByStatus(TaskStatus status);
 
+    List<Task> findByStatusIn(List<TaskStatus> statuses);
+
     @Override
     long count();
 }

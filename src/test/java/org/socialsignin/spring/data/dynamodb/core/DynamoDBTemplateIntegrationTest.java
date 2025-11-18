@@ -38,8 +38,6 @@ import java.util.UUID;
 public class DynamoDBTemplateIntegrationTest {
 
     @Autowired
-    private DynamoDbClient amazonDynamoDB;
-    @Autowired
     private DynamoDBTemplate dynamoDBTemplate;
 
     @Configuration

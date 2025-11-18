@@ -1,13 +1,12 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
 import org.socialsignin.spring.data.dynamodb.utils.DynamoDBLocalResource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -19,17 +18,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Integration tests for Error Recovery scenarios in DynamoDB operations.
+ * Integration tests for Error Recovery scenarios using spring-data-dynamodb repository methods.
  *
- * Coverage:
- * - Partial batch write failures
- * - Batch write with unprocessed items
- * - Retry logic for unprocessed items
- * - Partial batch read failures
- * - Transaction partial failures and rollback
- * - Handling of various DynamoDB exceptions
- * - Recovery from conditional check failures
- * - Handling malformed requests
+ * This test suite validates the library's error handling and recovery capabilities:
+ * - Repository batch operations with large datasets
+ * - Handling non-existent items in batch operations
+ * - Repository save/update error handling
+ * - Duplicate key handling through repository
+ * - Null value handling
+ * - Optional empty handling for missing items
+ *
+ * Note: Tests focus on library behavior, not low-level AWS SDK error handling.
  */
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {DynamoDBLocalResource.class, ErrorRecoveryIntegrationTest.TestAppConfig.class})
@@ -49,47 +48,38 @@ public class ErrorRecoveryIntegrationTest {
     @Autowired
     private BankAccountRepository accountRepository;
 
-    @Autowired
-    private DynamoDbClient amazonDynamoDB;
-
     @BeforeEach
     void setUp() {
         userRepository.deleteAll();
         accountRepository.deleteAll();
     }
 
-    // ==================== Batch Write Error Recovery ====================
+    // ==================== Repository Batch Operations Error Handling ====================
 
     @Test
     @org.junit.jupiter.api.Order(1)
-    @DisplayName("Test 1: Batch write with duplicate keys returns unprocessed items")
-    void testBatchWriteWithDuplicateKeys() {
-        // Given - Batch request with duplicate keys (violates DynamoDB constraint)
-        List<WriteRequest> writeRequests = new ArrayList<>();
+    @DisplayName("Test 1: Repository handles duplicate key saves (last write wins)")
+    void testRepositoryHandlesDuplicateKeySaves() {
+        // Given - Same entity saved twice with different values
+        User user1 = new User();
+        user1.setId("duplicate-key");
+        user1.setName("First Name");
+        user1.setNumberOfPlaylists(10);
 
-        // Two items with same key
-        Map<String, AttributeValue> item1 = new HashMap<>();
-        item1.put("Id", AttributeValue.builder().s("duplicate-key").build());
-        item1.put("name", AttributeValue.builder().s("Item 1").build());
-        writeRequests.add(WriteRequest.builder().putRequest(PutRequest.builder().item(item1)
-                .build())
-                .build());
+        User user2 = new User();
+        user2.setId("duplicate-key");
+        user2.setName("Second Name");
+        user2.setNumberOfPlaylists(20);
 
-        Map<String, AttributeValue> item2 = new HashMap<>();
-        item2.put("Id", AttributeValue.builder().s("duplicate-key").build());
-        item2.put("name", AttributeValue.builder().s("Item 2").build());
-        writeRequests.add(WriteRequest.builder().putRequest(PutRequest.builder().item(item2)
-                .build())
-                .build());
+        // When - Save both (last write wins in DynamoDB)
+        userRepository.save(user1);
+        userRepository.save(user2);
 
-        BatchWriteItemRequest batchRequest = BatchWriteItemRequest.builder()
-                .requestItems(Collections.singletonMap("user", writeRequests))
-                .build();
-
-        // When/Then - Should throw validation exception
-        assertThatThrownBy(() -> amazonDynamoDB.batchWriteItem(batchRequest))
-                .isInstanceOf(DynamoDbException.class)
-                .hasMessageContaining("duplicate");
+        // Then - Should contain the last saved values
+        User retrieved = userRepository.findById("duplicate-key").orElse(null);
+        assertThat(retrieved).isNotNull();
+        assertThat(retrieved.getName()).isEqualTo("Second Name");
+        assertThat(retrieved.getNumberOfPlaylists()).isEqualTo(20);
     }
 
     @Test
@@ -128,35 +118,24 @@ public class ErrorRecoveryIntegrationTest {
         assertThat(userRepository.count()).isEqualTo(25);
     }
 
-    // ==================== Batch Read Error Recovery ====================
+    // ==================== Repository Batch Read Error Handling ====================
 
     @Test
     @org.junit.jupiter.api.Order(4)
-    @DisplayName("Test 4: Batch get with non-existent keys")
-    void testBatchGetWithNonExistentKeys() {
+    @DisplayName("Test 4: Repository batch get with non-existent keys")
+    void testRepositoryBatchGetWithNonExistentKeys() {
         // Given - Some existing users
         userRepository.save(createUser("exists-1", "User 1"));
         userRepository.save(createUser("exists-2", "User 2"));
 
-        // When - Batch get including non-existent keys
-        Map<String, KeysAndAttributes> requestItems = new HashMap<>();
+        // When - Repository findAllById with mixed existing and non-existent IDs
+        List<String> ids = Arrays.asList("exists-1", "non-existent", "exists-2");
+        List<User> results = (List<User>) userRepository.findAllById(ids);
 
-        List<Map<String, AttributeValue>> keys = Arrays.asList(
-                Collections.singletonMap("Id", AttributeValue.builder().s("exists-1").build()),
-                Collections.singletonMap("Id", AttributeValue.builder().s("non-existent").build()),
-                Collections.singletonMap("Id", AttributeValue.builder().s("exists-2").build())
-        );
-
-        requestItems.put("user", KeysAndAttributes.builder().keys(keys)
-                .build());
-
-        BatchGetItemRequest batchGetRequest = BatchGetItemRequest.builder()
-                .requestItems(requestItems)
-                .build();
-        BatchGetItemResponse result = amazonDynamoDB.batchGetItem(batchGetRequest);
-
-        // Then - Should return only existing items
-        assertThat(result.responses().get("user")).hasSize(2);
+        // Then - Should return only existing items (library filters out non-existent)
+        assertThat(results).hasSize(2);
+        assertThat(results).extracting(User::getId)
+                .containsExactlyInAnyOrder("exists-1", "exists-2");
     }
 
     @Test
@@ -181,201 +160,98 @@ public class ErrorRecoveryIntegrationTest {
         assertThat(retrieved).hasSize(50);
     }
 
-    // ==================== Transaction Error Recovery ====================
+    // ==================== Repository Item Not Found Handling ====================
 
     @Test
     @org.junit.jupiter.api.Order(6)
-    @DisplayName("Test 6: Transaction rollback on conditional check failure")
-    void testTransactionRollbackOnConditionalFailure() {
-        // Given - Two accounts
-        accountRepository.save(new BankAccount("txn-err-1", "Alice", 1000.0));
-        accountRepository.save(new BankAccount("txn-err-2", "Bob", 500.0));
+    @DisplayName("Test 6: Repository findById returns empty Optional for non-existent item")
+    void testRepositoryFindByIdReturnsEmptyForNonExistent() {
+        // Given - No user exists with this ID
+        String nonExistentId = "does-not-exist";
 
-        // When - Transaction with failing condition
-        Collection<TransactWriteItem> actions = new ArrayList<>();
+        // When - Try to find non-existent user
+        Optional<User> result = userRepository.findById(nonExistentId);
 
-        // Update account 1 (will succeed)
-        Map<String, AttributeValue> key1 = new HashMap<>();
-        key1.put("accountId", AttributeValue.builder().s("txn-err-1").build());
-        actions.add(TransactWriteItem.builder().update(
-                Update.builder()
-                        .tableName("BankAccount")
-                        .key(key1)
-                        .updateExpression("SET balance = balance + :amount")
-                        .expressionAttributeValues(Collections.singletonMap(
-                                ":amount",  AttributeValue.builder().n("100")
-                                .build()
-                        ))
-                .build()
-        )
-        .build());
-
-        // Update account 2 with impossible condition (will fail)
-        Map<String, AttributeValue> key2 = new HashMap<>();
-        key2.put("accountId", AttributeValue.builder().s("txn-err-2").build());
-        actions.add(TransactWriteItem.builder().update(
-                Update.builder()
-                        .tableName("BankAccount")
-                        .key(key2)
-                        .updateExpression("SET balance = balance - :amount")
-                        .conditionExpression("balance >= :required")
-                        .expressionAttributeValues(Map.of(
-                                ":amount",  AttributeValue.builder().n("1000")
-                                        .build(),
-                                ":required",  AttributeValue.builder().n("1000")
-                                .build()
-                        ))
-                .build()
-        )
-        .build());
-
-        TransactWriteItemsRequest request = TransactWriteItemsRequest.builder()
-                .transactItems(actions)
-                .build();
-
-        // Then - Transaction fails, both rollback
-        assertThatThrownBy(() -> amazonDynamoDB.transactWriteItems(request))
-                .isInstanceOf(TransactionCanceledException.class);
-
-        // Verify both accounts unchanged
-        BankAccount account1 = accountRepository.findById("txn-err-1").get();
-        BankAccount account2 = accountRepository.findById("txn-err-2").get();
-        assertThat(account1.getBalance()).isEqualTo(1000.0);
-        assertThat(account2.getBalance()).isEqualTo(500.0);
+        // Then - Should return empty Optional (not throw exception)
+        assertThat(result).isEmpty();
     }
 
     @Test
     @org.junit.jupiter.api.Order(7)
-    @DisplayName("Test 7: Transaction cancellation reasons")
-    void testTransactionCancellationReasons() {
-        // Given - Account
-        accountRepository.save(new BankAccount("txn-reason-1", "Alice", 100.0));
+    @DisplayName("Test 7: Repository handles null values gracefully")
+    void testRepositoryHandlesNullValues() {
+        // Given - User with some null fields
+        User user = new User();
+        user.setId("null-fields-user");
+        user.setName(null); // null name
+        user.setNumberOfPlaylists(null); // null number
 
-        // When - Transaction with condition failure
-        Collection<TransactWriteItem> actions = new ArrayList<>();
+        // When - Save and retrieve
+        userRepository.save(user);
+        User retrieved = userRepository.findById("null-fields-user").orElse(null);
 
-        Map<String, AttributeValue> key = new HashMap<>();
-        key.put("accountId", AttributeValue.builder().s("txn-reason-1").build());
-        actions.add(TransactWriteItem.builder().update(
-                Update.builder()
-                        .tableName("BankAccount")
-                        .key(key)
-                        .updateExpression("SET balance = balance - :amount")
-                        .conditionExpression("balance >= :amount")
-                        .expressionAttributeValues(Collections.singletonMap(
-                                ":amount",  AttributeValue.builder().n("500")
-                                .build()
-                        ))
-                .build()
-        )
-        .build());
-
-        TransactWriteItemsRequest request = TransactWriteItemsRequest.builder()
-                .transactItems(actions)
-                .build();
-
-        // Then - Check cancellation reasons
-        try {
-            amazonDynamoDB.transactWriteItems(request);
-            Assertions.fail("Should have thrown TransactionCanceledException");
-        } catch (TransactionCanceledException e) {
-            assertThat(e.cancellationReasons()).isNotEmpty();
-            assertThat(e.cancellationReasons().get(0).code())
-                    .isEqualTo("ConditionalCheckFailed");
-        }
+        // Then - Should handle null fields correctly
+        assertThat(retrieved).isNotNull();
+        assertThat(retrieved.getId()).isEqualTo("null-fields-user");
+        assertThat(retrieved.getName()).isNull();
+        assertThat(retrieved.getNumberOfPlaylists()).isNull();
     }
-
-    // ==================== Exception Handling ====================
 
     @Test
     @org.junit.jupiter.api.Order(8)
-    @DisplayName("Test 8: Handle ResourceNotFoundException for non-existent table")
-    void testResourceNotFoundException() {
-        // When/Then - Query non-existent table
-        ScanRequest scanRequest = ScanRequest.builder().tableName("NonExistentTable")
-                .build();
+    @DisplayName("Test 8: Repository deleteById throws exception for non-existent items")
+    void testRepositoryDeleteThrowsForNonExistent() {
+        // Given - Non-existent ID
+        String nonExistentId = "never-existed";
 
-        assertThatThrownBy(() -> amazonDynamoDB.scan(scanRequest))
-                .isInstanceOf(ResourceNotFoundException.class);
+        // When/Then - Library throws EmptyResultDataAccessException for non-existent item
+        assertThatThrownBy(() -> userRepository.deleteById(nonExistentId))
+                .isInstanceOf(EmptyResultDataAccessException.class)
+                .hasMessageContaining("never-existed");
+
+        // Verify it doesn't exist
+        assertThat(userRepository.findById(nonExistentId)).isEmpty();
     }
 
     @Test
     @org.junit.jupiter.api.Order(9)
-    @DisplayName("Test 9: Handle ValidationException for invalid request")
-    void testValidationException() {
-        // Given - User
-        User user = new User();
-        user.setId("validation-test");
-        userRepository.save(user);
+    @DisplayName("Test 9: Repository update via save overwrites existing item")
+    void testRepositoryUpdateOverwritesExisting() {
+        // Given - Existing user
+        User original = new User();
+        original.setId("update-test");
+        original.setName("Original Name");
+        original.setNumberOfPlaylists(10);
+        userRepository.save(original);
 
-        // When/Then - Invalid UpdateExpression
-        Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", AttributeValue.builder().s("validation-test").build());
+        // When - Save updated version
+        User updated = new User();
+        updated.setId("update-test"); // same ID
+        updated.setName("Updated Name");
+        updated.setNumberOfPlaylists(20);
+        userRepository.save(updated);
 
-        UpdateItemRequest request = UpdateItemRequest.builder()
-                .tableName("user")
-                .key(key)
-                .updateExpression("INVALID SYNTAX HERE")
-                .build();
-
-        assertThatThrownBy(() -> amazonDynamoDB.updateItem(request))
-                .isInstanceOf(DynamoDbException.class)
-                .hasMessageContaining("Syntax error");
+        // Then - Should overwrite with new values
+        User retrieved = userRepository.findById("update-test").orElse(null);
+        assertThat(retrieved).isNotNull();
+        assertThat(retrieved.getName()).isEqualTo("Updated Name");
+        assertThat(retrieved.getNumberOfPlaylists()).isEqualTo(20);
     }
 
     @Test
     @org.junit.jupiter.api.Order(10)
-    @DisplayName("Test 10: Recover from conditional check failure")
-    void testRecoverFromConditionalCheckFailure() {
-        // Given - User
-        User user = new User();
-        user.setId("recover-1");
-        user.setName("Alice");
-        user.setNumberOfPlaylists(10);
-        userRepository.save(user);
+    @DisplayName("Test 10: Repository batch operations with empty collections")
+    void testRepositoryBatchOperationsWithEmptyCollections() {
+        // Given - Empty collections
+        List<User> emptyList = new ArrayList<>();
 
-        // When - First update with wrong condition (fails)
-        Map<String, AttributeValue> key = new HashMap<>();
-        key.put("Id", AttributeValue.builder().s("recover-1").build());
+        // When - Batch operations with empty data
+        userRepository.saveAll(emptyList);
+        List<User> results = (List<User>) userRepository.findAllById(Collections.emptyList());
 
-        UpdateItemRequest failingRequest = UpdateItemRequest.builder()
-                .tableName("user")
-                .key(key)
-                .updateExpression("SET numberOfPlaylists = :value")
-                .conditionExpression("numberOfPlaylists = :expected")
-                .expressionAttributeValues(Map.of(
-                        ":value",  AttributeValue.builder().n("20")
-                                .build(),
-                        ":expected",  AttributeValue.builder().n("999")
-                        .build()
-                ))
-                .build();
-
-        try {
-            amazonDynamoDB.updateItem(failingRequest);
-        } catch (ConditionalCheckFailedException e) {
-            // Expected - now retry with correct condition
-        }
-
-        // Retry with correct condition
-        UpdateItemRequest successRequest = UpdateItemRequest.builder()
-                .tableName("user")
-                .key(key)
-                .updateExpression("SET numberOfPlaylists = :value")
-                .conditionExpression("numberOfPlaylists = :expected")
-                .expressionAttributeValues(Map.of(
-                        ":value",  AttributeValue.builder().n("20")
-                                .build(),
-                        ":expected",  AttributeValue.builder().n("10")
-                        .build()
-                ))
-                .build();
-
-        amazonDynamoDB.updateItem(successRequest);
-
-        // Then - Should succeed on retry
-        User updated = userRepository.findById("recover-1").get();
-        assertThat(updated.getNumberOfPlaylists()).isEqualTo(20);
+        // Then - Should handle gracefully
+        assertThat(results).isEmpty();
+        assertThat(userRepository.count()).isEqualTo(0);
     }
 
     // ==================== Helper Methods ====================
