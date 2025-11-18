@@ -263,8 +263,15 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
 
     protected List<Condition> getHashKeyConditions() {
         List<Condition> hashKeyConditions = null;
-        if (isApplicableForGlobalSecondaryIndex() && entityInformation.getGlobalSecondaryIndexNamesByPropertyName()
-                .containsKey(getHashKeyPropertyName())) {
+        // For LSI: hash key is the table's partition key (not in globalSecondaryIndexNames map), only when using an index
+        // For GSI: hash key is a GSI partition key (in globalSecondaryIndexNames map)
+        boolean isLSIHashKey = isApplicableForGlobalSecondaryIndex()
+                && getGlobalSecondaryIndexName() != null
+                && getHashKeyPropertyName().equals(entityInformation.getHashKeyPropertyName());
+        boolean isGSIHashKey = isApplicableForGlobalSecondaryIndex()
+                && entityInformation.getGlobalSecondaryIndexNamesByPropertyName().containsKey(getHashKeyPropertyName());
+
+        if (isLSIHashKey || isGSIHashKey) {
             if (getHashKeyAttributeValue() != null) {
                 hashKeyConditions = Collections
                         .singletonList(createSingleValueCondition(getHashKeyPropertyName(), ComparisonOperator.EQ,
@@ -389,7 +396,11 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
     protected boolean hasIndexHashKeyEqualCondition() {
         boolean hasIndexHashKeyEqualCondition = false;
         for (Map.Entry<String, List<Condition>> propertyConditionList : propertyConditions.entrySet()) {
-            if (entityInformation.isGlobalIndexHashKeyProperty(propertyConditionList.getKey())) {
+            // Only consider table partition key if we're actually using an index (LSI case)
+            boolean isGSIHashKey = entityInformation.isGlobalIndexHashKeyProperty(propertyConditionList.getKey());
+            boolean isLSIHashKey = getGlobalSecondaryIndexName() != null
+                    && propertyConditionList.getKey().equals(entityInformation.getHashKeyPropertyName());
+            if (isGSIHashKey || isLSIHashKey) {
                 for (Condition condition : propertyConditionList.getValue()) {
                     if (condition.comparisonOperator().equals(ComparisonOperator.EQ)) {
                         hasIndexHashKeyEqualCondition = true;
@@ -397,8 +408,15 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
                 }
             }
         }
-        if (hashKeyAttributeValue != null && entityInformation.isGlobalIndexHashKeyProperty(hashKeyPropertyName)) {
-            hasIndexHashKeyEqualCondition = true;
+        if (hashKeyAttributeValue != null) {
+            // For LSI: hash key is the table's partition key (only when an index is being used)
+            // For GSI: hash key is a GSI partition key
+            boolean isTablePartitionKey = getGlobalSecondaryIndexName() != null
+                    && hashKeyPropertyName.equals(entityInformation.getHashKeyPropertyName());
+            boolean isGSIPartitionKey = entityInformation.isGlobalIndexHashKeyProperty(hashKeyPropertyName);
+            if (isTablePartitionKey || isGSIPartitionKey) {
+                hasIndexHashKeyEqualCondition = true;
+            }
         }
         return hasIndexHashKeyEqualCondition;
     }
@@ -418,9 +436,20 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
 
     protected boolean isApplicableForGlobalSecondaryIndex() {
         boolean global = this.getGlobalSecondaryIndexName() != null;
-        if (global && getHashKeyAttributeValue() != null && !entityInformation
-                .getGlobalSecondaryIndexNamesByPropertyName().keySet().contains(getHashKeyPropertyName())) {
-            return false;
+        if (global && getHashKeyAttributeValue() != null) {
+            // Check if the hash key used in the query is valid for this index
+            // Valid cases:
+            // 1. LSI: hash key is the table's partition key (not in globalSecondaryIndexNames map)
+            // 2. GSI: hash key is a GSI partition key (in globalSecondaryIndexNames map)
+            String queryHashKeyPropertyName = getHashKeyPropertyName();
+            boolean isTablePartitionKey = queryHashKeyPropertyName.equals(entityInformation.getHashKeyPropertyName());
+            boolean isGSIPartitionKey = entityInformation.getGlobalSecondaryIndexNamesByPropertyName()
+                    .keySet().contains(queryHashKeyPropertyName);
+
+            // If the hash key is neither the table's partition key (LSI case) nor a GSI partition key, reject
+            if (!isTablePartitionKey && !isGSIPartitionKey) {
+                return false;
+            }
         }
 
         int attributeConditionCount = attributeConditions.keySet().size();
