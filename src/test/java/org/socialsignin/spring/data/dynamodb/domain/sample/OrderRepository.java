@@ -8,55 +8,73 @@ import java.util.List;
 
 /**
  * Repository for testing Local Secondary Indexes (LSI) queries.
+ *
+ * IMPORTANT: @EnableScan is ONLY added to deleteAll() and findAll() for test cleanup.
+ * Query methods do NOT have @EnableScan, ensuring they must use LSI correctly.
+ * If a query method can't use LSI properly, it will fail rather than falling back
+ * to a table scan, giving us confidence in our LSI implementation.
  */
-@EnableScan
 public interface OrderRepository extends CrudRepository<ProductOrder, ProductOrderId> {
 
-    /**
-     * Query using base table - by customerId and orderId (hash + range key).
-     */
-    List<ProductOrder> findByCustomerIdAndOrderId(String customerId, String orderId);
+    // Override deleteAll() to enable scan for test cleanup
+    @Override
+    @EnableScan
+    void deleteAll();
 
-    /**
-     * Query using LSI 1: customerId-orderDate-index
-     * Finds orders for a customer after a specific date.
-     * Note: To get all orders sorted by date, use Instant.EPOCH as the date parameter.
-     */
+    // Override findAll() to enable scan (used internally by deleteAll())
+    @Override
+    @EnableScan
+    Iterable<ProductOrder> findAll();
+
+    // ========== LSI QUERIES - customerId-orderDate-index (table hash: customerId, LSI range: orderDate) ==========
+
+    // Test 13: Table hash + LSI range equality
+    List<ProductOrder> findByCustomerIdAndOrderDate(String customerId, Instant orderDate);
+
+    // Test 14: Table hash + LSI range >
     List<ProductOrder> findByCustomerIdAndOrderDateAfter(String customerId, Instant orderDate);
 
-    /**
-     * Query using LSI 1: customerId-orderDate-index
-     * Finds orders for a customer before a specific date.
-     */
+    // Test 15: Table hash + LSI range <
     List<ProductOrder> findByCustomerIdAndOrderDateBefore(String customerId, Instant orderDate);
 
-    /**
-     * Query using LSI 1: customerId-orderDate-index
-     * Finds orders for a customer within a date range.
-     */
+    // Test 16: Table hash + LSI range Between
     List<ProductOrder> findByCustomerIdAndOrderDateBetween(String customerId, Instant startDate, Instant endDate);
 
-    /**
-     * Query using LSI 2: customerId-status-index
-     * Finds all orders for a customer with specific status.
-     */
+    // Test 17: Table hash + OrderBy LSI range Asc
+    List<ProductOrder> findByCustomerIdOrderByOrderDateAsc(String customerId);
+
+    // Test 18: Table hash + OrderBy LSI range Desc
+    List<ProductOrder> findByCustomerIdOrderByOrderDateDesc(String customerId);
+
+    // Test 19: Table hash + LSI range + OrderBy
+    List<ProductOrder> findByCustomerIdAndOrderDateAfterOrderByOrderDateAsc(String customerId, Instant orderDate);
+
+    // Test 20: Table hash + LSI range >= (GreaterThanEqual)
+    List<ProductOrder> findByCustomerIdAndOrderDateGreaterThanEqual(String customerId, Instant orderDate);
+
+    // Test 21: Table hash + LSI range <= (LessThanEqual)
+    List<ProductOrder> findByCustomerIdAndOrderDateLessThanEqual(String customerId, Instant orderDate);
+
+    // ========== Additional LSI queries for status and totalAmount indexes ==========
+
+    // LSI 2: customerId-status-index
     List<ProductOrder> findByCustomerIdAndStatus(String customerId, String status);
 
-    /**
-     * Query using LSI 3: customerId-totalAmount-index
-     * Finds orders for a customer with amount greater than specified.
-     */
+    // LSI 2: customerId-status-index with StartingWith (begins_with)
+    List<ProductOrder> findByCustomerIdAndStatusStartingWith(String customerId, String statusPrefix);
+
+    // LSI 3: customerId-totalAmount-index
     List<ProductOrder> findByCustomerIdAndTotalAmountGreaterThan(String customerId, Double totalAmount);
-
-    /**
-     * Query using LSI 3: customerId-totalAmount-index
-     * Finds orders for a customer with amount less than specified.
-     */
     List<ProductOrder> findByCustomerIdAndTotalAmountLessThan(String customerId, Double totalAmount);
-
-    /**
-     * Query using LSI 3: customerId-totalAmount-index
-     * Finds orders for a customer within an amount range.
-     */
     List<ProductOrder> findByCustomerIdAndTotalAmountBetween(String customerId, Double minAmount, Double maxAmount);
+
+    // LSI 3: Additional operators for comprehensive coverage
+    List<ProductOrder> findByCustomerIdAndTotalAmount(String customerId, Double totalAmount);
+    List<ProductOrder> findByCustomerIdAndTotalAmountGreaterThanEqual(String customerId, Double totalAmount);
+    List<ProductOrder> findByCustomerIdAndTotalAmountLessThanEqual(String customerId, Double totalAmount);
+
+    // ========== Main table query for comparison ==========
+
+    // Base table query (customerId = hash, orderId = range)
+    List<ProductOrder> findByCustomerIdAndOrderId(String customerId, String orderId);
 }

@@ -273,19 +273,31 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
         // Build filter expression from conditions
         List<String> filterParts = new ArrayList<>();
         Map<String, AttributeValue> expressionValues = new HashMap<>();
+        Map<String, String> expressionNames = new HashMap<>();
         int valueCounter = 0;
+        int nameCounter = 0;
 
         // Add hash key filter if specified
         if (isHashKeySpecified()) {
+            String attributeName = getHashKeyAttributeName();
+            String namePlaceholder = "#n" + nameCounter++;
             String valuePlaceholder = ":hval" + valueCounter++;
-            filterParts.add(getHashKeyAttributeName() + " = " + valuePlaceholder);
+
+            // Always use expression attribute name (defensive approach for reserved keywords)
+            filterParts.add(namePlaceholder + " = " + valuePlaceholder);
+            expressionNames.put(namePlaceholder, attributeName);
             expressionValues.put(valuePlaceholder, convertToAttributeValue(getHashKeyAttributeValue()));
         }
 
         // Add range key filter if specified
         if (isRangeKeySpecified()) {
+            String attributeName = getRangeKeyAttributeName();
+            String namePlaceholder = "#n" + nameCounter++;
             String valuePlaceholder = ":rval" + valueCounter++;
-            filterParts.add(getRangeKeyAttributeName() + " = " + valuePlaceholder);
+
+            // Always use expression attribute name (defensive approach for reserved keywords)
+            filterParts.add(namePlaceholder + " = " + valuePlaceholder);
+            expressionNames.put(namePlaceholder, attributeName);
             expressionValues.put(valuePlaceholder, convertToAttributeValue(getRangeKeyAttributeValue()));
         }
 
@@ -293,11 +305,12 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
         for (Map.Entry<String, List<Condition>> conditionEntry : attributeConditions.entrySet()) {
             String attributeName = conditionEntry.getKey();
             for (Condition condition : conditionEntry.getValue()) {
-                // Convert Condition to Expression syntax
-                String expressionPart = convertConditionToExpression(attributeName, condition, valueCounter, expressionValues);
+                // Convert Condition to Expression syntax with reserved keyword handling
+                String expressionPart = convertConditionToExpression(attributeName, condition, nameCounter, valueCounter, expressionValues, expressionNames);
                 filterParts.add(expressionPart);
-                // Update value counter based on how many values were added
+                // Update counters based on how many values and names were added
                 valueCounter = expressionValues.size();
+                nameCounter = expressionNames.size();
             }
         }
 
@@ -307,6 +320,12 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
             Expression.Builder exprBuilder = Expression.builder()
                     .expression(filterExpression)
                     .expressionValues(expressionValues);
+
+            // Add expression attribute names if any were used
+            if (!expressionNames.isEmpty()) {
+                exprBuilder.expressionNames(expressionNames);
+            }
+
             requestBuilder.filterExpression(exprBuilder.build());
         }
 
@@ -318,51 +337,56 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
 
     /**
      * Converts SDK v1 Condition object to SDK v2 Expression syntax string.
-     * Also populates the expressionValues map with the necessary attribute values.
+     * Also populates the expressionValues and expressionNames maps with the necessary values.
+     * Uses expression attribute names for all attributes to handle reserved keywords defensively.
      */
-    private String convertConditionToExpression(String attributeName, Condition condition, int startValueCounter,
-            Map<String, AttributeValue> expressionValues) {
+    private String convertConditionToExpression(String attributeName, Condition condition, int startNameCounter,
+            int startValueCounter, Map<String, AttributeValue> expressionValues, Map<String, String> expressionNames) {
 
         ComparisonOperator operator = condition.comparisonOperator();
         List<AttributeValue> attributeValueList = condition.attributeValueList();
+
+        // Always use expression attribute name (defensive approach for reserved keywords)
+        String namePlaceholder = "#n" + startNameCounter;
+        expressionNames.put(namePlaceholder, attributeName);
 
         switch (operator) {
             case EQ:
                 String eqPlaceholder = ":val" + startValueCounter;
                 expressionValues.put(eqPlaceholder, attributeValueList.get(0));
-                return attributeName + " = " + eqPlaceholder;
+                return namePlaceholder + " = " + eqPlaceholder;
 
             case NE:
                 String nePlaceholder = ":val" + startValueCounter;
                 expressionValues.put(nePlaceholder, attributeValueList.get(0));
-                return attributeName + " <> " + nePlaceholder;
+                return namePlaceholder + " <> " + nePlaceholder;
 
             case LT:
                 String ltPlaceholder = ":val" + startValueCounter;
                 expressionValues.put(ltPlaceholder, attributeValueList.get(0));
-                return attributeName + " < " + ltPlaceholder;
+                return namePlaceholder + " < " + ltPlaceholder;
 
             case LE:
                 String lePlaceholder = ":val" + startValueCounter;
                 expressionValues.put(lePlaceholder, attributeValueList.get(0));
-                return attributeName + " <= " + lePlaceholder;
+                return namePlaceholder + " <= " + lePlaceholder;
 
             case GT:
                 String gtPlaceholder = ":val" + startValueCounter;
                 expressionValues.put(gtPlaceholder, attributeValueList.get(0));
-                return attributeName + " > " + gtPlaceholder;
+                return namePlaceholder + " > " + gtPlaceholder;
 
             case GE:
                 String gePlaceholder = ":val" + startValueCounter;
                 expressionValues.put(gePlaceholder, attributeValueList.get(0));
-                return attributeName + " >= " + gePlaceholder;
+                return namePlaceholder + " >= " + gePlaceholder;
 
             case BETWEEN:
                 String betweenPlaceholder1 = ":val" + startValueCounter;
                 String betweenPlaceholder2 = ":val" + (startValueCounter + 1);
                 expressionValues.put(betweenPlaceholder1, attributeValueList.get(0));
                 expressionValues.put(betweenPlaceholder2, attributeValueList.get(1));
-                return attributeName + " BETWEEN " + betweenPlaceholder1 + " AND " + betweenPlaceholder2;
+                return namePlaceholder + " BETWEEN " + betweenPlaceholder1 + " AND " + betweenPlaceholder2;
 
             case IN:
                 List<String> inPlaceholders = new ArrayList<>();
@@ -371,28 +395,28 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
                     expressionValues.put(placeholder, attributeValueList.get(i));
                     inPlaceholders.add(placeholder);
                 }
-                return attributeName + " IN (" + String.join(", ", inPlaceholders) + ")";
+                return namePlaceholder + " IN (" + String.join(", ", inPlaceholders) + ")";
 
             case BEGINS_WITH:
                 String beginsPlaceholder = ":val" + startValueCounter;
                 expressionValues.put(beginsPlaceholder, attributeValueList.get(0));
-                return "begins_with(" + attributeName + ", " + beginsPlaceholder + ")";
+                return "begins_with(" + namePlaceholder + ", " + beginsPlaceholder + ")";
 
             case CONTAINS:
                 String containsPlaceholder = ":val" + startValueCounter;
                 expressionValues.put(containsPlaceholder, attributeValueList.get(0));
-                return "contains(" + attributeName + ", " + containsPlaceholder + ")";
+                return "contains(" + namePlaceholder + ", " + containsPlaceholder + ")";
 
             case NOT_CONTAINS:
                 String notContainsPlaceholder = ":val" + startValueCounter;
                 expressionValues.put(notContainsPlaceholder, attributeValueList.get(0));
-                return "NOT contains(" + attributeName + ", " + notContainsPlaceholder + ")";
+                return "NOT contains(" + namePlaceholder + ", " + notContainsPlaceholder + ")";
 
             case NULL:
-                return "attribute_not_exists(" + attributeName + ")";
+                return "attribute_not_exists(" + namePlaceholder + ")";
 
             case NOT_NULL:
-                return "attribute_exists(" + attributeName + ")";
+                return "attribute_exists(" + namePlaceholder + ")";
 
             default:
                 throw new UnsupportedOperationException("Unsupported comparison operator for scan: " + operator);

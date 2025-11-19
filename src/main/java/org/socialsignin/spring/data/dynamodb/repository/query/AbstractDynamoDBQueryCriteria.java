@@ -72,15 +72,97 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
             String rangeKeyAttributeName, String rangeKeyPropertyName, List<Condition> hashKeyConditions,
             List<Condition> rangeKeyConditions) {
 
-        // TODO Set other query request properties based on config
+        // SDK v2: Build QueryRequest using modern keyConditionExpression
         QueryRequest queryRequest = QueryRequest.builder()
                 .build();
         queryRequest = queryRequest.toBuilder().tableName(tableName).build();
         queryRequest = queryRequest.toBuilder().indexName(theIndexName).build();
 
-        if (isApplicableForGlobalSecondaryIndex()) {
-            List<String> allowedSortProperties = new ArrayList<>();
+        // Build KeyConditionExpression for ALL query types (main table, GSI, and LSI)
+        // This is required by DynamoDB SDK v2 for all Query operations
+        List<String> keyConditionParts = new ArrayList<>();
+        Map<String, AttributeValue> keyExpressionValues = new HashMap<>();
+        Map<String, String> keyExpressionNames = new HashMap<>();
+        int nameCounter = 0;
+        int valueCounter = 0;
 
+        // Build hash key condition (always present for Query operations)
+        if (hashKeyConditions != null && hashKeyConditions.size() > 0) {
+            for (Condition hashKeyCondition : hashKeyConditions) {
+                String namePlaceholder = "#pk" + nameCounter++;
+                String conditionExpr = buildKeyConditionPart(namePlaceholder, hashKeyCondition, valueCounter, keyExpressionValues);
+                keyConditionParts.add(conditionExpr);
+                keyExpressionNames.put(namePlaceholder, hashKeyAttributeName);
+                valueCounter = keyExpressionValues.size();
+            }
+        }
+
+        // Build range key condition (if present)
+        if (rangeKeyConditions != null && rangeKeyConditions.size() > 0) {
+            for (Condition rangeKeyCondition : rangeKeyConditions) {
+                String namePlaceholder = "#sk" + nameCounter++;
+                String conditionExpr = buildKeyConditionPart(namePlaceholder, rangeKeyCondition, valueCounter, keyExpressionValues);
+                keyConditionParts.add(conditionExpr);
+                keyExpressionNames.put(namePlaceholder, rangeKeyAttributeName);
+                valueCounter = keyExpressionValues.size();
+            }
+        }
+
+        // For GSI queries, add ALL attribute conditions as key conditions
+        // For main table queries, ONLY add attribute conditions that match the range key
+        if (isApplicableForGlobalSecondaryIndex()) {
+            // GSI: Add all attribute conditions as key conditions
+            for (Entry<String, List<Condition>> singleAttributeConditions : attributeConditions.entrySet()) {
+                for (Condition condition : singleAttributeConditions.getValue()) {
+                    String namePlaceholder = "#k" + nameCounter++;
+                    String conditionExpr = buildKeyConditionPart(namePlaceholder, condition, valueCounter, keyExpressionValues);
+                    keyConditionParts.add(conditionExpr);
+                    keyExpressionNames.put(namePlaceholder, singleAttributeConditions.getKey());
+                    valueCounter = keyExpressionValues.size();
+                }
+            }
+        } else if (rangeKeyAttributeName != null) {
+            // Main table: Only add attribute conditions for the range key (GT, LT, BETWEEN, etc.)
+            if (attributeConditions.containsKey(rangeKeyAttributeName)) {
+                for (Condition condition : attributeConditions.get(rangeKeyAttributeName)) {
+                    String namePlaceholder = "#sk" + nameCounter++;
+                    String conditionExpr = buildKeyConditionPart(namePlaceholder, condition, valueCounter, keyExpressionValues);
+                    keyConditionParts.add(conditionExpr);
+                    keyExpressionNames.put(namePlaceholder, rangeKeyAttributeName);
+                    valueCounter = keyExpressionValues.size();
+                }
+            }
+        }
+
+        // Set keyConditionExpression (required for all Query operations in SDK v2)
+        if (!keyConditionParts.isEmpty()) {
+            String keyConditionExpression = String.join(" AND ", keyConditionParts);
+            queryRequest = queryRequest.toBuilder()
+                    .keyConditionExpression(keyConditionExpression)
+                    .build();
+
+            if (!keyExpressionNames.isEmpty()) {
+                queryRequest = queryRequest.toBuilder().expressionAttributeNames(keyExpressionNames).build();
+            }
+            if (!keyExpressionValues.isEmpty()) {
+                queryRequest = queryRequest.toBuilder().expressionAttributeValues(keyExpressionValues).build();
+            }
+        }
+
+        // Handle projection (select specific attributes)
+        if (projection.isPresent()) {
+            queryRequest = queryRequest.toBuilder().select(Select.SPECIFIC_ATTRIBUTES).build();
+            queryRequest = queryRequest.toBuilder().projectionExpression(projection.get()).build();
+        } else if (isApplicableForGlobalSecondaryIndex()) {
+            // For GSI queries without explicit projection, use ALL_PROJECTED_ATTRIBUTES
+            queryRequest = queryRequest.toBuilder().select(Select.ALL_PROJECTED_ATTRIBUTES).build();
+        }
+
+        // Determine allowed sort properties based on query type
+        List<String> allowedSortProperties = new ArrayList<>();
+
+        if (isApplicableForGlobalSecondaryIndex()) {
+            // GSI queries: Allow sorting by GSI properties and GSI range keys
             for (Entry<String, List<Condition>> singlePropertyCondition : propertyConditions.entrySet()) {
                 if (entityInformation.getGlobalSecondaryIndexNamesByPropertyName()
                         .containsKey(singlePropertyCondition.getKey())) {
@@ -88,74 +170,45 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
                 }
             }
 
-            HashMap<String, Condition> keyConditions = new HashMap<>();
-
-            if (hashKeyConditions != null && hashKeyConditions.size() > 0) {
-                for (Condition hashKeyCondition : hashKeyConditions) {
-                    keyConditions.put(hashKeyAttributeName, hashKeyCondition);
-                    allowedSortProperties.add(hashKeyPropertyName);
-                }
-            }
-            if (rangeKeyConditions != null && rangeKeyConditions.size() > 0) {
-                for (Condition rangeKeyCondition : rangeKeyConditions) {
-                    keyConditions.put(rangeKeyAttributeName, rangeKeyCondition);
-                    allowedSortProperties.add(rangeKeyPropertyName);
-                }
-            }
-
-            for (Entry<String, List<Condition>> singleAttributeConditions : attributeConditions.entrySet()) {
-
-                for (Condition condition : singleAttributeConditions.getValue()) {
-                    keyConditions.put(singleAttributeConditions.getKey(), condition);
-                }
-            }
-
+            // Add any GSI range key properties from sort
             for (Order order : sort) {
                 final String sortProperty = order.getProperty();
                 if (entityInformation.isGlobalIndexRangeKeyProperty(sortProperty)) {
                     allowedSortProperties.add(sortProperty);
                 }
             }
-
-            queryRequest = queryRequest.toBuilder().keyConditions(keyConditions).build();
-            // Might be overwritten in the actual Query classes
-            if (projection.isPresent()) {
-                queryRequest = queryRequest.toBuilder().select(Select.SPECIFIC_ATTRIBUTES).build();
-                queryRequest = queryRequest.toBuilder().projectionExpression(projection.get()).build();
-            } else {
-                queryRequest = queryRequest.toBuilder().select(Select.ALL_PROJECTED_ATTRIBUTES).build();
-            }
-
-            queryRequest = applySortIfSpecified(queryRequest, new ArrayList<>(new HashSet<>(allowedSortProperties)));
         } else {
-            // For non-GSI queries (regular table queries or local index queries),
-            // allow sorting by range keys and index range keys THAT ARE PART OF THE QUERY
-            List<String> allowedSortProperties = new ArrayList<>();
-
-            // Always allow sorting by the table's range key if present
+            // Main table or LSI queries: Allow sorting by table range key and LSI range keys
             if (rangeKeyPropertyName != null) {
                 allowedSortProperties.add(rangeKeyPropertyName);
             }
 
-            // Allow sorting by index range key properties that are part of query conditions
+            // Allow sorting by LSI range key properties
             if (entityInformation instanceof org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBHashAndRangeKeyExtractingEntityMetadata) {
                 org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBHashAndRangeKeyExtractingEntityMetadata<?, ?> compositeKeyEntityInfo =
                     (org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBHashAndRangeKeyExtractingEntityMetadata<?, ?>) entityInformation;
                 Set<String> indexRangeKeyPropertyNames = compositeKeyEntityInfo.getIndexRangeKeyPropertyNames();
                 if (indexRangeKeyPropertyNames != null) {
-                    // Only add index range keys that are actually being queried
+                    // For LSI queries: Allow sorting by ANY LSI range key (they share the same hash key as main table)
+                    // This enables hash-only queries with OrderBy on LSI range key (e.g., findByCustomerIdOrderByOrderDateAsc)
                     for (String indexRangeKeyPropertyName : indexRangeKeyPropertyNames) {
-                        // Check if this property is in the query conditions
-                        if (propertyConditions.containsKey(indexRangeKeyPropertyName) ||
-                            attributeConditions.containsKey(getAttributeName(indexRangeKeyPropertyName))) {
+                        // Add LSI range key if:
+                        // 1. It's being queried (has condition), OR
+                        // 2. We have a sort requirement on it (for hash-only + OrderBy pattern)
+                        boolean hasCondition = propertyConditions.containsKey(indexRangeKeyPropertyName) ||
+                            attributeConditions.containsKey(getAttributeName(indexRangeKeyPropertyName));
+                        boolean isSortProperty = sort != null && sort.iterator().hasNext() &&
+                            sort.iterator().next().getProperty().equals(indexRangeKeyPropertyName);
+
+                        if (hasCondition || isSortProperty) {
                             allowedSortProperties.add(indexRangeKeyPropertyName);
                         }
                     }
                 }
             }
-
-            queryRequest = applySortIfSpecified(queryRequest, allowedSortProperties);
         }
+
+        queryRequest = applySortIfSpecified(queryRequest, new ArrayList<>(new HashSet<>(allowedSortProperties)));
 
         queryRequest = applyConsistentReads(queryRequest);
 
@@ -169,9 +222,10 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
             if (!StringUtils.isEmpty(filter)) {
                 queryRequest = queryRequest.toBuilder().filterExpression(filter).build();
 
-                // SDK v2: Build expression attribute names map
+                // SDK v2: Build expression attribute names map and merge with existing key condition names
                 if (expressionAttributeNames != null && expressionAttributeNames.length > 0) {
-                    Map<String, String> attributeNamesMap = new HashMap<>();
+                    Map<String, String> attributeNamesMap = new HashMap<>(queryRequest.expressionAttributeNames() != null
+                            ? queryRequest.expressionAttributeNames() : new HashMap<>());
                     for (ExpressionAttribute attribute : expressionAttributeNames) {
                         if (!StringUtils.isEmpty(attribute.key())) {
                             attributeNamesMap.put(attribute.key(), attribute.value());
@@ -182,9 +236,10 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
                     }
                 }
 
-                // SDK v2: Build expression attribute values map
+                // SDK v2: Build expression attribute values map and merge with existing key condition values
                 if (expressionAttributeValues != null && expressionAttributeValues.length > 0) {
-                    Map<String, AttributeValue> attributeValuesMap = new HashMap<>();
+                    Map<String, AttributeValue> attributeValuesMap = new HashMap<>(queryRequest.expressionAttributeValues() != null
+                            ? queryRequest.expressionAttributeValues() : new HashMap<>());
                     for (ExpressionAttribute value : expressionAttributeValues) {
                         if (!StringUtils.isEmpty(value.key())) {
                             String stringValue;
@@ -229,12 +284,18 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
                     throw new UnsupportedOperationException("Sorting by multiple attributes not possible");
 
                 }
-                if (queryRequest.keyConditions().size() > 1 && !hasIndexHashKeyEqualCondition()) {
+                // SDK v2: Check keyConditionExpression instead of deprecated keyConditions
+                // For GSI queries: sorting with both hash and range conditions requires hash key equality
+                // For main table queries: sorting with hash and range conditions is always allowed
+                boolean hasMultipleKeyConditions = queryRequest.keyConditionExpression() != null
+                        && queryRequest.keyConditionExpression().contains(" AND ");
+                if (hasMultipleKeyConditions && isApplicableForGlobalSecondaryIndex() && !hasIndexHashKeyEqualCondition()) {
                     throw new UnsupportedOperationException(
                             "Sorting for global index queries with criteria on both hash and range not possible");
 
                 }
-                queryRequest = queryRequest.toBuilder().scanIndexForward(order.getDirection().equals(Direction.ASC)).build();
+                boolean scanForward = order.getDirection().equals(Direction.ASC);
+                queryRequest = queryRequest.toBuilder().scanIndexForward(scanForward).build();
                 sortAlreadySet = true;
             } else {
                 throw new UnsupportedOperationException("Sorting only possible by " + permittedPropertyNames
@@ -242,6 +303,67 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
             }
         }
         return queryRequest;
+    }
+
+    /**
+     * Builds a key condition expression part from a Condition object.
+     * Supports EQ, LT, LE, GT, GE, BETWEEN, and BEGINS_WITH operators (valid for key conditions).
+     *
+     * @param namePlaceholder     The expression attribute name placeholder (e.g., "#pk", "#sk")
+     * @param condition           The condition to convert
+     * @param startValueCounter   Starting counter for value placeholders
+     * @param expressionValues    Map to populate with expression attribute values
+     * @return The key condition expression string
+     */
+    private String buildKeyConditionPart(String namePlaceholder, Condition condition, int startValueCounter,
+            Map<String, AttributeValue> expressionValues) {
+
+        ComparisonOperator operator = condition.comparisonOperator();
+        List<AttributeValue> attributeValueList = condition.attributeValueList();
+
+        switch (operator) {
+            case EQ:
+                String eqPlaceholder = ":kval" + startValueCounter;
+                expressionValues.put(eqPlaceholder, attributeValueList.get(0));
+                return namePlaceholder + " = " + eqPlaceholder;
+
+            case LT:
+                String ltPlaceholder = ":kval" + startValueCounter;
+                expressionValues.put(ltPlaceholder, attributeValueList.get(0));
+                return namePlaceholder + " < " + ltPlaceholder;
+
+            case LE:
+                String lePlaceholder = ":kval" + startValueCounter;
+                expressionValues.put(lePlaceholder, attributeValueList.get(0));
+                return namePlaceholder + " <= " + lePlaceholder;
+
+            case GT:
+                String gtPlaceholder = ":kval" + startValueCounter;
+                expressionValues.put(gtPlaceholder, attributeValueList.get(0));
+                return namePlaceholder + " > " + gtPlaceholder;
+
+            case GE:
+                String gePlaceholder = ":kval" + startValueCounter;
+                expressionValues.put(gePlaceholder, attributeValueList.get(0));
+                return namePlaceholder + " >= " + gePlaceholder;
+
+            case BETWEEN:
+                String betweenPlaceholder1 = ":kval" + startValueCounter;
+                String betweenPlaceholder2 = ":kval" + (startValueCounter + 1);
+                expressionValues.put(betweenPlaceholder1, attributeValueList.get(0));
+                expressionValues.put(betweenPlaceholder2, attributeValueList.get(1));
+                return namePlaceholder + " BETWEEN " + betweenPlaceholder1 + " AND " + betweenPlaceholder2;
+
+            case BEGINS_WITH:
+                String beginsPlaceholder = ":kval" + startValueCounter;
+                expressionValues.put(beginsPlaceholder, attributeValueList.get(0));
+                return "begins_with(" + namePlaceholder + ", " + beginsPlaceholder + ")";
+
+            default:
+                throw new UnsupportedOperationException(
+                        "Comparison operator " + operator + " not supported for key conditions. " +
+                        "Only EQ, LT, LE, GT, GE, BETWEEN, and BEGINS_WITH are allowed.");
+        }
     }
 
     public boolean comparisonOperatorsPermittedForQuery() {
@@ -261,6 +383,46 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return true;
     }
 
+    /**
+     * Helper method to process projection expressions and escape reserved keywords.
+     * This method takes a comma-separated list of attribute names and returns a map
+     * of expression attribute names that can be used in projection expressions.
+     *
+     * <p>For user-provided projection expressions in @Query annotations, this helper
+     * can be used to automatically handle reserved keywords. However, users can also
+     * manually specify expression attribute names using the @ExpressionAttribute annotation.</p>
+     *
+     * <p>Example usage:</p>
+     * <pre>
+     * // Instead of: @Query(fields = "name, status, data")
+     * // Use: @Query(fields = "#n0, #n1, #n2",
+     * //             expressionMappingNames = {
+     * //                 @ExpressionAttribute(key = "#n0", value = "name"),
+     * //                 @ExpressionAttribute(key = "#n1", value = "status"),
+     * //                 @ExpressionAttribute(key = "#n2", value = "data")
+     * //             })
+     * </pre>
+     *
+     * @param attributeNames Comma-separated list of attribute names
+     * @return Map of expression attribute name placeholders to actual attribute names
+     */
+    protected Map<String, String> buildProjectionAttributeNames(String attributeNames) {
+        Map<String, String> expressionNames = new HashMap<>();
+        if (attributeNames == null || attributeNames.trim().isEmpty()) {
+            return expressionNames;
+        }
+
+        String[] attributes = attributeNames.split(",");
+        for (int i = 0; i < attributes.length; i++) {
+            String attribute = attributes[i].trim();
+            if (!attribute.isEmpty()) {
+                String placeholder = "#proj" + i;
+                expressionNames.put(placeholder, attribute);
+            }
+        }
+        return expressionNames;
+    }
+
     protected List<Condition> getHashKeyConditions() {
         List<Condition> hashKeyConditions = null;
         // For LSI: hash key is the table's partition key (not in globalSecondaryIndexNames map), only when using an index
@@ -271,7 +433,10 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         boolean isGSIHashKey = isApplicableForGlobalSecondaryIndex()
                 && entityInformation.getGlobalSecondaryIndexNamesByPropertyName().containsKey(getHashKeyPropertyName());
 
-        if (isLSIHashKey || isGSIHashKey) {
+        // SDK v2: Also build hash key conditions for main table queries (not just LSI/GSI)
+        boolean isMainTableHashKey = !isApplicableForGlobalSecondaryIndex();
+
+        if (isLSIHashKey || isGSIHashKey || isMainTableHashKey) {
             if (getHashKeyAttributeValue() != null) {
                 hashKeyConditions = Collections
                         .singletonList(createSingleValueCondition(getHashKeyPropertyName(), ComparisonOperator.EQ,
@@ -316,10 +481,20 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
 
         // Lazy evaluate the globalSecondaryIndexName if not already set
 
-        // We must have attribute conditions specified in order to use a global
-        // secondary index, otherwise return null for index name
-        // Also this method only evaluates the
-        if (globalSecondaryIndexName == null && attributeConditions != null && !attributeConditions.isEmpty()) {
+        // Check if we have a sort requirement
+        boolean hasSortRequirement = sort != null && sort.iterator().hasNext();
+
+        // Check if hash key is a GSI partition key
+        boolean hashKeyIsGSIPartitionKey = entityInformation.getGlobalSecondaryIndexNamesByPropertyName()
+                .containsKey(getHashKeyPropertyName());
+
+        // Run index selection if:
+        // 1. We have attribute conditions (traditional GSI query), OR
+        // 2. Hash key is a GSI partition key AND we have a sort requirement (hash-only GSI query with OrderBy)
+        boolean shouldSelectIndex = (attributeConditions != null && !attributeConditions.isEmpty()) ||
+                                    (hashKeyIsGSIPartitionKey && hasSortRequirement);
+
+        if (globalSecondaryIndexName == null && shouldSelectIndex) {
             // Declare map of index names by attribute name which we will populate below -
             // this will be used to determine which index to use if multiple indexes are
             // applicable
@@ -358,6 +533,55 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
                     } else {
                         partialMatchIndexNames.add(indexNameForAttributeList);
                     }
+                }
+            }
+
+            // Check if we have a sort requirement
+            String sortPropertyName = null;
+            if (sort != null && sort.iterator().hasNext()) {
+                sortPropertyName = sort.iterator().next().getProperty();
+            }
+
+            // If we have a sort requirement, filter candidates to prefer indexes that support it
+            if (sortPropertyName != null) {
+                final String finalSortPropertyName = sortPropertyName;
+
+                // Filter exact matches to prefer those that have the sort property as a range key
+                List<String> sortCompatibleExactMatches = exactMatchIndexNames.stream()
+                        .filter(indexName -> {
+                            List<String> indexAttributes = attributeListsByIndexName.get(indexName);
+                            return indexAttributes != null &&
+                                   indexAttributes.contains(getAttributeName(finalSortPropertyName)) &&
+                                   entityInformation.isGlobalIndexRangeKeyProperty(finalSortPropertyName);
+                        })
+                        .collect(java.util.stream.Collectors.toList());
+
+                // Filter partial matches similarly
+                List<String> sortCompatiblePartialMatches = partialMatchIndexNames.stream()
+                        .filter(indexName -> {
+                            List<String> indexAttributes = attributeListsByIndexName.get(indexName);
+                            return indexAttributes != null &&
+                                   indexAttributes.contains(getAttributeName(finalSortPropertyName)) &&
+                                   entityInformation.isGlobalIndexRangeKeyProperty(finalSortPropertyName);
+                        })
+                        .collect(java.util.stream.Collectors.toList());
+
+                // Prefer sort-compatible indexes if available
+                if (!sortCompatibleExactMatches.isEmpty()) {
+                    // We have sort-compatible exact matches - use them
+                    exactMatchIndexNames = sortCompatibleExactMatches;
+                    partialMatchIndexNames.clear(); // Clear partial matches since we have exact matches
+                } else if (!sortCompatiblePartialMatches.isEmpty()) {
+                    // We have NO sort-compatible exact matches, but we DO have sort-compatible partial matches
+                    // In this case, the sort-compatible partial match is BETTER than a non-sort-compatible exact match
+                    // Example: merchantId-transactionDate-index (partial, sort-compatible) is better than
+                    //          merchantId-index (exact, NOT sort-compatible) for findByMerchantIdOrderByTransactionDateAsc
+                    exactMatchIndexNames.clear(); // Clear non-sort-compatible exact matches
+                    exactMatchIndexNames = sortCompatiblePartialMatches; // Promote sort-compatible partial matches
+                    partialMatchIndexNames.clear();
+                } else {
+                    // No sort-compatible indexes at all - keep the original lists unchanged
+                    // This means we'll use whatever exact/partial matches we found, even if they don't support sorting
                 }
             }
 
