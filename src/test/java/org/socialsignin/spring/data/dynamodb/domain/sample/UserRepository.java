@@ -125,6 +125,7 @@ public interface UserRepository extends CrudRepository<User, String> {
     void deleteByPostCodeAndNumberOfPlaylists(String postCode, Integer numberOfPlaylists);
 
     @EnableScan
+    @Override
     void deleteAll();
 
     @EnableScanCount

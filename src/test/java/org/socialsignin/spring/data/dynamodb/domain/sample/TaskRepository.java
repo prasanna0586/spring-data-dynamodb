@@ -29,5 +29,10 @@ public interface TaskRepository extends CrudRepository<Task, String> {
     List<Task> findByStatusIn(List<TaskStatus> statuses);
 
     @EnableScanCount
+    @Override
     long count();
+
+    @EnableScan
+    @Override
+    void deleteAll();
 }

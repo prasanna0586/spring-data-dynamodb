@@ -16,6 +16,7 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
 import org.socialsignin.spring.data.dynamodb.repository.EnableScan;
+import org.socialsignin.spring.data.dynamodb.repository.EnableScanCount;
 import org.socialsignin.spring.data.dynamodb.repository.Query;
 import org.socialsignin.spring.data.dynamodb.repository.QueryConstants;
 import org.springframework.data.repository.CrudRepository;
@@ -46,4 +47,12 @@ public interface PlaylistRepository extends CrudRepository<Playlist, PlaylistId>
 
     @EnableScan
     List<Playlist> findByPlaylistNameAndDisplayName(String playlistName, String displayName);
+
+    @EnableScanCount
+    @Override
+    long count();
+
+    @EnableScan
+    @Override
+    void deleteAll();
 }
