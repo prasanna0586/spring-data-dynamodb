@@ -29,7 +29,7 @@ public interface OrderRepository extends CrudRepository<ProductOrder, ProductOrd
 
     // Override count() to enable scan count
     @Override
-    @EnableScanCount
+    @EnableScan
     long count();
 
     // ========== LSI QUERIES - customerId-orderDate-index (table hash: customerId, LSI range: orderDate) ==========

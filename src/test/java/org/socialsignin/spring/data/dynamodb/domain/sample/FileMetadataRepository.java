@@ -20,7 +20,7 @@ public interface FileMetadataRepository extends CrudRepository<FileMetadata, Str
     @EnableScanCount
     Page<FileMetadata> findByUploadedBy(String uploadedBy, Pageable pageable);
 
-    @EnableScanCount
+    @EnableScan
     @Override
     long count();
 

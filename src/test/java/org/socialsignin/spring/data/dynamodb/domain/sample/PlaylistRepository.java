@@ -48,7 +48,7 @@ public interface PlaylistRepository extends CrudRepository<Playlist, PlaylistId>
     @EnableScan
     List<Playlist> findByPlaylistNameAndDisplayName(String playlistName, String displayName);
 
-    @EnableScanCount
+    @EnableScan
     @Override
     long count();
 

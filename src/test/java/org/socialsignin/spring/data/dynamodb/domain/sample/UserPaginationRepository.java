@@ -37,7 +37,7 @@ public interface UserPaginationRepository
     @EnableScan
     List<User> findAll();
 
-    @EnableScanCount
+    @EnableScan
     @Override
     long count();
 

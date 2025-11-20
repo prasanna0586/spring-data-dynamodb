@@ -27,7 +27,7 @@ public interface FeedPagingRepository
         extends DynamoDBPagingAndSortingRepository<Feed, String>, CrudRepository<Feed, String> {
     Page<Feed> findAllByMessageOrderByRegDateDesc(String message, Pageable pageable);
 
-    @EnableScanCount
+    @EnableScan
     @Override
     long count();
 
