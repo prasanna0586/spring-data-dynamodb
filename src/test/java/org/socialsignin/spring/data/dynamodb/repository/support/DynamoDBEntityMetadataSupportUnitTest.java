@@ -15,9 +15,9 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
-import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
 import org.junit.jupiter.api.Test;
 import org.socialsignin.spring.data.dynamodb.domain.sample.User;
+import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 

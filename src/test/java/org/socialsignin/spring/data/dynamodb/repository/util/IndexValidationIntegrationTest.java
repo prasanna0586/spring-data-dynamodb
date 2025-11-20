@@ -2,16 +2,17 @@ package org.socialsignin.spring.data.dynamodb.repository.util;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.socialsignin.spring.data.dynamodb.domain.validation.*;
+import org.socialsignin.spring.data.dynamodb.domain.validation.InvalidEntityDuplicateGsiPartitionKey;
+import org.socialsignin.spring.data.dynamodb.domain.validation.InvalidEntityDuplicateGsiSortKey;
+import org.socialsignin.spring.data.dynamodb.domain.validation.InvalidEntityDuplicateLsiSortKey;
+import org.socialsignin.spring.data.dynamodb.domain.validation.ValidEntityMethodAndFieldAnnotations;
 import org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext;
-import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBEntityInformation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**

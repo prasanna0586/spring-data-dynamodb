@@ -17,7 +17,6 @@ package org.socialsignin.spring.data.dynamodb.core;
 
 import org.socialsignin.spring.data.dynamodb.marshaller.*;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
 /**
  * Factory for creating TableSchema instances based on the marshalling mode.

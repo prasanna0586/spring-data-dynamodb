@@ -15,12 +15,12 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
-import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
+import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;

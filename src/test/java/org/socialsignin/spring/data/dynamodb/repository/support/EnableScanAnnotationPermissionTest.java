@@ -30,8 +30,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class EnableScanAnnotationPermissionTest {
 
-    @EnableScan
+
     public interface SampleRepository {
+        @EnableScan
         List<User> findAll();
     }
 
@@ -39,13 +40,10 @@ public class EnableScanAnnotationPermissionTest {
         List<User> findAll();
     }
 
-    @EnableScanCount
+
     public interface SampleMethodRepository {
 
-        @EnableScan
-        int someMethodThatsIgnored();
-
-        @EnableScan
+        @EnableScanCount
         int count();
 
         @EnableScan
@@ -55,6 +53,7 @@ public class EnableScanAnnotationPermissionTest {
         List<User> findAll();
 
         @EnableScan
+        @EnableScanCount
         Page<User> findAll(Pageable pageable);
 
     }

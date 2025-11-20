@@ -17,7 +17,6 @@ package org.socialsignin.spring.data.dynamodb.repository.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.socialsignin.spring.data.dynamodb.core.TableSchemaFactory;
 import org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext;
 import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBEntityInformation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,8 +29,6 @@ import org.springframework.context.event.ContextStoppedEvent;
 import org.springframework.data.repository.core.support.RepositoryProxyPostProcessor;
 import org.springframework.util.ReflectionUtils;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
-import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;

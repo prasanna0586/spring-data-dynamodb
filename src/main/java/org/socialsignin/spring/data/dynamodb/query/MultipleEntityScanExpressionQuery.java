@@ -15,9 +15,9 @@
  */
 package org.socialsignin.spring.data.dynamodb.query;
 
-import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.springframework.util.Assert;
+import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 
 import java.util.List;
 import java.util.stream.Collectors;

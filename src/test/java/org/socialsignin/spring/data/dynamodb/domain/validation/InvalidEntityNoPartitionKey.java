@@ -1,6 +1,7 @@
 package org.socialsignin.spring.data.dynamodb.domain.validation;
 
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 
 /**
  * Invalid test entity - EC-1.1: Missing table partition key.

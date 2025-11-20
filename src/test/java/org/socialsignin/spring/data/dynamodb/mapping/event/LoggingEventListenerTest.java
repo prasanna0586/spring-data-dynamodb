@@ -27,7 +27,8 @@ import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests for LoggingEventListener.

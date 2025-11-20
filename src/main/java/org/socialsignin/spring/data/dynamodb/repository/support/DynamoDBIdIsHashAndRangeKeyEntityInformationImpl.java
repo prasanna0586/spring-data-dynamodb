@@ -15,8 +15,8 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
-import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
 import org.springframework.data.annotation.Id;
+import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
 
 import java.util.Map;
 import java.util.Optional;

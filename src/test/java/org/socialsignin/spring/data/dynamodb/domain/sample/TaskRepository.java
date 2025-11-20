@@ -9,22 +9,25 @@ import java.util.List;
 /**
  * Repository for Task entity.
  */
-@EnableScan
-@EnableScanCount
+
+
 public interface TaskRepository extends CrudRepository<Task, String> {
 
+    @EnableScan
     List<Task> findByStatus(TaskStatus status);
 
+    @EnableScan
     List<Task> findByPriority(Priority priority);
 
+    @EnableScan
     List<Task> findByStatusAndPriority(TaskStatus status, Priority priority);
 
-    List<Task> findByAssignedTo(String assignedTo);
-
+    @EnableScanCount
     long countByStatus(TaskStatus status);
 
+    @EnableScan
     List<Task> findByStatusIn(List<TaskStatus> statuses);
 
-    @Override
+    @EnableScanCount
     long count();
 }

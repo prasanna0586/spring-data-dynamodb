@@ -12,7 +12,6 @@ import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.socialsignin.spring.data.dynamodb.domain.sample.ProductOrder;
 import org.socialsignin.spring.data.dynamodb.domain.sample.ProductOrderId;
 import org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext;
-import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBEntityInformation;
 import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBIdIsHashAndRangeKeyEntityInformation;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.model.Condition;

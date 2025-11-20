@@ -15,9 +15,8 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
-import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
-import software.amazon.awssdk.enhanced.dynamodb.AttributeConverterProvider;
 import org.springframework.data.repository.core.EntityMetadata;
+import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
 
 import java.util.Map;
 import java.util.Optional;

@@ -15,7 +15,6 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.query;
 
-import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.socialsignin.spring.data.dynamodb.query.Query;
 import org.socialsignin.spring.data.dynamodb.repository.ExpressionAttribute;
@@ -34,6 +33,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
+import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.model.ComparisonOperator;
 
 import java.util.*;

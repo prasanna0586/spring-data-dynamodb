@@ -16,13 +16,9 @@
 package org.socialsignin.spring.data.dynamodb.utils;
 
 import org.socialsignin.spring.data.dynamodb.config.AbstractDynamoDBConfiguration;
-import org.socialsignin.spring.data.dynamodb.core.MarshallingMode;
 import org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.FilterType;
 import org.springframework.test.context.TestExecutionListener;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;

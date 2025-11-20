@@ -31,11 +31,11 @@ package org.socialsignin.spring.data.dynamodb.mapping.event;
  * limitations under the License.
  */
 
-import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.GenericTypeResolver;
+import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 
 import java.util.function.Consumer;
 import java.util.stream.StreamSupport;

@@ -15,8 +15,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.time.LocalDateTime;
 import java.util.Random;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = { SortPageableDebugTest.TestAppConfig.class, DynamoDBLocalResource.class })
 @TestPropertySource(properties = { "spring.data.dynamodb.entity2ddl.auto=create" })

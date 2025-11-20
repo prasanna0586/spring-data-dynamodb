@@ -15,10 +15,10 @@
  */
 package org.socialsignin.spring.data.dynamodb.utils;
 
-import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteResult;
 import org.socialsignin.spring.data.dynamodb.exception.BatchDeleteException;
 import org.socialsignin.spring.data.dynamodb.exception.BatchWriteException;
 import org.springframework.dao.DataAccessException;
+import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteResult;
 
 import java.util.List;
 

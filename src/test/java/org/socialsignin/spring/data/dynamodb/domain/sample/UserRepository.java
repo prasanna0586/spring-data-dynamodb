@@ -15,10 +15,7 @@
  */
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import org.socialsignin.spring.data.dynamodb.repository.EnableScan;
-import org.socialsignin.spring.data.dynamodb.repository.ExpressionAttribute;
-import org.socialsignin.spring.data.dynamodb.repository.Query;
-import org.socialsignin.spring.data.dynamodb.repository.QueryConstants;
+import org.socialsignin.spring.data.dynamodb.repository.*;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 
@@ -102,7 +99,6 @@ public interface UserRepository extends CrudRepository<User, String> {
     @EnableScan
     Future<User> findByNameAndPostCode(String name, String postCode);
 
-    @EnableScan
     User findFirstByPostCode(String postCode);
 
     <T extends User> T save(T entity);
@@ -131,7 +127,7 @@ public interface UserRepository extends CrudRepository<User, String> {
     @EnableScan
     void deleteAll();
 
-    @EnableScan
+    @EnableScanCount
     @Override
     long count();
 
@@ -150,7 +146,6 @@ public interface UserRepository extends CrudRepository<User, String> {
     @EnableScan
     List<User> findByNumberOfPlaylistsBetween(Integer min, Integer max);
 
-    @EnableScan
     List<User> findByPostCodeIn(List<String> postCodes);
 
     @EnableScan
@@ -159,7 +154,6 @@ public interface UserRepository extends CrudRepository<User, String> {
     @EnableScan
     List<User> findByNameContaining(String substring);
 
-    @EnableScan
     List<User> findByPostCodeAndNumberOfPlaylistsGreaterThan(String postCode, Integer minPlaylists);
 
     // DAX pattern methods for DAXIntegrationPatternsTest
