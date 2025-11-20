@@ -1,6 +1,7 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
 import org.socialsignin.spring.data.dynamodb.repository.EnableScan;
+import org.socialsignin.spring.data.dynamodb.repository.EnableScanCount;
 import org.springframework.data.repository.CrudRepository;
 
 import java.time.Instant;
@@ -25,6 +26,11 @@ public interface OrderRepository extends CrudRepository<ProductOrder, ProductOrd
     @Override
     @EnableScan
     Iterable<ProductOrder> findAll();
+
+    // Override count() to enable scan count
+    @Override
+    @EnableScanCount
+    long count();
 
     // ========== LSI QUERIES - customerId-orderDate-index (table hash: customerId, LSI range: orderDate) ==========
 

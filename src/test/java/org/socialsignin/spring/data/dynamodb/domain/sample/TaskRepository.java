@@ -34,5 +34,9 @@ public interface TaskRepository extends CrudRepository<Task, String> {
 
     @EnableScan
     @Override
+    Iterable<Task> findAll();
+
+    @EnableScan
+    @Override
     void deleteAll();
 }

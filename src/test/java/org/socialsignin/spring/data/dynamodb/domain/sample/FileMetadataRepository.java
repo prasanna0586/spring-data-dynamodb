@@ -26,6 +26,10 @@ public interface FileMetadataRepository extends CrudRepository<FileMetadata, Str
 
     @EnableScan
     @Override
+    Iterable<FileMetadata> findAll();
+
+    @EnableScan
+    @Override
     void deleteAll();
 
 }

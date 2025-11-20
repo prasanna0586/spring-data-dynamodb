@@ -16,5 +16,9 @@ public interface BankAccountRepository extends CrudRepository<BankAccount, Strin
 
     @EnableScan
     @Override
+    Iterable<BankAccount> findAll();
+
+    @EnableScan
+    @Override
     void deleteAll();
 }

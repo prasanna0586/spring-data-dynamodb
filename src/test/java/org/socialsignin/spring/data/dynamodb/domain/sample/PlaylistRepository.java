@@ -54,5 +54,9 @@ public interface PlaylistRepository extends CrudRepository<Playlist, PlaylistId>
 
     @EnableScan
     @Override
+    Iterable<Playlist> findAll();
+
+    @EnableScan
+    @Override
     void deleteAll();
 }
