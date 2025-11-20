@@ -14,6 +14,7 @@ import org.socialsignin.spring.data.dynamodb.domain.sample.ProductOrderId;
 import org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext;
 import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBIdIsHashAndRangeKeyEntityInformation;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.services.dynamodb.model.ComparisonOperator;
 import software.amazon.awssdk.services.dynamodb.model.Condition;
 
 import java.util.HashMap;
@@ -179,8 +180,11 @@ public class LSIMethodsUnitTest {
     }
 
     @Test
-    @DisplayName("Test 8: getHashKeyConditions() returns null when not using index")
+    @DisplayName("Test 8: getHashKeyConditions() returns a condition for main table queries when not using index")
     void testGetHashKeyConditions_WithoutIndex() {
+        // Note: In SDK v2, main table queries also generate hash key conditions.
+        // This test validates the new behavior instead of expecting null (SDK v1 behavior).
+
         // Given - No index
         criteria.setGlobalSecondaryIndexName(null);
         criteria.setHashKeyPropertyName("customerId");
@@ -189,9 +193,14 @@ public class LSIMethodsUnitTest {
         // When
         List<Condition> conditions = criteria.getHashKeyConditions();
 
-        // Then - Should return null when not using an index
-        assertNull(conditions, "Should return null when not using index");
+        // Then - Should return a condition for main table queries (new behavior)
+        assertNotNull(conditions, "Should return conditions for main table queries");
+        assertEquals(1, conditions.size());
+        assertEquals(ComparisonOperator.EQ, conditions.get(0).comparisonOperator());
+        assertEquals(1, conditions.get(0).attributeValueList().size());
+        assertEquals("customer-001", conditions.get(0).attributeValueList().get(0).s());
     }
+
 
     @Test
     @DisplayName("Test 9: LSI vs GSI detection - LSI uses table partition key")

@@ -27,6 +27,9 @@ import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.TypeInformation;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Comparator;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -83,11 +86,28 @@ public class DynamoDBPersistentEntityTest {
     }
 
     @Test
-    public void testIdProperty() throws NoSuchFieldException {
-        Property prop = Property.of(cti, DynamoDBPersistentEntity.class.getDeclaredField("id"));
-        DynamoDBPersistentProperty property = new DynamoDBPersistentPropertyImpl(prop, underTest,
-                SimpleTypeHolder.DEFAULT);
-        DynamoDBPersistentProperty actual = underTest.returnPropertyIfBetterIdPropertyCandidateOrNull(property);
+    public void testIdProperty() throws Exception {
+        // notes:
+        // The original test retrieved the "id" property using the field directly via getDeclaredField("id").
+        // After the entity was updated to place the @DynamoDbPartitionKey annotation on the getter method
+        // instead of on the field, the old approach no longer allowed DynamoDBPersistentPropertyImpl to detect
+        // the annotation, since field lookup does not expose method-level metadata.
+        //
+        // To preserve the test’s original intent — verifying that the "id" property is correctly identified
+        // as the hash key — we now construct the Property using a PropertyDescriptor. This allows the
+        // underlying metadata system to inspect the getter (where the annotation now resides),
+        // without modifying production code or changing the behavior that the test validates.
+
+        PropertyDescriptor pd =
+                new PropertyDescriptor("id", DynamoDBPersistentEntity.class, "getId", "setId");
+
+        Property prop = Property.of(cti, pd);
+
+        DynamoDBPersistentProperty property =
+                new DynamoDBPersistentPropertyImpl(prop, underTest, SimpleTypeHolder.DEFAULT);
+
+        DynamoDBPersistentProperty actual =
+                underTest.returnPropertyIfBetterIdPropertyCandidateOrNull(property);
 
         assertNotNull(actual);
         assertTrue(actual.isHashKeyProperty());

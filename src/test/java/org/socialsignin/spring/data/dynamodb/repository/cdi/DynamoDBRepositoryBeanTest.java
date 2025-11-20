@@ -34,6 +34,8 @@ import java.util.Collections;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -66,12 +68,37 @@ public class DynamoDBRepositoryBeanTest {
     }
 
     private void setupDynamoDBBeanStubs() {
-        when(beanManager.createCreationalContext(dynamoDbClientBean)).thenReturn(creationalContext);
-        when(beanManager.getReference(dynamoDbClientBean, DynamoDbClient.class, creationalContext))
-                .thenReturn(dynamoDbClient);
-        when(beanManager.getReference(enhancedClientBean, DynamoDbEnhancedClient.class, creationalContext))
-                .thenReturn(enhancedClient);
+        // Notes:
+        // Mockito was throwing a "Strict stubbing argument mismatch" because the original
+        // stub used a specific CreationalContext instance (the mocked 'creationalContext').
+        //
+        // However, inside DynamoDBRepositoryBean.create(), the BeanManager invokes
+        // getReference(...) using a different CreationalContext — sometimes even `null`.
+        // As a result, Mockito considered the stub invalid and the test failed.
+        //
+        // To fix this, we now use:
+        //   - eq(...) to validate the first two arguments (bean and type)
+        //   - any() to accept any CreationalContext (including null)
+        //
+        // This preserves correctness for the important parameters while allowing CDI
+        // to pass any context internally without breaking the stub.
+
+        when(beanManager.createCreationalContext(dynamoDbClientBean))
+                .thenReturn(creationalContext);
+
+        when(beanManager.getReference(
+                eq(dynamoDbClientBean),
+                eq(DynamoDbClient.class),
+                any()
+        )).thenReturn(dynamoDbClient);
+
+        when(beanManager.getReference(
+                eq(enhancedClientBean),
+                eq(DynamoDbEnhancedClient.class),
+                any()
+        )).thenReturn(enhancedClient);
     }
+
 
     @Test
     public void testNullOperationsOk() {

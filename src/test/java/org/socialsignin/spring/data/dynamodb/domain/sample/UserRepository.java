@@ -111,12 +111,12 @@ public interface UserRepository extends CrudRepository<User, String> {
 
     @Query(fields = "leaveDate", limit = 1, filterExpression = "contains(#field, :value)", expressionMappingNames = {
             @ExpressionAttribute(key = "#field", value = "name") }, expressionMappingValues = {
-                    @ExpressionAttribute(key = ":value", parameterName = "projection") })
+            @ExpressionAttribute(key = ":value", parameterName = "projection") })
     List<User> findByPostCode(@Param("postCode") String postCode, @Param("projection") String projection);
 
     @Query(fields = "leaveDate", limit = 1, filterExpression = "contains(#field, :value)", expressionMappingNames = {
             @ExpressionAttribute(key = "#field", value = "name") }, expressionMappingValues = {
-                    @ExpressionAttribute(key = ":value", value = "projection") })
+            @ExpressionAttribute(key = ":value", value = "projection") })
     List<User> findByPostCode(String postCode);
 
     @EnableScan
@@ -147,6 +147,7 @@ public interface UserRepository extends CrudRepository<User, String> {
     @EnableScan
     List<User> findByNumberOfPlaylistsBetween(Integer min, Integer max);
 
+    @EnableScan
     List<User> findByPostCodeIn(List<String> postCodes);
 
     @EnableScan

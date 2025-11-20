@@ -315,7 +315,7 @@ public class DocumentMetadataRepositoryIntegrationTest {
         assertThat(results).hasSize(3);
         assertThat(results).allMatch(doc -> doc.getMemberId().equals(8));
         assertThat(results).allMatch(doc ->
-            doc.getCreatedAt().isAfter(startDate) && doc.getCreatedAt().isBefore(endDate.plus(1, ChronoUnit.SECONDS)));
+                doc.getCreatedAt().isAfter(startDate) && doc.getCreatedAt().isBefore(endDate.plus(1, ChronoUnit.SECONDS)));
     }
 
     // ==================== CUSTOM: memberId + documentCategoryIn ====================
@@ -339,7 +339,7 @@ public class DocumentMetadataRepositoryIntegrationTest {
         assertThat(results).hasSize(2);
         assertThat(results).allMatch(doc -> doc.getMemberId().equals(9));
         assertThat(results).allMatch(doc ->
-            doc.getDocumentCategory().equals(101) || doc.getDocumentCategory().equals(102));
+                doc.getDocumentCategory().equals(101) || doc.getDocumentCategory().equals(102));
     }
 
     @Test
@@ -407,9 +407,9 @@ public class DocumentMetadataRepositoryIntegrationTest {
         assertThat(results).hasSize(3);
         assertThat(results).allMatch(doc -> doc.getMemberId().equals(13));
         assertThat(results).allMatch(doc ->
-            doc.getDocumentSubCategory().equals(201) ||
-            doc.getDocumentSubCategory().equals(202) ||
-            doc.getDocumentSubCategory().equals(203));
+                doc.getDocumentSubCategory().equals(201) ||
+                        doc.getDocumentSubCategory().equals(202) ||
+                        doc.getDocumentSubCategory().equals(203));
     }
 
     @Test
@@ -467,15 +467,28 @@ public class DocumentMetadataRepositoryIntegrationTest {
     @Order(16)
     @DisplayName("Test 16: Update document - Modify multiple fields")
     void testUpdateDocument_MultipleFields() {
+        // notes:
+        // Reloading the entity before updating is required because the first save operation
+        // may modify internal attributes managed by DynamoDB (e.g., version fields or metadata
+        // used for conditional writes). The in-memory object still holds the old state, and a
+        // second save using outdated values causes a ConditionalCheckFailedException.
+        // By re-fetching the entity from the database, we ensure it has the latest version/data
+        // expected by DynamoDB, allowing the update to succeed without triggering conditional
+        // write failures.
+
         // Given
         DocumentMetadata doc = createTestDocument("test16-doc1", 16, 101, 201, "user1");
         repository.save(doc);
+
+        // MUST reload to avoid ConditionalCheckFailedException (version/condition mismatch)
+        doc = repository.findByUniqueDocumentId("test16-doc1").get();
 
         // When
         doc.setNotes("Updated notes for test");
         doc.setUpdatedAt(Instant.now().plus(1, ChronoUnit.HOURS));
         doc.setUpdatedBy("user2");
         doc.setDocumentSubCategory(202);
+
         repository.save(doc);
 
         Optional<DocumentMetadata> updated = repository.findByUniqueDocumentId("test16-doc1");
@@ -486,8 +499,9 @@ public class DocumentMetadataRepositoryIntegrationTest {
         assertThat(updatedDoc.getNotes()).isEqualTo("Updated notes for test");
         assertThat(updatedDoc.getUpdatedBy()).isEqualTo("user2");
         assertThat(updatedDoc.getDocumentSubCategory()).isEqualTo(202);
-        assertThat(updatedDoc.getCreatedBy()).isEqualTo("user1"); // Should remain unchanged
+        assertThat(updatedDoc.getCreatedBy()).isEqualTo("user1");
     }
+
 
     @Test
     @Order(17)
@@ -530,7 +544,7 @@ public class DocumentMetadataRepositoryIntegrationTest {
     }
 
     private DocumentMetadata createTestDocument(String id, Integer memberId, Integer category,
-                                                  Integer subCategory, String createdBy) {
+                                                Integer subCategory, String createdBy) {
         DocumentMetadata doc = new DocumentMetadata();
         doc.setUniqueDocumentId(id);
         doc.setMemberId(memberId);
