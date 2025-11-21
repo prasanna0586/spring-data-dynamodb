@@ -206,19 +206,82 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
                 }
             }
         } else if (isApplicableForGlobalSecondaryIndex()) {
-            // GSI queries: Allow sorting by GSI properties and GSI range keys
+            // GSI queries: ONLY allow sorting by the specific GSI's range key being queried
+            // Collect all GSI properties that have conditions
+            List<String> gsiPropertiesWithConditions = new ArrayList<>();
+            Map<String, String[]> gsiNamesByProperty = entityInformation.getGlobalSecondaryIndexNamesByPropertyName();
+
             for (Entry<String, List<Condition>> singlePropertyCondition : propertyConditions.entrySet()) {
-                if (entityInformation.getGlobalSecondaryIndexNamesByPropertyName()
-                        .containsKey(singlePropertyCondition.getKey())) {
-                    allowedSortProperties.add(singlePropertyCondition.getKey());
+                String propertyName = singlePropertyCondition.getKey();
+                if (gsiNamesByProperty.containsKey(propertyName)) {
+                    gsiPropertiesWithConditions.add(propertyName);
                 }
             }
 
-            // Add any GSI range key properties from sort
-            for (Order order : sort) {
-                final String sortProperty = order.getProperty();
-                if (entityInformation.isGlobalIndexRangeKeyProperty(sortProperty)) {
-                    allowedSortProperties.add(sortProperty);
+            // Find common GSI index that contains ALL properties with conditions
+            String commonGsiIndexName = null;
+            if (!gsiPropertiesWithConditions.isEmpty()) {
+                // Start with the GSI indexes of the first property
+                String firstProperty = gsiPropertiesWithConditions.get(0);
+                String[] firstPropertyIndexes = gsiNamesByProperty.get(firstProperty);
+
+                if (firstPropertyIndexes != null && firstPropertyIndexes.length > 0) {
+                    // For each GSI index of the first property, check if ALL other properties also belong to it
+                    for (String candidateIndexName : firstPropertyIndexes) {
+                        boolean allPropertiesInThisIndex = true;
+
+                        for (String property : gsiPropertiesWithConditions) {
+                            String[] propertyIndexes = gsiNamesByProperty.get(property);
+                            boolean propertyInCandidateIndex = false;
+
+                            if (propertyIndexes != null) {
+                                for (String indexName : propertyIndexes) {
+                                    if (indexName.equals(candidateIndexName)) {
+                                        propertyInCandidateIndex = true;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (!propertyInCandidateIndex) {
+                                allPropertiesInThisIndex = false;
+                                break;
+                            }
+                        }
+
+                        if (allPropertiesInThisIndex) {
+                            commonGsiIndexName = candidateIndexName;
+                            break; // Found a common GSI, use it
+                        }
+                    }
+                }
+
+                // If no common GSI found, these properties belong to different GSIs
+                if (commonGsiIndexName == null) {
+                    throw new UnsupportedOperationException(
+                        "Cannot query properties from different GSI indexes in a single query. Found conditions on: " +
+                        String.join(", ", gsiPropertiesWithConditions));
+                }
+
+                // Add all properties with conditions to allowed sort properties
+                allowedSortProperties.addAll(gsiPropertiesWithConditions);
+
+                // Add all range keys from the common GSI to allowed sort properties
+                for (Entry<String, String[]> entry : gsiNamesByProperty.entrySet()) {
+                    String propertyName = entry.getKey();
+                    String[] indexNames = entry.getValue();
+
+                    if (indexNames != null) {
+                        for (String indexName : indexNames) {
+                            if (indexName.equals(commonGsiIndexName)) {
+                                // Check if this is a range key property for this GSI
+                                if (entityInformation.isGlobalIndexRangeKeyProperty(propertyName)) {
+                                    allowedSortProperties.add(propertyName);
+                                }
+                                break;
+                            }
+                        }
+                    }
                 }
             }
         } else {
