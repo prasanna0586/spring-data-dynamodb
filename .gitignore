@@ -17,3 +17,6 @@ release.properties
 .checkstyle
 
 .DS_Store
+
+TEST_FAILURE_DETAILS.md
+.claude
