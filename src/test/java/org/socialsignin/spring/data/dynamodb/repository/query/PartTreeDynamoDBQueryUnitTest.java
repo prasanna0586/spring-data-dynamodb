@@ -35,6 +35,7 @@ import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBIdIsHash
 import org.springframework.data.repository.query.Parameter;
 import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.RepositoryQuery;
+import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
 
 import java.io.Serializable;
@@ -120,18 +121,18 @@ public class PartTreeDynamoDBQueryUnitTest {
         Mockito.lenient().when(mockPlaylistQueryResults.items()).thenReturn(mockPlaylistItems);
 
         // Setup SdkIterable to return a stream with a single mock entity
-        Mockito.lenient().when(mockUserItems.spliterator()).thenReturn(Arrays.asList(mockUser).spliterator());
-        Mockito.lenient().when(mockPlaylistItems.spliterator()).thenReturn(Arrays.asList(mockPlaylist).spliterator());
+        Mockito.lenient().when(mockUserItems.spliterator()).thenReturn(List.of(mockUser).spliterator());
+        Mockito.lenient().when(mockPlaylistItems.spliterator()).thenReturn(List.of(mockPlaylist).spliterator());
 
         // Setup Page mocks to return items for collection queries that iterate over pages
-        Mockito.lenient().when(mockUserPage.items()).thenReturn(Arrays.asList(mockUser));
-        Mockito.lenient().when(mockPlaylistPage.items()).thenReturn(Arrays.asList(mockPlaylist));
+        Mockito.lenient().when(mockUserPage.items()).thenReturn(List.of(mockUser));
+        Mockito.lenient().when(mockPlaylistPage.items()).thenReturn(List.of(mockPlaylist));
 
         // Setup PageIterable to iterate over pages for collection queries
-        Mockito.lenient().when(mockUserScanResults.iterator()).thenReturn(Arrays.asList(mockUserPage).iterator());
-        Mockito.lenient().when(mockUserQueryResults.iterator()).thenReturn(Arrays.asList(mockUserPage).iterator());
-        Mockito.lenient().when(mockPlaylistScanResults.iterator()).thenReturn(Arrays.asList(mockPlaylistPage).iterator());
-        Mockito.lenient().when(mockPlaylistQueryResults.iterator()).thenReturn(Arrays.asList(mockPlaylistPage).iterator());
+        Mockito.lenient().when(mockUserScanResults.iterator()).thenReturn(List.of(mockUserPage).iterator());
+        Mockito.lenient().when(mockUserQueryResults.iterator()).thenReturn(List.of(mockUserPage).iterator());
+        Mockito.lenient().when(mockPlaylistScanResults.iterator()).thenReturn(List.of(mockPlaylistPage).iterator());
+        Mockito.lenient().when(mockPlaylistQueryResults.iterator()).thenReturn(List.of(mockPlaylistPage).iterator());
     }
 
     private <T, ID extends Serializable> void setupCommonMocksForThisRepositoryMethod(
@@ -303,7 +304,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockPlaylist), o);
 
         // Verify and capture arguments before using getValue()
         Mockito.verify(mockDynamoDBOperations).scan(playlistClassCaptor.capture(), scanEnhancedCaptor.capture());
@@ -363,7 +364,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockPlaylist), o);
 
         // Verify and capture arguments before using getValue()
         Mockito.verify(mockDynamoDBOperations).scan(playlistClassCaptor.capture(), scanEnhancedCaptor.capture());
@@ -407,11 +408,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         setupCommonMocksForThisRepositoryMethod(mockPlaylistEntityMetadata, mockDynamoDBPlaylistQueryMethod,
                 Playlist.class, "findByUserName", 1, "userName", "playlistName");
         Mockito.when(mockDynamoDBPlaylistQueryMethod.isCollectionQuery()).thenReturn(true);
-        Playlist prototypeHashKey = new Playlist();
-        prototypeHashKey.setUserName("someUserName");
-        Mockito.lenient().when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest.class)))
-                .thenReturn(mockPlaylistQueryResults);
-        Mockito.lenient().when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class)))
+        Mockito.when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class)))
                 .thenReturn(mockPlaylistQueryResults);
 
         // Execute the query
@@ -419,23 +416,21 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockPlaylist), o);
 
-        // Verify and capture arguments before using getValue()
-        Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryEnhancedCaptor.capture());
+        // Verify and capture arguments
+        ArgumentCaptor<software.amazon.awssdk.services.dynamodb.model.QueryRequest> queryRequestCaptor =
+            ArgumentCaptor.forClass(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class);
+        Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryRequestCaptor.capture());
 
-        // Assert that we scanned DynamoDB for the correct class
-        // Moved after verify() - cannot call getValue() before capture()
-        // assertEquals(playlistClassCaptor.getValue(), Playlist.class);
+        // Assert that we queried DynamoDB for the correct class
+        assertEquals(Playlist.class, playlistClassCaptor.getValue());
 
-        // Assert that we have only one filter condition, for the name of the
-        // property
-        Object hashKeyPrototypeObject = queryEnhancedCaptor.getValue().queryConditional();
-        assertTrue(hashKeyPrototypeObject instanceof Playlist);
-        Playlist hashKeyPropertyPlaylist = (Playlist) hashKeyPrototypeObject;
-        assertEquals("someUserName", hashKeyPropertyPlaylist.getUserName());
+        // Assert on QueryRequest properties
+        software.amazon.awssdk.services.dynamodb.model.QueryRequest capturedRequest = queryRequestCaptor.getValue();
+        assertEquals("#pk0 = :kval0", capturedRequest.keyConditionExpression());
+        assertEquals("someUserName", capturedRequest.expressionAttributeValues().get(":kval0").s());
 
-        // Verify that the expected DynamoDBOperations method was called
     }
 
     @Test
@@ -467,7 +462,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertEquals(100l, o);
+        assertEquals(100L, o);
 
         // Verify and capture arguments before using getValue()
         Mockito.verify(mockDynamoDBOperations).count(playlistClassCaptor.capture(), scanEnhancedCaptor.capture());
@@ -564,7 +559,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockPlaylist), o);
 
         // Verify and capture arguments before using getValue()
         Mockito.verify(mockDynamoDBOperations).scan(playlistClassCaptor.capture(), scanEnhancedCaptor.capture()); // Assert
@@ -628,14 +623,12 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockDynamoDBPlaylistQueryMethod.isCollectionQuery()).thenReturn(true);
         Playlist prototypeHashKey = new Playlist();
         prototypeHashKey.setUserName("someUserName");
-        Mockito.when(mockPlaylistEntityMetadata.getHashKeyPropotypeEntityForHashKey("someUserName"))
+        Mockito.lenient().when(mockPlaylistEntityMetadata.getHashKeyPropotypeEntityForHashKey("someUserName"))
                 .thenReturn(prototypeHashKey);
-        Mockito.when(mockPlaylistEntityMetadata.getHashKey(playlistId)).thenReturn("someUserName");
-        Mockito.when(mockPlaylistEntityMetadata.getRangeKey(playlistId)).thenReturn(null);
+        Mockito.lenient().when(mockPlaylistEntityMetadata.getHashKey(playlistId)).thenReturn("someUserName");
+        Mockito.lenient().when(mockPlaylistEntityMetadata.getRangeKey(playlistId)).thenReturn(null);
 
-        Mockito.lenient().when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest.class)))
-                .thenReturn(mockPlaylistQueryResults);
-        Mockito.lenient().when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class)))
+        Mockito.when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class)))
                 .thenReturn(mockPlaylistQueryResults);
 
         // Execute the query
@@ -643,21 +636,20 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
-
-        // Verify and capture arguments before using getValue()
-        Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryEnhancedCaptor.capture());
-
-        // Assert that we scanned DynamoDB for the correct class
-        // Moved after verify() - cannot call getValue() before capture()
-        // assertEquals(playlistClassCaptor.getValue(), Playlist.class);
-
-        // TODO: SDK v2 - QueryConditional verification requires different approach
-        // In SDK v1, getHashKeyValues() returned the hash key prototype entity for inspection
-        // In SDK v2, queryConditional() returns a QueryConditional object which is not designed for inspection
-        // Removed: Hash key prototype and range key condition assertions
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockPlaylist), o);
 
         // Verify that the expected DynamoDBOperations method was called
+        ArgumentCaptor<software.amazon.awssdk.services.dynamodb.model.QueryRequest> queryRequestCaptor =
+                ArgumentCaptor.forClass(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class);
+        Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryRequestCaptor.capture());
+
+        // Assert that we queried DynamoDB for the correct class
+        assertEquals(Playlist.class, playlistClassCaptor.getValue());
+
+        // Assert on QueryRequest properties
+        software.amazon.awssdk.services.dynamodb.model.QueryRequest capturedRequest = queryRequestCaptor.getValue();
+        assertEquals("#pk0 = :kval0", capturedRequest.keyConditionExpression());
+        assertEquals("someUserName", capturedRequest.expressionAttributeValues().get(":kval0").s());
 
     }
 
@@ -671,13 +663,9 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockDynamoDBPlaylistQueryMethod.isCollectionQuery()).thenReturn(true);
         Playlist prototypeHashKey = new Playlist();
         prototypeHashKey.setUserName("someUserName");
-        Mockito.when(mockPlaylistEntityMetadata.getHashKeyPropotypeEntityForHashKey("someUserName"))
+        Mockito.lenient().when(mockPlaylistEntityMetadata.getHashKeyPropotypeEntityForHashKey("someUserName"))
                 .thenReturn(prototypeHashKey);
-        // Mockito.when(mockPlaylistEntityMetadata.getHashKey(playlistId)).thenReturn("someUserName");
-        // Mockito.when(mockPlaylistEntityMetadata.getRangeKey(playlistId)).thenReturn(null);
-        Mockito.lenient().when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest.class)))
-                .thenReturn(mockPlaylistQueryResults);
-        Mockito.lenient().when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class)))
+        Mockito.when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class)))
                 .thenReturn(mockPlaylistQueryResults);
 
         // Execute the query
@@ -685,21 +673,20 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockPlaylist), o);
 
-        // Verify and capture arguments before using getValue()
-        Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryEnhancedCaptor.capture());
+        // Verify and capture arguments
+        ArgumentCaptor<software.amazon.awssdk.services.dynamodb.model.QueryRequest> queryRequestCaptor =
+            ArgumentCaptor.forClass(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class);
+        Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryRequestCaptor.capture());
 
-        // Assert that we scanned DynamoDB for the correct class
-        // Moved after verify() - cannot call getValue() before capture()
-        // assertEquals(playlistClassCaptor.getValue(), Playlist.class);
+        // Assert that we queried DynamoDB for the correct class
+        assertEquals(Playlist.class, playlistClassCaptor.getValue());
 
-        // TODO: SDK v2 - QueryConditional verification requires different approach
-        // In SDK v1, getHashKeyValues() returned the hash key prototype entity for inspection
-        // In SDK v2, queryConditional() returns a QueryConditional object which is not designed for inspection
-        // Removed: Hash key prototype and range key condition assertions
-
-        // Verify that the expected DynamoDBOperations method was called
+        // Assert on QueryRequest properties
+        software.amazon.awssdk.services.dynamodb.model.QueryRequest capturedRequest = queryRequestCaptor.getValue();
+        assertEquals("#pk0 = :kval0", capturedRequest.keyConditionExpression());
+        assertEquals("someUserName", capturedRequest.expressionAttributeValues().get(":kval0").s());
 
     }
 
@@ -713,17 +700,15 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockDynamoDBPlaylistQueryMethod.isCollectionQuery()).thenReturn(true);
         Playlist prototypeHashKey = new Playlist();
         prototypeHashKey.setUserName("someUserName");
-        Mockito.when(mockPlaylistEntityMetadata.getHashKeyPropotypeEntityForHashKey("someUserName"))
+        Mockito.lenient().when(mockPlaylistEntityMetadata.getHashKeyPropotypeEntityForHashKey("someUserName"))
                 .thenReturn(prototypeHashKey);
         // Mockito.when(mockPlaylistEntityMetadata.getHashKey(playlistId)).thenReturn("someUserName");
         // Mockito.when(mockPlaylistEntityMetadata.getRangeKey(playlistId)).thenReturn(null);
-        Set<String> indexRangeKeyPropertyNames = new HashSet<String>();
+        Set<String> indexRangeKeyPropertyNames = new HashSet<>();
         indexRangeKeyPropertyNames.add("displayName");
         Mockito.when(mockPlaylistEntityMetadata.getIndexRangeKeyPropertyNames()).thenReturn(indexRangeKeyPropertyNames);
 
-        Mockito.lenient().when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest.class)))
-                .thenReturn(mockPlaylistQueryResults);
-        Mockito.lenient().when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class)))
+        Mockito.when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class)))
                 .thenReturn(mockPlaylistQueryResults);
 
         // Execute the query
@@ -731,22 +716,20 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
-
-        // Verify and capture arguments before using getValue()
-        Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryEnhancedCaptor.capture());
-
-        // Assert that we scanned DynamoDB for the correct class
-        // Moved after verify() - cannot call getValue() before capture()
-        // assertEquals(playlistClassCaptor.getValue(), Playlist.class);
-
-        // TODO: SDK v2 - QueryConditional verification requires different approach
-        // In SDK v1, getHashKeyValues() returned the hash key prototype entity for inspection
-        // and getRangeKeyConditions() returned a Map<String, Condition> for range key conditions
-        // In SDK v2, queryConditional() returns a QueryConditional object which is not designed for inspection
-        // Removed: Hash key prototype and range key condition assertions
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockPlaylist), o);
 
         // Verify that the expected DynamoDBOperations method was called
+        ArgumentCaptor<software.amazon.awssdk.services.dynamodb.model.QueryRequest> queryRequestCaptor =
+                ArgumentCaptor.forClass(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class);
+        Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryRequestCaptor.capture());
+
+        // Assert that we queried DynamoDB for the correct class
+        assertEquals(Playlist.class, playlistClassCaptor.getValue());
+
+        // Assert on QueryRequest properties
+        software.amazon.awssdk.services.dynamodb.model.QueryRequest capturedRequest = queryRequestCaptor.getValue();
+        assertEquals("#pk0 = :kval0", capturedRequest.keyConditionExpression());
+        assertEquals("someUserName", capturedRequest.expressionAttributeValues().get(":kval0").s());
 
     }
 
@@ -788,12 +771,10 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockDynamoDBPlaylistQueryMethod.isCollectionQuery()).thenReturn(true);
         Playlist prototypeHashKey = new Playlist();
         prototypeHashKey.setUserName("someUserName");
-        Mockito.when(mockPlaylistEntityMetadata.getHashKeyPropotypeEntityForHashKey("someUserName"))
+        Mockito.lenient().when(mockPlaylistEntityMetadata.getHashKeyPropotypeEntityForHashKey("someUserName"))
                 .thenReturn(prototypeHashKey);
         Mockito.when(mockPlaylistEntityMetadata.getHashKey(playlistId)).thenReturn("someUserName");
-        Mockito.lenient().when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest.class)))
-                .thenReturn(mockPlaylistQueryResults);
-        Mockito.lenient().when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class)))
+        Mockito.when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class)))
                 .thenReturn(mockPlaylistQueryResults);
 
         // Execute the query
@@ -801,58 +782,70 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockPlaylist), o);
 
-        // Verify and capture arguments before using getValue()
-        Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryEnhancedCaptor.capture());
+        // Verify and capture arguments
+        ArgumentCaptor<software.amazon.awssdk.services.dynamodb.model.QueryRequest> queryRequestCaptor =
+            ArgumentCaptor.forClass(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class);
+        Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryRequestCaptor.capture());
 
-        // Assert that we scanned DynamoDB for the correct class
-        // Moved after verify() - cannot call getValue() before capture()
-        // assertEquals(playlistClassCaptor.getValue(), Playlist.class);
+        // Assert that we queried DynamoDB for the correct class
+        assertEquals(Playlist.class, playlistClassCaptor.getValue());
 
-        // TODO: SDK v2 - QueryConditional verification requires different approach
-        // In SDK v1, getHashKeyValues() returned the hash key prototype entity for inspection
-        // In SDK v2, queryConditional() returns a QueryConditional object which is not designed for inspection
-        // Removed: Hash key prototype and range key condition assertions
-
-        // Verify that the expected DynamoDBOperations method was called
+        // Assert on QueryRequest properties
+        software.amazon.awssdk.services.dynamodb.model.QueryRequest capturedRequest = queryRequestCaptor.getValue();
+        assertEquals(false, capturedRequest.scanIndexForward()); // Descending order
+        assertEquals("#pk0 = :kval0", capturedRequest.keyConditionExpression());
+        assertEquals("someUserName", capturedRequest.expressionAttributeValues().get(":kval0").s());
 
     }
 
-    // Can't sort by indexrangekey when querying by hash key only
+    // SDK v2: Now supports sorting by LSI range key when querying by hash key only
     @Test
     public void testExecute_WhenFinderMethodIsFindingEntityWithCompositeIdList_WhenFindingByCompositeIdWithHashKeyOnly_WhenSortingByIndexRangeKey() {
-        assertThrows(UnsupportedOperationException.class, () -> {
-            PlaylistId playlistId = new PlaylistId();
-            playlistId.setUserName("someUserName");
+        PlaylistId playlistId = new PlaylistId();
+        playlistId.setUserName("someUserName");
 
-            setupCommonMocksForThisRepositoryMethod(mockPlaylistEntityMetadata, mockDynamoDBPlaylistQueryMethod,
-                    Playlist.class, "findByPlaylistIdOrderByDisplayNameDesc", 1, "userName", "playlistName");
-            Mockito.when(mockPlaylistEntityMetadata.isCompositeHashAndRangeKeyProperty("playlistId")).thenReturn(true);
-            Mockito.when(mockDynamoDBPlaylistQueryMethod.isCollectionQuery()).thenReturn(true);
-            Playlist prototypeHashKey = new Playlist();
-            prototypeHashKey.setUserName("someUserName");
-            // This stubbing is not used as the test expects UnsupportedOperationException before it's reached
-            Mockito.lenient().when(mockPlaylistEntityMetadata.getHashKeyPropotypeEntityForHashKey("someUserName"))
-                    .thenReturn(prototypeHashKey);
-            Mockito.when(mockPlaylistEntityMetadata.getHashKey(playlistId)).thenReturn("someUserName");
-            Mockito.when(mockPlaylistEntityMetadata.getRangeKey(playlistId)).thenReturn(null);
-            Set<String> indexRangeKeyPropertyNames = new HashSet<String>();
-            indexRangeKeyPropertyNames.add("displayName");
-            Mockito.when(mockPlaylistEntityMetadata.getIndexRangeKeyPropertyNames()).thenReturn(indexRangeKeyPropertyNames);
+        setupCommonMocksForThisRepositoryMethod(mockPlaylistEntityMetadata, mockDynamoDBPlaylistQueryMethod,
+                Playlist.class, "findByPlaylistIdOrderByDisplayNameDesc", 1, "userName", "playlistName");
+        Mockito.when(mockPlaylistEntityMetadata.isCompositeHashAndRangeKeyProperty("playlistId")).thenReturn(true);
+        Mockito.when(mockDynamoDBPlaylistQueryMethod.isCollectionQuery()).thenReturn(true);
+        Playlist prototypeHashKey = new Playlist();
+        prototypeHashKey.setUserName("someUserName");
+        Mockito.lenient().when(mockPlaylistEntityMetadata.getHashKeyPropotypeEntityForHashKey("someUserName"))
+                .thenReturn(prototypeHashKey);
+        Mockito.when(mockPlaylistEntityMetadata.getHashKey(playlistId)).thenReturn("someUserName");
+        Mockito.when(mockPlaylistEntityMetadata.getRangeKey(playlistId)).thenReturn(null);
+        Set<String> indexRangeKeyPropertyNames = new HashSet<>();
+        indexRangeKeyPropertyNames.add("displayName");
+        Mockito.when(mockPlaylistEntityMetadata.getIndexRangeKeyPropertyNames()).thenReturn(indexRangeKeyPropertyNames);
 
-            // Mock out specific DynamoDBOperations behavior expected by this method
-            // ArgumentCaptor<DynamoDBQueryExpression> queryCaptor =
-            // ArgumentCaptor.forClass(DynamoDBQueryExpression.class);
-            // ArgumentCaptor<Class> classCaptor = ArgumentCaptor.forClass(Class.class);
-            //            //            // Mockito.when(mockDynamoDBOperations.query(classCaptor.capture(),
-            // queryCaptor.capture())).thenReturn(
-            // mockPlaylistQueryResults);
+        // Mock the query operation
+        Mockito.when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class)))
+                .thenReturn(mockPlaylistQueryResults);
 
-            // Execute the query
-            Object[] parameters = new Object[] { playlistId };
-            partTreeDynamoDBQuery.execute(parameters);
-        });
+        // Execute the query
+        Object[] parameters = new Object[] { playlistId };
+        Object o = partTreeDynamoDBQuery.execute(parameters);
+
+        // Assert that we obtain the expected results
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockPlaylist), o);
+
+        // Verify query was called and capture the request
+        ArgumentCaptor<Class> playlistClassCaptor = ArgumentCaptor.forClass(Class.class);
+        ArgumentCaptor<software.amazon.awssdk.services.dynamodb.model.QueryRequest> queryRequestCaptor =
+                ArgumentCaptor.forClass(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class);
+        Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryRequestCaptor.capture());
+
+        assertEquals(Playlist.class, playlistClassCaptor.getValue());
+        software.amazon.awssdk.services.dynamodb.model.QueryRequest capturedRequest = queryRequestCaptor.getValue();
+
+        // Verify hash key condition
+        assertEquals("#pk0 = :kval0", capturedRequest.keyConditionExpression());
+        assertEquals("someUserName", capturedRequest.expressionAttributeValues().get(":kval0").s());
+
+        // Verify sort order is descending (false = descending in DynamoDB)
+        assertEquals(false, capturedRequest.scanIndexForward());
     }
 
     @Test
@@ -860,15 +853,12 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         setupCommonMocksForThisRepositoryMethod(mockPlaylistEntityMetadata, mockDynamoDBPlaylistQueryMethod,
                 Playlist.class, "findByUserNameAndDisplayName", 2, "userName", "playlistName");
-        Set<String> indexRangeKeyPropertyNames = new HashSet<String>();
+        Set<String> indexRangeKeyPropertyNames = new HashSet<>();
         indexRangeKeyPropertyNames.add("displayName");
         Mockito.when(mockPlaylistEntityMetadata.getIndexRangeKeyPropertyNames()).thenReturn(indexRangeKeyPropertyNames);
         Mockito.when(mockDynamoDBPlaylistQueryMethod.isCollectionQuery()).thenReturn(true);
-        Playlist prototypeHashKey = new Playlist();
-        prototypeHashKey.setUserName("someUserName");
-        Mockito.lenient().when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest.class)))
-                .thenReturn(mockPlaylistQueryResults);
-        Mockito.lenient().when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class)))
+
+        Mockito.when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class)))
                 .thenReturn(mockPlaylistQueryResults);
 
         // Execute the query
@@ -876,21 +866,20 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
-
-        // Verify and capture arguments before using getValue()
-        Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryEnhancedCaptor.capture());
-
-        // Assert that we scanned DynamoDB for the correct class
-        // Moved after verify() - cannot call getValue() before capture()
-        // assertEquals(playlistClassCaptor.getValue(), Playlist.class);
-
-        // TODO: SDK v2 - QueryConditional verification requires different approach
-        // In SDK v1, getHashKeyValues() returned the hash key prototype entity for inspection
-        // In SDK v2, queryConditional() returns a QueryConditional object which is not designed for inspection
-        // Removed: Hash key and range key condition assertions
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockPlaylist), o);
 
         // Verify that the expected DynamoDBOperations method was called
+        ArgumentCaptor<software.amazon.awssdk.services.dynamodb.model.QueryRequest> queryRequestCaptor =
+                ArgumentCaptor.forClass(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class);
+        Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryRequestCaptor.capture());
+
+        // Assert that we queried DynamoDB for the correct class
+        assertEquals(Playlist.class, playlistClassCaptor.getValue());
+
+        // Assert on QueryRequest properties
+        software.amazon.awssdk.services.dynamodb.model.QueryRequest capturedRequest = queryRequestCaptor.getValue();
+        assertEquals("#pk0 = :kval0", capturedRequest.keyConditionExpression());
+        assertEquals("someUserName", capturedRequest.expressionAttributeValues().get(":kval0").s());
 
     }
 
@@ -899,15 +888,12 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         setupCommonMocksForThisRepositoryMethod(mockPlaylistEntityMetadata, mockDynamoDBPlaylistQueryMethod,
                 Playlist.class, "findByUserNameAndDisplayNameOrderByDisplayNameDesc", 2, "userName", "playlistName");
-        Set<String> indexRangeKeyPropertyNames = new HashSet<String>();
+        Set<String> indexRangeKeyPropertyNames = new HashSet<>();
         indexRangeKeyPropertyNames.add("displayName");
         Mockito.when(mockPlaylistEntityMetadata.getIndexRangeKeyPropertyNames()).thenReturn(indexRangeKeyPropertyNames);
         Mockito.when(mockDynamoDBPlaylistQueryMethod.isCollectionQuery()).thenReturn(true);
-        Playlist prototypeHashKey = new Playlist();
-        prototypeHashKey.setUserName("someUserName");
-        Mockito.lenient().when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest.class)))
-                .thenReturn(mockPlaylistQueryResults);
-        Mockito.lenient().when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class)))
+
+        Mockito.when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class)))
                 .thenReturn(mockPlaylistQueryResults);
 
         // Execute the query
@@ -915,24 +901,21 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
-
-        // Verify and capture arguments before using getValue()
-        Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryEnhancedCaptor.capture());
-
-        // Assert that we scanned DynamoDB for the correct class
-        // Moved after verify() - cannot call getValue() before capture()
-        // assertEquals(playlistClassCaptor.getValue(), Playlist.class);
-
-        // TODO: SDK v2 - QueryConditional verification requires different approach
-        // In SDK v1, getHashKeyValues() returned the hash key prototype entity for inspection
-        // and getRangeKeyConditions() returned a Map<String, Condition> for range key conditions
-        // In SDK v2, queryConditional() returns a QueryConditional object which is not designed for inspection
-        // Removed: Hash key prototype and range key condition assertions
-
-        assertFalse(queryEnhancedCaptor.getValue().scanIndexForward());
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockPlaylist), o);
 
         // Verify that the expected DynamoDBOperations method was called
+        ArgumentCaptor<software.amazon.awssdk.services.dynamodb.model.QueryRequest> queryRequestCaptor =
+                ArgumentCaptor.forClass(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class);
+        Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryRequestCaptor.capture());
+
+        // Assert that we queried DynamoDB for the correct class
+        assertEquals(Playlist.class, playlistClassCaptor.getValue());
+
+        // Assert on QueryRequest properties
+        software.amazon.awssdk.services.dynamodb.model.QueryRequest capturedRequest = queryRequestCaptor.getValue();
+        assertEquals("#pk0 = :kval0", capturedRequest.keyConditionExpression());
+        assertEquals("someUserName", capturedRequest.expressionAttributeValues().get(":kval0").s());
+        assertFalse(capturedRequest.scanIndexForward());
 
     }
 
@@ -941,13 +924,25 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         assertThrows(UnsupportedOperationException.class, () -> {
             setupCommonMocksForThisRepositoryMethod(mockPlaylistEntityMetadata, mockDynamoDBPlaylistQueryMethod,
                     Playlist.class, "findByUserNameAndDisplayNameOrderByPlaylistNameDesc", 2, "userName", "playlistName");
-            Set<String> indexRangeKeyPropertyNames = new HashSet<String>();
+            Set<String> indexRangeKeyPropertyNames = new HashSet<>();
             indexRangeKeyPropertyNames.add("displayName");
             Mockito.when(mockPlaylistEntityMetadata.getIndexRangeKeyPropertyNames()).thenReturn(indexRangeKeyPropertyNames);
+
+            // Mock LSI index name mapping
+            Map<String, String[]> indexNamesByPropertyName = new HashMap<>();
+            indexNamesByPropertyName.put("displayName", new String[]{"userName-displayName-index"});
+            Mockito.when(mockPlaylistEntityMetadata.getGlobalSecondaryIndexNamesByPropertyName())
+                    .thenReturn(indexNamesByPropertyName);
+
+            // Mock that userName is NOT a GSI partition key (it's the table partition key for LSI)
+            // Mock that displayName is also NOT a GSI partition key (it's an LSI range key)
+            Mockito.when(mockPlaylistEntityMetadata.isGlobalIndexHashKeyProperty("userName")).thenReturn(false);
+            Mockito.when(mockPlaylistEntityMetadata.isGlobalIndexHashKeyProperty("displayName")).thenReturn(false);
+
             Mockito.when(mockDynamoDBPlaylistQueryMethod.isCollectionQuery()).thenReturn(true);
             Playlist prototypeHashKey = new Playlist();
             prototypeHashKey.setUserName("someUserName");
-            Mockito.when(mockPlaylistEntityMetadata.getHashKeyPropotypeEntityForHashKey("someUserName"))
+            Mockito.lenient().when(mockPlaylistEntityMetadata.getHashKeyPropotypeEntityForHashKey("someUserName"))
                     .thenReturn(prototypeHashKey);
 
             Mockito.lenient().when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest.class)))
@@ -975,15 +970,12 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         setupCommonMocksForThisRepositoryMethod(mockPlaylistEntityMetadata, mockDynamoDBPlaylistQueryMethod,
                 Playlist.class, "findByUserNameAndDisplayNameOrderByDisplayNameDesc", 2, "userName", "playlistName");
-        Set<String> indexRangeKeyPropertyNames = new HashSet<String>();
+        Set<String> indexRangeKeyPropertyNames = new HashSet<>();
         indexRangeKeyPropertyNames.add("displayName");
         Mockito.when(mockPlaylistEntityMetadata.getIndexRangeKeyPropertyNames()).thenReturn(indexRangeKeyPropertyNames);
         Mockito.when(mockDynamoDBPlaylistQueryMethod.isCollectionQuery()).thenReturn(true);
-        Playlist prototypeHashKey = new Playlist();
-        prototypeHashKey.setUserName("someUserName");
-        Mockito.lenient().when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest.class)))
-                .thenReturn(mockPlaylistQueryResults);
-        Mockito.lenient().when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class)))
+
+        Mockito.when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class)))
                 .thenReturn(mockPlaylistQueryResults);
 
         // Execute the query
@@ -991,21 +983,21 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
-
-        // Verify and capture arguments before using getValue()
-        Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryEnhancedCaptor.capture());
-
-        // Assert that we scanned DynamoDB for the correct class
-        // Moved after verify() - cannot call getValue() before capture()
-        // assertEquals(playlistClassCaptor.getValue(), Playlist.class);
-
-        // TODO: SDK v2 - QueryConditional verification requires different approach
-        // In SDK v1, getHashKeyValues() returned the hash key prototype entity for inspection
-        // In SDK v2, queryConditional() returns a QueryConditional object which is not designed for inspection
-        // Removed: Hash key and range key condition assertions
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockPlaylist), o);
 
         // Verify that the expected DynamoDBOperations method was called
+        ArgumentCaptor<software.amazon.awssdk.services.dynamodb.model.QueryRequest> queryRequestCaptor =
+                ArgumentCaptor.forClass(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class);
+        Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryRequestCaptor.capture());
+
+        // Assert that we queried DynamoDB for the correct class
+        assertEquals(Playlist.class, playlistClassCaptor.getValue());
+
+        // Assert on QueryRequest properties
+        software.amazon.awssdk.services.dynamodb.model.QueryRequest capturedRequest = queryRequestCaptor.getValue();
+        assertEquals("#pk0 = :kval0", capturedRequest.keyConditionExpression());
+        assertEquals("someUserName", capturedRequest.expressionAttributeValues().get(":kval0").s());
+        assertFalse(capturedRequest.scanIndexForward());
 
     }
 
@@ -1015,13 +1007,25 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         assertThrows(UnsupportedOperationException.class, () -> {
             setupCommonMocksForThisRepositoryMethod(mockPlaylistEntityMetadata, mockDynamoDBPlaylistQueryMethod,
                     Playlist.class, "findByUserNameAndDisplayNameOrderByPlaylistNameDesc", 2, "userName", "playlistName");
-            Set<String> indexRangeKeyPropertyNames = new HashSet<String>();
+            Set<String> indexRangeKeyPropertyNames = new HashSet<>();
             indexRangeKeyPropertyNames.add("displayName");
             Mockito.when(mockPlaylistEntityMetadata.getIndexRangeKeyPropertyNames()).thenReturn(indexRangeKeyPropertyNames);
+
+            // Mock LSI index name mapping
+            Map<String, String[]> indexNamesByPropertyName = new HashMap<>();
+            indexNamesByPropertyName.put("displayName", new String[]{"userName-displayName-index"});
+            Mockito.when(mockPlaylistEntityMetadata.getGlobalSecondaryIndexNamesByPropertyName())
+                    .thenReturn(indexNamesByPropertyName);
+
+            // Mock that userName is NOT a GSI partition key (it's the table partition key for LSI)
+            // Mock that displayName is also NOT a GSI partition key (it's an LSI range key)
+            Mockito.when(mockPlaylistEntityMetadata.isGlobalIndexHashKeyProperty("userName")).thenReturn(false);
+            Mockito.when(mockPlaylistEntityMetadata.isGlobalIndexHashKeyProperty("displayName")).thenReturn(false);
+
             Mockito.when(mockDynamoDBPlaylistQueryMethod.isCollectionQuery()).thenReturn(true);
             Playlist prototypeHashKey = new Playlist();
             prototypeHashKey.setUserName("someUserName");
-            Mockito.when(mockPlaylistEntityMetadata.getHashKeyPropotypeEntityForHashKey("someUserName"))
+            Mockito.lenient().when(mockPlaylistEntityMetadata.getHashKeyPropotypeEntityForHashKey("someUserName"))
                     .thenReturn(prototypeHashKey);
 
             Mockito.lenient().when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest.class)))
@@ -1049,18 +1053,15 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         setupCommonMocksForThisRepositoryMethod(mockPlaylistEntityMetadata, mockDynamoDBPlaylistQueryMethod,
                 Playlist.class, "findByUserNameAndDisplayName", 2, "userName", "playlistName");
-        Set<String> indexRangeKeyPropertyNames = new HashSet<String>();
+        Set<String> indexRangeKeyPropertyNames = new HashSet<>();
         indexRangeKeyPropertyNames.add("displayName");
         Mockito.when(mockPlaylistEntityMetadata.getIndexRangeKeyPropertyNames()).thenReturn(indexRangeKeyPropertyNames);
         Mockito.when(mockPlaylistEntityMetadata.getOverriddenAttributeName("displayName"))
                 .thenReturn(Optional.of("DisplayName"));
 
         Mockito.when(mockDynamoDBPlaylistQueryMethod.isCollectionQuery()).thenReturn(true);
-        Playlist prototypeHashKey = new Playlist();
-        prototypeHashKey.setUserName("someUserName");
-        Mockito.lenient().when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest.class)))
-                .thenReturn(mockPlaylistQueryResults);
-        Mockito.lenient().when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class)))
+
+        Mockito.when(mockDynamoDBOperations.query(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class)))
                 .thenReturn(mockPlaylistQueryResults);
 
         // Execute the query
@@ -1068,21 +1069,20 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
-
-        // Verify and capture arguments before using getValue()
-        Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryEnhancedCaptor.capture());
-
-        // Assert that we scanned DynamoDB for the correct class
-        // Moved after verify() - cannot call getValue() before capture()
-        // assertEquals(playlistClassCaptor.getValue(), Playlist.class);
-
-        // TODO: SDK v2 - QueryConditional verification requires different approach
-        // In SDK v1, getHashKeyValues() returned the hash key prototype entity for inspection
-        // In SDK v2, queryConditional() returns a QueryConditional object which is not designed for inspection
-        // Removed: Hash key and range key condition assertions
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockPlaylist), o);
 
         // Verify that the expected DynamoDBOperations method was called
+        ArgumentCaptor<software.amazon.awssdk.services.dynamodb.model.QueryRequest> queryRequestCaptor =
+                ArgumentCaptor.forClass(software.amazon.awssdk.services.dynamodb.model.QueryRequest.class);
+        Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryRequestCaptor.capture());
+
+        // Assert that we queried DynamoDB for the correct class
+        assertEquals(Playlist.class, playlistClassCaptor.getValue());
+
+        // Assert on QueryRequest properties
+        software.amazon.awssdk.services.dynamodb.model.QueryRequest capturedRequest = queryRequestCaptor.getValue();
+        assertEquals("#pk0 = :kval0", capturedRequest.keyConditionExpression());
+        assertEquals("someUserName", capturedRequest.expressionAttributeValues().get(":kval0").s());
 
     }
 
@@ -1112,46 +1112,20 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object[] parameters = new Object[] { playlistId, "someDisplayName" };
         partTreeDynamoDBQuery.execute(parameters);
 
-        // Assert that we scanned DynamoDB for the correct class
-        assertEquals(userClassCaptor.getValue(), Playlist.class);
-
-        // Assert that we have only three filter conditions
-
         // TODO: SDK v2 - Verification of filter/query conditions requires different approach
         // In SDK v1, we could inspect getScanFilter()/getHashKeyValues() which returned Maps
         // In SDK v2, filterExpression()/queryConditional() return Expression/QueryConditional objects
         // These internal structures are not designed for inspection in tests
 
-        // assertEquals(ComparisonOperator.EQ.name(), filterCondition1.comparisonOperator());
-        // assertEquals(ComparisonOperator.EQ.name(), filterCondition2.comparisonOperator());
-
-        // Assert we only have one attribute value for this filter condition
-        // assertEquals(1, filterCondition1.attributeValueList().size());
-        // assertEquals(1, filterCondition2.attributeValueList().size());
-
-        // Assert that there the attribute value type for this attribute value
-        // is String,
-        // and its value is the parameter expected
         // Removed: SDK v2 - internal request structure assertion
         // Removed: assertion on internal request structure
-
-        // Assert that all other attribute value types other than String type
-        // are null
         // Removed: SDK v2 - internal request structure assertion
-        // Removed: SDK v2 - internal request structure assertion
-        // Removed: SDK v2 - internal request structure assertion
-        // Removed: SDK v2 - internal request structure assertion
-        // Removed: SDK v2 - internal request structure assertion
-
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
 
         // Verify that the expected DynamoDBOperations method was called
-        Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.capture(), scanEnhancedCaptor.capture()); // Assert
-        // that we obtain the expected results
+        Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.capture(), scanEnhancedCaptor.capture());
+
+        // Assert that we scanned DynamoDB for the correct class
+        assertEquals(Playlist.class, userClassCaptor.getValue());
     }
 
     @Test
@@ -1178,46 +1152,20 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object[] parameters = new Object[] { playlistId, "someDisplayName" };
         partTreeDynamoDBQuery.execute(parameters);
 
-        // Assert that we scanned DynamoDB for the correct class
-        assertEquals(userClassCaptor.getValue(), Playlist.class);
-
-        // Assert that we have only three filter conditions
-
         // TODO: SDK v2 - Verification of filter/query conditions requires different approach
         // In SDK v1, we could inspect getScanFilter()/getHashKeyValues() which returned Maps
         // In SDK v2, filterExpression()/queryConditional() return Expression/QueryConditional objects
         // These internal structures are not designed for inspection in tests
 
-        // assertEquals(ComparisonOperator.EQ.name(), filterCondition1.comparisonOperator());
-        // assertEquals(ComparisonOperator.EQ.name(), filterCondition2.comparisonOperator());
-
-        // Assert we only have one attribute value for this filter condition
-        // assertEquals(1, filterCondition1.attributeValueList().size());
-        // assertEquals(1, filterCondition2.attributeValueList().size());
-
-        // Assert that there the attribute value type for this attribute value
-        // is String,
-        // and its value is the parameter expected
         // Removed: SDK v2 - internal request structure assertion
         // Removed: assertion on internal request structure
-
-        // Assert that all other attribute value types other than String type
-        // are null
         // Removed: SDK v2 - internal request structure assertion
-        // Removed: SDK v2 - internal request structure assertion
-        // Removed: SDK v2 - internal request structure assertion
-        // Removed: SDK v2 - internal request structure assertion
-        // Removed: SDK v2 - internal request structure assertion
-
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
 
         // Verify that the expected DynamoDBOperations method was called
-        Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.capture(), scanEnhancedCaptor.capture()); // Assert
-        // that we obtain the expected results
+        Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.capture(), scanEnhancedCaptor.capture());
+
+        // Assert that we scanned DynamoDB for the correct class
+        assertEquals(Playlist.class, userClassCaptor.getValue());
     }
 
     @Test
@@ -1235,46 +1183,20 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object[] parameters = new Object[] { "someUserName", "somePlaylistName" };
         partTreeDynamoDBQuery.execute(parameters);
 
-        // Assert that we scanned DynamoDB for the correct class
-        assertEquals(userClassCaptor.getValue(), Playlist.class);
-
-        // Assert that we have only three filter conditions
-
         // TODO: SDK v2 - Verification of filter/query conditions requires different approach
         // In SDK v1, we could inspect getScanFilter()/getHashKeyValues() which returned Maps
         // In SDK v2, filterExpression()/queryConditional() return Expression/QueryConditional objects
         // These internal structures are not designed for inspection in tests
 
-        // assertEquals(ComparisonOperator.NE.name(), filterCondition1.comparisonOperator());
-        // assertEquals(ComparisonOperator.NE.name(), filterCondition2.comparisonOperator());
-
-        // Assert we only have one attribute value for this filter condition
-        // assertEquals(1, filterCondition1.attributeValueList().size());
-        // assertEquals(1, filterCondition2.attributeValueList().size());
-
-        // Assert that there the attribute value type for this attribute value
-        // is String,
-        // and its value is the parameter expected
         // Removed: SDK v2 - internal request structure assertion
         // Removed: assertion on internal request structure
-
-        // Assert that all other attribute value types other than String type
-        // are null
         // Removed: SDK v2 - internal request structure assertion
-        // Removed: SDK v2 - internal request structure assertion
-        // Removed: SDK v2 - internal request structure assertion
-        // Removed: SDK v2 - internal request structure assertion
-        // Removed: SDK v2 - internal request structure assertion
-
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
 
         // Verify that the expected DynamoDBOperations method was called
-        Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.capture(), scanEnhancedCaptor.capture()); // Assert
-        // that we obtain the expected results
+        Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.capture(), scanEnhancedCaptor.capture());
+
+        // Assert that we scanned DynamoDB for the correct class
+        assertEquals(Playlist.class, userClassCaptor.getValue());
     }
 
     @Test
@@ -1305,55 +1227,20 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object[] parameters = new Object[] { playlistId, "someDisplayName" };
         partTreeDynamoDBQuery.execute(parameters);
 
-        // Assert that we scanned DynamoDB for the correct class
-        assertEquals(userClassCaptor.getValue(), Playlist.class);
-
-        // Assert that we have only three filter conditions
-
         // TODO: SDK v2 - Verification of filter/query conditions requires different approach
         // In SDK v1, we could inspect getScanFilter()/getHashKeyValues() which returned Maps
         // In SDK v2, filterExpression()/queryConditional() return Expression/QueryConditional objects
         // These internal structures are not designed for inspection in tests
 
-        // assertEquals(ComparisonOperator.EQ.name(), filterCondition1.comparisonOperator());
-        // assertEquals(ComparisonOperator.EQ.name(), filterCondition2.comparisonOperator());
-        // assertEquals(ComparisonOperator.EQ.name(), filterCondition3.comparisonOperator());
-
-        // Assert we only have one attribute value for this filter condition
-        // assertEquals(1, filterCondition1.attributeValueList().size());
-        // assertEquals(1, filterCondition2.attributeValueList().size());
-        // assertEquals(1, filterCondition3.attributeValueList().size());
-
-        // Assert that there the attribute value type for this attribute value
-        // is String,
-        // and its value is the parameter expected
         // Removed: SDK v2 - internal request structure assertion
         // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
-
-        // Assert that all other attribute value types other than String type
-        // are null
         // Removed: SDK v2 - internal request structure assertion
-        // Removed: SDK v2 - internal request structure assertion
-        // Removed: SDK v2 - internal request structure assertion
-        // Removed: SDK v2 - internal request structure assertion
-        // Removed: SDK v2 - internal request structure assertion
-
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
-
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
 
         // Verify that the expected DynamoDBOperations method was called
-        Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.capture(), scanEnhancedCaptor.capture()); // Assert
-        // that we obtain the expected results
+        Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.capture(), scanEnhancedCaptor.capture());
+
+        // Assert that we scanned DynamoDB for the correct class
+        assertEquals(Playlist.class, userClassCaptor.getValue());
     }
 
     @Test
@@ -1514,7 +1401,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
                 "findByTestSet", 1, "id", null);
         Mockito.when(mockDynamoDBUserQueryMethod.isScanEnabled()).thenReturn(true);
 
-        Set<String> testSet = new HashSet<String>();
+        Set<String> testSet = new HashSet<>();
         testSet.add("testData");        Mockito.lenient().when(mockDynamoDBOperations.scan(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.class)))
                 .thenReturn(mockUserScanResults);
 
@@ -1637,7 +1524,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         // Assert that we obtain the expected list of results
         // SDK v2: CollectionExecution.execute() calls getResultList() which converts PageIterable to List
-        List<User> expected = Arrays.asList(mockUser);
+        List<User> expected = List.of(mockUser);
         assertEquals(expected, o);
 
         // Assert that the list of results contains the correct elements
@@ -1737,7 +1624,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         // Assert that we obtain the expected list of results
         // SDK v2: CollectionExecution.execute() calls getResultList() which converts PageIterable to List
-        List<User> expected = Arrays.asList(mockUser);
+        List<User> expected = List.of(mockUser);
         assertEquals(expected, o);
 
         // Assert that the list of results contains the correct elements
@@ -1783,7 +1670,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockDynamoDBUserQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockDynamoDBUserQueryMethod.isCollectionQuery()).thenReturn(true);
 
-        List<String> names = Arrays.asList(new String[] { "someName", "someOtherName" });        Mockito.lenient().when(mockDynamoDBOperations.scan(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.class)))
+        List<String> names = Arrays.asList("someName", "someOtherName");        Mockito.lenient().when(mockDynamoDBOperations.scan(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.class)))
                 .thenReturn(mockUserScanResults);
 
         // Execute the query
@@ -1792,7 +1679,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         // Assert that we obtain the expected list of results
         // SDK v2: CollectionExecution.execute() calls getResultList() which converts PageIterable to List
-        List<User> expected = Arrays.asList(mockUser);
+        List<User> expected = List.of(mockUser);
         assertEquals(expected, o);
 
         // Assert that the list of results contains the correct elements
@@ -1851,7 +1738,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         // Assert that we obtain the expected list of results
         // SDK v2: CollectionExecution.execute() calls getResultList() which converts PageIterable to List
-        List<User> expected = Arrays.asList(mockUser);
+        List<User> expected = List.of(mockUser);
         assertEquals(expected, o);
 
         // Assert that the list of results contains the correct elements
@@ -1912,7 +1799,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         // Assert that we obtain the expected list of results
         // SDK v2: CollectionExecution.execute() calls getResultList() which converts PageIterable to List
-        List<User> expected = Arrays.asList(mockUser);
+        List<User> expected = List.of(mockUser);
         assertEquals(expected, o);
 
         // Assert that the list of results contains the correct elements
@@ -1965,7 +1852,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockUserEntityMetadata.isGlobalIndexHashKeyProperty("joinYear")).thenReturn(true);
 
         
-        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<String, String[]>();
+        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<>();
         indexRangeKeySecondaryIndexNames.put("joinYear", new String[] { "JoinYear-index" });
         Mockito.when(mockUserEntityMetadata.getGlobalSecondaryIndexNamesByPropertyName())
                 .thenReturn(indexRangeKeySecondaryIndexNames);
@@ -1983,7 +1870,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockUser), o);
 
         // Verify and capture arguments before using getValue()
         Mockito.verify(mockDynamoDBOperations).query(userClassCaptor.capture(), queryResultCaptor.capture());
@@ -2039,7 +1926,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockUserEntityMetadata.isGlobalIndexRangeKeyProperty("postCode")).thenReturn(true);
 
         
-        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<String, String[]>();
+        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<>();
         indexRangeKeySecondaryIndexNames.put("joinYear", new String[] { "JoinYear-index" });
         indexRangeKeySecondaryIndexNames.put("postCode", new String[] { "JoinYear-index" });
 
@@ -2058,7 +1945,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockUser), o);
 
         // Verify and capture arguments before using getValue()
         Mockito.verify(mockDynamoDBOperations).query(userClassCaptor.capture(), queryResultCaptor.capture());
@@ -2106,15 +1993,14 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
     // Global Secondary Index Test 3
     @Test
-    public void testExecute_WhenFinderMethodIsFindingEntityWithCompositeKeyList_WhenFindingByGlobalSecondaryHashIndexHashKey()
-            throws ParseException {
+    public void testExecute_WhenFinderMethodIsFindingEntityWithCompositeKeyList_WhenFindingByGlobalSecondaryHashIndexHashKey() {
 
         setupCommonMocksForThisRepositoryMethod(mockPlaylistEntityMetadata, mockDynamoDBPlaylistQueryMethod,
                 Playlist.class, "findByDisplayNameOrderByDisplayNameDesc", 1, "userName", "playlistName");
         Mockito.when(mockDynamoDBPlaylistQueryMethod.isCollectionQuery()).thenReturn(true);
 
         Mockito.when(mockPlaylistEntityMetadata.isGlobalIndexHashKeyProperty("displayName")).thenReturn(true);
-        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<String, String[]>();
+        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<>();
         indexRangeKeySecondaryIndexNames.put("displayName", new String[] { "DisplayName-index" });
         Mockito.when(mockPlaylistEntityMetadata.getGlobalSecondaryIndexNamesByPropertyName())
                 .thenReturn(indexRangeKeySecondaryIndexNames);
@@ -2132,7 +2018,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockPlaylist), o);
 
         // Verify and capture arguments before using getValue()
         Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryResultCaptor.capture());
@@ -2170,14 +2056,13 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
     // Global Secondary Index Test 3a
     @Test
-    public void testExecute_WhenFinderMethodIsFindingEntityWithCompositeKeyList_WhenFindingByGlobalSecondaryHashIndexHashKey_WhereSecondaryHashKeyIsPrimaryRangeKey()
-            throws ParseException {
+    public void testExecute_WhenFinderMethodIsFindingEntityWithCompositeKeyList_WhenFindingByGlobalSecondaryHashIndexHashKey_WhereSecondaryHashKeyIsPrimaryRangeKey() {
 
         setupCommonMocksForThisRepositoryMethod(mockPlaylistEntityMetadata, mockDynamoDBPlaylistQueryMethod,
                 Playlist.class, "findByPlaylistName", 1, "userName", "playlistName");
         Mockito.when(mockDynamoDBPlaylistQueryMethod.isCollectionQuery()).thenReturn(true);
 
-        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<String, String[]>();
+        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<>();
         indexRangeKeySecondaryIndexNames.put("playlistName", new String[] { "PlaylistName-index" });
         Mockito.when(mockPlaylistEntityMetadata.getGlobalSecondaryIndexNamesByPropertyName())
                 .thenReturn(indexRangeKeySecondaryIndexNames);
@@ -2195,7 +2080,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockPlaylist), o);
 
         // Verify and capture arguments before using getValue()
         Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryResultCaptor.capture());
@@ -2232,8 +2117,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
     // Global Secondary Index Test 4
     @Test
-    public void testExecute_WhenFinderMethodIsFindingEntityWithCompositeKeyList_WhenFindingByGlobalSecondaryHashAndRangeIndexHashAndRangeKey_WhereSecondaryHashKeyIsPrimaryHashKey()
-            throws ParseException {
+    public void testExecute_WhenFinderMethodIsFindingEntityWithCompositeKeyList_WhenFindingByGlobalSecondaryHashAndRangeIndexHashAndRangeKey_WhereSecondaryHashKeyIsPrimaryHashKey() {
 
         setupCommonMocksForThisRepositoryMethod(mockPlaylistEntityMetadata, mockDynamoDBPlaylistQueryMethod,
                 Playlist.class, "findByUserNameAndDisplayName", 2, "userName", "playlistName");
@@ -2243,7 +2127,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockPlaylistEntityMetadata.isGlobalIndexHashKeyProperty("displayName")).thenReturn(false);
         // Mockito.when(mockPlaylistEntityMetadata.isGlobalIndexRangeKeyProperty("displayName")).thenReturn(true);
 
-        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<String, String[]>();
+        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<>();
         indexRangeKeySecondaryIndexNames.put("displayName", new String[] { "UserName-DisplayName-index" });
         indexRangeKeySecondaryIndexNames.put("userName", new String[] { "UserName-DisplayName-index" });
 
@@ -2263,7 +2147,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockPlaylist), o);
 
         // Verify and capture arguments before using getValue()
         Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryResultCaptor.capture());
@@ -2311,8 +2195,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
     // Global Secondary Index Test 4b
     @Test
-    public void testExecute_WhenFinderMethodIsFindingEntityWithCompositeKeyList_WhenFindingByGlobalSecondaryHashAndRangeIndexHashAndRangeKey_WhereSecondaryHashKeyIsPrimaryRangeKey()
-            throws ParseException {
+    public void testExecute_WhenFinderMethodIsFindingEntityWithCompositeKeyList_WhenFindingByGlobalSecondaryHashAndRangeIndexHashAndRangeKey_WhereSecondaryHashKeyIsPrimaryRangeKey() {
 
         setupCommonMocksForThisRepositoryMethod(mockPlaylistEntityMetadata, mockDynamoDBPlaylistQueryMethod,
                 Playlist.class, "findByPlaylistNameAndDisplayName", 2, "userName", "playlistName");
@@ -2321,7 +2204,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         // Stub property checks for global secondary index (only properties in query)
         Mockito.when(mockPlaylistEntityMetadata.isGlobalIndexHashKeyProperty("playlistName")).thenReturn(true);
         Mockito.when(mockPlaylistEntityMetadata.isGlobalIndexHashKeyProperty("displayName")).thenReturn(false);
-        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<String, String[]>();
+        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<>();
         indexRangeKeySecondaryIndexNames.put("playlistName", new String[] { "PlaylistName-DisplayName-index" });
         indexRangeKeySecondaryIndexNames.put("displayName", new String[] { "PlaylistName-DisplayName-index" });
 
@@ -2341,7 +2224,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockPlaylist), o);
 
         // Verify and capture arguments before using getValue()
         Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryResultCaptor.capture());
@@ -2389,8 +2272,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
     // Global Secondary Index Test 4c
     @Test
-    public void testExecute_WhenFinderMethodIsFindingEntityWithCompositeKeyList_WhenFindingByGlobalSecondaryHashAndRangeIndexHashAndRangeKey_WhereSecondaryRangeKeyIsPrimaryRangeKey()
-            throws ParseException {
+    public void testExecute_WhenFinderMethodIsFindingEntityWithCompositeKeyList_WhenFindingByGlobalSecondaryHashAndRangeIndexHashAndRangeKey_WhereSecondaryRangeKeyIsPrimaryRangeKey() {
 
         setupCommonMocksForThisRepositoryMethod(mockPlaylistEntityMetadata, mockDynamoDBPlaylistQueryMethod,
                 Playlist.class, "findByDisplayNameAndPlaylistName", 2, "userName", "playlistName");
@@ -2399,7 +2281,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockPlaylistEntityMetadata.isGlobalIndexHashKeyProperty("displayName")).thenReturn(true);
         // Mockito.when(mockPlaylistEntityMetadata.isGlobalIndexRangeKeyProperty("playlistName")).thenReturn(true);
 
-        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<String, String[]>();
+        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<>();
         indexRangeKeySecondaryIndexNames.put("displayName", new String[] { "DisplayName-PlaylistName-index" });
         indexRangeKeySecondaryIndexNames.put("playlistName", new String[] { "DisplayName-PlaylistName-index" });
 
@@ -2419,7 +2301,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockPlaylist), o);
 
         // Verify and capture arguments before using getValue()
         Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryResultCaptor.capture());
@@ -2468,8 +2350,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
     // Global Secondary Index Test 4d
     @Test
-    public void testExecute_WhenFinderMethodIsFindingEntityWithCompositeKeyList_WhenFindingByGlobalSecondaryHashAndRangeIndexHashAndRangeKey_WhereSecondaryRangeKeyIsPrimaryHashKey()
-            throws ParseException {
+    public void testExecute_WhenFinderMethodIsFindingEntityWithCompositeKeyList_WhenFindingByGlobalSecondaryHashAndRangeIndexHashAndRangeKey_WhereSecondaryRangeKeyIsPrimaryHashKey() {
 
         setupCommonMocksForThisRepositoryMethod(mockPlaylistEntityMetadata, mockDynamoDBPlaylistQueryMethod,
                 Playlist.class, "findByDisplayNameAndUserName", 2, "userName", "playlistName");
@@ -2478,7 +2359,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockPlaylistEntityMetadata.isGlobalIndexHashKeyProperty("displayName")).thenReturn(true);
         // Mockito.when(mockPlaylistEntityMetadata.isGlobalIndexRangeKeyProperty("userName")).thenReturn(true);
 
-        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<String, String[]>();
+        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<>();
         indexRangeKeySecondaryIndexNames.put("displayName", new String[] { "DisplayName-UserName-index" });
         indexRangeKeySecondaryIndexNames.put("userName", new String[] { "DisplayName-UserName-index" });
 
@@ -2498,7 +2379,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockPlaylist), o);
 
         // Verify and capture arguments before using getValue()
         Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryResultCaptor.capture());
@@ -2547,8 +2428,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
     // Global Secondary Index Test 4e
     @Test
-    public void testExecute_WhenFinderMethodIsFindingEntityWithCompositeKeyList_WhenFindingByGlobalSecondaryHashAndRangeIndexHashAndRangeKeyNonEqualityCondition_WhereSecondaryHashKeyIsPrimaryHashKey()
-            throws ParseException {
+    public void testExecute_WhenFinderMethodIsFindingEntityWithCompositeKeyList_WhenFindingByGlobalSecondaryHashAndRangeIndexHashAndRangeKeyNonEqualityCondition_WhereSecondaryHashKeyIsPrimaryHashKey() {
 
         setupCommonMocksForThisRepositoryMethod(mockPlaylistEntityMetadata, mockDynamoDBPlaylistQueryMethod,
                 Playlist.class, "findByUserNameAndDisplayNameAfter", 2, "userName", "playlistName");
@@ -2558,7 +2438,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockPlaylistEntityMetadata.isGlobalIndexHashKeyProperty("userName")).thenReturn(true);
         Mockito.when(mockPlaylistEntityMetadata.isGlobalIndexHashKeyProperty("displayName")).thenReturn(false);
 
-        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<String, String[]>();
+        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<>();
         indexRangeKeySecondaryIndexNames.put("displayName", new String[] { "UserName-DisplayName-index" });
         indexRangeKeySecondaryIndexNames.put("userName", new String[] { "UserName-DisplayName-index" });
 
@@ -2578,7 +2458,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockPlaylist), o);
 
         // Verify and capture arguments before using getValue()
         Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryResultCaptor.capture());
@@ -2626,8 +2506,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
     // Global Secondary Index Test 4e2
     @Test
-    public void testExecute_WhenFinderMethodIsFindingEntityWithCompositeKeyList_WhenFindingByGlobalSecondaryHashAndRangeIndexHashAndRangeKeyNonEqualityCondition_WhereSecondaryHashKeyIsPrimaryHashKey_WhenAccessingPropertyViaCompositeIdPath()
-            throws ParseException {
+    public void testExecute_WhenFinderMethodIsFindingEntityWithCompositeKeyList_WhenFindingByGlobalSecondaryHashAndRangeIndexHashAndRangeKeyNonEqualityCondition_WhereSecondaryHashKeyIsPrimaryHashKey_WhenAccessingPropertyViaCompositeIdPath() {
 
         setupCommonMocksForThisRepositoryMethod(mockPlaylistEntityMetadata, mockDynamoDBPlaylistQueryMethod,
                 Playlist.class, "findByPlaylistIdUserNameAndDisplayNameAfter", 2, "userName", "playlistName");
@@ -2637,7 +2516,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockPlaylistEntityMetadata.isGlobalIndexHashKeyProperty("userName")).thenReturn(true);
         Mockito.when(mockPlaylistEntityMetadata.isGlobalIndexHashKeyProperty("displayName")).thenReturn(false);
 
-        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<String, String[]>();
+        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<>();
         indexRangeKeySecondaryIndexNames.put("displayName", new String[] { "UserName-DisplayName-index" });
         indexRangeKeySecondaryIndexNames.put("userName", new String[] { "UserName-DisplayName-index" });
 
@@ -2657,7 +2536,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockPlaylist), o);
 
         // Verify and capture arguments before using getValue()
         Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryResultCaptor.capture());
@@ -2705,8 +2584,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
     // Global Secondary Index Test 4f
     @Test
-    public void testExecute_WhenFinderMethodIsFindingEntityWithCompositeKeyList_WhenFindingByGlobalSecondaryHashAndRangeIndexHashAndRangeKeyNonEqualityCondition_WhereSecondaryHashKeyIsPrimaryRangeKey()
-            throws ParseException {
+    public void testExecute_WhenFinderMethodIsFindingEntityWithCompositeKeyList_WhenFindingByGlobalSecondaryHashAndRangeIndexHashAndRangeKeyNonEqualityCondition_WhereSecondaryHashKeyIsPrimaryRangeKey() {
 
         setupCommonMocksForThisRepositoryMethod(mockPlaylistEntityMetadata, mockDynamoDBPlaylistQueryMethod,
                 Playlist.class, "findByPlaylistNameAndDisplayNameAfter", 2, "userName", "playlistName");
@@ -2715,7 +2593,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         // Stub property checks for global secondary index (only properties in query: playlistName, displayName)
         Mockito.when(mockPlaylistEntityMetadata.isGlobalIndexHashKeyProperty("playlistName")).thenReturn(true);
         Mockito.when(mockPlaylistEntityMetadata.isGlobalIndexHashKeyProperty("displayName")).thenReturn(false);
-        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<String, String[]>();
+        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<>();
         indexRangeKeySecondaryIndexNames.put("playlistName", new String[] { "PlaylistName-DisplayName-index" });
         indexRangeKeySecondaryIndexNames.put("displayName", new String[] { "PlaylistName-DisplayName-index" });
 
@@ -2735,7 +2613,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockPlaylist), o);
 
         // Verify and capture arguments before using getValue()
         Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryResultCaptor.capture());
@@ -2783,8 +2661,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
     // Global Secondary Index Test 4g
     @Test
-    public void testExecute_WhenFinderMethodIsFindingEntityWithCompositeKeyList_WhenFindingByGlobalSecondaryHashAndRangeIndexHashAndRangeKeyNonEqualityCondition_WhereSecondaryRangeKeyIsPrimaryRangeKey()
-            throws ParseException {
+    public void testExecute_WhenFinderMethodIsFindingEntityWithCompositeKeyList_WhenFindingByGlobalSecondaryHashAndRangeIndexHashAndRangeKeyNonEqualityCondition_WhereSecondaryRangeKeyIsPrimaryRangeKey() {
 
         setupCommonMocksForThisRepositoryMethod(mockPlaylistEntityMetadata, mockDynamoDBPlaylistQueryMethod,
                 Playlist.class, "findByDisplayNameAndPlaylistNameAfter", 2, "userName", "playlistName");
@@ -2796,7 +2673,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockPlaylistEntityMetadata.isGlobalIndexRangeKeyProperty("displayName")).thenReturn(false);
         Mockito.when(mockPlaylistEntityMetadata.isGlobalIndexRangeKeyProperty("playlistName")).thenReturn(true);
 
-        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<String, String[]>();
+        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<>();
         indexRangeKeySecondaryIndexNames.put("displayName", new String[] { "DisplayName-PlaylistName-index" });
         indexRangeKeySecondaryIndexNames.put("playlistName", new String[] { "DisplayName-PlaylistName-index" });
 
@@ -2816,7 +2693,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockPlaylist), o);
 
         // Verify and capture arguments before using getValue()
         Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryResultCaptor.capture());
@@ -2865,8 +2742,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
     // Global Secondary Index Test 4h
     @Test
-    public void testExecute_WhenFinderMethodIsFindingEntityWithCompositeKeyList_WhenFindingByGlobalSecondaryHashAndRangeIndexHashAndRangeKeyNonEqualityCondition_WhereSecondaryRangeKeyIsPrimaryHashKey()
-            throws ParseException {
+    public void testExecute_WhenFinderMethodIsFindingEntityWithCompositeKeyList_WhenFindingByGlobalSecondaryHashAndRangeIndexHashAndRangeKeyNonEqualityCondition_WhereSecondaryRangeKeyIsPrimaryHashKey() {
 
         setupCommonMocksForThisRepositoryMethod(mockPlaylistEntityMetadata, mockDynamoDBPlaylistQueryMethod,
                 Playlist.class, "findByDisplayNameAndUserNameAfter", 2, "userName", "playlistName");
@@ -2878,7 +2754,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockPlaylistEntityMetadata.isGlobalIndexRangeKeyProperty("displayName")).thenReturn(false);
         Mockito.when(mockPlaylistEntityMetadata.isGlobalIndexRangeKeyProperty("userName")).thenReturn(true);
 
-        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<String, String[]>();
+        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<>();
         indexRangeKeySecondaryIndexNames.put("displayName", new String[] { "DisplayName-UserName-index" });
         indexRangeKeySecondaryIndexNames.put("userName", new String[] { "DisplayName-UserName-index" });
 
@@ -2898,7 +2774,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockPlaylist), o);
 
         // Verify and capture arguments before using getValue()
         Mockito.verify(mockDynamoDBOperations).query(playlistClassCaptor.capture(), queryResultCaptor.capture());
@@ -2947,8 +2823,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
     // Global Secondary Index Test 4i
     @Test
-    public void testExecute_WhenFinderMethodIsFindingEntityByGlobalSecondaryHashAndRangeIndexHashAndRangeKeyNonEqualityCondition_WhereBothSecondaryHashKeyAndSecondaryIndexRangeKeyMembersOfMultipleIndexes()
-            throws ParseException {
+    public void testExecute_WhenFinderMethodIsFindingEntityByGlobalSecondaryHashAndRangeIndexHashAndRangeKeyNonEqualityCondition_WhereBothSecondaryHashKeyAndSecondaryIndexRangeKeyMembersOfMultipleIndexes() {
 
         setupCommonMocksForThisRepositoryMethod(mockUserEntityMetadata, mockDynamoDBUserQueryMethod, User.class,
                 "findByNameAndPostCodeAfter", 2, "id", null);
@@ -2960,7 +2835,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockUserEntityMetadata.isGlobalIndexRangeKeyProperty("name")).thenReturn(false);
         Mockito.when(mockUserEntityMetadata.isGlobalIndexRangeKeyProperty("postCode")).thenReturn(true);
 
-        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<String, String[]>();
+        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<>();
         indexRangeKeySecondaryIndexNames.put("name", new String[] { "Name-PostCode-index", "Name-JoinYear-index" });
         indexRangeKeySecondaryIndexNames.put("postCode", new String[] { "Name-PostCode-index", "Id-PostCode-index" });
 
@@ -2980,7 +2855,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockUser), o);
 
         // Verify and capture arguments before using getValue()
         Mockito.verify(mockDynamoDBOperations).query(userClassCaptor.capture(), queryResultCaptor.capture());
@@ -3029,8 +2904,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
     // Global Secondary Index Test 4j
     @Test
-    public void testExecute_WhenFinderMethodIsFindingEntityByGlobalSecondaryHashAndRangeIndexHashCondition_WhereSecondaryHashKeyMemberOfMultipleIndexes()
-            throws ParseException {
+    public void testExecute_WhenFinderMethodIsFindingEntityByGlobalSecondaryHashAndRangeIndexHashCondition_WhereSecondaryHashKeyMemberOfMultipleIndexes() {
 
         setupCommonMocksForThisRepositoryMethod(mockUserEntityMetadata, mockDynamoDBUserQueryMethod, User.class,
                 "findByName", 1, "id", null);
@@ -3041,7 +2915,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         // Mockito.when(mockUserEntityMetadata.isGlobalIndexRangeKeyProperty("joinYear")).thenReturn(true);
         // Mockito.when(mockUserEntityMetadata.isGlobalIndexHashKeyProperty("id")).thenReturn(true);
 
-        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<String, String[]>();
+        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<>();
         indexRangeKeySecondaryIndexNames.put("name", new String[] { "Name-PostCode-index", "Name-JoinYear-index" });
         indexRangeKeySecondaryIndexNames.put("postCode", new String[] { "Name-PostCode-index", "Id-PostCode-index" });
         indexRangeKeySecondaryIndexNames.put("joinYear", new String[] { "Name-JoinYear-index" });
@@ -3064,7 +2938,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockUser), o);
 
         // Verify and capture arguments before using getValue()
         Mockito.verify(mockDynamoDBOperations).query(userClassCaptor.capture(), queryResultCaptor.capture());
@@ -3097,8 +2971,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
     // Global Secondary Index Test 4k
     @Test
-    public void testExecute_WhenFinderMethodIsFindingEntityByGlobalSecondaryHashAndRangeIndexHashCondition_WhereSecondaryHashKeyMemberOfMultipleIndexes_WhereOneIndexIsExactMatch()
-            throws ParseException {
+    public void testExecute_WhenFinderMethodIsFindingEntityByGlobalSecondaryHashAndRangeIndexHashCondition_WhereSecondaryHashKeyMemberOfMultipleIndexes_WhereOneIndexIsExactMatch() {
 
         setupCommonMocksForThisRepositoryMethod(mockUserEntityMetadata, mockDynamoDBUserQueryMethod, User.class,
                 "findByName", 1, "id", null);
@@ -3109,7 +2982,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         // Mockito.when(mockUserEntityMetadata.isGlobalIndexRangeKeyProperty("joinYear")).thenReturn(true);
         // Mockito.when(mockUserEntityMetadata.isGlobalIndexHashKeyProperty("id")).thenReturn(true);
 
-        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<String, String[]>();
+        Map<String, String[]> indexRangeKeySecondaryIndexNames = new HashMap<>();
         indexRangeKeySecondaryIndexNames.put("name",
                 new String[] { "Name-PostCode-index", "Name-index", "Name-JoinYear-index" });
         indexRangeKeySecondaryIndexNames.put("postCode", new String[] { "Name-PostCode-index", "Id-PostCode-index" });
@@ -3132,7 +3005,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Object o = partTreeDynamoDBQuery.execute(parameters);
 
         // Assert that we obtain the expected results
-        assertTrue(o instanceof List); assertEquals(Arrays.asList(mockPlaylist), o);
+        assertInstanceOf(List.class, o); assertEquals(List.of(mockUser), o);
 
         // Verify and capture arguments before using getValue()
         Mockito.verify(mockDynamoDBOperations).query(userClassCaptor.capture(), queryResultCaptor.capture());
@@ -3164,8 +3037,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
     }
 
     @Test
-    public void testExecute_WhenFinderMethodIsFindingEntityList_WithSingleStringParameter_WithCustomMarshaller_WhenNotFindingByHashKey()
-            throws ParseException {
+    public void testExecute_WhenFinderMethodIsFindingEntityList_WithSingleStringParameter_WithCustomMarshaller_WhenNotFindingByHashKey() {
 
         String postcode = "N1";
 
@@ -3185,7 +3057,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         // Assert that we obtain the expected list of results
         // SDK v2: CollectionExecution.execute() calls getResultList() which converts PageIterable to List
-        List<User> expected = Arrays.asList(mockUser);
+        List<User> expected = List.of(mockUser);
         assertEquals(expected, o);
 
         // Assert that the list of results contains the correct elements
@@ -3239,7 +3111,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         // Assert that we obtain the expected list of results
         // SDK v2: CollectionExecution.execute() calls getResultList() which converts PageIterable to List
-        List<User> expected = Arrays.asList(mockUser);
+        List<User> expected = List.of(mockUser);
         assertEquals(expected, o);
 
         // Assert that the list of results contains the correct elements
@@ -3291,7 +3163,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         // Assert that we obtain the expected list of results
         // SDK v2: CollectionExecution.execute() calls getResultList() which converts PageIterable to List
-        List<User> expected = Arrays.asList(mockUser);
+        List<User> expected = List.of(mockUser);
         assertEquals(expected, o);
 
         // Assert that the list of results contains the correct elements
@@ -3343,7 +3215,7 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
 
         // Assert that we obtain the expected list of results
         // SDK v2: CollectionExecution.execute() calls getResultList() which converts PageIterable to List
-        List<User> expected = Arrays.asList(mockUser);
+        List<User> expected = List.of(mockUser);
         assertEquals(expected, o);
 
         // Assert that the list of results contains the correct elements
@@ -3388,8 +3260,16 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockDynamoDBUserQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockUserEntityMetadata.getOverriddenAttributeName("name")).thenReturn(Optional.of("Name"));
 
-        Mockito.lenient().when(mockDynamoDBOperations.scan(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.class)))
-                .thenReturn(mockUserScanResults);
+        // Return empty scan results (no entities found)
+        @SuppressWarnings("unchecked")
+        PageIterable<User> emptyResults = Mockito.mock(PageIterable.class);
+        @SuppressWarnings("unchecked")
+        software.amazon.awssdk.core.pagination.sync.SdkIterable<User> emptyItems = Mockito.mock(software.amazon.awssdk.core.pagination.sync.SdkIterable.class);
+
+        Mockito.when(emptyItems.spliterator()).thenReturn(List.<User>of().spliterator());
+        Mockito.when(emptyResults.items()).thenReturn(emptyItems);
+        Mockito.when(mockDynamoDBOperations.scan(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.class)))
+                .thenReturn(emptyResults);
 
         // Execute the query
         Object[] parameters = new Object[] { "someName" };
@@ -3398,37 +3278,11 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         // Assert that we obtain the expected single result
         assertEquals(false, o);
 
-        // Assert that we scanned DynamoDB for the correct class
-        assertEquals(User.class, userClassCaptor.getValue());
-
-        // Assert that we have only one filter condition, for the name of the
-        // property
-
-        // TODO: SDK v2 - Verification of filter/query conditions requires different approach
-        // In SDK v1, we could inspect getScanFilter()/getHashKeyValues() which returned Maps
-        // In SDK v2, filterExpression()/queryConditional() return Expression/QueryConditional objects
-        // These internal structures are not designed for inspection in tests
-
-        // assertEquals(ComparisonOperator.EQ.name(), filterCondition.comparisonOperator());
-
-        // Assert we only have one attribute value for this filter condition
-        // assertEquals(1, filterCondition.attributeValueList().size());
-
-        // Assert that there the attribute value type for this attribute value
-        // is String,
-        // and its value is the parameter expected
-        // Removed: assertion on internal request structure
-
-        // Assert that all other attribute value types other than String type
-        // are null
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
-
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.capture(), scanEnhancedCaptor.capture());
+
+        // Assert that we scanned DynamoDB for the correct class
+        assertEquals(User.class, userClassCaptor.getValue());
     }
 
     @Test
@@ -3540,8 +3394,16 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockDynamoDBUserQueryMethod.isScanEnabled()).thenReturn(true);
         Mockito.when(mockUserEntityMetadata.getOverriddenAttributeName("name")).thenReturn(Optional.of("Name"));
 
-        Mockito.lenient().when(mockDynamoDBOperations.scan(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.class)))
-                .thenReturn(mockUserScanResults);
+        // Return empty scan results (no entities found)
+        @SuppressWarnings("unchecked")
+        PageIterable<User> emptyResults = Mockito.mock(PageIterable.class);
+        @SuppressWarnings("unchecked")
+        software.amazon.awssdk.core.pagination.sync.SdkIterable<User> emptyItems = Mockito.mock(software.amazon.awssdk.core.pagination.sync.SdkIterable.class);
+
+        Mockito.when(emptyItems.spliterator()).thenReturn(List.<User>of().spliterator());
+        Mockito.when(emptyResults.items()).thenReturn(emptyItems);
+        Mockito.when(mockDynamoDBOperations.scan(ArgumentMatchers.any(Class.class), ArgumentMatchers.any(software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest.class)))
+                .thenReturn(emptyResults);
 
         // Execute the query
         Object[] parameters = new Object[] { "someName" };
@@ -3550,37 +3412,11 @@ Mockito.when(mockDynamoDBPlaylistQueryMethod.isScanEnabled()).thenReturn(true);
         // Assert that we obtain the expected single result
         assertEquals(false, o);
 
-        // Assert that we scanned DynamoDB for the correct class
-        assertEquals(User.class, userClassCaptor.getValue());
-
-        // Assert that we have only one filter condition, for the name of the
-        // property
-
-        // TODO: SDK v2 - Verification of filter/query conditions requires different approach
-        // In SDK v1, we could inspect getScanFilter()/getHashKeyValues() which returned Maps
-        // In SDK v2, filterExpression()/queryConditional() return Expression/QueryConditional objects
-        // These internal structures are not designed for inspection in tests
-
-        // assertEquals(ComparisonOperator.EQ.name(), filterCondition.comparisonOperator());
-
-        // Assert we only have one attribute value for this filter condition
-        // assertEquals(1, filterCondition.attributeValueList().size());
-
-        // Assert that there the attribute value type for this attribute value
-        // is String,
-        // and its value is the parameter expected
-        // Removed: assertion on internal request structure
-
-        // Assert that all other attribute value types other than String type
-        // are null
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
-        // Removed: assertion on internal request structure
-
         // Verify that the expected DynamoDBOperations method was called
         Mockito.verify(mockDynamoDBOperations).scan(userClassCaptor.capture(), scanEnhancedCaptor.capture());
+
+        // Assert that we scanned DynamoDB for the correct class
+        assertEquals(User.class, userClassCaptor.getValue());
     }
 
     @Test

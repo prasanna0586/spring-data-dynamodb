@@ -83,4 +83,28 @@ public interface OrderRepository extends CrudRepository<ProductOrder, ProductOrd
 
     // Base table query (customerId = hash, orderId = range)
     List<ProductOrder> findByCustomerIdAndOrderId(String customerId, String orderId);
+
+    // ========== NEGATIVE TEST METHODS - These should fail or be invalid ==========
+    // These methods test scenarios that SHOULD throw exceptions or behave incorrectly
+    // if there are bugs in LSI handling
+
+    // Test: Query by LSI range key (orderDate) but sort by MAIN table range key (orderId)
+    // Expected: Should throw UnsupportedOperationException (can't sort by orderId when using orderDate LSI)
+    // Bug behavior: Might allow it by querying base table with orderDate as filter
+    List<ProductOrder> findByCustomerIdAndOrderDateAfterOrderByOrderIdAsc(String customerId, Instant orderDate);
+
+    // Test: Query by LSI range key (status) but sort by MAIN table range key (orderId)
+    // Expected: Should throw UnsupportedOperationException (can't sort by orderId when using status LSI)
+    // Bug behavior: Might allow it by querying base table with status as filter
+    List<ProductOrder> findByCustomerIdAndStatusOrderByOrderIdDesc(String customerId, String status);
+
+    // Test: Query by one LSI (orderDate) but sort by DIFFERENT LSI range key (status)
+    // Expected: Should throw UnsupportedOperationException (can't use two different LSIs)
+    // Bug behavior: Might allow it incorrectly
+    List<ProductOrder> findByCustomerIdAndOrderDateAfterOrderByStatusAsc(String customerId, Instant orderDate);
+
+    // Test: Query by one LSI (status) but sort by DIFFERENT LSI range key (totalAmount)
+    // Expected: Should throw UnsupportedOperationException (can't use two different LSIs)
+    // Bug behavior: Might allow it incorrectly
+    List<ProductOrder> findByCustomerIdAndStatusOrderByTotalAmountDesc(String customerId, String status);
 }

@@ -150,9 +150,33 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
             // SDK v2: Use QueryRequest for both GSI and regular queries
             String tableName = dynamoDBOperations.getOverriddenTableName(clazz,
                     entityInformation.getDynamoDBTableName());
-            String indexName = isApplicableForGlobalSecondaryIndex() ? getGlobalSecondaryIndexName() : null;
+            String indexName = isApplicableForGlobalSecondaryIndex() ? getGlobalSecondaryIndexName() : getLocalSecondaryIndexName();
+
+            // Determine the correct range key info based on query type
+            String rangeKeyAttrName;
+            String rangeKeyPropName;
+
+            // Check if this is an LSI query: getLocalSecondaryIndexName() returns non-null
+            String lsiIndexName = getLocalSecondaryIndexName();
+            if (lsiIndexName != null) {
+                // LSI query: use the LSI range key, not main table range key
+                String lsiPropertyName = getLSIPropertyNameWithCondition();
+                if (lsiPropertyName != null) {
+                    rangeKeyAttrName = getAttributeName(lsiPropertyName);
+                    rangeKeyPropName = lsiPropertyName;
+                } else {
+                    // Fallback to main table range key
+                    rangeKeyAttrName = getRangeKeyAttributeName();
+                    rangeKeyPropName = this.getRangeKeyPropertyName();
+                }
+            } else {
+                // Main table or GSI query: use main table range key
+                rangeKeyAttrName = getRangeKeyAttributeName();
+                rangeKeyPropName = this.getRangeKeyPropertyName();
+            }
+
             QueryRequest queryRequest = buildQueryRequest(tableName, indexName,
-                    getHashKeyAttributeName(), getRangeKeyAttributeName(), this.getRangeKeyPropertyName(),
+                    getHashKeyAttributeName(), rangeKeyAttrName, rangeKeyPropName,
                     getHashKeyConditions(), getRangeKeyConditions());
             return new MultipleEntityQueryRequestQuery<>(dynamoDBOperations, entityInformation.getJavaType(),
                     queryRequest);
@@ -166,9 +190,33 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
             // SDK v2: Use QueryRequest for both GSI and regular queries
             String tableName = dynamoDBOperations.getOverriddenTableName(clazz,
                     entityInformation.getDynamoDBTableName());
-            String indexName = isApplicableForGlobalSecondaryIndex() ? getGlobalSecondaryIndexName() : null;
+            String indexName = isApplicableForGlobalSecondaryIndex() ? getGlobalSecondaryIndexName() : getLocalSecondaryIndexName();
+
+            // Determine the correct range key info based on query type
+            String rangeKeyAttrName;
+            String rangeKeyPropName;
+
+            // Check if this is an LSI query: getLocalSecondaryIndexName() returns non-null
+            String lsiIndexName = getLocalSecondaryIndexName();
+            if (lsiIndexName != null) {
+                // LSI query: use the LSI range key, not main table range key
+                String lsiPropertyName = getLSIPropertyNameWithCondition();
+                if (lsiPropertyName != null) {
+                    rangeKeyAttrName = getAttributeName(lsiPropertyName);
+                    rangeKeyPropName = lsiPropertyName;
+                } else {
+                    // Fallback to main table range key
+                    rangeKeyAttrName = getRangeKeyAttributeName();
+                    rangeKeyPropName = this.getRangeKeyPropertyName();
+                }
+            } else {
+                // Main table or GSI query: use main table range key
+                rangeKeyAttrName = getRangeKeyAttributeName();
+                rangeKeyPropName = this.getRangeKeyPropertyName();
+            }
+
             QueryRequest queryRequest = buildQueryRequest(tableName, indexName,
-                    getHashKeyAttributeName(), getRangeKeyAttributeName(), this.getRangeKeyPropertyName(),
+                    getHashKeyAttributeName(), rangeKeyAttrName, rangeKeyPropName,
                     getHashKeyConditions(), getRangeKeyConditions());
             return new QueryRequestCountQuery(dynamoDBOperations, queryRequest);
         } else {
@@ -256,6 +304,68 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
             }
         }
         return globalSecondaryIndexName;
+    }
+
+    /**
+     * Get the Local Secondary Index (LSI) name for queries that use an LSI.
+     * LSI queries are identified by:
+     * 1. Hash key condition + LSI range key condition, OR
+     * 2. Hash key only + OrderBy on LSI range key
+     *
+     * @return LSI index name if applicable, null otherwise
+     */
+    protected String getLocalSecondaryIndexName() {
+        // Check if any LSI range key property has a condition
+        for (String indexRangeKeyPropertyName : indexRangeKeyPropertyNames) {
+            String attributeName = getAttributeName(indexRangeKeyPropertyName);
+            if (propertyConditions.containsKey(indexRangeKeyPropertyName) ||
+                attributeConditions.containsKey(attributeName)) {
+                // Found LSI property with condition - get its index name
+                String[] indexNames = entityInformation.getGlobalSecondaryIndexNamesByPropertyName()
+                        .get(indexRangeKeyPropertyName);
+                if (indexNames != null && indexNames.length > 0) {
+                    return indexNames[0]; // Return first index name (LSI typically has one index per property)
+                }
+            }
+        }
+
+        // No LSI condition found - check if this is a hash-only query with OrderBy on LSI
+        if (isOnlyHashKeySpecified() && sort != null && sort.iterator().hasNext()) {
+            String sortProperty = sort.iterator().next().getProperty();
+            if (indexRangeKeyPropertyNames.contains(sortProperty)) {
+                // Hash-only + OrderBy LSI pattern - get the LSI index name
+                String[] indexNames = entityInformation.getGlobalSecondaryIndexNamesByPropertyName()
+                        .get(sortProperty);
+                if (indexNames != null && indexNames.length > 0) {
+                    return indexNames[0];
+                }
+            }
+        }
+
+        return null; // No LSI applicable
+    }
+
+    /**
+     * Detect which LSI property (if any) has a condition.
+     * This is used to determine the correct range key for LSI queries.
+     *
+     * @return LSI property name that has a condition, or null if none
+     */
+    protected String getLSIPropertyNameWithCondition() {
+        if (indexRangeKeyPropertyNames == null || indexRangeKeyPropertyNames.isEmpty()) {
+            return null;
+        }
+
+        // Check which LSI property has a condition
+        for (String indexRangeKeyPropertyName : indexRangeKeyPropertyNames) {
+            String attributeName = getAttributeName(indexRangeKeyPropertyName);
+            if (propertyConditions.containsKey(indexRangeKeyPropertyName) ||
+                attributeConditions.containsKey(attributeName)) {
+                return indexRangeKeyPropertyName;
+            }
+        }
+
+        return null;
     }
 
     public boolean isApplicableForQuery() {

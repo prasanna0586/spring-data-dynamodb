@@ -159,9 +159,53 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         }
 
         // Determine allowed sort properties based on query type
+        // Check if this is an LSI query
+        // LSI query: hash key is table partition key + index name is set
+        boolean isLSIQuery = false;
+        if (isApplicableForGlobalSecondaryIndex() && getHashKeyAttributeValue() != null) {
+            String queryHashKeyPropertyName = getHashKeyPropertyName();
+            boolean isTablePartitionKey = queryHashKeyPropertyName.equals(entityInformation.getHashKeyPropertyName());
+            boolean isGSIPartitionKey = entityInformation.isGlobalIndexHashKeyProperty(queryHashKeyPropertyName);
+            // LSI: hash key is table partition, not a GSI partition key
+            isLSIQuery = isTablePartitionKey && !isGSIPartitionKey;
+        }
+
         List<String> allowedSortProperties = new ArrayList<>();
 
-        if (isApplicableForGlobalSecondaryIndex()) {
+        if (isLSIQuery) {
+            // LSI queries: ONLY allow sorting by the specific LSI range key being queried
+            // Detect which LSI property has a condition
+            String lsiPropertyWithCondition = null;
+            if (entityInformation instanceof org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBHashAndRangeKeyExtractingEntityMetadata) {
+                org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBHashAndRangeKeyExtractingEntityMetadata<?, ?> compositeKeyEntityInfo =
+                    (org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBHashAndRangeKeyExtractingEntityMetadata<?, ?>) entityInformation;
+                Set<String> indexRangeKeyPropertyNames = compositeKeyEntityInfo.getIndexRangeKeyPropertyNames();
+
+                if (indexRangeKeyPropertyNames != null) {
+                    for (String indexRangeKeyPropertyName : indexRangeKeyPropertyNames) {
+                        boolean hasCondition = propertyConditions.containsKey(indexRangeKeyPropertyName) ||
+                            attributeConditions.containsKey(getAttributeName(indexRangeKeyPropertyName));
+                        if (hasCondition) {
+                            if (lsiPropertyWithCondition != null) {
+                                throw new UnsupportedOperationException(
+                                    "Cannot query multiple LSI range keys in a single query. Found conditions on: " +
+                                    lsiPropertyWithCondition + " and " + indexRangeKeyPropertyName);
+                            }
+                            lsiPropertyWithCondition = indexRangeKeyPropertyName;
+                        }
+                    }
+                }
+            }
+
+            if (lsiPropertyWithCondition != null) {
+                allowedSortProperties.add(lsiPropertyWithCondition);
+            } else {
+                // Fallback: if we couldn't detect LSI property, use rangeKeyPropertyName
+                if (rangeKeyPropertyName != null) {
+                    allowedSortProperties.add(rangeKeyPropertyName);
+                }
+            }
+        } else if (isApplicableForGlobalSecondaryIndex()) {
             // GSI queries: Allow sorting by GSI properties and GSI range keys
             for (Entry<String, List<Condition>> singlePropertyCondition : propertyConditions.entrySet()) {
                 if (entityInformation.getGlobalSecondaryIndexNamesByPropertyName()
@@ -178,37 +222,31 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
                 }
             }
         } else {
-            // Main table or LSI queries: Allow sorting by table range key and LSI range keys
+            // Main table queries (no secondary index)
+            // Allow sorting by main table range key
             if (rangeKeyPropertyName != null) {
                 allowedSortProperties.add(rangeKeyPropertyName);
             }
 
-            // Allow sorting by LSI range key properties
+            // Also allow sorting by any LSI range key for hash-only + OrderBy pattern
+            // (e.g., findByCustomerIdOrderByOrderDateAsc)
             if (entityInformation instanceof org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBHashAndRangeKeyExtractingEntityMetadata) {
                 org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBHashAndRangeKeyExtractingEntityMetadata<?, ?> compositeKeyEntityInfo =
                     (org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBHashAndRangeKeyExtractingEntityMetadata<?, ?>) entityInformation;
                 Set<String> indexRangeKeyPropertyNames = compositeKeyEntityInfo.getIndexRangeKeyPropertyNames();
-                if (indexRangeKeyPropertyNames != null) {
-                    // For LSI queries: Allow sorting by ANY LSI range key (they share the same hash key as main table)
-                    // This enables hash-only queries with OrderBy on LSI range key (e.g., findByCustomerIdOrderByOrderDateAsc)
-                    for (String indexRangeKeyPropertyName : indexRangeKeyPropertyNames) {
-                        // Add LSI range key if:
-                        // 1. It's being queried (has condition), OR
-                        // 2. We have a sort requirement on it (for hash-only + OrderBy pattern)
-                        boolean hasCondition = propertyConditions.containsKey(indexRangeKeyPropertyName) ||
-                            attributeConditions.containsKey(getAttributeName(indexRangeKeyPropertyName));
-                        boolean isSortProperty = sort != null && sort.iterator().hasNext() &&
-                            sort.iterator().next().getProperty().equals(indexRangeKeyPropertyName);
 
-                        if (hasCondition || isSortProperty) {
-                            allowedSortProperties.add(indexRangeKeyPropertyName);
-                        }
+                if (indexRangeKeyPropertyNames != null && sort != null && sort.iterator().hasNext()) {
+                    String sortProperty = sort.iterator().next().getProperty();
+                    // Only add LSI range key if it's the sort property (hash-only + OrderBy pattern)
+                    if (indexRangeKeyPropertyNames.contains(sortProperty)) {
+                        allowedSortProperties.add(sortProperty);
                     }
                 }
             }
         }
 
-        queryRequest = applySortIfSpecified(queryRequest, new ArrayList<>(new HashSet<>(allowedSortProperties)));
+        List<String> dedupedAllowedProps = new ArrayList<>(new HashSet<>(allowedSortProperties));
+        queryRequest = applySortIfSpecified(queryRequest, dedupedAllowedProps);
 
         queryRequest = applyConsistentReads(queryRequest);
 
