@@ -304,10 +304,16 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
 
         @SuppressWarnings("unchecked")
         DynamoDbTable<T> table = (DynamoDbTable<T>) getTable(entity.getClass());
-        table.putItem(entity);
 
-        maybeEmitEvent(entity, AfterSaveEvent::new);
-        return entity;
+        // Use updateItem instead of putItem to properly handle @DynamoDbVersionAttribute.
+        // AWS SDK v2 Enhanced Client's putItem does not update the local object's version field,
+        // but updateItem returns the complete updated entity with the new version.
+        // updateItem works for both new items (insert) and existing items (update).
+        // See: https://github.com/aws/aws-sdk-java-v2/issues/3278
+        T savedEntity = table.updateItem(entity);
+
+        maybeEmitEvent(savedEntity, AfterSaveEvent::new);
+        return savedEntity;
     }
 
     /**

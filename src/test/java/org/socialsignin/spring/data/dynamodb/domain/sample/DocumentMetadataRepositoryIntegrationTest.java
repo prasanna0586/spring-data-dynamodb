@@ -469,14 +469,14 @@ public class DocumentMetadataRepositoryIntegrationTest {
     void testUpdateDocument_MultipleFields() {
         // Given
         DocumentMetadata doc = createTestDocument("test16-doc1", 16, 101, 201, "user1");
-        repository.save(doc);
+        DocumentMetadata savedDoc = repository.save(doc);
 
-        // When
-        doc.setNotes("Updated notes for test");
-        doc.setUpdatedAt(Instant.now().plus(1, ChronoUnit.HOURS));
-        doc.setUpdatedBy("user2");
-        doc.setDocumentSubCategory(202);
-        repository.save(doc);
+        // When - Update using the saved document (which has version populated)
+        savedDoc.setNotes("Updated notes for test");
+        savedDoc.setUpdatedAt(Instant.now().plus(1, ChronoUnit.HOURS));
+        savedDoc.setUpdatedBy("user2");
+        savedDoc.setDocumentSubCategory(202);
+        repository.save(savedDoc);
 
         Optional<DocumentMetadata> updated = repository.findByUniqueDocumentId("test16-doc1");
 

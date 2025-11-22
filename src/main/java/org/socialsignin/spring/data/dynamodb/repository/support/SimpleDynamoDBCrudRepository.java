@@ -128,9 +128,9 @@ public class SimpleDynamoDBCrudRepository<T, ID>
 
     @Override
     public <S extends T> S save(S entity) {
-
-        dynamoDBOperations.save(entity);
-        return entity;
+        // Return the saved entity from DynamoDBOperations.save() to properly handle
+        // @DynamoDbVersionAttribute and other attributes that may be updated during save.
+        return dynamoDBOperations.save(entity);
     }
 
     /**

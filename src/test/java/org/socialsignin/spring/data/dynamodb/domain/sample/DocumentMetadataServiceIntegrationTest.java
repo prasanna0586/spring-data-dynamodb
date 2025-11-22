@@ -2,6 +2,8 @@ package org.socialsignin.spring.data.dynamodb.domain.sample;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
 import org.socialsignin.spring.data.dynamodb.utils.DynamoDBLocalResource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +41,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DisplayName("DocumentMetadataService Integration Tests")
 public class DocumentMetadataServiceIntegrationTest {
 
+    private static final Logger log = LoggerFactory.getLogger(DocumentMetadataServiceIntegrationTest.class);
+
     @Configuration
     @EnableDynamoDBRepositories(basePackages = "org.socialsignin.spring.data.dynamodb.domain.sample")
     public static class TestAppConfig {
@@ -53,6 +57,11 @@ public class DocumentMetadataServiceIntegrationTest {
 
     @Autowired
     private DocumentMetadataRepository repository;
+
+    // NOTE: DynamoDbClient is injected ONLY for testing purposes - to inspect raw DynamoDB storage format
+    // and verify if version attribute is actually being stored in DynamoDB.
+    @Autowired
+    private software.amazon.awssdk.services.dynamodb.DynamoDbClient dynamoDbClient;
 
     private static final List<String> testDocumentIds = new ArrayList<>();
 
@@ -402,13 +411,13 @@ public class DocumentMetadataServiceIntegrationTest {
     void testUpdateDocument() {
         // Given - Create and save document
         DocumentMetadata doc = createTestDocument("service-test16-doc1", 113, 1001, 2001, "user1");
-        documentMetadataService.saveDocument(doc);
+        DocumentMetadata savedDoc = documentMetadataService.saveDocument(doc);
 
-        // When - Update the document
-        doc.setNotes("Updated notes");
-        doc.setUpdatedBy("user2");
-        doc.setUpdatedAt(Instant.now());
-        DocumentMetadata updatedDoc = documentMetadataService.saveDocument(doc);
+        // When - Update the document (use savedDoc which has the version field populated)
+        savedDoc.setNotes("Updated notes");
+        savedDoc.setUpdatedBy("user2");
+        savedDoc.setUpdatedAt(Instant.now());
+        DocumentMetadata updatedDoc = documentMetadataService.saveDocument(savedDoc);
 
         // Then - Verify update
         assertThat(updatedDoc.getNotes()).isEqualTo("Updated notes");
@@ -434,7 +443,11 @@ public class DocumentMetadataServiceIntegrationTest {
         // When
         DocumentMetadata savedDoc = documentMetadataService.saveDocument(doc);
 
+        // Log raw storage to verify if version is stored in DynamoDB
+        logRawStorage("service-test17-doc1");
+
         // Then
+        log.info("Version from savedDoc object: {}", savedDoc.getVersion());
         assertThat(savedDoc.getVersion()).isNotNull();
         assertThat(savedDoc.getVersion()).isEqualTo(1L); // First version should be 1
     }
@@ -525,5 +538,31 @@ public class DocumentMetadataServiceIntegrationTest {
         // Then - Update should succeed
         assertThat(updated.getVersion()).isEqualTo(2L);
         assertThat(updated.getNotes()).isEqualTo("Updated with correct version");
+    }
+
+    /**
+     * Logs the raw DynamoDB storage format for inspection.
+     * This is useful for verifying if version attribute is actually stored in DynamoDB.
+     */
+    private void logRawStorage(String uniqueDocumentId) {
+        java.util.Map<String, software.amazon.awssdk.services.dynamodb.model.AttributeValue> key = new java.util.HashMap<>();
+        key.put("uniqueDocumentId", software.amazon.awssdk.services.dynamodb.model.AttributeValue.builder().s(uniqueDocumentId).build());
+
+        software.amazon.awssdk.services.dynamodb.model.GetItemResponse response = dynamoDbClient.getItem(
+            software.amazon.awssdk.services.dynamodb.model.GetItemRequest.builder()
+                .tableName("DocumentMetadata")
+                .key(key)
+                .build()
+        );
+
+        java.util.Map<String, software.amazon.awssdk.services.dynamodb.model.AttributeValue> item = response.item();
+
+        log.info("=== Raw DynamoDB Storage for DocumentMetadata ID: {} ===", uniqueDocumentId);
+        if (item != null && item.containsKey("version")) {
+            log.info("version attribute: {}", item.get("version"));
+        } else {
+            log.info("version attribute: NOT FOUND in DynamoDB");
+        }
+        log.info("========================================");
     }
 }
