@@ -56,6 +56,12 @@ public class TypeConverterV2NativeIntegrationTest {
     @Autowired
     private TypeTestEntityRepository repository;
 
+    // NOTE: DynamoDbClient is injected ONLY for testing purposes - to inspect raw DynamoDB storage format
+    // and verify how data is actually stored (e.g., booleans as true/false vs 0/1).
+    // Normal application code should NOT need direct DynamoDbClient access.
+    @Autowired
+    private software.amazon.awssdk.services.dynamodb.DynamoDbClient dynamoDbClient;
+
     // No BeforeEach needed - each test uses unique IDs
 
     @Test
@@ -84,6 +90,9 @@ public class TypeConverterV2NativeIntegrationTest {
         entity.setWrapperBoolean(Boolean.FALSE);
 
         repository.save(entity);
+
+        // Log raw storage format to verify booleans are stored as true/false (BOOL) in V2_NATIVE mode
+        logRawStorage("boolean-test", "primitiveBoolean", "wrapperBoolean");
 
         TypeTestEntity retrieved = repository.findById("boolean-test").orElse(null);
         assertThat(retrieved).isNotNull();
@@ -200,6 +209,9 @@ public class TypeConverterV2NativeIntegrationTest {
 
         repository.save(entity);
 
+        // Log raw storage format to verify Date/Instant are stored as numbers (epoch) in V2_NATIVE mode
+        logRawStorage("datetime-test", "dateValue", "instantValue");
+
         TypeTestEntity retrieved = repository.findById("datetime-test").orElse(null);
         assertThat(retrieved).isNotNull();
         assertThat(retrieved.getDateValue()).isEqualTo(now);
@@ -220,6 +232,9 @@ public class TypeConverterV2NativeIntegrationTest {
         entity.setInstantEpochValue(instant);
 
         repository.save(entity);
+
+        // Log raw storage format to verify Date/Instant with Epoch converters
+        logRawStorage("datetime-epoch-test", "dateEpochValue", "instantEpochValue");
 
         TypeTestEntity retrieved = repository.findById("datetime-epoch-test").orElse(null);
         assertThat(retrieved).isNotNull();
@@ -292,6 +307,9 @@ public class TypeConverterV2NativeIntegrationTest {
 
         repository.save(entity);
 
+        // Log raw storage format to verify map boolean values are stored as true/false in V2_NATIVE mode
+        logRawStorage("boolean-map", "booleanMap");
+
         TypeTestEntity retrieved = repository.findById("boolean-map").orElse(null);
         assertThat(retrieved).isNotNull();
         assertThat(retrieved.getBooleanMap()).containsEntry("enabled", true);
@@ -319,6 +337,34 @@ public class TypeConverterV2NativeIntegrationTest {
     }
 
     // Helper methods
+
+    /**
+     * Logs the raw DynamoDB storage format for inspection.
+     * This is useful for verifying how data is actually stored (e.g., booleans as true/false vs 0/1).
+     *
+     * @param id The entity ID to inspect
+     * @param attributeNames The attribute names to log
+     */
+    private void logRawStorage(String id, String... attributeNames) {
+        java.util.Map<String, software.amazon.awssdk.services.dynamodb.model.AttributeValue> key = new java.util.HashMap<>();
+        key.put("id", software.amazon.awssdk.services.dynamodb.model.AttributeValue.builder().s(id).build());
+
+        software.amazon.awssdk.services.dynamodb.model.GetItemResponse response = dynamoDbClient.getItem(
+            software.amazon.awssdk.services.dynamodb.model.GetItemRequest.builder()
+                .tableName("TypeTestEntity")
+                .key(key)
+                .build()
+        );
+
+        java.util.Map<String, software.amazon.awssdk.services.dynamodb.model.AttributeValue> item = response.item();
+
+        System.out.println("\n=== V2_NATIVE: Raw Storage Format for ID: " + id + " ===");
+        for (String attrName : attributeNames) {
+            software.amazon.awssdk.services.dynamodb.model.AttributeValue value = item.get(attrName);
+            System.out.println(attrName + ": " + value);
+        }
+        System.out.println("========================================\n");
+    }
 
     private TypeTestEntity createFullyPopulatedEntity(String id) {
         TypeTestEntity entity = new TypeTestEntity();

@@ -54,7 +54,13 @@ public class TypeConverterV1CompatibleIntegrationTest {
     }
 
     @Autowired
-    private TypeTestEntityRepository repository;
+    private TypeTestEntityV1CompatibleRepository repository;
+
+    // NOTE: DynamoDbClient is injected ONLY for testing purposes - to inspect raw DynamoDB storage format
+    // and verify how data is actually stored (e.g., booleans as 0/1 vs true/false).
+    // Normal application code should NOT need direct DynamoDbClient access.
+    @Autowired
+    private software.amazon.awssdk.services.dynamodb.DynamoDbClient dynamoDbClient;
 
     // No BeforeEach needed - each test uses unique IDs
 
@@ -62,13 +68,13 @@ public class TypeConverterV1CompatibleIntegrationTest {
     @DisplayName("Test all types - complete entity")
     void testAllTypes() {
         // Create entity with all types populated
-        TypeTestEntity entity = createFullyPopulatedEntity("test-1");
+        TypeTestEntityV1Compatible entity = createFullyPopulatedEntity("test-1");
 
         // Save
         repository.save(entity);
 
         // Retrieve
-        TypeTestEntity retrieved = repository.findById("test-1").orElse(null);
+        TypeTestEntityV1Compatible retrieved = repository.findById("test-1").orElse(null);
 
         // Verify all fields
         assertThat(retrieved).isNotNull();
@@ -78,14 +84,17 @@ public class TypeConverterV1CompatibleIntegrationTest {
     @Test
     @DisplayName("Test Boolean types - primitive and wrapper")
     void testBooleanTypes() {
-        TypeTestEntity entity = new TypeTestEntity();
+        TypeTestEntityV1Compatible entity = new TypeTestEntityV1Compatible();
         entity.setId("boolean-test");
         entity.setPrimitiveBoolean(true);
         entity.setWrapperBoolean(Boolean.FALSE);
 
         repository.save(entity);
 
-        TypeTestEntity retrieved = repository.findById("boolean-test").orElse(null);
+        // Log raw storage format to verify booleans are stored as 0/1 (NUMBER) in V1_COMPATIBLE mode
+        logRawStorage("boolean-test", "primitiveBoolean", "wrapperBoolean");
+
+        TypeTestEntityV1Compatible retrieved = repository.findById("boolean-test").orElse(null);
         assertThat(retrieved).isNotNull();
         assertThat(retrieved.isPrimitiveBoolean()).isTrue();
         assertThat(retrieved.getWrapperBoolean()).isFalse();
@@ -94,14 +103,14 @@ public class TypeConverterV1CompatibleIntegrationTest {
     @Test
     @DisplayName("Test Boolean wrapper - null handling")
     void testBooleanWrapperNull() {
-        TypeTestEntity entity = new TypeTestEntity();
+        TypeTestEntityV1Compatible entity = new TypeTestEntityV1Compatible();
         entity.setId("boolean-null-test");
         entity.setPrimitiveBoolean(false);
         entity.setWrapperBoolean(null);
 
         repository.save(entity);
 
-        TypeTestEntity retrieved = repository.findById("boolean-null-test").orElse(null);
+        TypeTestEntityV1Compatible retrieved = repository.findById("boolean-null-test").orElse(null);
         assertThat(retrieved).isNotNull();
         assertThat(retrieved.isPrimitiveBoolean()).isFalse();
         assertThat(retrieved.getWrapperBoolean()).isNull();
@@ -110,7 +119,7 @@ public class TypeConverterV1CompatibleIntegrationTest {
     @Test
     @DisplayName("Test numeric types - primitives")
     void testNumericPrimitives() {
-        TypeTestEntity entity = new TypeTestEntity();
+        TypeTestEntityV1Compatible entity = new TypeTestEntityV1Compatible();
         entity.setId("numeric-primitives");
         entity.setPrimitiveByte((byte) 127);
         entity.setPrimitiveShort((short) 32000);
@@ -121,7 +130,7 @@ public class TypeConverterV1CompatibleIntegrationTest {
 
         repository.save(entity);
 
-        TypeTestEntity retrieved = repository.findById("numeric-primitives").orElse(null);
+        TypeTestEntityV1Compatible retrieved = repository.findById("numeric-primitives").orElse(null);
         assertThat(retrieved).isNotNull();
         assertThat(retrieved.getPrimitiveByte()).isEqualTo((byte) 127);
         assertThat(retrieved.getPrimitiveShort()).isEqualTo((short) 32000);
@@ -134,7 +143,7 @@ public class TypeConverterV1CompatibleIntegrationTest {
     @Test
     @DisplayName("Test numeric types - wrappers with null")
     void testNumericWrappersWithNull() {
-        TypeTestEntity entity = new TypeTestEntity();
+        TypeTestEntityV1Compatible entity = new TypeTestEntityV1Compatible();
         entity.setId("numeric-wrappers-null");
         entity.setWrapperByte((byte) 100);
         entity.setWrapperShort(null);
@@ -145,7 +154,7 @@ public class TypeConverterV1CompatibleIntegrationTest {
 
         repository.save(entity);
 
-        TypeTestEntity retrieved = repository.findById("numeric-wrappers-null").orElse(null);
+        TypeTestEntityV1Compatible retrieved = repository.findById("numeric-wrappers-null").orElse(null);
         assertThat(retrieved).isNotNull();
         assertThat(retrieved.getWrapperByte()).isEqualTo((byte) 100);
         assertThat(retrieved.getWrapperShort()).isNull();
@@ -158,14 +167,14 @@ public class TypeConverterV1CompatibleIntegrationTest {
     @Test
     @DisplayName("Test BigDecimal and BigInteger")
     void testBigNumberTypes() {
-        TypeTestEntity entity = new TypeTestEntity();
+        TypeTestEntityV1Compatible entity = new TypeTestEntityV1Compatible();
         entity.setId("big-numbers");
         entity.setBigDecimalValue(new BigDecimal("123456.789"));
         entity.setBigIntegerValue(new BigInteger("987654321098765432109876543210"));
 
         repository.save(entity);
 
-        TypeTestEntity retrieved = repository.findById("big-numbers").orElse(null);
+        TypeTestEntityV1Compatible retrieved = repository.findById("big-numbers").orElse(null);
         assertThat(retrieved).isNotNull();
         assertThat(retrieved.getBigDecimalValue()).isEqualByComparingTo(new BigDecimal("123456.789"));
         assertThat(retrieved.getBigIntegerValue()).isEqualTo(new BigInteger("987654321098765432109876543210"));
@@ -174,13 +183,13 @@ public class TypeConverterV1CompatibleIntegrationTest {
     @Test
     @DisplayName("Test Enum type")
     void testEnumType() {
-        TypeTestEntity entity = new TypeTestEntity();
+        TypeTestEntityV1Compatible entity = new TypeTestEntityV1Compatible();
         entity.setId("enum-test");
         entity.setEnumValue(TaskStatus.IN_PROGRESS);
 
         repository.save(entity);
 
-        TypeTestEntity retrieved = repository.findById("enum-test").orElse(null);
+        TypeTestEntityV1Compatible retrieved = repository.findById("enum-test").orElse(null);
         assertThat(retrieved).isNotNull();
         assertThat(retrieved.getEnumValue()).isEqualTo(TaskStatus.IN_PROGRESS);
     }
@@ -188,7 +197,7 @@ public class TypeConverterV1CompatibleIntegrationTest {
     @Test
     @DisplayName("Test Date and Time types - ISO converters")
     void testDateTimeTypes() {
-        TypeTestEntity entity = new TypeTestEntity();
+        TypeTestEntityV1Compatible entity = new TypeTestEntityV1Compatible();
         entity.setId("datetime-test");
 
         Date now = new Date();
@@ -200,7 +209,10 @@ public class TypeConverterV1CompatibleIntegrationTest {
 
         repository.save(entity);
 
-        TypeTestEntity retrieved = repository.findById("datetime-test").orElse(null);
+        // Log raw storage format to verify Date/Instant are stored as ISO strings in V1_COMPATIBLE mode
+        logRawStorage("datetime-test", "dateValue", "instantValue");
+
+        TypeTestEntityV1Compatible retrieved = repository.findById("datetime-test").orElse(null);
         assertThat(retrieved).isNotNull();
         assertThat(retrieved.getDateValue()).isEqualTo(now);
         assertThat(retrieved.getInstantValue()).isEqualTo(instant);
@@ -209,7 +221,7 @@ public class TypeConverterV1CompatibleIntegrationTest {
     @Test
     @DisplayName("Test Date and Time types - Epoch converters")
     void testDateTimeEpochTypes() {
-        TypeTestEntity entity = new TypeTestEntity();
+        TypeTestEntityV1Compatible entity = new TypeTestEntityV1Compatible();
         entity.setId("datetime-epoch-test");
 
         Date now = new Date();
@@ -221,7 +233,10 @@ public class TypeConverterV1CompatibleIntegrationTest {
 
         repository.save(entity);
 
-        TypeTestEntity retrieved = repository.findById("datetime-epoch-test").orElse(null);
+        // Log raw storage format to verify Date/Instant with Epoch converters are stored as strings
+        logRawStorage("datetime-epoch-test", "dateEpochValue", "instantEpochValue");
+
+        TypeTestEntityV1Compatible retrieved = repository.findById("datetime-epoch-test").orElse(null);
         assertThat(retrieved).isNotNull();
         assertThat(retrieved.getDateEpochValue()).isEqualTo(now);
         assertThat(retrieved.getInstantEpochValue()).isEqualTo(instant);
@@ -230,7 +245,7 @@ public class TypeConverterV1CompatibleIntegrationTest {
     @Test
     @DisplayName("Test String collections - List, Set, Map")
     void testStringCollections() {
-        TypeTestEntity entity = new TypeTestEntity();
+        TypeTestEntityV1Compatible entity = new TypeTestEntityV1Compatible();
         entity.setId("string-collections");
 
         entity.setStringList(Arrays.asList("a", "b", "c"));
@@ -243,7 +258,7 @@ public class TypeConverterV1CompatibleIntegrationTest {
 
         repository.save(entity);
 
-        TypeTestEntity retrieved = repository.findById("string-collections").orElse(null);
+        TypeTestEntityV1Compatible retrieved = repository.findById("string-collections").orElse(null);
         assertThat(retrieved).isNotNull();
         assertThat(retrieved.getStringList()).containsExactly("a", "b", "c");
         assertThat(retrieved.getStringSet()).containsExactlyInAnyOrder("x", "y", "z");
@@ -254,7 +269,7 @@ public class TypeConverterV1CompatibleIntegrationTest {
     @Test
     @DisplayName("Test Number collections - List, Set, Map")
     void testNumberCollections() {
-        TypeTestEntity entity = new TypeTestEntity();
+        TypeTestEntityV1Compatible entity = new TypeTestEntityV1Compatible();
         entity.setId("number-collections");
 
         entity.setIntegerList(Arrays.asList(1, 2, 3, 4, 5));
@@ -269,7 +284,7 @@ public class TypeConverterV1CompatibleIntegrationTest {
 
         repository.save(entity);
 
-        TypeTestEntity retrieved = repository.findById("number-collections").orElse(null);
+        TypeTestEntityV1Compatible retrieved = repository.findById("number-collections").orElse(null);
         assertThat(retrieved).isNotNull();
         assertThat(retrieved.getIntegerList()).containsExactly(1, 2, 3, 4, 5);
         assertThat(retrieved.getIntegerSet()).containsExactlyInAnyOrder(10, 20, 30);
@@ -281,7 +296,7 @@ public class TypeConverterV1CompatibleIntegrationTest {
     @Test
     @DisplayName("Test Boolean map")
     void testBooleanMap() {
-        TypeTestEntity entity = new TypeTestEntity();
+        TypeTestEntityV1Compatible entity = new TypeTestEntityV1Compatible();
         entity.setId("boolean-map");
 
         Map<String, Boolean> boolMap = new HashMap<>();
@@ -292,7 +307,10 @@ public class TypeConverterV1CompatibleIntegrationTest {
 
         repository.save(entity);
 
-        TypeTestEntity retrieved = repository.findById("boolean-map").orElse(null);
+        // Log raw storage format to verify map boolean values are stored as 0/1 in V1_COMPATIBLE mode
+        logRawStorage("boolean-map", "booleanMap");
+
+        TypeTestEntityV1Compatible retrieved = repository.findById("boolean-map").orElse(null);
         assertThat(retrieved).isNotNull();
         assertThat(retrieved.getBooleanMap()).containsEntry("enabled", true);
         assertThat(retrieved.getBooleanMap()).containsEntry("disabled", false);
@@ -301,7 +319,7 @@ public class TypeConverterV1CompatibleIntegrationTest {
     @Test
     @DisplayName("Test empty collections")
     void testEmptyCollections() {
-        TypeTestEntity entity = new TypeTestEntity();
+        TypeTestEntityV1Compatible entity = new TypeTestEntityV1Compatible();
         entity.setId("empty-collections");
 
         entity.setStringList(new ArrayList<>());
@@ -310,7 +328,7 @@ public class TypeConverterV1CompatibleIntegrationTest {
 
         repository.save(entity);
 
-        TypeTestEntity retrieved = repository.findById("empty-collections").orElse(null);
+        TypeTestEntityV1Compatible retrieved = repository.findById("empty-collections").orElse(null);
         assertThat(retrieved).isNotNull();
         assertThat(retrieved.getStringList()).isEmpty();
         assertThat(retrieved.getStringMap()).isEmpty();
@@ -320,8 +338,36 @@ public class TypeConverterV1CompatibleIntegrationTest {
 
     // Helper methods
 
-    private TypeTestEntity createFullyPopulatedEntity(String id) {
-        TypeTestEntity entity = new TypeTestEntity();
+    /**
+     * Logs the raw DynamoDB storage format for inspection.
+     * This is useful for verifying how data is actually stored (e.g., booleans as 0/1 vs true/false).
+     *
+     * @param id The entity ID to inspect
+     * @param attributeNames The attribute names to log
+     */
+    private void logRawStorage(String id, String... attributeNames) {
+        java.util.Map<String, software.amazon.awssdk.services.dynamodb.model.AttributeValue> key = new java.util.HashMap<>();
+        key.put("id", software.amazon.awssdk.services.dynamodb.model.AttributeValue.builder().s(id).build());
+
+        software.amazon.awssdk.services.dynamodb.model.GetItemResponse response = dynamoDbClient.getItem(
+            software.amazon.awssdk.services.dynamodb.model.GetItemRequest.builder()
+                .tableName("TypeTestEntityV1Compatible")
+                .key(key)
+                .build()
+        );
+
+        java.util.Map<String, software.amazon.awssdk.services.dynamodb.model.AttributeValue> item = response.item();
+
+        System.out.println("\n=== V1_COMPATIBLE: Raw Storage Format for ID: " + id + " ===");
+        for (String attrName : attributeNames) {
+            software.amazon.awssdk.services.dynamodb.model.AttributeValue value = item.get(attrName);
+            System.out.println(attrName + ": " + value);
+        }
+        System.out.println("========================================\n");
+    }
+
+    private TypeTestEntityV1Compatible createFullyPopulatedEntity(String id) {
+        TypeTestEntityV1Compatible entity = new TypeTestEntityV1Compatible();
         entity.setId(id);
 
         // Booleans
@@ -380,7 +426,7 @@ public class TypeConverterV1CompatibleIntegrationTest {
         return entity;
     }
 
-    private void verifyAllFields(TypeTestEntity expected, TypeTestEntity actual) {
+    private void verifyAllFields(TypeTestEntityV1Compatible expected, TypeTestEntityV1Compatible actual) {
         assertThat(actual.getId()).isEqualTo(expected.getId());
         assertThat(actual.isPrimitiveBoolean()).isEqualTo(expected.isPrimitiveBoolean());
         assertThat(actual.getWrapperBoolean()).isEqualTo(expected.getWrapperBoolean());
