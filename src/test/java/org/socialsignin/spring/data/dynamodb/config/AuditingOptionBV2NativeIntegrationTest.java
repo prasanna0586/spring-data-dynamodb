@@ -70,7 +70,7 @@ public class AuditingOptionBV2NativeIntegrationTest {
     }
 
     @Configuration
-    @EnableDynamoDBAuditing(auditorAwareRef = "auditorProvider", setDates = true, modifyOnCreate = true)
+    @EnableDynamoDBAuditing(auditorAwareRef = "auditorProvider")
     @EnableDynamoDBRepositories(basePackages = "org.socialsignin.spring.data.dynamodb.domain.sample",
                                  marshallingMode = org.socialsignin.spring.data.dynamodb.core.MarshallingMode.SDK_V2_NATIVE)
     public static class TestAppConfig {

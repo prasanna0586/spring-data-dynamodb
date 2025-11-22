@@ -15,6 +15,8 @@
  */
 package org.socialsignin.spring.data.dynamodb.mapping;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.core.MarshallingMode;
 import org.springframework.data.mapping.context.AbstractMappingContext;
 import org.springframework.data.mapping.model.Property;
@@ -38,6 +40,8 @@ import java.lang.reflect.Method;
 public class DynamoDBMappingContext
         extends AbstractMappingContext<DynamoDBPersistentEntityImpl<?>, DynamoDBPersistentProperty> {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(DynamoDBMappingContext.class);
+
     private final MarshallingMode marshallingMode;
 
     /**
@@ -48,6 +52,7 @@ public class DynamoDBMappingContext
      */
     public DynamoDBMappingContext(MarshallingMode marshallingMode) {
         this.marshallingMode = marshallingMode != null ? marshallingMode : MarshallingMode.SDK_V2_NATIVE;
+        LOGGER.info("DynamoDBMappingContext initialized with Marshalling Mode: {}", this.marshallingMode);
     }
 
     /**

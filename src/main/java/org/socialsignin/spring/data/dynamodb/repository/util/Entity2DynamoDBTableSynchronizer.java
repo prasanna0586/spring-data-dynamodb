@@ -80,7 +80,7 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
 
     @Autowired
     public Entity2DynamoDBTableSynchronizer(DynamoDbClient amazonDynamoDB,
-            @Qualifier("dynamoDbEnhancedClient") DynamoDbEnhancedClient enhancedClient,
+            @Qualifier("dynamoDB-DynamoDBMapper") DynamoDbEnhancedClient enhancedClient,
             @Qualifier("dynamoDBMappingContext") DynamoDBMappingContext mappingContext,
             @Value(CONFIGURATION_KEY_entity2ddl_auto) String mode,
             @Value(CONFIGURATION_KEY_entity2ddl_gsiProjectionType) String gsiProjectionType,

@@ -59,16 +59,13 @@ public class DynamoDBLocalResource implements TestExecutionListener {
         return AwsBasicCredentials.create("dummy", "dummy");
     }
 
-    @Bean
-    public DynamoDbEnhancedClient dynamoDbEnhancedClient(DynamoDbClient amazonDynamoDB) {
-        return DynamoDbEnhancedClient.builder()
-                .dynamoDbClient(amazonDynamoDB)
-                .build();
-    }
-
-    // NOTE: Do NOT create a DynamoDBMappingContext bean here.
-    // Let @EnableDynamoDBRepositories create it with the correct marshalling mode.
-    // Each test class using @EnableDynamoDBRepositories will specify the appropriate
-    // marshalling mode and base packages for scanning.
+    // NOTE: Do NOT create DynamoDBMappingContext or DynamoDbEnhancedClient beans here.
+    //
+    // All tests should use @EnableDynamoDBRepositories which will create:
+    // - DynamoDBMappingContext with the correct marshalling mode (defaults to SDK_V2_NATIVE)
+    // - DynamoDbEnhancedClient via DynamoDBMapperFactory
+    //
+    // Only tests testing V1_COMPATIBLE mode should explicitly set:
+    // @EnableDynamoDBRepositories(marshallingMode = MarshallingMode.SDK_V1_COMPATIBLE)
 
 }

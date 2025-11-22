@@ -7,8 +7,10 @@ import org.socialsignin.spring.data.dynamodb.domain.validation.InvalidEntityDupl
 import org.socialsignin.spring.data.dynamodb.domain.validation.InvalidEntityDuplicateLsiSortKey;
 import org.socialsignin.spring.data.dynamodb.domain.validation.ValidEntityMethodAndFieldAnnotations;
 import org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext;
+import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.TestPropertySource;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -21,13 +23,29 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * with clear, actionable error messages.
  */
 @SpringBootTest(classes = {
-        org.socialsignin.spring.data.dynamodb.utils.DynamoDBLocalResource.class
+        org.socialsignin.spring.data.dynamodb.utils.DynamoDBLocalResource.class,
+        IndexValidationIntegrationTest.TestConfig.class
 })
 @TestPropertySource(properties = {
         "spring.data.dynamodb.entity2ddl.auto=none"  // Don't auto-create tables
 })
 @DisplayName("Index Validation Integration Tests")
 class IndexValidationIntegrationTest {
+
+    /**
+     * Configuration for this test.
+     * Uses @EnableDynamoDBRepositories without specifying marshallingMode,
+     * which defaults to SDK_V2_NATIVE (the default for all tests).
+     *
+     * Note: We point to domain.sample package which has actual repositories,
+     * so that @EnableDynamoDBRepositories will create the DynamoDBMappingContext bean.
+     */
+    @Configuration
+    @EnableDynamoDBRepositories(basePackages = "org.socialsignin.spring.data.dynamodb.domain.sample")
+    static class TestConfig {
+        // @EnableDynamoDBRepositories will create the DynamoDBMappingContext bean
+        // with SDK_V2_NATIVE mode (default)
+    }
 
     @Autowired
     private DynamoDbClient amazonDynamoDB;
