@@ -18,6 +18,7 @@ package org.socialsignin.spring.data.dynamodb.config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext;
+import org.socialsignin.spring.data.dynamodb.mapping.event.AuditingEntityCallback;
 import org.socialsignin.spring.data.dynamodb.mapping.event.AuditingEventListener;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
@@ -114,6 +115,16 @@ class DynamoDBAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
         Assert.notNull(auditingHandlerDefinition, "BeanDefinition must not be null!");
         Assert.notNull(registry, "BeanDefinitionRegistry must not be null!");
 
+        // Register the modern callback-based auditing (for entity modification)
+        BeanDefinitionBuilder callbackBeanDefinitionBuilder = BeanDefinitionBuilder
+                .rootBeanDefinition(AuditingEntityCallback.class);
+        callbackBeanDefinitionBuilder.addConstructorArgValue(
+                ParsingUtils.getObjectFactoryBeanDefinition(getAuditingHandlerBeanName(), registry));
+
+        registerInfrastructureBeanWithId(callbackBeanDefinitionBuilder.getBeanDefinition(),
+                AuditingEntityCallback.class.getName(), registry);
+
+        // Also register the legacy event listener for backward compatibility
         BeanDefinitionBuilder listenerBeanDefinitionBuilder = BeanDefinitionBuilder
                 .rootBeanDefinition(AuditingEventListener.class);
         listenerBeanDefinitionBuilder.addConstructorArgValue(
@@ -124,26 +135,25 @@ class DynamoDBAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
     }
 
     /**
-     * Register default bean definitions for a {@link DynamoDBMappingContext} and an
-     * {@link org.springframework.data.support.IsNewStrategyFactory} in case we don't find beans with the assumed names
-     * in the registry.
+     * This method no longer creates a default {@link DynamoDBMappingContext} bean.
+     * The mapping context should be provided by:
+     * 1. @EnableDynamoDBRepositories (which creates it with the appropriate marshalling mode), or
+     * 2. A user-defined @Bean
+     *
+     * This matches the pattern used by Spring Data MongoDB's MongoAuditingRegistrar, which
+     * relies on Spring's dependency injection to fail with a clear error if the required
+     * mapping context bean is not available.
      *
      * @param registry
-     *            the {@link BeanDefinitionRegistry} to use to register the components into.
+     *            the {@link BeanDefinitionRegistry} (unused, kept for method signature compatibility)
      * @param source
-     *            the source which the registered components shall be registered with
+     *            the source (unused, kept for method signature compatibility)
      */
     private void defaultDependenciesIfNecessary(BeanDefinitionRegistry registry, Object source) {
-        LOGGER.trace("defaultDependenciesIfNecessary. source:{}", source);
-        LOGGER.trace("is registry.containsBeanDefinition {} {}", MAPPING_CONTEXT_BEAN_NAME,
-                registry.containsBeanDefinition(MAPPING_CONTEXT_BEAN_NAME));
-        if (!registry.containsBeanDefinition(MAPPING_CONTEXT_BEAN_NAME)) {
-
-            RootBeanDefinition definition = new RootBeanDefinition(DynamoDBMappingContext.class);
-            definition.setRole(ROLE_INFRASTRUCTURE);
-            definition.setSource(source);
-
-            registry.registerBeanDefinition(MAPPING_CONTEXT_BEAN_NAME, definition);
-        }
+        // No longer create a default mapping context bean.
+        // The bean reference in getAuditHandlerBeanDefinitionBuilder (line 97) will cause Spring
+        // to fail with a clear dependency injection error if no DynamoDBMappingContext bean exists.
+        LOGGER.trace("DynamoDBAuditingRegistrar expects DynamoDBMappingContext bean '{}' to be provided by @EnableDynamoDBRepositories or user configuration",
+                MAPPING_CONTEXT_BEAN_NAME);
     }
 }

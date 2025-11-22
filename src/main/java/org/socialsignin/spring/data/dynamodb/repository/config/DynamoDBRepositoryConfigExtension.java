@@ -242,18 +242,24 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
     private String registerDynamoDBMappingContext(BeanDefinitionRegistry registry) {
         assert registry != null;
 
-        BeanDefinitionBuilder dynamoDBMappingContextBuilder = BeanDefinitionBuilder
-                .genericBeanDefinition(DynamoDBMappingContext.class);
+        // Use the standard bean name to ensure compatibility with @EnableDynamoDBAuditing
+        String dynamoDBMappingContextRef = org.socialsignin.spring.data.dynamodb.config.BeanNames.MAPPING_CONTEXT_BEAN_NAME;
 
-        // Pass marshalling mode as constructor argument
-        dynamoDBMappingContextBuilder.addConstructorArgValue(marshallingMode);
+        // Check if the bean already exists (might be provided by user or @EnableDynamoDBAuditing)
+        if (!registry.containsBeanDefinition(dynamoDBMappingContextRef)) {
+            BeanDefinitionBuilder dynamoDBMappingContextBuilder = BeanDefinitionBuilder
+                    .genericBeanDefinition(DynamoDBMappingContext.class);
 
-        String dynamoDBMappingContextRef = getBeanNameWithModulePrefix("DynamoDBMappingContext");
+            // Pass marshalling mode as constructor argument
+            dynamoDBMappingContextBuilder.addConstructorArgValue(marshallingMode);
 
-        LOGGER.debug("Adding bean <{}> of type <{}> with marshalling mode <{}>", dynamoDBMappingContextRef,
-                dynamoDBMappingContextBuilder.getBeanDefinition(), marshallingMode);
+            LOGGER.debug("Registering DynamoDBMappingContext bean <{}> with marshalling mode <{}>",
+                    dynamoDBMappingContextRef, marshallingMode);
 
-        registry.registerBeanDefinition(dynamoDBMappingContextRef, dynamoDBMappingContextBuilder.getBeanDefinition());
+            registry.registerBeanDefinition(dynamoDBMappingContextRef, dynamoDBMappingContextBuilder.getBeanDefinition());
+        } else {
+            LOGGER.debug("DynamoDBMappingContext bean <{}> already exists, reusing it", dynamoDBMappingContextRef);
+        }
 
         return dynamoDBMappingContextRef;
     }
@@ -270,6 +276,9 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
         if (configurationSource instanceof AnnotationRepositoryConfigurationSource) {
             AnnotationAttributes attributes = ((AnnotationRepositoryConfigurationSource) configurationSource).getAttributes();
             this.marshallingMode = attributes.getEnum("marshallingMode");
+            LOGGER.debug("Read marshalling mode from @EnableDynamoDBRepositories: {}", this.marshallingMode);
+        } else {
+            LOGGER.debug("ConfigurationSource is not AnnotationRepositoryConfigurationSource, using default marshalling mode: {}", this.marshallingMode);
         }
 
         this.dynamoDBMapperConfigName = getBeanNameWithModulePrefix("DynamoDBMapperConfig");

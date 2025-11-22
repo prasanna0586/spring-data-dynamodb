@@ -18,37 +18,46 @@ package org.socialsignin.spring.data.dynamodb.mapping.event;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectFactory;
+import org.springframework.core.Ordered;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
 import org.springframework.util.Assert;
 
 /**
- * Event listener to populate auditing related fields on an entity about to be saved.
+ * Entity callback to populate auditing related fields on an entity about to be saved.
+ * This callback-based approach ensures the modified entity is properly returned and saved.
  *
  * @author Prasanna Kumar Ramachandran
  */
-public class AuditingEventListener extends AbstractDynamoDBEventListener<Object> {
+public class AuditingEntityCallback implements BeforeConvertCallback<Object>, Ordered {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AuditingEventListener.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuditingEntityCallback.class);
 
     private final ObjectFactory<IsNewAwareAuditingHandler> auditingHandlerFactory;
 
     /**
-     * Creates a new {@link AuditingEventListener} using the given
-     * {@link org.springframework.data.mapping.context.MappingContext} and
-     * {@link org.springframework.data.auditing.AuditingHandler} provided by the given {@link ObjectFactory}.
-     *
-     * NOTE: This event listener is kept for backward compatibility only.
-     * The actual auditing happens in {@link AuditingEntityCallback}, which is the modern
-     * callback-based approach that properly returns the modified entity.
-     * This listener exists so that existing code using @EnableDynamoDBAuditing doesn't break,
-     * but it doesn't do any actual work since the callback handles it.
+     * Creates a new {@link AuditingEntityCallback} using the given {@link IsNewAwareAuditingHandler}
+     * provided by the given {@link ObjectFactory}.
      *
      * @param auditingHandlerFactory must not be {@literal null}.
      */
-    public AuditingEventListener(ObjectFactory<IsNewAwareAuditingHandler> auditingHandlerFactory) {
+    public AuditingEntityCallback(ObjectFactory<IsNewAwareAuditingHandler> auditingHandlerFactory) {
         Assert.notNull(auditingHandlerFactory, "IsNewAwareAuditingHandler must not be null!");
         this.auditingHandlerFactory = auditingHandlerFactory;
     }
 
-    // No methods overridden - auditing is handled by AuditingEntityCallback
+    @Override
+    public Object onBeforeConvert(Object entity, String tableName) {
+        IsNewAwareAuditingHandler handler = auditingHandlerFactory.getObject();
+        if (handler != null) {
+            Object result = handler.markAudited(entity);
+            // markAudited should never return null, but return original entity as fallback
+            return result != null ? result : entity;
+        }
+        return entity;
+    }
+
+    @Override
+    public int getOrder() {
+        return 100;  // Run before other callbacks
+    }
 }

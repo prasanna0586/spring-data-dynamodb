@@ -33,7 +33,7 @@ import java.util.Date;
  * - Spring Data auditing annotations (@CreatedBy, @CreatedDate, @LastModifiedBy, @LastModifiedDate) remain unchanged
  * - Auditing works the same way in SDK v2 as it did in SDK v1
  *
- * @author Vito Limandibhrata
+ * @author Prasanna Kumar Ramachandran
  */
 @DynamoDbBean
 public class AuditableUser {
@@ -54,6 +54,9 @@ public class AuditableUser {
 
     @LastModifiedDate
     private Date lastModifiedAt;
+
+    @Version
+    private Long version;
 
     public AuditableUser() {
     }
@@ -113,5 +116,13 @@ public class AuditableUser {
 
     public void setLastModifiedAt(Date lastModifiedAt) {
         this.lastModifiedAt = lastModifiedAt;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 }
