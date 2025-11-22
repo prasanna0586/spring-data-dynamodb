@@ -11,6 +11,16 @@ Run tests with coverage:
 mvn clean test
 ```
 
+Or run the full build (if tests pass):
+```bash
+mvn clean verify
+```
+
+If you have failing tests but still want the coverage report:
+```bash
+mvn clean test -Dmaven.test.failure.ignore=true
+```
+
 The coverage report will be generated at:
 ```
 target/site/jacoco/index.html
