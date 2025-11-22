@@ -196,13 +196,21 @@ public abstract class AbstractDynamoDBQueryCreator<T, ID, R>
         Assert.notNull(in, "Creating conditions on null parameters not supported: please specify a value for '"
                 + leafNodePropertyName + "'");
 
+        // For CONTAINS/NOT_CONTAINS operations on collection properties (Set, List, etc.),
+        // the value type should be the actual value's type, not the collection type.
+        // For example, if tags is Set<String> and we're checking contains("tag-a"),
+        // we should use String.class as the type, not Set.class.
+        Class<?> valueType = leafNodePropertyType;
+
         if (ObjectUtils.isArray(in)) {
             List<?> list = Arrays.asList(ObjectUtils.toObjectArray(in));
             Assert.isTrue(list.size() == 1,
                     "Only one value is supported: please specify a value for '\" + leafNodePropertyName + \"'\"");
             Object value = list.get(0);
+            // Use the actual value's type for conversion
+            valueType = value != null ? value.getClass() : leafNodePropertyType;
             return criteria.withSingleValueCriteria(leafNodePropertyName, comparisonOperator, value,
-                    leafNodePropertyType);
+                    valueType);
         } else if (ClassUtils.isAssignable(Iterable.class, in.getClass())) {
             Iterator<?> iter = ((Iterable<?>) in).iterator();
             Assert.isTrue(iter.hasNext(),
@@ -210,10 +218,14 @@ public abstract class AbstractDynamoDBQueryCreator<T, ID, R>
             Object value = iter.next();
             Assert.isTrue(!iter.hasNext(),
                     "Only one value is supported: please specify a value for '\" + leafNodePropertyName + \"'\"");
+            // Use the actual value's type for conversion
+            valueType = value != null ? value.getClass() : leafNodePropertyType;
             return criteria.withSingleValueCriteria(leafNodePropertyName, comparisonOperator, value,
-                    leafNodePropertyType);
+                    valueType);
         } else {
-            return criteria.withSingleValueCriteria(leafNodePropertyName, comparisonOperator, in, leafNodePropertyType);
+            // Use the actual value's type for conversion
+            valueType = in != null ? in.getClass() : leafNodePropertyType;
+            return criteria.withSingleValueCriteria(leafNodePropertyName, comparisonOperator, in, valueType);
         }
     }
 

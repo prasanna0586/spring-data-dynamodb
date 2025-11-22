@@ -275,6 +275,17 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
         }
 
         if (propertyType != null) {
+            // AWS SDK v2's DefaultAttributeConverterProvider cannot create converters for raw collection types
+            // (Set, List, Map) without generic type parameters. When we get the type via field.getType() or
+            // method.getReturnType(), we lose the generic type information (e.g., Set<String> becomes Set).
+            // DynamoDB natively supports these collection types, so no custom converter is needed.
+            // Return null to indicate no converter is available - the value will be handled by DynamoDB's
+            // native type support.
+            if (java.util.Collection.class.isAssignableFrom(propertyType) ||
+                java.util.Map.class.isAssignableFrom(propertyType)) {
+                return null;
+            }
+
             software.amazon.awssdk.enhanced.dynamodb.DefaultAttributeConverterProvider defaultProvider =
                 software.amazon.awssdk.enhanced.dynamodb.DefaultAttributeConverterProvider.create();
             return defaultProvider.converterFor(software.amazon.awssdk.enhanced.dynamodb.EnhancedType.of(propertyType));

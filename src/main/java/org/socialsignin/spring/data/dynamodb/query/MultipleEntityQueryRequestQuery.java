@@ -40,8 +40,33 @@ public class MultipleEntityQueryRequestQuery<T> extends AbstractMultipleEntityQu
         // SDK v2: query() returns PageIterable<T>, convert to List<T>
         PageIterable<T> pageIterable = dynamoDBOperations.query(clazz, queryRequest);
         List<T> results = new ArrayList<>();
+
+        // If a limit is specified in the query request, we need to respect it when collecting results.
+        // DynamoDB's limit parameter specifies the max number of items to EXAMINE (before filtering),
+        // not the number to RETURN (after filtering). When a filterExpression is present, multiple
+        // pages may be returned, each with items that passed the filter. We need to stop collecting
+        // once we reach the user-specified limit.
+        Integer userLimit = queryRequest.limit();
+
         for (Page<T> page : pageIterable) {
-            results.addAll(page.items());
+            if (userLimit != null && results.size() >= userLimit) {
+                break; // Stop collecting once we've reached the limit
+            }
+
+            if (userLimit != null) {
+                // Add only as many items as needed to reach the limit
+                int remainingSlots = userLimit - results.size();
+                List<T> pageItems = page.items();
+                if (pageItems.size() <= remainingSlots) {
+                    results.addAll(pageItems);
+                } else {
+                    results.addAll(pageItems.subList(0, remainingSlots));
+                    break;
+                }
+            } else {
+                // No limit specified, add all items
+                results.addAll(page.items());
+            }
         }
         return results;
     }

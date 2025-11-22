@@ -17,8 +17,11 @@ package org.socialsignin.spring.data.dynamodb.query;
 
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.springframework.util.Assert;
+import software.amazon.awssdk.enhanced.dynamodb.model.Page;
+import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -36,9 +39,41 @@ public class MultipleEntityScanExpressionQuery<T> extends AbstractMultipleEntity
     @Override
     public List<T> getResultList() {
         assertScanEnabled(isScanEnabled());
+
         // SDK v2 returns PageIterable, convert to List
-        return StreamSupport.stream(dynamoDBOperations.scan(clazz, scanRequest).items().spliterator(), false)
-                .collect(Collectors.toList());
+        PageIterable<T> pageIterable = dynamoDBOperations.scan(clazz, scanRequest);
+
+        // If a limit is specified in the scan request, we need to respect it when collecting results.
+        // DynamoDB's limit parameter specifies the max number of items to EXAMINE (before filtering),
+        // not the number to RETURN (after filtering). When a filterExpression is present, multiple
+        // pages may be returned, each with items that passed the filter. We need to stop collecting
+        // once we reach the user-specified limit.
+        Integer userLimit = scanRequest.limit();
+
+        if (userLimit == null) {
+            // No limit specified, collect all items
+            return StreamSupport.stream(pageIterable.items().spliterator(), false)
+                    .collect(Collectors.toList());
+        }
+
+        // Limit specified, collect up to the limit
+        List<T> results = new ArrayList<>();
+        for (Page<T> page : pageIterable) {
+            if (results.size() >= userLimit) {
+                break; // Stop collecting once we've reached the limit
+            }
+
+            // Add only as many items as needed to reach the limit
+            int remainingSlots = userLimit - results.size();
+            List<T> pageItems = page.items();
+            if (pageItems.size() <= remainingSlots) {
+                results.addAll(pageItems);
+            } else {
+                results.addAll(pageItems.subList(0, remainingSlots));
+                break;
+            }
+        }
+        return results;
     }
 
     public void assertScanEnabled(boolean scanEnabled) {
