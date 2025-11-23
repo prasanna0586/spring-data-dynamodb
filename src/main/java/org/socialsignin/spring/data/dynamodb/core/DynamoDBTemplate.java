@@ -243,7 +243,9 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
     @SuppressWarnings("unchecked")
     @Override
     public <T> List<T> batchLoad(Map<Class<?>, List<Key>> itemsToGet) {
-        List<T> results = new ArrayList<>();
+        // Pre-allocate result list to avoid resizing
+        int totalKeys = itemsToGet.values().stream().mapToInt(List::size).sum();
+        List<T> results = new ArrayList<>(totalKeys);
 
         // SDK v2 Enhanced Client requires separate batch requests per table
         for (Map.Entry<Class<?>, List<Key>> entry : itemsToGet.entrySet()) {
@@ -257,27 +259,38 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
 
             DynamoDbTable<Object> table = getTable(domainClass);
 
-            // Create batch get request
-            BatchGetItemEnhancedRequest.Builder requestBuilder = BatchGetItemEnhancedRequest.builder();
+            // DynamoDB BatchGetItem has a limit of 100 items per request
+            // See: https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchGetItem.html
+            // If more than 100 items are requested, chunk them into multiple batches
+            final int batchSize = 100;
+            int totalKeyCount = keys.size();
 
-            ReadBatch.Builder<Object> batchBuilder = ReadBatch.builder(domainClass)
-                    .mappedTableResource(table);
+            for (int startIndex = 0; startIndex < totalKeyCount; startIndex += batchSize) {
+                int endIndex = Math.min(startIndex + batchSize, totalKeyCount);
+                List<Key> keysBatch = keys.subList(startIndex, endIndex);
 
-            for (Key key : keys) {
-                batchBuilder.addGetItem(key);
-            }
+                // Create batch get request for this chunk
+                BatchGetItemEnhancedRequest.Builder requestBuilder = BatchGetItemEnhancedRequest.builder();
 
-            requestBuilder.addReadBatch(batchBuilder.build());
+                ReadBatch.Builder<Object> batchBuilder = ReadBatch.builder(domainClass)
+                        .mappedTableResource(table);
 
-            // Execute batch get
-            BatchGetResultPageIterable resultPages = enhancedClient.batchGetItem(requestBuilder.build());
+                for (Key key : keysBatch) {
+                    batchBuilder.addGetItem(key);
+                }
 
-            // Collect results
-            for (BatchGetResultPage page : resultPages) {
-                List<?> pageResults = page.resultsForTable(table);
-                for (Object entity : pageResults) {
-                    maybeEmitEvent(entity, AfterLoadEvent::new);
-                    results.add((T) entity);
+                requestBuilder.addReadBatch(batchBuilder.build());
+
+                // Execute batch get
+                BatchGetResultPageIterable resultPages = enhancedClient.batchGetItem(requestBuilder.build());
+
+                // Collect results
+                for (BatchGetResultPage page : resultPages) {
+                    List<?> pageResults = page.resultsForTable(table);
+                    for (Object entity : pageResults) {
+                        maybeEmitEvent(entity, AfterLoadEvent::new);
+                        results.add((T) entity);
+                    }
                 }
             }
         }
