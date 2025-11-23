@@ -43,6 +43,7 @@ public interface PlaylistRepository extends CrudRepository<Playlist, PlaylistId>
     @EnableScan
     List<Playlist> findByDisplayName(String displayName);
 
+    @EnableScan
     List<Playlist> findByUserNameAndDisplayName(String userName, String displayName);
 
     @EnableScan
