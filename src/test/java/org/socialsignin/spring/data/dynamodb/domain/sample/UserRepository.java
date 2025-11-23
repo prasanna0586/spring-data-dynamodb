@@ -147,6 +147,7 @@ public interface UserRepository extends CrudRepository<User, String> {
     @EnableScan
     List<User> findByNumberOfPlaylistsBetween(Integer min, Integer max);
 
+    @EnableScan
     List<User> findByPostCodeIn(List<String> postCodes);
 
     @EnableScan
