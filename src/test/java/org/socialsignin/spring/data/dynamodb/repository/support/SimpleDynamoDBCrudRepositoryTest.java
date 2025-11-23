@@ -33,6 +33,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -282,9 +283,19 @@ public class SimpleDynamoDBCrudRepositoryTest {
         failures.add(result2);
 
         List<User> entities = new ArrayList<>();
-        entities.add(new User());
-        entities.add(new User());
+        User user1 = new User();
+        User user2 = new User();
+        entities.add(user1);
+        entities.add(user2);
+
+        // Mock batchSave to return failures
         when(dynamoDBOperations.batchSave(anyIterable())).thenReturn(failures);
+
+        // SDK v2: Must also mock extractUnprocessedPutItems to return the unprocessed entities
+        // In SDK v1, batchSave() directly returned FailedBatch objects with exceptions
+        // In SDK v2, we must extract unprocessed entities from BatchWriteResult
+        when(dynamoDBOperations.extractUnprocessedPutItems(anyList(), anyMap()))
+                .thenReturn(Arrays.asList(user1, user2));
 
         BatchWriteException exception = assertThrows(BatchWriteException.class, () -> {
             repoForEntityWithOnlyHashKey.saveAll(entities);
