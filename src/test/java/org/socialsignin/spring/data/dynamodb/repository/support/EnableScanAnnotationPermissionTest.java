@@ -33,7 +33,16 @@ public class EnableScanAnnotationPermissionTest {
 
     public interface SampleRepository {
         @EnableScan
+        int count();
+
+        @EnableScan
+        void deleteAll();
+
+        @EnableScan
         List<User> findAll();
+
+        @EnableScan
+        Page<User> findAll(Pageable pageable);
     }
 
     public interface SampleNoScanRepository {
@@ -43,7 +52,7 @@ public class EnableScanAnnotationPermissionTest {
 
     public interface SampleMethodRepository {
 
-        @EnableScanCount
+        @EnableScan
         int count();
 
         @EnableScan
