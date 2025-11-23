@@ -179,9 +179,9 @@ public class LSIMethodsUnitTest {
     }
 
     @Test
-    @DisplayName("Test 8: getHashKeyConditions() returns null when not using index")
+    @DisplayName("Test 8: getHashKeyConditions() returns conditions for main table query")
     void testGetHashKeyConditions_WithoutIndex() {
-        // Given - No index
+        // Given - No index (main table query)
         criteria.setGlobalSecondaryIndexName(null);
         criteria.setHashKeyPropertyName("customerId");
         criteria.setHashKeyAttributeValue("customer-001");
@@ -189,8 +189,10 @@ public class LSIMethodsUnitTest {
         // When
         List<Condition> conditions = criteria.getHashKeyConditions();
 
-        // Then - Should return null when not using an index
-        assertNull(conditions, "Should return null when not using index");
+        // Then - SDK v2 requires KeyConditionExpression for ALL Query operations, including main table queries
+        // getHashKeyConditions() must return conditions so buildQueryRequest() can build the KeyConditionExpression
+        assertNotNull(conditions, "Should return hash key conditions for main table query (SDK v2 requirement)");
+        assertEquals(1, conditions.size(), "Should have one condition for hash key");
     }
 
     @Test
