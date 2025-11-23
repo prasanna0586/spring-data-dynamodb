@@ -23,6 +23,10 @@ import org.springframework.util.Assert;
 
 /**
  * Event listener to populate auditing related fields on an entity about to be saved.
+ * <p>
+ * NOTE: This listener is registered for backward compatibility with XML-based configurations,
+ * but auditing is handled by {@link AuditingEntityCallback} in modern annotation-based configurations.
+ * The callback-based approach is triggered automatically during repository.save() operations.
  *
  * @author Prasanna Kumar Ramachandran
  */
@@ -37,12 +41,6 @@ public class AuditingEventListener extends AbstractDynamoDBEventListener<Object>
      * {@link org.springframework.data.mapping.context.MappingContext} and
      * {@link org.springframework.data.auditing.AuditingHandler} provided by the given {@link ObjectFactory}.
      *
-     * NOTE: This event listener is kept for backward compatibility only.
-     * The actual auditing happens in {@link AuditingEntityCallback}, which is the modern
-     * callback-based approach that properly returns the modified entity.
-     * This listener exists so that existing code using @EnableDynamoDBAuditing doesn't break,
-     * but it doesn't do any actual work since the callback handles it.
-     *
      * @param auditingHandlerFactory must not be {@literal null}.
      */
     public AuditingEventListener(ObjectFactory<IsNewAwareAuditingHandler> auditingHandlerFactory) {
@@ -50,5 +48,7 @@ public class AuditingEventListener extends AbstractDynamoDBEventListener<Object>
         this.auditingHandlerFactory = auditingHandlerFactory;
     }
 
-    // No methods overridden - auditing is handled by AuditingEntityCallback
+    // Note: onBeforeSave() is not implemented here.
+    // Modern auditing uses AuditingEntityCallback which is triggered during repository.save().
+    // For legacy XML-based event publishing, extend this class and override onBeforeSave().
 }

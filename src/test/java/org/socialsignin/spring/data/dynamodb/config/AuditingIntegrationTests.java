@@ -17,12 +17,16 @@ package org.socialsignin.spring.data.dynamodb.config;
 
 import org.junit.jupiter.api.Test;
 import org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext;
+import org.socialsignin.spring.data.dynamodb.mapping.event.AbstractDynamoDBEventListener;
 import org.socialsignin.spring.data.dynamodb.mapping.event.BeforeSaveEvent;
+import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.auditing.IsNewAwareAuditingHandler;
+import org.springframework.util.Assert;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 
 import java.time.LocalDateTime;
@@ -36,6 +40,26 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Vito Limandibhrata
  */
 public class AuditingIntegrationTests {
+
+    /**
+     * Test-specific auditing event listener that responds to manually published BeforeSaveEvent.
+     * This is used to test the legacy XML-based auditing configuration.
+     * Production code should use @EnableDynamoDBAuditing which uses AuditingEntityCallback instead.
+     */
+    public static class TestAuditingEventListener extends AbstractDynamoDBEventListener<Object> {
+
+        private final ObjectFactory<IsNewAwareAuditingHandler> auditingHandlerFactory;
+
+        public TestAuditingEventListener(ObjectFactory<IsNewAwareAuditingHandler> auditingHandlerFactory) {
+            Assert.notNull(auditingHandlerFactory, "IsNewAwareAuditingHandler must not be null!");
+            this.auditingHandlerFactory = auditingHandlerFactory;
+        }
+
+        @Override
+        public void onBeforeSave(Object source) {
+            auditingHandlerFactory.getObject().markAudited(source);
+        }
+    }
 
     @Test
     public void enablesAuditingAndSetsPropertiesAccordingly() throws Exception {
@@ -69,6 +93,8 @@ public class AuditingIntegrationTests {
         Long id;
         @CreatedDate
         LocalDateTime created;
+
+        @LastModifiedDate
         LocalDateTime modified;
 
         public Long getId() {
@@ -87,7 +113,6 @@ public class AuditingIntegrationTests {
             this.created = created;
         }
 
-        @LastModifiedDate
         public LocalDateTime getModified() {
             return modified;
         }

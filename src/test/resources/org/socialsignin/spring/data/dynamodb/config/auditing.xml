@@ -5,8 +5,26 @@
        xsi:schemaLocation="http://docs.socialsignin.org/schema/data/dynamodb http://docs.socialsignin.org/schema/data/dynamodb/spring-dynamodb.xsd
        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <dynamodb:auditing mapping-context-ref="customMappingContext"/>
-
     <bean id="customMappingContext" class="org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext"/>
+
+    <!-- PersistentEntities for auditing handler -->
+    <bean id="persistentEntities" class="org.springframework.data.repository.config.PersistentEntitiesFactoryBean">
+        <constructor-arg ref="customMappingContext"/>
+    </bean>
+
+    <!-- Auditing handler -->
+    <bean id="auditingHandler" class="org.springframework.data.auditing.IsNewAwareAuditingHandler">
+        <constructor-arg ref="persistentEntities"/>
+    </bean>
+
+    <!-- ObjectFactory for auditing handler -->
+    <bean id="auditingHandlerFactory" class="org.springframework.beans.factory.config.ObjectFactoryCreatingFactoryBean">
+        <property name="targetBeanName" value="auditingHandler"/>
+    </bean>
+
+    <!-- Use test-specific event listener instead of production AuditingEventListener -->
+    <bean class="org.socialsignin.spring.data.dynamodb.config.AuditingIntegrationTests$TestAuditingEventListener">
+        <constructor-arg ref="auditingHandlerFactory"/>
+    </bean>
 
 </beans>
