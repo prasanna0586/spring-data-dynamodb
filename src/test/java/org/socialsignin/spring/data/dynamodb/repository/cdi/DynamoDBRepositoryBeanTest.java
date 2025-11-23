@@ -34,7 +34,9 @@ import java.util.Collections;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 
 @ExtendWith(MockitoExtension.class)
 public class DynamoDBRepositoryBeanTest {
@@ -67,9 +69,9 @@ public class DynamoDBRepositoryBeanTest {
 
     private void setupDynamoDBBeanStubs() {
         when(beanManager.createCreationalContext(dynamoDbClientBean)).thenReturn(creationalContext);
-        when(beanManager.getReference(dynamoDbClientBean, DynamoDbClient.class, creationalContext))
+        when(beanManager.getReference(eq(dynamoDbClientBean), eq(DynamoDbClient.class), any()))
                 .thenReturn(dynamoDbClient);
-        when(beanManager.getReference(enhancedClientBean, DynamoDbEnhancedClient.class, creationalContext))
+        when(beanManager.getReference(eq(enhancedClientBean), eq(DynamoDbEnhancedClient.class), any()))
                 .thenReturn(enhancedClient);
     }
 
