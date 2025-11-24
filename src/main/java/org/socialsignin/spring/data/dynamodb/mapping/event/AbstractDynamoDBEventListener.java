@@ -92,23 +92,23 @@ public abstract class AbstractDynamoDBEventListener<E> implements ApplicationLis
         // Check for matching domain type and invoke callbacks
         else if (domainClass.isAssignableFrom(source.getClass())) {
             switch (event) {
-                case BeforeSaveEvent ignored -> {
+                case BeforeSaveEvent<?> ignored -> {
                     onBeforeSave(source);
                     return;
                 }
-                case AfterSaveEvent ignored -> {
+                case AfterSaveEvent<?> ignored -> {
                     onAfterSave(source);
                     return;
                 }
-                case BeforeDeleteEvent ignored -> {
+                case BeforeDeleteEvent<?> ignored -> {
                     onBeforeDelete(source);
                     return;
                 }
-                case AfterDeleteEvent ignored -> {
+                case AfterDeleteEvent<?> ignored -> {
                     onAfterDelete(source);
                     return;
                 }
-                case AfterLoadEvent ignored -> {
+                case AfterLoadEvent<?> ignored -> {
                     onAfterLoad(source);
                     return;
                 }
