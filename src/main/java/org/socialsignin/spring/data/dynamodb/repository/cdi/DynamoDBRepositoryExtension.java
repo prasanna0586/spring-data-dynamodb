@@ -68,7 +68,7 @@ public class DynamoDBRepositoryExtension extends CdiRepositoryExtensionSupport {
     <X> void processBean(@NonNull @Observes ProcessBean<X> processBean) {
         Bean<X> bean = processBean.getBean();
         for (Type type : bean.getTypes()) {
-            // Check if the bean is a AmazonDynamoDB
+            // Check if the bean is a DynamoDbClient
             if (type instanceof Class<?> && DynamoDbClient.class.isAssignableFrom((Class<?>) type)) {
                 Set<Annotation> qualifiers = new HashSet<>(bean.getQualifiers());
                 if (bean.isAlternative() || !amazonDynamoDBs.containsKey(qualifiers)) {
@@ -82,6 +82,14 @@ public class DynamoDBRepositoryExtension extends CdiRepositoryExtensionSupport {
                 if (bean.isAlternative() || !enhancedClients.containsKey(qualifiers)) {
                     logDiscoveredBean(DynamoDbEnhancedClient.class, qualifiers);
                     enhancedClients.put(qualifiers, (Bean<DynamoDbEnhancedClient>) bean);
+                }
+            }
+            // Check if the bean is a DynamoDBOperations
+            if (type instanceof Class<?> && DynamoDBOperations.class.isAssignableFrom((Class<?>) type)) {
+                Set<Annotation> qualifiers = new HashSet<>(bean.getQualifiers());
+                if (bean.isAlternative() || !dynamoDBOperations.containsKey(qualifiers)) {
+                    logDiscoveredBean(DynamoDBOperations.class, qualifiers);
+                    dynamoDBOperations.put(qualifiers, (Bean<DynamoDBOperations>) bean);
                 }
             }
         }
