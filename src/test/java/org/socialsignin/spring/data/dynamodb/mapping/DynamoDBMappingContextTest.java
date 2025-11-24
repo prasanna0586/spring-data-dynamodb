@@ -35,9 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Unit tests for {@link DynamoDBMappingContext}.
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 @ExtendWith(MockitoExtension.class)
 public class DynamoDBMappingContextTest {

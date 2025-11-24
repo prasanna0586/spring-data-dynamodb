@@ -26,7 +26,7 @@ import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.util.Version;
 import software.amazon.awssdk.core.SdkClient;
 
@@ -36,8 +36,7 @@ import java.util.StringTokenizer;
 import static org.springframework.data.querydsl.QuerydslUtils.QUERY_DSL_PRESENT;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBRepositoryFactory extends RepositoryFactorySupport {
     private static final Logger LOGGER = LoggerFactory.getLogger(DynamoDBRepositoryFactory.class);
@@ -108,7 +107,7 @@ public class DynamoDBRepositoryFactory extends RepositoryFactorySupport {
 
     @Override
     protected Optional<QueryLookupStrategy> getQueryLookupStrategy(Key key,
-            QueryMethodEvaluationContextProvider evaluationContextProvider) {
+            ValueExpressionDelegate valueExpressionDelegate) {
         return Optional.of(DynamoDBQueryLookupStrategy.create(dynamoDBOperations, key));
     }
 

@@ -36,8 +36,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * Integration test for the auditing support.
- *
- * @author Vito Limandibhrata
+ * @author Prasanna Kumar Ramachandran
  */
 public class AuditingIntegrationTests {
 

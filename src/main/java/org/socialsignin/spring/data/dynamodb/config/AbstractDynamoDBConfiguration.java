@@ -34,8 +34,7 @@ import java.util.Set;
 
 /**
  * Base class for Spring Data DynamoDB configuration using JavaConfig.
- *
- * @author Vito Limandibhrata
+ * @author Prasanna Kumar Ramachandran
  */
 @Configuration
 public abstract class AbstractDynamoDBConfiguration {

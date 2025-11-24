@@ -26,8 +26,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public interface DynamoDBQueryCriteria<T, ID> {
 

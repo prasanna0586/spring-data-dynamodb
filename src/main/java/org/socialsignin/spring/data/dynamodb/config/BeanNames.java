@@ -17,8 +17,7 @@ package org.socialsignin.spring.data.dynamodb.config;
 
 /**
  * Constants to declare bean names used by the namespace configuration.
- *
- * @author Vito Limandibhrata
+ * @author Prasanna Kumar Ramachandran
  */
 public abstract class BeanNames {
 

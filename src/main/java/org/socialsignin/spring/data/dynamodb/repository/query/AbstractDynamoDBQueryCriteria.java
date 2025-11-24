@@ -39,15 +39,13 @@ import java.util.*;
 import java.util.Map.Entry;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQueryCriteria<T, ID>, SortHandler {
 
     protected Class<T> clazz;
     private final DynamoDBEntityInformation<T, ID> entityInformation;
     private final Map<String, String> attributeNamesByPropertyName;
-    private final TableSchema<T> tableModel;
     private final String hashKeyPropertyName;
     protected final DynamoDBMappingContext mappingContext;
 
@@ -320,7 +318,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
 
         if (filterExpression.isPresent()) {
             String filter = filterExpression.get();
-            if (!StringUtils.isEmpty(filter)) {
+            if (StringUtils.hasLength(filter)) {
                 queryRequest = queryRequest.toBuilder().filterExpression(filter).build();
 
                 // SDK v2: Build expression attribute names map and merge with existing key condition names
@@ -328,7 +326,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
                     Map<String, String> attributeNamesMap = new HashMap<>(queryRequest.expressionAttributeNames() != null
                             ? queryRequest.expressionAttributeNames() : new HashMap<>());
                     for (ExpressionAttribute attribute : expressionAttributeNames) {
-                        if (!StringUtils.isEmpty(attribute.key())) {
+                        if (StringUtils.hasLength(attribute.key())) {
                             attributeNamesMap.put(attribute.key(), attribute.value());
                         }
                     }
@@ -342,7 +340,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
                     Map<String, AttributeValue> attributeValuesMap = new HashMap<>(queryRequest.expressionAttributeValues() != null
                             ? queryRequest.expressionAttributeValues() : new HashMap<>());
                     for (ExpressionAttribute value : expressionAttributeValues) {
-                        if (!StringUtils.isEmpty(value.key())) {
+                        if (StringUtils.hasLength(value.key())) {
                             String stringValue;
                             if (mappedExpressionValues.containsKey(value.parameterName())) {
                                 stringValue = mappedExpressionValues.get(value.parameterName());
@@ -561,7 +559,6 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         this.attributeNamesByPropertyName = new HashMap<>();
         // TODO consider adding the table schema to
         // DynamoDBEntityInformation instead
-        this.tableModel = tableModel;
         this.mappingContext = mappingContext;
     }
 

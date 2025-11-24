@@ -100,7 +100,7 @@ public class GSINegativeTestIntegrationTest {
             transactionRepository.findByMerchantIdOrderByTransactionIdAsc(MERCHANT_1);
         });
 
-        logger.info("✅ CORRECTLY THREW UnsupportedOperationException");
+        logger.info("CORRECTLY THREW UnsupportedOperationException");
         logger.info("   Message: {}", exception.getMessage());
         logger.info("   Production code correctly validates GSI sort constraints");
     }
@@ -121,7 +121,7 @@ public class GSINegativeTestIntegrationTest {
             transactionRepository.findByMerchantIdOrderByAmountAsc(MERCHANT_1);
         });
 
-        logger.info("✅ CORRECTLY THREW UnsupportedOperationException: {}", exception.getMessage());
+        logger.info("CORRECTLY THREW UnsupportedOperationException: {}", exception.getMessage());
     }
 
     @Test
@@ -135,7 +135,7 @@ public class GSINegativeTestIntegrationTest {
             transactionRepository.findByCategoryOrderByTransactionIdDesc(CATEGORY_1);
         });
 
-        logger.info("✅ CORRECTLY THREW UnsupportedOperationException: {}", exception.getMessage());
+        logger.info("CORRECTLY THREW UnsupportedOperationException: {}", exception.getMessage());
     }
 
     @Test
@@ -149,7 +149,7 @@ public class GSINegativeTestIntegrationTest {
             transactionRepository.findByCategoryOrderByTransactionDateAsc(CATEGORY_1);
         });
 
-        logger.info("✅ CORRECTLY THREW UnsupportedOperationException: {}", exception.getMessage());
+        logger.info("CORRECTLY THREW UnsupportedOperationException: {}", exception.getMessage());
     }
 
     // ============================================================================
@@ -166,7 +166,7 @@ public class GSINegativeTestIntegrationTest {
         List<CustomerTransaction> transactions = transactionRepository
                 .findByMerchantIdOrderByTransactionDateAsc(MERCHANT_1);
 
-        logger.info("✅ QUERY SUCCEEDED (as expected for valid operation)");
+        logger.info("QUERY SUCCEEDED (as expected for valid operation)");
         logger.info("   Returned {} transactions, sorted by transactionDate", transactions.size());
 
         assertThat(transactions).hasSize(3);
@@ -187,7 +187,7 @@ public class GSINegativeTestIntegrationTest {
         List<CustomerTransaction> transactions = transactionRepository
                 .findByMerchantIdAndTransactionDateAfterOrderByTransactionDateAsc(MERCHANT_1, twoDaysAgo);
 
-        logger.info("✅ QUERY SUCCEEDED (as expected for valid operation)");
+        logger.info("QUERY SUCCEEDED (as expected for valid operation)");
         logger.info("   Returned {} transactions", transactions.size());
 
         assertThat(transactions).hasSize(2); // yesterday and now
@@ -205,7 +205,7 @@ public class GSINegativeTestIntegrationTest {
         List<CustomerTransaction> transactions = transactionRepository
                 .findByCategoryOrderByAmountAsc(CATEGORY_1);
 
-        logger.info("✅ QUERY SUCCEEDED (as expected for valid operation)");
+        logger.info("QUERY SUCCEEDED (as expected for valid operation)");
         logger.info("   Returned {} transactions, sorted by amount", transactions.size());
 
         assertThat(transactions).hasSize(3);
@@ -224,7 +224,7 @@ public class GSINegativeTestIntegrationTest {
         List<CustomerTransaction> transactions = transactionRepository
                 .findByCategoryAndAmountGreaterThanOrderByAmountDesc(CATEGORY_1, 100.0);
 
-        logger.info("✅ QUERY SUCCEEDED (as expected for valid operation)");
+        logger.info("QUERY SUCCEEDED (as expected for valid operation)");
         logger.info("   Returned {} transactions", transactions.size());
 
         assertThat(transactions).hasSize(2); // 200.0 and 300.0
@@ -241,7 +241,7 @@ public class GSINegativeTestIntegrationTest {
 
         List<CustomerTransaction> transactions = transactionRepository.findByMerchantId(MERCHANT_1);
 
-        logger.info("✅ QUERY SUCCEEDED (as expected for valid operation)");
+        logger.info("QUERY SUCCEEDED (as expected for valid operation)");
         logger.info("   Returned {} transactions", transactions.size());
 
         assertThat(transactions).hasSize(3);
@@ -255,14 +255,14 @@ public class GSINegativeTestIntegrationTest {
         logger.info("This test suite validates GSI sort constraint enforcement.");
         logger.info("");
         logger.info("If all tests PASS:");
-        logger.info("  ✅ Library correctly validates GSI sort constraints");
-        logger.info("  ✅ Invalid operations are rejected before reaching DynamoDB");
-        logger.info("  ✅ Users get clear error messages instead of unexpected behavior");
+        logger.info("  Library correctly validates GSI sort constraints");
+        logger.info("  Invalid operations are rejected before reaching DynamoDB");
+        logger.info("  Users get clear error messages instead of unexpected behavior");
         logger.info("");
         logger.info("If NEGATIVE tests FAIL (queries succeed instead of throwing exceptions):");
-        logger.info("  ❌ BUG: GSI sort validation not enforcing constraints");
-        logger.info("  ❌ Queries would produce unexpected sort behavior");
-        logger.info("  ❌ Users would get confusing results (sorted by GSI range, not requested field)");
+        logger.info("  BUG: GSI sort validation not enforcing constraints");
+        logger.info("  Queries would produce unexpected sort behavior");
+        logger.info("  Users would get confusing results (sorted by GSI range, not requested field)");
         logger.info("");
         logger.info("Key findings from DirectSDK tests:");
         logger.info("  - DynamoDB DOES NOT validate sort attributes");

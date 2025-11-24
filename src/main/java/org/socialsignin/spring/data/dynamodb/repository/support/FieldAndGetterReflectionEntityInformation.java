@@ -27,9 +27,7 @@ import java.lang.reflect.Method;
 /**
  * {@link org.springframework.data.repository.core.EntityInformation} implementation that inspects getters for an
  * annotation and invokes this getter's value to retrieve the id.
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public class FieldAndGetterReflectionEntityInformation<T, ID> extends AbstractEntityInformation<T, ID> {
 

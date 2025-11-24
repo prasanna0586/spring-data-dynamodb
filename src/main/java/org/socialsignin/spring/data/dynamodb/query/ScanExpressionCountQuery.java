@@ -38,7 +38,7 @@ public class ScanExpressionCountQuery<T> extends AbstractSingleEntityQuery<Long>
     @Override
     public Long getSingleResult() {
         assertScanCountEnabled(isScanCountEnabled());
-        return Long.valueOf(dynamoDBOperations.count(domainClass, scanExpression));
+        return (long) dynamoDBOperations.count(domainClass, scanExpression);
     }
 
     public void assertScanCountEnabled(boolean scanCountEnabled) {

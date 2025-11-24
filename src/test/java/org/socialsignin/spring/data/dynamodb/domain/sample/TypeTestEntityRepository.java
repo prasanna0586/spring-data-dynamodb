@@ -19,7 +19,6 @@ import org.springframework.data.repository.CrudRepository;
 
 /**
  * Repository for TypeTestEntity.
- *
  * @author Prasanna Kumar Ramachandran
  */
 public interface TypeTestEntityRepository extends CrudRepository<TypeTestEntity, String> {

@@ -41,12 +41,11 @@ import static org.springframework.beans.factory.support.BeanDefinitionBuilder.ro
 /**
  * {@link org.springframework.context.annotation.ImportBeanDefinitionRegistrar} to enable {@link EnableDynamoDBAuditing}
  * annotation.
- *
- * @author Vito Limandibhrata
+ * @author Prasanna Kumar Ramachandran
  */
 class DynamoDBAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(DynamoDBAuditingRegistrar.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DynamoDBAuditingRegistrar.class);
 
     /*
      * (non-Javadoc)

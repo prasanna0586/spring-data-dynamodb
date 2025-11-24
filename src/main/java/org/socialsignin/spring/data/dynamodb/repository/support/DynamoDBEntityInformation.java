@@ -24,9 +24,7 @@ import java.util.Optional;
  * metadata. Implementing classes can elect to be either range-key aware or not. If a subclass is not range-key aware it
  * should return null from getRangeKey(ID id) method, and return false from isRangeKeyAware and
  * isCompositeHashAndRangeKeyProperty methods
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public interface DynamoDBEntityInformation<T, ID>
         extends EntityInformation<T, ID>, DynamoDBHashKeyExtractingEntityMetadata<T> {

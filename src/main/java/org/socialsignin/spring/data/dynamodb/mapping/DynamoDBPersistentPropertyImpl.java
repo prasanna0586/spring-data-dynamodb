@@ -33,9 +33,7 @@ import java.util.Set;
 
 /**
  * {@link DynamoDBPersistentProperty} implementation
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 class DynamoDBPersistentPropertyImpl extends AnnotationBasedPersistentProperty<DynamoDBPersistentProperty>
         implements DynamoDBPersistentProperty {
@@ -109,13 +107,7 @@ class DynamoDBPersistentPropertyImpl extends AnnotationBasedPersistentProperty<D
 
     public boolean isEntity() {
 
-        return isAnnotationPresent(Reference.class);// Reference not Yet
-        // Supported
-        // return propertyDescriptor != null
-        // && propertyDescriptor.getPropertyType().isAnnotationPresent(
-        // DynamoDBTable.class);
-
-        // return false;
+        return isAnnotationPresent(Reference.class);
 
     }
 
@@ -147,12 +139,9 @@ class DynamoDBPersistentPropertyImpl extends AnnotationBasedPersistentProperty<D
         return isAnnotationPresent(Transient.class) || super.isTransient() || isAnnotationPresent(DynamoDbIgnore.class);
     }
 
-    @Override
-    public boolean isVersionProperty() {
-        // SDK v2 does not have a direct equivalent to DynamoDBVersionAttribute
-        // Version tracking should be handled via Spring Data's @Version annotation
-        return super.isVersionProperty();
-    }
+    // SDK v2 does not have a direct equivalent to DynamoDBVersionAttribute
+    // Version tracking is handled via Spring Data's @Version annotation
+    // The default implementation from the superclass is used
 
     /*
      * (non-Javadoc)

@@ -20,8 +20,7 @@ import java.text.ParseException;
 import java.util.Date;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  *
  * @deprecated This class was created for SDK v1 compatibility. {@link DateFormat} is not thread-safe.
  *             <br>

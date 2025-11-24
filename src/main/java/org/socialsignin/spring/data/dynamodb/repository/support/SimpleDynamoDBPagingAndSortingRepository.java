@@ -35,9 +35,7 @@ import java.util.List;
  * find-all queries is not possible using an integer page number For paged requests, attempt to approximate paging
  * behavior by limiting the number of items which will be scanned, and by returning a sublist of the result-set. NB:
  * Number of results scanned for a given page request is proportional to the page number requested!
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  *
  * @param <T>
  *            the type of the entity to handle

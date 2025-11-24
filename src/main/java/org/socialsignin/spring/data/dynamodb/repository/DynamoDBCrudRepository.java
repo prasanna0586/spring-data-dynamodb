@@ -20,9 +20,7 @@ import org.springframework.data.repository.NoRepositoryBean;
 
 /**
  * DynamoDB specific extension of {@link org.springframework.data.repository.Repository}.
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 @NoRepositoryBean
 public interface DynamoDBCrudRepository<T, ID> extends CrudRepository<T, ID> {

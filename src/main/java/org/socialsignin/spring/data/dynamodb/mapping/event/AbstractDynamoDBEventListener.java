@@ -42,9 +42,7 @@ import java.util.stream.StreamSupport;
 
 /**
  * Base class to implement domain class specific {@link ApplicationListener}s.
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public abstract class AbstractDynamoDBEventListener<E> implements ApplicationListener<DynamoDBMappingEvent<?>> {
 
@@ -120,11 +118,11 @@ public abstract class AbstractDynamoDBEventListener<E> implements ApplicationLis
     }
 
     public void onBeforeSave(E source) {
-        LOG.debug("onBeforeSave({}, {})", source);
+        LOG.debug("onBeforeSave({})", source);
     }
 
     public void onAfterSave(E source) {
-        LOG.debug("onAfterSave({}, {})", source);
+        LOG.debug("onAfterSave({})", source);
     }
 
     public void onAfterLoad(E source) {

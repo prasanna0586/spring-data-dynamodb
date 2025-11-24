@@ -33,9 +33,7 @@ import java.lang.reflect.Method;
 /**
  * Default implementation of a {@link org.springframework.data.mapping.context.MappingContext} for DynamoDB using
  * {@link DynamoDBPersistentEntityImpl} and {@link DynamoDBPersistentProperty} as primary abstractions.
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBMappingContext
         extends AbstractMappingContext<DynamoDBPersistentEntityImpl<?>, DynamoDBPersistentProperty> {

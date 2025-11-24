@@ -30,8 +30,6 @@ public abstract class EntityInformationProxyPostProcessor<T, ID> implements Repo
     public final void postProcess(ProxyFactory factory, RepositoryInformation repositoryInformation) {
         try {
             TargetSource targetSource = factory.getTargetSource();
-            // assert
-            // targetSource.getTargetClass().equals(SimpleDynamoDBCrudRepository.class);
 
             @SuppressWarnings("unchecked")
             SimpleDynamoDBCrudRepository<T, ID> target = SimpleDynamoDBCrudRepository.class

@@ -34,9 +34,7 @@ import java.util.Set;
  *
  * <p>Migrated to AWS SDK v2. Uses DynamoDbClient and DynamoDbEnhancedClient
  * instead of SDK v1's AmazonDynamoDB and DynamoDBMapper.
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  *
  * @param <T>
  *            The type of the repository.

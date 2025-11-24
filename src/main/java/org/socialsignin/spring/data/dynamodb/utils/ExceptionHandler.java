@@ -60,7 +60,7 @@ public interface ExceptionHandler {
         // Unprocessed items typically indicate persistent throttling, capacity limits, or transaction conflicts
 
         // Determine operation type based on exception class
-        String operationType = targetType.equals(BatchDeleteException.class) ? "delete" : "write";
+        String operationType = targetType == BatchDeleteException.class ? "delete" : "write";
 
         String message;
         if (cause != null) {
@@ -82,11 +82,11 @@ public interface ExceptionHandler {
                     retriesAttempted);
         }
 
-        if (targetType.equals(BatchWriteException.class)) {
+        if (targetType == BatchWriteException.class) {
             @SuppressWarnings("unchecked")
             T exception = (T) new BatchWriteException(message, unprocessedEntities, retriesAttempted, cause);
             return exception;
-        } else if (targetType.equals(BatchDeleteException.class)) {
+        } else if (targetType == BatchDeleteException.class) {
             @SuppressWarnings("unchecked")
             T exception = (T) new BatchDeleteException(message, unprocessedEntities, retriesAttempted, cause);
             return exception;
@@ -114,7 +114,7 @@ public interface ExceptionHandler {
                 "Unable to extract specific entities (requires DynamoDBTemplate migration to SDK v2).",
                 failedBatches.size());
 
-        if (targetType.equals(BatchWriteException.class)) {
+        if (targetType == BatchWriteException.class) {
             @SuppressWarnings("unchecked")
             T exception = (T) new BatchWriteException(
                     message,

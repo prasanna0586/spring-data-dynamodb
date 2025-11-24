@@ -42,7 +42,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * Configuration Option B: Using marshallingMode parameter on @EnableDynamoDBRepositories
  * with SDK_V1_COMPATIBLE mode (auto-generation enabled).
- *
  * @author Prasanna Kumar Ramachandran
  */
 @ExtendWith(SpringExtension.class)

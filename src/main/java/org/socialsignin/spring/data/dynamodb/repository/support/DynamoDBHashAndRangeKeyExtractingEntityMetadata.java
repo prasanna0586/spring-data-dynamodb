@@ -19,9 +19,7 @@ import java.util.Set;
 
 /**
  * Obtains basic hash-and-range-key-related metadata about a DynamoDBEntity
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public interface DynamoDBHashAndRangeKeyExtractingEntityMetadata<T, ID>
         extends DynamoDBHashKeyExtractingEntityMetadata<T> {

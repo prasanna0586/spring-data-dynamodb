@@ -17,9 +17,7 @@ package org.socialsignin.spring.data.dynamodb.query;
 
 /**
  * {@link org.socialsignin.spring.data.dynamodb.mapping.DynamoDBPersistentProperty} implementation
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public abstract class AbstractQuery<T> implements Query<T> {
 

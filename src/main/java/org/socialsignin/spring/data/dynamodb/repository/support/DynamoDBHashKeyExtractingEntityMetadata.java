@@ -25,9 +25,7 @@ import java.util.Optional;
  * Obtains basic hash key-related metadata about a DynamoDBEntity, such as whether properties have overridden attribute
  * names or have custom attribute converters assigned, whether a property is a hash key property or a composite id property, and
  * generates a hash key prototype entity given a hash key.
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public interface DynamoDBHashKeyExtractingEntityMetadata<T> extends EntityMetadata<T> {
 

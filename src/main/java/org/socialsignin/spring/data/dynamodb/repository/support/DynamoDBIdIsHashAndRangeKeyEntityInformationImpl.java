@@ -26,9 +26,7 @@ import java.util.Set;
  * Encapsulates minimal information needed to load DynamoDB entities that have both hash and range key, and have a
  * composite id attribute annotated with {@link Id}. Delegates to metadata and hashKeyExtractor components for all
  * operations.
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBIdIsHashAndRangeKeyEntityInformationImpl<T, ID>
         extends FieldAndGetterReflectionEntityInformation<T, ID>

@@ -28,9 +28,7 @@ import java.util.Optional;
  * for many operations - it is the responsibility of calling clients to ensure they pass in a valid
  * DynamoDBHashKeyExtractingEntityMetadata implementation for this entity. Entities of type T must have a public getter
  * method of return type ID annotated with @DynamoDbPartitionKey to ensure correct behavior
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBIdIsHashKeyEntityInformationImpl<T, ID> extends FieldAndGetterReflectionEntityInformation<T, ID>
         implements DynamoDBEntityInformation<T, ID> {

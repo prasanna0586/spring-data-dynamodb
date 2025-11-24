@@ -21,8 +21,7 @@ import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import java.util.List;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public abstract class AbstractMultipleEntityQuery<T> extends AbstractDynamicQuery<T> implements Query<T> {
 

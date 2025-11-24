@@ -44,8 +44,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationExtensionSupport {
 

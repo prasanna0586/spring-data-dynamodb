@@ -27,9 +27,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
  *
  * <p>Migrated to AWS SDK v2. Creates DynamoDbEnhancedClient from DynamoDbClient.
  * This replaces the SDK v1 DynamoDBMapper factory.
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  * @since 7.0.0
  */
 public class DynamoDBMapperFactory implements FactoryBean<DynamoDbEnhancedClient>, BeanFactoryAware {

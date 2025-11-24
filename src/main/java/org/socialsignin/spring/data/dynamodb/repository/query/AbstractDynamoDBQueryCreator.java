@@ -39,8 +39,7 @@ import software.amazon.awssdk.services.dynamodb.model.ComparisonOperator;
 import java.util.*;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public abstract class AbstractDynamoDBQueryCreator<T, ID, R>
         extends AbstractQueryCreator<Query<R>, DynamoDBQueryCriteria<T, ID>> {
@@ -97,7 +96,7 @@ public abstract class AbstractDynamoDBQueryCreator<T, ID, R>
         if (values != null) {
             this.expressionAttributeValues = values.clone();
             for (ExpressionAttribute value : expressionAttributeValues) {
-                if (!StringUtils.isEmpty(value.parameterName())) {
+                if (StringUtils.hasLength(value.parameterName())) {
                     for (Parameter p : ((ParametersParameterAccessor) parameterAccessor).getParameters()) {
                         if (p.getName().isPresent() && p.getName().get().equals(value.parameterName())) {
                             mappedExpressionValues.put(value.parameterName(),

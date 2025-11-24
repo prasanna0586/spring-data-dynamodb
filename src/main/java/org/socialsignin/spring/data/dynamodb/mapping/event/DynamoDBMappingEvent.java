@@ -18,8 +18,7 @@ package org.socialsignin.spring.data.dynamodb.mapping.event;
 import org.springframework.context.ApplicationEvent;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBMappingEvent<T> extends ApplicationEvent {
 

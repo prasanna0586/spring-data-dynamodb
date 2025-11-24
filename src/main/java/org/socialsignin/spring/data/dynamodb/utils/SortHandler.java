@@ -20,8 +20,7 @@ import org.springframework.data.domain.Sort;
 
 /**
  * Some helper methods to deal with {@link Sort}.
- *
- * @author derjust
+ * @author Prasanna Kumar Ramachandran
  */
 public interface SortHandler {
 

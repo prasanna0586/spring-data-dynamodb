@@ -25,7 +25,6 @@ import org.springframework.util.Assert;
 /**
  * Entity callback to populate auditing related fields on an entity about to be saved.
  * This callback-based approach ensures the modified entity is properly returned and saved.
- *
  * @author Prasanna Kumar Ramachandran
  */
 public class AuditingEntityCallback implements BeforeConvertCallback<Object>, Ordered {

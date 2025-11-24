@@ -19,8 +19,7 @@ import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public class QueryExpressionCountQuery<T> extends AbstractSingleEntityQuery<Long> {
 
@@ -36,7 +35,7 @@ public class QueryExpressionCountQuery<T> extends AbstractSingleEntityQuery<Long
 
     @Override
     public Long getSingleResult() {
-        return Long.valueOf(dynamoDBOperations.count(domainClass, queryRequest));
+        return (long) dynamoDBOperations.count(domainClass, queryRequest);
     }
 
 }

@@ -31,8 +31,7 @@ public class QueryRequestCountQuery extends AbstractSingleEntityQuery<Long> {
 
     @Override
     public Long getSingleResult() {
-
-        return Long.valueOf(dynamoDBOperations.count(clazz, queryRequest));
+        return (long) dynamoDBOperations.count(clazz, queryRequest);
     }
 
 }

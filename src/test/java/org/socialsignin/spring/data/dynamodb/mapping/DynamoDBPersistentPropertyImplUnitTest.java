@@ -28,9 +28,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * Unit tests for {@link DynamoDBPersistentPropertyImpl}.
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 @ExtendWith(MockitoExtension.class)
 public class DynamoDBPersistentPropertyImplUnitTest {

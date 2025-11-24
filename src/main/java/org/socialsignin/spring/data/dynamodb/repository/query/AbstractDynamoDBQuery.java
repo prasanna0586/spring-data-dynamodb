@@ -30,8 +30,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteResult;
 import java.util.*;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, ExceptionHandler {
 

@@ -26,9 +26,7 @@ import java.lang.annotation.*;
 /**
  * Annotation to enable DynamoDB repositories. Will scan the package of the annotated configuration class for Spring
  * Data repositories by default.
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

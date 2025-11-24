@@ -19,9 +19,7 @@ import org.springframework.data.mapping.PersistentProperty;
 
 /**
  * Interface for a DynamoDB-specific {@link PersistentProperty}.
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public interface DynamoDBPersistentProperty extends PersistentProperty<DynamoDBPersistentProperty> {
 

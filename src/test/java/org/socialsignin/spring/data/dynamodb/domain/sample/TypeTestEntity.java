@@ -37,7 +37,6 @@ import java.util.Set;
  *
  * This entity includes all DynamoDB-supported types to ensure proper conversion and marshalling
  * across different modes.
- *
  * @author Prasanna Kumar Ramachandran
  */
 @DynamoDbBean

@@ -26,8 +26,7 @@ import org.springframework.data.repository.query.RepositoryQuery;
 import java.lang.reflect.Method;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBQueryLookupStrategy {
 
@@ -41,9 +40,7 @@ public class DynamoDBQueryLookupStrategy {
     /**
      * Base class for {@link QueryLookupStrategy} implementations that need access to an
      * {@link com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper}.
-     *
-     * @author Michael Lavelle
-     * @author Sebastian Just
+     * @author Prasanna Kumar Ramachandran
      */
     private abstract static class AbstractQueryLookupStrategy implements QueryLookupStrategy {
 
@@ -74,9 +71,7 @@ public class DynamoDBQueryLookupStrategy {
 
     /**
      * {@link QueryLookupStrategy} to create a query from the method name.
-     *
-     * @author Michael Lavelle
-     * @author Sebastian Just
+     * @author Prasanna Kumar Ramachandran
      */
     private static class CreateQueryLookupStrategy extends AbstractQueryLookupStrategy {
 
@@ -102,9 +97,7 @@ public class DynamoDBQueryLookupStrategy {
     /**
      * {@link QueryLookupStrategy} that tries to detect a declared query declared via
      * {@link org.socialsignin.spring.data.dynamodb.query.Query} annotation
-     *
-     * @author Michael Lavelle
-     * @author Sebastian Just
+     * @author Prasanna Kumar Ramachandran
      */
     private static class DeclaredQueryLookupStrategy extends AbstractQueryLookupStrategy {
 
@@ -124,9 +117,7 @@ public class DynamoDBQueryLookupStrategy {
     /**
      * {@link QueryLookupStrategy} to try to detect a declared query first (
      * {@link org.springframework.data.jpa.repository.Query}. In case none is found we fall back on query creation.
-     *
-     * @author Michael Lavelle
-     * @author Sebastian Just
+     * @author Prasanna Kumar Ramachandran
      */
     private static class CreateIfNotFoundQueryLookupStrategy extends AbstractQueryLookupStrategy {
 

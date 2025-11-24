@@ -38,9 +38,7 @@ import java.util.Set;
 
 /**
  * A portable CDI extension which registers beans for Spring Data DynamoDB repositories.
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBRepositoryExtension extends CdiRepositoryExtensionSupport {
 
@@ -73,7 +71,7 @@ public class DynamoDBRepositoryExtension extends CdiRepositoryExtensionSupport {
             if (type instanceof Class<?> && DynamoDbClient.class.isAssignableFrom((Class<?>) type)) {
                 Set<Annotation> qualifiers = new HashSet<Annotation>(bean.getQualifiers());
                 if (bean.isAlternative() || !amazonDynamoDBs.containsKey(qualifiers)) {
-                    LOGGER.debug("Discovered '{}' with qualifiers {}.", DynamoDbClient.class.getName(), qualifiers);
+                    logDiscoveredBean(DynamoDbClient.class, qualifiers);
                     amazonDynamoDBs.put(qualifiers, (Bean<DynamoDbClient>) bean);
                 }
             }
@@ -81,11 +79,15 @@ public class DynamoDBRepositoryExtension extends CdiRepositoryExtensionSupport {
             if (type instanceof Class<?> && DynamoDbEnhancedClient.class.isAssignableFrom((Class<?>) type)) {
                 Set<Annotation> qualifiers = new HashSet<Annotation>(bean.getQualifiers());
                 if (bean.isAlternative() || !enhancedClients.containsKey(qualifiers)) {
-                    LOGGER.debug("Discovered '{}' with qualifiers {}.", DynamoDbEnhancedClient.class.getName(), qualifiers);
+                    logDiscoveredBean(DynamoDbEnhancedClient.class, qualifiers);
                     enhancedClients.put(qualifiers, (Bean<DynamoDbEnhancedClient>) bean);
                 }
             }
         }
+    }
+
+    private void logDiscoveredBean(Class<?> beanClass, Set<Annotation> qualifiers) {
+        LOGGER.debug("Discovered '{}' with qualifiers {}.", beanClass.getName(), qualifiers);
     }
 
     /**

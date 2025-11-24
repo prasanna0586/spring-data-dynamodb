@@ -16,8 +16,7 @@
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public interface EnableScanPermissions {
 

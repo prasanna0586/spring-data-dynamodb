@@ -29,8 +29,7 @@ import java.util.Optional;
 import static org.socialsignin.spring.data.dynamodb.repository.QueryConstants.QUERY_LIMIT_UNLIMITED;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBQueryMethod<T, ID> extends QueryMethod {
 
@@ -54,13 +53,13 @@ public class DynamoDBQueryMethod<T, ID> extends QueryMethod {
         Query query = method.getAnnotation(Query.class);
         if (query != null) {
             String projections = query.fields();
-            if (!StringUtils.isEmpty(projections)) {
+            if (StringUtils.hasLength(projections)) {
                 this.projectionExpression = Optional.of(query.fields());
             } else {
                 this.projectionExpression = Optional.empty();
             }
             String filterExp = query.filterExpression();
-            if (!StringUtils.isEmpty(filterExp)) {
+            if (StringUtils.hasLength(filterExp)) {
                 this.filterExpression = Optional.of(filterExp);
             } else {
                 this.filterExpression = Optional.empty();

@@ -46,9 +46,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for {@link SimpleDynamoDBCrudRepository}.
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 @ExtendWith(MockitoExtension.class)
 public class SimpleDynamoDBCrudRepositoryTest {

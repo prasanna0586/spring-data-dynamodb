@@ -21,8 +21,7 @@ import org.springframework.data.mapping.callback.EntityCallback;
  * Entity callback triggered before an entity is converted to be persisted in DynamoDB.
  * Allows modification of the entity before conversion.
  *
- * @param <T> the entity type
- * @author Prasanna Kumar Ramachandran
+ * @param <T> the entity type * @author Prasanna Kumar Ramachandran
  */
 @FunctionalInterface
 public interface BeforeConvertCallback<T> extends EntityCallback<T> {

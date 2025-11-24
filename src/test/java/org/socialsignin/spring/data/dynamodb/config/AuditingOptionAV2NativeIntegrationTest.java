@@ -45,7 +45,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * Configuration Option A: Explicit @Bean for dynamoDBMappingContext
  * with SDK_V2_NATIVE mode (no auto-generation, IDs must be set manually).
- *
  * @author Prasanna Kumar Ramachandran
  */
 @ExtendWith(SpringExtension.class)

@@ -19,8 +19,7 @@ import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  *
  * @deprecated Consider using {@link org.socialsignin.spring.data.dynamodb.marshaller.Date2IsoDynamoDBMarshaller}
  */

@@ -338,7 +338,6 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
      * @param <T> entity type
      * @return the potentially modified entity
      */
-    @SuppressWarnings("unchecked")
     private <T> T maybeCallBeforeConvert(T entity, String tableName) {
         if (entityCallbacks != null) {
             return (T) entityCallbacks.callback(BeforeConvertCallback.class, entity, tableName);
@@ -597,7 +596,7 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
                     .collect(Collectors.toList());
 
             // Create a Page with the items and add to results
-            allPages.add(Page.create(items));
+            allPages.add(Page.builder(clazz).items(items).build());
 
             // Check if there are more pages - lastEvaluatedKey can be empty map {} instead of null
             if (queryResult.lastEvaluatedKey() == null || queryResult.lastEvaluatedKey().isEmpty()) {

@@ -23,9 +23,7 @@ import java.io.Serializable;
 /**
  * Default implementation of a DynamoDB composite key, comprising both a partition key (hash key)
  * and a sort key (range key).
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBHashAndRangeKey implements Serializable {
 

@@ -27,8 +27,7 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
  * <p><b>For SDK_V1_COMPATIBLE mode, users MUST annotate their entity fields with
  * {@code @DynamoDbConvertedBy} to specify the appropriate converter.</b> See the
  * {@link #createTableSchema(Class, MarshallingMode)} method documentation for details.
- *
- * @author Michael Lavelle
+ * @author Prasanna Kumar Ramachandran
  * @since 7.0.0
  */
 public class TableSchemaFactory {

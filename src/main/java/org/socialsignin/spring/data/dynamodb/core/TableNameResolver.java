@@ -18,9 +18,7 @@ package org.socialsignin.spring.data.dynamodb.core;
 /**
  * Strategy interface for resolving DynamoDB table names.
  * Replaces SDK v1 DynamoDBMapperConfig.TableNameOverride functionality.
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  * @since 7.0.0
  */
 public interface TableNameResolver {

@@ -38,7 +38,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * This test validates that all DynamoDB-supported types are correctly converted and marshalled
  * when using SDK_V1_COMPATIBLE mode (backward compatibility mode).
- *
  * @author Prasanna Kumar Ramachandran
  */
 @ExtendWith(SpringExtension.class)

@@ -18,8 +18,7 @@ package org.socialsignin.spring.data.dynamodb.mapping.event;
 import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public class AfterScanEvent<T> extends DynamoDBMappingEvent<PageIterable<T>> {
 

@@ -21,8 +21,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public interface DynamoDBHashAndRangeKeyMethodExtractor<ID> extends EntityMetadata<ID> {
 

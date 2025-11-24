@@ -45,7 +45,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * - No explicit marshallingMode (defaults to SDK_V2_NATIVE)
  * - No explicit DynamoDBMappingContext bean
  * - IDs must be set manually
- *
  * @author Prasanna Kumar Ramachandran
  */
 @ExtendWith(SpringExtension.class)

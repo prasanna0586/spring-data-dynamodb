@@ -18,8 +18,7 @@ package org.socialsignin.spring.data.dynamodb.repository.support;
 import org.springframework.util.Assert;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public class HashKeyIsIdHashKeyExtractor<ID> implements HashKeyExtractor<ID, ID> {
 

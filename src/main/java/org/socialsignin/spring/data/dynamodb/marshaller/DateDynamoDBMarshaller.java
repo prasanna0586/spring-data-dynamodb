@@ -76,7 +76,7 @@ public abstract class DateDynamoDBMarshaller {
      * @return Date object
      */
     public Date unmarshall(Class<Date> clazz, String obj) {
-        if (StringUtils.isEmpty(obj)) {
+        if (!StringUtils.hasLength(obj)) {
             return null;
         } else {
             try {

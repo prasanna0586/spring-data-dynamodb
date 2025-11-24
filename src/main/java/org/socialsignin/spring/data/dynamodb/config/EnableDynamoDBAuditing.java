@@ -21,8 +21,7 @@ import java.lang.annotation.*;
 
 /**
  * Annotation to enable auditing in DynamoDB via annotation configuration.
- *
- * @author Vito Limandibhrata
+ * @author Prasanna Kumar Ramachandran
  */
 @Inherited
 @Documented

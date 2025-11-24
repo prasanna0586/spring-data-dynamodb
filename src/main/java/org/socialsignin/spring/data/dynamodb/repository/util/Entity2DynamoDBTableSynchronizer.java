@@ -59,8 +59,6 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
     private static final String CONFIGURATION_KEY_entity2ddl_writeCapacity = "${spring.data.dynamodb.entity2ddl.writeCapacity:1}";
 
     private final DynamoDbClient amazonDynamoDB;
-    private final DynamoDbEnhancedClient enhancedClient;
-    private final DynamoDBMappingContext mappingContext;
 
     private final Entity2DDL mode;
     private final ProjectionType gsiProjectionType;
@@ -88,8 +86,6 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
             @Value(CONFIGURATION_KEY_entity2ddl_readCapacity) long readCapacity,
             @Value(CONFIGURATION_KEY_entity2ddl_writeCapacity) long writeCapacity) {
         this.amazonDynamoDB = amazonDynamoDB;
-        this.enhancedClient = enhancedClient;
-        this.mappingContext = mappingContext;
 
         this.mode = Entity2DDL.fromValue(mode);
         this.gsiProjectionType = ProjectionType.fromValue(gsiProjectionType);
@@ -813,11 +809,7 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
                         String attributeName = getAttributeName(method);
 
                         // EC-3.3: Warn if LSI sort key is same as table sort key (redundant but valid)
-                        if (tableSortKeyAttributeName != null && tableSortKeyAttributeName.equals(attributeName)) {
-                            LOGGER.warn("LSI configuration for entity {}: Index '{}' uses '{}' as sort key, " +
-                                "which is the same as the table's sort key. This LSI is redundant and provides no benefit.",
-                                domainType.getSimpleName(), indexName, attributeName);
-                        }
+                        warnIfLsiSortKeyMatchesTableSortKey(domainType, indexName, attributeName, tableSortKeyAttributeName);
 
                         // Validate: Check for duplicate sort keys in LSI
                         if (lsiSortKeys.containsKey(indexName)) {
@@ -887,11 +879,7 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
                         String attributeName = getAttributeName(field);
 
                         // EC-3.3: Warn if LSI sort key is same as table sort key (redundant but valid)
-                        if (tableSortKeyAttributeName != null && tableSortKeyAttributeName.equals(attributeName)) {
-                            LOGGER.warn("LSI configuration for entity {}: Index '{}' uses '{}' as sort key, " +
-                                "which is the same as the table's sort key. This LSI is redundant and provides no benefit.",
-                                domainType.getSimpleName(), indexName, attributeName);
-                        }
+                        warnIfLsiSortKeyMatchesTableSortKey(domainType, indexName, attributeName, tableSortKeyAttributeName);
 
                         // Validate: Check for duplicate sort keys in LSI
                         if (lsiSortKeys.containsKey(indexName)) {
@@ -1072,6 +1060,19 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
             if (k1.keyType() == k2.keyType()) return 0;
             return k1.keyType() == KeyType.HASH ? -1 : 1;
         });
+    }
+
+    /**
+     * Warns if an LSI sort key is the same as the table's sort key (redundant but valid).
+     * EC-3.3: Validate LSI configuration for redundancy.
+     */
+    private void warnIfLsiSortKeyMatchesTableSortKey(Class<T> domainType, String indexName,
+                                                      String attributeName, String tableSortKeyAttributeName) {
+        if (tableSortKeyAttributeName != null && tableSortKeyAttributeName.equals(attributeName)) {
+            LOGGER.warn("LSI configuration for entity {}: Index '{}' uses '{}' as sort key, " +
+                "which is the same as the table's sort key. This LSI is redundant and provides no benefit.",
+                domainType.getSimpleName(), indexName, attributeName);
+        }
     }
 
 }

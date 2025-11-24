@@ -16,8 +16,7 @@
 package org.socialsignin.spring.data.dynamodb.mapping.event;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public class AfterDeleteEvent<T> extends DynamoDBMappingEvent<T> {
 

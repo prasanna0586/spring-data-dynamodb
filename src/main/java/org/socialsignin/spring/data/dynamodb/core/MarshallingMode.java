@@ -43,9 +43,7 @@ package org.socialsignin.spring.data.dynamodb.core;
  *
  * <p><b>New projects should use SDK_V2_NATIVE</b> (the default) for modern, standard
  * DynamoDB type mappings.
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  * @since 7.0.0
  */
 public enum MarshallingMode {

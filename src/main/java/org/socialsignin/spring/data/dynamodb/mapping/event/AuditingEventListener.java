@@ -27,14 +27,11 @@ import org.springframework.util.Assert;
  * NOTE: This listener is registered for backward compatibility with XML-based configurations,
  * but auditing is handled by {@link AuditingEntityCallback} in modern annotation-based configurations.
  * The callback-based approach is triggered automatically during repository.save() operations.
- *
  * @author Prasanna Kumar Ramachandran
  */
 public class AuditingEventListener extends AbstractDynamoDBEventListener<Object> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuditingEventListener.class);
-
-    private final ObjectFactory<IsNewAwareAuditingHandler> auditingHandlerFactory;
 
     /**
      * Creates a new {@link AuditingEventListener} using the given
@@ -45,7 +42,6 @@ public class AuditingEventListener extends AbstractDynamoDBEventListener<Object>
      */
     public AuditingEventListener(ObjectFactory<IsNewAwareAuditingHandler> auditingHandlerFactory) {
         Assert.notNull(auditingHandlerFactory, "IsNewAwareAuditingHandler must not be null!");
-        this.auditingHandlerFactory = auditingHandlerFactory;
     }
 
     // Note: onBeforeSave() is not implemented here.

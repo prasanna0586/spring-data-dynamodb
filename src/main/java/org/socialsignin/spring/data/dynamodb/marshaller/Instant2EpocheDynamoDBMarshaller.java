@@ -72,7 +72,7 @@ public class Instant2EpocheDynamoDBMarshaller {
      * @return Instant object
      */
     public Instant unmarshall(Class<Instant> clazz, String obj) {
-        if (StringUtils.isEmpty(obj)) {
+        if (!StringUtils.hasLength(obj)) {
             return null;
         } else {
             return Instant.ofEpochMilli(Long.parseLong(obj));

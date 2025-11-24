@@ -92,7 +92,7 @@ public class LSINegativeTestIntegrationTest {
             orderRepository.findByCustomerIdAndOrderDateAfterOrderByOrderIdAsc(CUSTOMER_1, twoDaysAgo);
         });
 
-        logger.info("✅ CORRECTLY THREW UnsupportedOperationException");
+        logger.info("CORRECTLY THREW UnsupportedOperationException");
         logger.info("   Message: {}", exception.getMessage());
         logger.info("   Production code correctly validates LSI sort constraints");
     }
@@ -108,7 +108,7 @@ public class LSINegativeTestIntegrationTest {
             orderRepository.findByCustomerIdAndStatusOrderByOrderIdDesc(CUSTOMER_1, "SHIPPED");
         });
 
-        logger.info("✅ CORRECTLY THREW UnsupportedOperationException: {}", exception.getMessage());
+        logger.info("CORRECTLY THREW UnsupportedOperationException: {}", exception.getMessage());
     }
 
     @Test
@@ -123,7 +123,7 @@ public class LSINegativeTestIntegrationTest {
             orderRepository.findByCustomerIdAndOrderDateAfterOrderByStatusAsc(CUSTOMER_1, twoDaysAgo);
         });
 
-        logger.info("✅ CORRECTLY THREW UnsupportedOperationException: {}", exception.getMessage());
+        logger.info("CORRECTLY THREW UnsupportedOperationException: {}", exception.getMessage());
     }
 
     @Test
@@ -137,7 +137,7 @@ public class LSINegativeTestIntegrationTest {
             orderRepository.findByCustomerIdAndStatusOrderByTotalAmountDesc(CUSTOMER_1, "PENDING");
         });
 
-        logger.info("✅ CORRECTLY THREW UnsupportedOperationException: {}", exception.getMessage());
+        logger.info("CORRECTLY THREW UnsupportedOperationException: {}", exception.getMessage());
     }
 
     @Test
@@ -151,7 +151,7 @@ public class LSINegativeTestIntegrationTest {
         List<ProductOrder> orders = orderRepository.findByCustomerIdAndOrderDateAfterOrderByOrderDateAsc(
                 CUSTOMER_1, twoDaysAgo);
 
-        logger.info("✅ QUERY SUCCEEDED (as expected for valid operation)");
+        logger.info("QUERY SUCCEEDED (as expected for valid operation)");
         logger.info("   Returned {} orders, sorted by orderDate", orders.size());
 
         assertThat(orders).hasSize(2);
@@ -171,13 +171,13 @@ public class LSINegativeTestIntegrationTest {
         logger.info("This test suite validates LSI sort constraint enforcement.");
         logger.info("");
         logger.info("If all tests PASS (throw UnsupportedOperationException):");
-        logger.info("  ✅ Production code correctly validates LSI constraints");
-        logger.info("  ✅ No bugs exist");
+        logger.info("  Production code correctly validates LSI constraints");
+        logger.info("  No bugs exist");
         logger.info("");
         logger.info("If tests FAIL (queries succeed instead of throwing exceptions):");
-        logger.info("  ❌ BUG #1: LSI index names not being detected/set");
-        logger.info("  ❌ BUG #2: Sort validation not enforcing LSI constraints");
-        logger.info("  ❌ Queries fall back to inefficient table scans with filters");
+        logger.info("  BUG #1: LSI index names not being detected/set");
+        logger.info("  BUG #2: Sort validation not enforcing LSI constraints");
+        logger.info("  Queries fall back to inefficient table scans with filters");
         logger.info("=".repeat(80) + "\n");
     }
 }

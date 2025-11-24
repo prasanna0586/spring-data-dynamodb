@@ -23,8 +23,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public class MultipleEntityQueryExpressionQuery<T> extends AbstractMultipleEntityQuery<T> {
 

@@ -18,8 +18,7 @@ package org.socialsignin.spring.data.dynamodb.query;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public class CountByHashAndRangeKeyQuery<T> extends AbstractSingleEntityQuery<Long> implements Query<Long> {
 

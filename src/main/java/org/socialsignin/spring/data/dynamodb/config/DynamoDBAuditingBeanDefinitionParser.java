@@ -32,8 +32,7 @@ import static org.springframework.data.config.ParsingUtils.getObjectFactoryBeanD
 /**
  * {@link org.springframework.beans.factory.xml.BeanDefinitionParser} to register a {@link AuditingEventListener} to
  * transparently set auditing information on an entity.
- *
- * @author Vito Limandibhrata
+ * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBAuditingBeanDefinitionParser extends AbstractSingleBeanDefinitionParser {
 
