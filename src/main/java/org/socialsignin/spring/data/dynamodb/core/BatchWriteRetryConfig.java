@@ -15,6 +15,9 @@
  */
 package org.socialsignin.spring.data.dynamodb.core;
 
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
+
 import java.util.Random;
 
 /**
@@ -59,6 +62,7 @@ public class BatchWriteRetryConfig {
     private final long baseDelayMs;
     private final long maxDelayMs;
     private final boolean useJitter;
+    @Nullable
     private final Random random;
 
     /**
@@ -159,21 +163,25 @@ public class BatchWriteRetryConfig {
         private long maxDelayMs = DEFAULT_MAX_DELAY_MS;
         private boolean useJitter = DEFAULT_USE_JITTER;
 
+        @NonNull
         public Builder maxRetries(int maxRetries) {
             this.maxRetries = maxRetries;
             return this;
         }
 
+        @NonNull
         public Builder baseDelayMs(long baseDelayMs) {
             this.baseDelayMs = baseDelayMs;
             return this;
         }
 
+        @NonNull
         public Builder maxDelayMs(long maxDelayMs) {
             this.maxDelayMs = maxDelayMs;
             return this;
         }
 
+        @NonNull
         public Builder useJitter(boolean useJitter) {
             this.useJitter = useJitter;
             return this;
@@ -182,16 +190,19 @@ public class BatchWriteRetryConfig {
         /**
          * Disables retry logic completely (maxRetries = 0).
          */
+        @NonNull
         public Builder disableRetries() {
             this.maxRetries = 0;
             return this;
         }
 
+        @NonNull
         public BatchWriteRetryConfig build() {
             return new BatchWriteRetryConfig(maxRetries, baseDelayMs, maxDelayMs, useJitter);
         }
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "BatchWriteRetryConfig{" +

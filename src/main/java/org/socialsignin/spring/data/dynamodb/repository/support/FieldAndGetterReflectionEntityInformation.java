@@ -17,6 +17,7 @@ package org.socialsignin.spring.data.dynamodb.repository.support;
 
 import org.springframework.data.repository.core.support.AbstractEntityInformation;
 import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 
@@ -32,6 +33,7 @@ import java.lang.reflect.Method;
 public class FieldAndGetterReflectionEntityInformation<T, ID> extends AbstractEntityInformation<T, ID> {
 
     protected Method method;
+    @Nullable
     private Field field;
 
     /**
@@ -96,6 +98,7 @@ public class FieldAndGetterReflectionEntityInformation<T, ID> extends AbstractEn
      * (non-Javadoc)
      * @see org.springframework.data.repository.core.EntityInformation#getIdType()
      */
+    @NonNull
     @Override
     @SuppressWarnings("unchecked")
     public Class<ID> getIdType() {

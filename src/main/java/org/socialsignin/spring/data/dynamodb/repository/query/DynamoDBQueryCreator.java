@@ -24,6 +24,7 @@ import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBEntityIn
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.parser.PartTree;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 import java.util.Optional;
@@ -38,6 +39,7 @@ public class DynamoDBQueryCreator<T, ID> extends AbstractDynamoDBQueryCreator<T,
                 values, dynamoDBOperations);
     }
 
+    @NonNull
     @Override
     protected Query<T> complete(@Nullable DynamoDBQueryCriteria<T, ID> criteria, Sort sort) {
         if (criteria == null) {

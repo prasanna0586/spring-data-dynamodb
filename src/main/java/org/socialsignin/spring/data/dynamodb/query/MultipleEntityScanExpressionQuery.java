@@ -16,6 +16,7 @@
 package org.socialsignin.spring.data.dynamodb.query;
 
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
+import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
@@ -36,6 +37,7 @@ public class MultipleEntityScanExpressionQuery<T> extends AbstractMultipleEntity
         this.scanRequest = scanRequest;
     }
 
+    @NonNull
     @Override
     public List<T> getResultList() {
         assertScanEnabled(isScanEnabled());

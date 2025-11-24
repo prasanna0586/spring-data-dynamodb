@@ -21,6 +21,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
@@ -45,17 +46,19 @@ import java.util.List;
 public class SimpleDynamoDBPagingAndSortingRepository<T, ID> extends SimpleDynamoDBCrudRepository<T, ID>
         implements DynamoDBPagingAndSortingRepository<T, ID> {
 
-    public SimpleDynamoDBPagingAndSortingRepository(DynamoDBEntityInformation<T, ID> entityInformation,
-            DynamoDBOperations dynamoDBOperations, EnableScanPermissions enableScanPermissions) {
+    public SimpleDynamoDBPagingAndSortingRepository(@NonNull DynamoDBEntityInformation<T, ID> entityInformation,
+                                                    DynamoDBOperations dynamoDBOperations, EnableScanPermissions enableScanPermissions) {
         super(entityInformation, dynamoDBOperations, enableScanPermissions);
 
     }
 
+    @NonNull
     @Override
     public Iterable<T> findAll(Sort sort) {
         return throwUnsupportedSortOperationException();
     }
 
+    @NonNull
     @Override
     public Page<T> findAll(Pageable pageable) {
 
@@ -88,7 +91,7 @@ public class SimpleDynamoDBPagingAndSortingRepository<T, ID> extends SimpleDynam
 
     }
 
-    private long scanThroughResults(Iterator<T> paginatedScanListIterator, long resultsToScan) {
+    private long scanThroughResults(@NonNull Iterator<T> paginatedScanListIterator, long resultsToScan) {
         long processed = 0;
         while (paginatedScanListIterator.hasNext() && processed < resultsToScan) {
             paginatedScanListIterator.next();
@@ -97,7 +100,8 @@ public class SimpleDynamoDBPagingAndSortingRepository<T, ID> extends SimpleDynam
         return processed;
     }
 
-    private List<T> readPageOfResults(Iterator<T> paginatedScanListIterator, int pageSize) {
+    @NonNull
+    private List<T> readPageOfResults(@NonNull Iterator<T> paginatedScanListIterator, int pageSize) {
         int processed = 0;
         List<T> resultsPage = new ArrayList<>();
         while (paginatedScanListIterator.hasNext() && processed < pageSize) {

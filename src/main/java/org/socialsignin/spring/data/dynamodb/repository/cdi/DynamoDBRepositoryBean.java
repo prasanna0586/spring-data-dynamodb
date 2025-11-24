@@ -22,6 +22,8 @@ import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBTemplate;
 import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBRepositoryFactory;
 import org.springframework.data.repository.cdi.CdiRepositoryBean;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -41,10 +43,13 @@ import java.util.Set;
  * @since 7.0.0
  */
 class DynamoDBRepositoryBean<T> extends CdiRepositoryBean<T> {
+    @Nullable
     private final Bean<DynamoDbClient> dynamoDbClientBean;
 
+    @Nullable
     private final Bean<DynamoDbEnhancedClient> enhancedClientBean;
 
+    @Nullable
     private final Bean<DynamoDBOperations> dynamoDBOperationsBean;
 
     /**
@@ -63,9 +68,9 @@ class DynamoDBRepositoryBean<T> extends CdiRepositoryBean<T> {
      * @param repositoryType
      *            must not be {@literal null}.
      */
-    DynamoDBRepositoryBean(BeanManager beanManager, Bean<DynamoDbClient> dynamoDbClientBean,
-            Bean<DynamoDbEnhancedClient> enhancedClientBean, Bean<DynamoDBOperations> dynamoDBOperationsBean,
-            Set<Annotation> qualifiers, Class<T> repositoryType) {
+    DynamoDBRepositoryBean(@NonNull BeanManager beanManager, Bean<DynamoDbClient> dynamoDbClientBean,
+                           Bean<DynamoDbEnhancedClient> enhancedClientBean, @Nullable Bean<DynamoDBOperations> dynamoDBOperationsBean,
+                           @NonNull Set<Annotation> qualifiers, @NonNull Class<T> repositoryType) {
 
         super(qualifiers, repositoryType, beanManager);
         if (dynamoDBOperationsBean == null) {
@@ -87,6 +92,7 @@ class DynamoDBRepositoryBean<T> extends CdiRepositoryBean<T> {
      * @see jakarta.enterprise.context.spi.Contextual#create(jakarta.enterprise .context.spi.CreationalContext,
      * Class<T>, Optional<Object>)
      */
+    @NonNull
     @Override
     protected T create(CreationalContext<T> creationalContext, Class<T> repositoryType) {
         // Get DynamoDBOperations if provided directly

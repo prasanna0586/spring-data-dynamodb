@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.springframework.data.repository.cdi.CdiRepositoryExtensionSupport;
+import org.springframework.lang.NonNull;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
@@ -64,7 +65,7 @@ public class DynamoDBRepositoryExtension extends CdiRepositoryExtensionSupport {
      *            The annotated type as defined by CDI.
      */
     @SuppressWarnings("unchecked")
-    <X> void processBean(@Observes ProcessBean<X> processBean) {
+    <X> void processBean(@NonNull @Observes ProcessBean<X> processBean) {
         Bean<X> bean = processBean.getBean();
         for (Type type : bean.getTypes()) {
             // Check if the bean is a AmazonDynamoDB
@@ -86,7 +87,7 @@ public class DynamoDBRepositoryExtension extends CdiRepositoryExtensionSupport {
         }
     }
 
-    private void logDiscoveredBean(Class<?> beanClass, Set<Annotation> qualifiers) {
+    private void logDiscoveredBean(@NonNull Class<?> beanClass, Set<Annotation> qualifiers) {
         LOGGER.debug("Discovered '{}' with qualifiers {}.", beanClass.getName(), qualifiers);
     }
 
@@ -99,7 +100,7 @@ public class DynamoDBRepositoryExtension extends CdiRepositoryExtensionSupport {
      * @param beanManager
      *            The BeanManager instance.
      */
-    void afterBeanDiscovery(@Observes AfterBeanDiscovery afterBeanDiscovery, BeanManager beanManager) {
+    void afterBeanDiscovery(@NonNull @Observes AfterBeanDiscovery afterBeanDiscovery, @NonNull BeanManager beanManager) {
 
         for (Entry<Class<?>, Set<Annotation>> entry : getRepositoryTypes()) {
 
@@ -125,8 +126,9 @@ public class DynamoDBRepositoryExtension extends CdiRepositoryExtensionSupport {
      *
      * @return The bean.
      */
-    private <T> Bean<T> createRepositoryBean(Class<T> repositoryType, Set<Annotation> qualifiers,
-            BeanManager beanManager) {
+    @NonNull
+    private <T> Bean<T> createRepositoryBean(@NonNull Class<T> repositoryType, @NonNull Set<Annotation> qualifiers,
+                                             @NonNull BeanManager beanManager) {
 
         // Determine the amazondbclient bean which matches the qualifiers of the
         // repository.

@@ -16,6 +16,7 @@
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
 import org.springframework.data.repository.core.EntityMetadata;
+import org.springframework.lang.Nullable;
 import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
 
 import java.util.Map;
@@ -31,6 +32,7 @@ public interface DynamoDBHashKeyExtractingEntityMetadata<T> extends EntityMetada
 
     Optional<String> getOverriddenAttributeName(String propertyName);
 
+    @Nullable
     AttributeConverter<?> getAttributeConverterForProperty(String propertyName);
 
     boolean isHashKeyProperty(String propertyName);

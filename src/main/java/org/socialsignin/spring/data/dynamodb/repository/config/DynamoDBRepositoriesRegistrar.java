@@ -17,6 +17,7 @@ package org.socialsignin.spring.data.dynamodb.repository.config;
 
 import org.springframework.data.repository.config.RepositoryBeanDefinitionRegistrarSupport;
 import org.springframework.data.repository.config.RepositoryConfigurationExtension;
+import org.springframework.lang.NonNull;
 
 import java.lang.annotation.Annotation;
 
@@ -25,11 +26,13 @@ import java.lang.annotation.Annotation;
  */
 public class DynamoDBRepositoriesRegistrar extends RepositoryBeanDefinitionRegistrarSupport {
 
+    @NonNull
     @Override
     protected Class<? extends Annotation> getAnnotation() {
         return EnableDynamoDBRepositories.class;
     }
 
+    @NonNull
     @Override
     protected RepositoryConfigurationExtension getExtension() {
         return new DynamoDBRepositoryConfigExtension();

@@ -16,6 +16,7 @@
 package org.socialsignin.spring.data.dynamodb.mapping.event;
 
 import org.springframework.context.ApplicationEvent;
+import org.springframework.lang.NonNull;
 
 import java.io.Serial;
 
@@ -27,7 +28,7 @@ public class DynamoDBMappingEvent<T> extends ApplicationEvent {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    public DynamoDBMappingEvent(T source) {
+    public DynamoDBMappingEvent(@NonNull T source) {
         super(source);
     }
 

@@ -24,6 +24,7 @@ import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBEntityIn
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.parser.PartTree;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
 import java.util.Optional;
@@ -54,6 +55,7 @@ public class DynamoDBCountQueryCreator<T, ID> extends AbstractDynamoDBQueryCreat
 
     }
 
+    @NonNull
     @Override
     protected Query<Long> complete(@Nullable DynamoDBQueryCriteria<T, ID> criteria, Sort sort) {
         if (criteria == null) {

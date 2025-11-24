@@ -16,6 +16,7 @@
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
 import org.springframework.data.repository.core.EntityInformation;
+import org.springframework.lang.Nullable;
 
 import java.util.Optional;
 
@@ -37,6 +38,7 @@ public interface DynamoDBEntityInformation<T, ID>
 
     Object getHashKey(ID id);
 
+    @Nullable
     default Object getRangeKey(ID id) {
         return null;
     }

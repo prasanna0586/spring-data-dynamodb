@@ -16,6 +16,8 @@
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
@@ -33,13 +35,18 @@ import java.util.*;
  */
 public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtractingEntityMetadata<T> {
 
+    @NonNull
     private final Class<T> domainType;
     private boolean hasRangeKey;
+    @Nullable
     private String hashKeyPropertyName;
+    @NonNull
     private final List<String> globalIndexHashKeyPropertyNames;
+    @NonNull
     private final List<String> globalIndexRangeKeyPropertyNames;
 
     private final String dynamoDBTableName;
+    @NonNull
     private final Map<String, String[]> globalSecondaryIndexNames;
 
     @Override
@@ -53,7 +60,7 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
      * @param domainType
      *            must not be {@literal null}.
      */
-    public DynamoDBEntityMetadataSupport(final Class<T> domainType) {
+    public DynamoDBEntityMetadataSupport(@NonNull final Class<T> domainType) {
         this(domainType, null);
     }
 
@@ -65,7 +72,7 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
      * @param dynamoDBOperations
      *            dynamoDBOperations as populated from Spring Data DynamoDB Configuration
      */
-    public DynamoDBEntityMetadataSupport(final Class<T> domainType, DynamoDBOperations dynamoDBOperations) {
+    public DynamoDBEntityMetadataSupport(@NonNull final Class<T> domainType, @Nullable DynamoDBOperations dynamoDBOperations) {
 
         Assert.notNull(domainType, "Domain type must not be null!");
         this.domainType = domainType;
@@ -124,6 +131,7 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
         Assert.notNull(hashKeyPropertyName, "Unable to find hash key field or getter method on " + domainType + "!");
     }
 
+    @NonNull
     public DynamoDBEntityInformation<T, ID> getEntityInformation() {
 
         if (hasRangeKey) {
@@ -139,6 +147,7 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
      * (non-Javadoc)
      * @see org.springframework.data.repository.core.EntityMetadata#getJavaType()
      */
+    @NonNull
     @Override
     public Class<T> getJavaType() {
         return domainType;
@@ -155,7 +164,8 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
         return field != null && field.getAnnotation((Class<? extends Annotation>) org.springframework.data.annotation.Id.class) != null;
     }
 
-    private String toGetMethodName(String propertyName) {
+    @NonNull
+    private String toGetMethodName(@NonNull String propertyName) {
         String methodName = propertyName.substring(0, 1).toUpperCase();
         if (propertyName.length() > 1) {
             methodName = methodName + propertyName.substring(1);
@@ -163,7 +173,8 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
         return "get" + methodName;
     }
 
-    protected String toSetterMethodNameFromAccessorMethod(Method method) {
+    @Nullable
+    protected String toSetterMethodNameFromAccessorMethod(@NonNull Method method) {
         String accessorMethodName = method.getName();
         if (accessorMethodName.startsWith("get")) {
             return "set" + accessorMethodName.substring(3);
@@ -173,7 +184,8 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
         return null;
     }
 
-    private String toIsMethodName(String propertyName) {
+    @NonNull
+    private String toIsMethodName(@NonNull String propertyName) {
         String methodName = propertyName.substring(0, 1).toUpperCase();
         if (propertyName.length() > 1) {
             methodName = methodName + propertyName.substring(1);
@@ -181,7 +193,8 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
         return "is" + methodName;
     }
 
-    private Method findMethod(String propertyName) {
+    @Nullable
+    private Method findMethod(@NonNull String propertyName) {
         Method method = ReflectionUtils.findMethod(domainType, toGetMethodName(propertyName));
         if (method == null) {
             method = ReflectionUtils.findMethod(domainType, toIsMethodName(propertyName));
@@ -190,12 +203,14 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
 
     }
 
+    @Nullable
     private Field findField(String propertyName) {
         return ReflectionUtils.findField(domainType, propertyName);
     }
 
+    @NonNull
     @Override
-    public Optional<String> getOverriddenAttributeName(final String propertyName) {
+    public Optional<String> getOverriddenAttributeName(@NonNull final String propertyName) {
 
         Method method = findMethod(propertyName);
         if (method != null) {
@@ -220,8 +235,9 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
 
     }
 
+    @Nullable
     @Override
-    public AttributeConverter<?> getAttributeConverterForProperty(final String propertyName) {
+    public AttributeConverter<?> getAttributeConverterForProperty(@NonNull final String propertyName) {
         // SDK v2 uses @DynamoDbConvertedBy annotation for custom converters
         DynamoDbConvertedBy annotation = null;
 
@@ -278,7 +294,8 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
         return null;
     }
 
-    protected String getPropertyNameForAccessorMethod(Method method) {
+    @NonNull
+    protected String getPropertyNameForAccessorMethod(@NonNull Method method) {
         String methodName = method.getName();
         String propertyName = null;
         if (methodName.startsWith("get")) {
@@ -293,7 +310,8 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
         return firstLetter.toLowerCase() + remainder;
     }
 
-    protected String getPropertyNameForField(Field field) {
+    @NonNull
+    protected String getPropertyNameForField(@NonNull Field field) {
         return field.getName();
     }
 
@@ -302,7 +320,7 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
         return hashKeyPropertyName;
     }
 
-    private void addGlobalSecondaryIndexNames(Method method, DynamoDbSecondarySortKey dynamoDBSecondarySortKey) {
+    private void addGlobalSecondaryIndexNames(@NonNull Method method, @NonNull DynamoDbSecondarySortKey dynamoDBSecondarySortKey) {
 
         // SDK v2 uses indexNames() which returns array of index names for both GSI and LSI
         if (dynamoDBSecondarySortKey.indexNames() != null
@@ -315,7 +333,7 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
 
     }
 
-    private void addGlobalSecondaryIndexNames(Field field, DynamoDbSecondarySortKey dynamoDBSecondarySortKey) {
+    private void addGlobalSecondaryIndexNames(@NonNull Field field, @NonNull DynamoDbSecondarySortKey dynamoDBSecondarySortKey) {
 
         // SDK v2 uses indexNames() which returns array of index names for both GSI and LSI
         if (dynamoDBSecondarySortKey.indexNames() != null
@@ -328,7 +346,7 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
 
     }
 
-    private void addGlobalSecondaryIndexNames(Method method, DynamoDbSecondaryPartitionKey dynamoDBSecondaryPartitionKey) {
+    private void addGlobalSecondaryIndexNames(@NonNull Method method, @NonNull DynamoDbSecondaryPartitionKey dynamoDBSecondaryPartitionKey) {
 
         // SDK v2 uses indexNames() which returns array of index names for GSI
         if (dynamoDBSecondaryPartitionKey.indexNames() != null
@@ -340,7 +358,7 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
         }
     }
 
-    private void addGlobalSecondaryIndexNames(Field field, DynamoDbSecondaryPartitionKey dynamoDBSecondaryPartitionKey) {
+    private void addGlobalSecondaryIndexNames(@NonNull Field field, @NonNull DynamoDbSecondaryPartitionKey dynamoDBSecondaryPartitionKey) {
 
         // SDK v2 uses indexNames() which returns array of index names for GSI
         if (dynamoDBSecondaryPartitionKey.indexNames() != null

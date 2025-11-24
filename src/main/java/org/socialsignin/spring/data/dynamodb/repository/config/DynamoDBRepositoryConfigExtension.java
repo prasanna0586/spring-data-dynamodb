@@ -34,6 +34,7 @@ import org.springframework.data.repository.config.AnnotationRepositoryConfigurat
 import org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport;
 import org.springframework.data.repository.config.RepositoryConfigurationSource;
 import org.springframework.data.repository.config.XmlRepositoryConfigurationSource;
+import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
@@ -63,25 +64,29 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
 
     private BeanDefinitionRegistry registry;
     private String defaultDynamoDBMappingContext;
+    @NonNull
     private MarshallingMode marshallingMode = MarshallingMode.SDK_V2_NATIVE;
 
+    @NonNull
     @Override
     public String getRepositoryFactoryBeanClassName() {
         return DynamoDBRepositoryFactoryBean.class.getName();
     }
 
+    @NonNull
     @Override
     protected Collection<Class<?>> getIdentifyingTypes() {
         return List.of(DynamoDBPagingAndSortingRepository.class, DynamoDBCrudRepository.class);
     }
 
+    @NonNull
     @Override
     protected Collection<Class<? extends Annotation>> getIdentifyingAnnotations() {
         return List.of(DynamoDbBean.class, DynamoDbImmutable.class);
     }
 
     @Override
-    public void postProcess(BeanDefinitionBuilder builder, AnnotationRepositoryConfigurationSource config) {
+    public void postProcess(@NonNull BeanDefinitionBuilder builder, @NonNull AnnotationRepositoryConfigurationSource config) {
         AnnotationAttributes attributes = config.getAttributes();
 
         String repositoryBeanName = config.generateBeanName(builder.getBeanDefinition());
@@ -98,7 +103,7 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
      * org.springframework.data.repository .config.XmlRepositoryConfigurationSource)
      */
     @Override
-    public void postProcess(BeanDefinitionBuilder builder, XmlRepositoryConfigurationSource config) {
+    public void postProcess(BeanDefinitionBuilder builder, @NonNull XmlRepositoryConfigurationSource config) {
         Element element = config.getElement();
 
         ParsingUtils.setPropertyReference(builder, element, AMAZON_DYNAMODB_REF, "amazonDynamoDB");
@@ -120,8 +125,8 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
 
     private final Map<String, String> dynamoDBTemplateCache = new HashMap<>();
 
-    private void postProcess(BeanDefinitionBuilder builder, String amazonDynamoDBRef,
-                             String dynamoDBMapperRef, String dynamoDBMapperConfigRef, String dynamoDBOperationsRef,
+    private void postProcess(@NonNull BeanDefinitionBuilder builder, String amazonDynamoDBRef,
+                             @NonNull String dynamoDBMapperRef, @NonNull String dynamoDBMapperConfigRef, @NonNull String dynamoDBOperationsRef,
                              String dynamoDBMappingContextRef) {
 
         // Ensure mapping context is created first
@@ -186,8 +191,8 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
         registerAndSetPostProcessingBeans(builder, registry, dynamoDBMappingContextRef);
     }
 
-    protected void registerAndSetPostProcessingBeans(BeanDefinitionBuilder builder, BeanDefinitionRegistry registry,
-            String dynamoDBMappingContextRef) {
+    protected void registerAndSetPostProcessingBeans(@NonNull BeanDefinitionBuilder builder, @NonNull BeanDefinitionRegistry registry,
+                                                     @NonNull String dynamoDBMappingContextRef) {
         String tableSynchronizerName = registerEntity2DynamoDBTableSynchronizer(registry, dynamoDBMappingContextRef);
         builder.addPropertyReference("entity2DynamoDBTableSynchronizer", tableSynchronizerName);
 
@@ -198,8 +203,9 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
 
     private final Map<String, String> entity2DynamoDBTableSynchronizerCache = new ConcurrentHashMap<>();
 
-    private String registerEntity2DynamoDBTableSynchronizer(BeanDefinitionRegistry registry,
-            String dynamoDBMappingContextRef) {
+    @NonNull
+    private String registerEntity2DynamoDBTableSynchronizer(@NonNull BeanDefinitionRegistry registry,
+                                                            String dynamoDBMappingContextRef) {
         assert registry != null;
 
         return entity2DynamoDBTableSynchronizerCache.computeIfAbsent(dynamoDBMappingContextRef, ref -> {
@@ -221,8 +227,9 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
 
     private String dynamoDBMapperConfigName;
 
-    private String registerDynamoDBMappingContextProcessor(BeanDefinitionRegistry registry,
-            String dynamoDBMappingContextRef) {
+    @NonNull
+    private String registerDynamoDBMappingContextProcessor(@NonNull BeanDefinitionRegistry registry,
+                                                           @NonNull String dynamoDBMappingContextRef) {
         assert registry != null;
 
         return dynamoDBMappingContextProcessorCache.computeIfAbsent(dynamoDBMappingContextRef, ref -> {
@@ -240,7 +247,8 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
         });
     }
 
-    private String registerDynamoDBMappingContext(BeanDefinitionRegistry registry) {
+    @NonNull
+    private String registerDynamoDBMappingContext(@NonNull BeanDefinitionRegistry registry) {
         assert registry != null;
 
         // Use the standard bean name to ensure compatibility with @EnableDynamoDBAuditing
@@ -301,10 +309,12 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
         }
     }
 
+    @NonNull
     protected String getBeanNameWithModulePrefix(String baseBeanName) {
         return String.format("%s-%s", getModulePrefix(), baseBeanName);
     }
 
+    @NonNull
     @Override
     protected String getModulePrefix() {
         return "dynamoDB";

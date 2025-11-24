@@ -20,6 +20,7 @@ import org.socialsignin.spring.data.dynamodb.core.MarshallingMode;
 import org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext;
 import org.socialsignin.spring.data.dynamodb.query.*;
 import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBEntityInformation;
+import org.springframework.lang.NonNull;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
@@ -35,23 +36,27 @@ import java.util.Map;
  */
 public class DynamoDBEntityWithHashKeyOnlyCriteria<T, ID> extends AbstractDynamoDBQueryCriteria<T, ID> {
 
+    @NonNull
     private final DynamoDBEntityInformation<T, ID> entityInformation;
 
-    public DynamoDBEntityWithHashKeyOnlyCriteria(DynamoDBEntityInformation<T, ID> entityInformation,
-            TableSchema<T> tableModel, DynamoDBMappingContext mappingContext) {
+    public DynamoDBEntityWithHashKeyOnlyCriteria(@NonNull DynamoDBEntityInformation<T, ID> entityInformation,
+                                                 TableSchema<T> tableModel, DynamoDBMappingContext mappingContext) {
         super(entityInformation, mappingContext);
         this.entityInformation = entityInformation;
     }
 
+    @NonNull
     protected Query<T> buildSingleEntityLoadQuery(DynamoDBOperations dynamoDBOperations) {
         return new SingleEntityLoadByHashKeyQuery<>(dynamoDBOperations, clazz, getHashKeyPropertyValue());
     }
 
+    @NonNull
     protected Query<Long> buildSingleEntityCountQuery(DynamoDBOperations dynamoDBOperations) {
         return new CountByHashKeyQuery<>(dynamoDBOperations, clazz, getHashKeyPropertyValue());
     }
 
-    protected Query<T> buildFinderQuery(DynamoDBOperations dynamoDBOperations) {
+    @NonNull
+    protected Query<T> buildFinderQuery(@NonNull DynamoDBOperations dynamoDBOperations) {
         if (isApplicableForQuery()) {
             List<Condition> hashKeyConditions = getHashKeyConditions();
 
@@ -73,7 +78,8 @@ public class DynamoDBEntityWithHashKeyOnlyCriteria<T, ID> extends AbstractDynamo
         }
     }
 
-    protected Query<Long> buildFinderCountQuery(DynamoDBOperations dynamoDBOperations, boolean pageQuery) {
+    @NonNull
+    protected Query<Long> buildFinderCountQuery(@NonNull DynamoDBOperations dynamoDBOperations, boolean pageQuery) {
         if (isApplicableForQuery()) {
             List<Condition> hashKeyConditions = getHashKeyConditions();
 
@@ -130,6 +136,7 @@ public class DynamoDBEntityWithHashKeyOnlyCriteria<T, ID> extends AbstractDynamo
         return isMainTableHashOnly || isGSIQuery;
     }
 
+    @NonNull
     public ScanEnhancedRequest buildScanExpression() {
         ensureNoSort(sort);
 
@@ -194,8 +201,9 @@ public class DynamoDBEntityWithHashKeyOnlyCriteria<T, ID> extends AbstractDynamo
      * Also populates the expressionValues and expressionNames maps with the necessary values.
      * Uses expression attribute names for all attributes to handle reserved keywords defensively.
      */
-    private String convertConditionToExpression(String attributeName, Condition condition, int startNameCounter,
-            int startValueCounter, Map<String, AttributeValue> expressionValues, Map<String, String> expressionNames) {
+    @NonNull
+    private String convertConditionToExpression(String attributeName, @NonNull Condition condition, int startNameCounter,
+                                                int startValueCounter, @NonNull Map<String, AttributeValue> expressionValues, @NonNull Map<String, String> expressionNames) {
 
         ComparisonOperator operator = condition.comparisonOperator();
         List<AttributeValue> attributeValueList = condition.attributeValueList();
@@ -283,7 +291,7 @@ public class DynamoDBEntityWithHashKeyOnlyCriteria<T, ID> extends AbstractDynamo
      * - SDK_V2_NATIVE: Uses AWS SDK v2's native type mappings (Boolean → BOOL)
      * - SDK_V1_COMPATIBLE: Maintains backward compatibility (Boolean → Number "1"/"0", Date/Instant → ISO String)
      */
-    private AttributeValue convertToAttributeValue(Object value) {
+    private AttributeValue convertToAttributeValue(@NonNull Object value) {
         switch (value) {
             case null -> {
                 return AttributeValue.builder().nul(true).build();
@@ -345,7 +353,7 @@ public class DynamoDBEntityWithHashKeyOnlyCriteria<T, ID> extends AbstractDynamo
     }
 
     @Override
-    public DynamoDBQueryCriteria<T, ID> withPropertyEquals(String propertyName, Object value, Class<?> propertyType) {
+    public DynamoDBQueryCriteria<T, ID> withPropertyEquals(@NonNull String propertyName, Object value, Class<?> propertyType) {
         if (isHashKeyProperty(propertyName)) {
             return withHashKeyEquals(value);
         } else {

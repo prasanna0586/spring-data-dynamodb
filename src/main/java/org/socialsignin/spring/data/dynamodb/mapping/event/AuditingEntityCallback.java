@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.core.Ordered;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
+import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 
 /**
@@ -29,6 +30,7 @@ import org.springframework.util.Assert;
  */
 public class AuditingEntityCallback implements BeforeConvertCallback<Object>, Ordered {
 
+    @NonNull
     private final ObjectFactory<IsNewAwareAuditingHandler> auditingHandlerFactory;
 
     /**
@@ -37,13 +39,14 @@ public class AuditingEntityCallback implements BeforeConvertCallback<Object>, Or
      *
      * @param auditingHandlerFactory must not be {@literal null}.
      */
-    public AuditingEntityCallback(ObjectFactory<IsNewAwareAuditingHandler> auditingHandlerFactory) {
+    public AuditingEntityCallback(@NonNull ObjectFactory<IsNewAwareAuditingHandler> auditingHandlerFactory) {
         Assert.notNull(auditingHandlerFactory, "IsNewAwareAuditingHandler must not be null!");
         this.auditingHandlerFactory = auditingHandlerFactory;
     }
 
+    @NonNull
     @Override
-    public Object onBeforeConvert(Object entity, String tableName) {
+    public Object onBeforeConvert(@NonNull Object entity, String tableName) {
         IsNewAwareAuditingHandler handler = auditingHandlerFactory.getObject();
         Object result = handler.markAudited(entity);
         // markAudited should never return null, but return original entity as fallback

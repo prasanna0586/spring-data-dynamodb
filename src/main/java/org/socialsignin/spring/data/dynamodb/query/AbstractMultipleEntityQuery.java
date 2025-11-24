@@ -17,6 +17,7 @@ package org.socialsignin.spring.data.dynamodb.query;
 
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.lang.Nullable;
 
 import java.util.List;
 
@@ -29,6 +30,7 @@ public abstract class AbstractMultipleEntityQuery<T> extends AbstractDynamicQuer
         super(dynamoDBOperations, clazz);
     }
 
+    @Nullable
     @Override
     public T getSingleResult() {
         List<T> results = getResultList();

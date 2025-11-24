@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.GenericTypeResolver;
+import org.springframework.lang.NonNull;
 import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 
 import java.util.function.Consumer;
@@ -47,6 +48,7 @@ import java.util.stream.StreamSupport;
 public abstract class AbstractDynamoDBEventListener<E> implements ApplicationListener<DynamoDBMappingEvent<?>> {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractDynamoDBEventListener.class);
+    @NonNull
     private final Class<?> domainClass;
 
     /**
@@ -68,7 +70,7 @@ public abstract class AbstractDynamoDBEventListener<E> implements ApplicationLis
      * .springframework.context.ApplicationEvent)
      */
     @Override
-    public void onApplicationEvent(DynamoDBMappingEvent<?> event) {
+    public void onApplicationEvent(@NonNull DynamoDBMappingEvent<?> event) {
 
         @SuppressWarnings("unchecked")
         E source = (E) event.getSource();
@@ -118,7 +120,7 @@ public abstract class AbstractDynamoDBEventListener<E> implements ApplicationLis
     }
 
     @SuppressWarnings("unchecked")
-    private void publishEachElement(PageIterable<?> pageIterable, Consumer<E> publishMethod) {
+    private void publishEachElement(@NonNull PageIterable<?> pageIterable, Consumer<E> publishMethod) {
         StreamSupport.stream(pageIterable.items().spliterator(), false)
                 .filter(o -> domainClass.isAssignableFrom(o.getClass()))
                 .map(o -> (E) o)

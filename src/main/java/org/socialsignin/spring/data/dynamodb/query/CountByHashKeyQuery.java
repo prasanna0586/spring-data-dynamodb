@@ -16,6 +16,7 @@
 package org.socialsignin.spring.data.dynamodb.query;
 
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
+import org.springframework.lang.NonNull;
 
 /**
  * @author Prasanna Kumar Ramachandran
@@ -31,6 +32,7 @@ public class CountByHashKeyQuery<T> extends AbstractSingleEntityQuery<Long> impl
         this.entityClass = clazz;
     }
 
+    @NonNull
     @Override
     public Long getSingleResult() {
         return dynamoDBOperations.load(entityClass, hashKey) == null ? 0L : 1L;

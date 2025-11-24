@@ -22,6 +22,8 @@ import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.RepositoryQuery;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 
 import java.lang.reflect.Method;
 
@@ -57,6 +59,7 @@ public class DynamoDBQueryLookupStrategy {
          * org.springframework.data.repository.core.RepositoryMetadata,
          * org.springframework.data.repository.core.NamedQueries)
          */
+        @NonNull
         @Override
         public final RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, ProjectionFactory factory,
                 NamedQueries namedQueries) {
@@ -80,9 +83,10 @@ public class DynamoDBQueryLookupStrategy {
             super(dynamoDBOperations);
         }
 
+        @NonNull
         @Override
-        protected <T, ID> RepositoryQuery createDynamoDBQuery(Method method, RepositoryMetadata metadata,
-                ProjectionFactory factory, Class<T> entityClass, Class<ID> idClass, NamedQueries namedQueries) {
+        protected <T, ID> RepositoryQuery createDynamoDBQuery(@NonNull Method method, @NonNull RepositoryMetadata metadata,
+                                                              @NonNull ProjectionFactory factory, Class<T> entityClass, Class<ID> idClass, NamedQueries namedQueries) {
             try {
                 return new PartTreeDynamoDBQuery<>(dynamoDBOperations,
                         new DynamoDBQueryMethod<T, ID>(method, metadata, factory));
@@ -121,7 +125,9 @@ public class DynamoDBQueryLookupStrategy {
      */
     private static class CreateIfNotFoundQueryLookupStrategy extends AbstractQueryLookupStrategy {
 
+        @NonNull
         private final DeclaredQueryLookupStrategy strategy;
+        @NonNull
         private final CreateQueryLookupStrategy createStrategy;
 
         public CreateIfNotFoundQueryLookupStrategy(DynamoDBOperations dynamoDBOperations) {
@@ -131,9 +137,10 @@ public class DynamoDBQueryLookupStrategy {
             this.createStrategy = new CreateQueryLookupStrategy(dynamoDBOperations);
         }
 
+        @NonNull
         @Override
-        protected <T, ID> RepositoryQuery createDynamoDBQuery(Method method, RepositoryMetadata metadata,
-                ProjectionFactory factory, Class<T> entityClass, Class<ID> idClass, NamedQueries namedQueries) {
+        protected <T, ID> RepositoryQuery createDynamoDBQuery(@NonNull Method method, @NonNull RepositoryMetadata metadata,
+                                                              @NonNull ProjectionFactory factory, Class<T> entityClass, Class<ID> idClass, NamedQueries namedQueries) {
             try {
                 return strategy.createDynamoDBQuery(method, metadata, factory, entityClass, idClass, namedQueries);
             } catch (IllegalStateException | UnsupportedOperationException e) {
@@ -155,7 +162,8 @@ public class DynamoDBQueryLookupStrategy {
      *
      * @return The created {@link QueryLookupStrategy}
      */
-    public static QueryLookupStrategy create(DynamoDBOperations dynamoDBOperations, Key key) {
+    @NonNull
+    public static QueryLookupStrategy create(DynamoDBOperations dynamoDBOperations, @Nullable Key key) {
 
         if (key == null) {
             return new CreateQueryLookupStrategy(dynamoDBOperations);

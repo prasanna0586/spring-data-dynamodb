@@ -15,6 +15,8 @@
  */
 package org.socialsignin.spring.data.dynamodb.mapping;
 
+import org.springframework.lang.Nullable;
+
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Date;
@@ -43,7 +45,8 @@ public class AbstractDynamoDBDateMarshaller {
      * @param getterReturnResult the Date to marshall
      * @return String representation of the date
      */
-    public String marshall(Date getterReturnResult) {
+    @Nullable
+    public String marshall(@Nullable Date getterReturnResult) {
         if (getterReturnResult == null) {
             return null;
         } else {
@@ -58,7 +61,8 @@ public class AbstractDynamoDBDateMarshaller {
      * @return Date object
      * @throws IllegalArgumentException if parsing fails
      */
-    public Date unmarshall(String obj) throws IllegalArgumentException {
+    @Nullable
+    public Date unmarshall(@Nullable String obj) throws IllegalArgumentException {
         if (obj == null) {
             return null;
         } else {

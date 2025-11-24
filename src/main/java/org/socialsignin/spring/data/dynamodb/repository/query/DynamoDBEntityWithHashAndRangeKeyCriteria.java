@@ -20,6 +20,8 @@ import org.socialsignin.spring.data.dynamodb.core.MarshallingMode;
 import org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext;
 import org.socialsignin.spring.data.dynamodb.query.*;
 import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBIdIsHashAndRangeKeyEntityInformation;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
@@ -40,7 +42,9 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
     private Object rangeKeyAttributeValue;
     private Object rangeKeyPropertyValue;
     private final String rangeKeyPropertyName;
+    @NonNull
     private final Set<String> indexRangeKeyPropertyNames;
+    @NonNull
     private final DynamoDBIdIsHashAndRangeKeyEntityInformation<T, ID> entityInformation;
 
     protected String getRangeKeyAttributeName() {
@@ -56,7 +60,7 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
     }
 
     public DynamoDBEntityWithHashAndRangeKeyCriteria(
-            DynamoDBIdIsHashAndRangeKeyEntityInformation<T, ID> entityInformation,
+            @NonNull DynamoDBIdIsHashAndRangeKeyEntityInformation<T, ID> entityInformation,
             TableSchema<T> tableModel,
             DynamoDBMappingContext mappingContext) {
 
@@ -70,6 +74,7 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
         this.entityInformation = entityInformation;
     }
 
+    @NonNull
     public Set<String> getIndexRangeKeyAttributeNames() {
         Set<String> indexRangeKeyAttributeNames = new HashSet<>();
         for (String indexRangeKeyPropertyName : indexRangeKeyPropertyNames) {
@@ -90,11 +95,13 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
         return getRangeKeyAttributeValue() != null;
     }
 
+    @NonNull
     protected Query<T> buildSingleEntityLoadQuery(DynamoDBOperations dynamoDBOperations) {
         return new SingleEntityLoadByHashAndRangeKeyQuery<>(dynamoDBOperations, entityInformation.getJavaType(),
                 getHashKeyPropertyValue(), getRangeKeyPropertyValue());
     }
 
+    @NonNull
     protected Query<Long> buildSingleEntityCountQuery(DynamoDBOperations dynamoDBOperations) {
         return new CountByHashAndRangeKeyQuery<>(dynamoDBOperations, entityInformation.getJavaType(),
                 getHashKeyPropertyValue(), getRangeKeyPropertyValue());
@@ -112,8 +119,8 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
 
     @SuppressWarnings("unchecked")
     @Override
-    public DynamoDBQueryCriteria<T, ID> withSingleValueCriteria(String propertyName,
-            ComparisonOperator comparisonOperator, Object value, Class<?> propertyType) {
+    public DynamoDBQueryCriteria<T, ID> withSingleValueCriteria(@NonNull String propertyName,
+                                                                @NonNull ComparisonOperator comparisonOperator, Object value, Class<?> propertyType) {
 
         if (entityInformation.isCompositeHashAndRangeKeyProperty(propertyName)) {
             checkComparisonOperatorPermittedForCompositeHashAndRangeKey(comparisonOperator);
@@ -131,6 +138,7 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
         }
     }
 
+    @Nullable
     protected List<Condition> getRangeKeyConditions() {
         List<Condition> rangeKeyConditions = null;
         if (isApplicableForGlobalSecondaryIndex() && entityInformation.getGlobalSecondaryIndexNamesByPropertyName()
@@ -144,7 +152,8 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
         return rangeKeyConditions;
     }
 
-    protected Query<T> buildFinderQuery(DynamoDBOperations dynamoDBOperations) {
+    @NonNull
+    protected Query<T> buildFinderQuery(@NonNull DynamoDBOperations dynamoDBOperations) {
         if (isApplicableForQuery()) {
             // SDK v2: Use QueryRequest for both GSI and regular queries
             String tableName = dynamoDBOperations.getOverriddenTableName(clazz,
@@ -184,7 +193,8 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
         }
     }
 
-    protected Query<Long> buildFinderCountQuery(DynamoDBOperations dynamoDBOperations, boolean pageQuery) {
+    @NonNull
+    protected Query<Long> buildFinderCountQuery(@NonNull DynamoDBOperations dynamoDBOperations, boolean pageQuery) {
         if (isApplicableForQuery()) {
             // SDK v2: Use QueryRequest for both GSI and regular queries
             String tableName = dynamoDBOperations.getOverriddenTableName(clazz,
@@ -283,6 +293,7 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
 
     }
 
+    @Nullable
     protected String getGlobalSecondaryIndexName() {
         // Get the target global secondary index name using the property
         // conditions
@@ -313,6 +324,7 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
      *
      * @return LSI index name if applicable, null otherwise
      */
+    @Nullable
     protected String getLocalSecondaryIndexName() {
         // Check if any LSI range key property has a condition
         for (String indexRangeKeyPropertyName : indexRangeKeyPropertyNames) {
@@ -350,6 +362,7 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
      *
      * @return LSI property name that has a condition, or null if none
      */
+    @Nullable
     protected String getLSIPropertyNameWithCondition() {
         if (indexRangeKeyPropertyNames == null || indexRangeKeyPropertyNames.isEmpty()) {
             return null;
@@ -376,6 +389,7 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
 
     }
 
+    @NonNull
     public ScanEnhancedRequest buildScanExpression() {
         ensureNoSort(sort);
 
@@ -452,8 +466,9 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
      * Also populates the expressionValues and expressionNames maps with the necessary values.
      * Uses expression attribute names for all attributes to handle reserved keywords defensively.
      */
-    private String convertConditionToExpression(String attributeName, Condition condition, int startNameCounter,
-            int startValueCounter, Map<String, AttributeValue> expressionValues, Map<String, String> expressionNames) {
+    @NonNull
+    private String convertConditionToExpression(String attributeName, @NonNull Condition condition, int startNameCounter,
+                                                int startValueCounter, @NonNull Map<String, AttributeValue> expressionValues, @NonNull Map<String, String> expressionNames) {
 
         ComparisonOperator operator = condition.comparisonOperator();
         List<AttributeValue> attributeValueList = condition.attributeValueList();
@@ -541,7 +556,7 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
      * - SDK_V2_NATIVE: Uses AWS SDK v2's native type mappings (Boolean → BOOL)
      * - SDK_V1_COMPATIBLE: Maintains backward compatibility (Boolean → Number "1"/"0", Date/Instant → ISO String)
      */
-    private AttributeValue convertToAttributeValue(Object value) {
+    private AttributeValue convertToAttributeValue(@NonNull Object value) {
         switch (value) {
             case null -> {
                 return AttributeValue.builder().nul(true).build();
@@ -602,6 +617,7 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
 
     }
 
+    @NonNull
     public DynamoDBQueryCriteria<T, ID> withRangeKeyEquals(Object value) {
         Assert.notNull(value, "Creating conditions on null range keys not supported: please specify a value for '"
                 + getRangeKeyPropertyName() + "'");
@@ -613,7 +629,7 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
 
     @SuppressWarnings("unchecked")
     @Override
-    public DynamoDBQueryCriteria<T, ID> withPropertyEquals(String propertyName, Object value, Class<?> propertyType) {
+    public DynamoDBQueryCriteria<T, ID> withPropertyEquals(@NonNull String propertyName, Object value, Class<?> propertyType) {
         if (isHashKeyProperty(propertyName)) {
             return withHashKeyEquals(value);
         } else if (isRangeKeyProperty(propertyName)) {

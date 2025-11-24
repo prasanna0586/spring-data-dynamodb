@@ -35,6 +35,7 @@ import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 
 import java.util.ArrayList;
@@ -51,6 +52,7 @@ public class ValidatingDynamoDBEventListener extends AbstractDynamoDBEventListen
 
     private static final Logger LOG = LoggerFactory.getLogger(ValidatingDynamoDBEventListener.class);
 
+    @NonNull
     private final Validator validator;
 
     /**
@@ -59,7 +61,7 @@ public class ValidatingDynamoDBEventListener extends AbstractDynamoDBEventListen
      * @param validator
      *            must not be {@literal null}.
      */
-    public ValidatingDynamoDBEventListener(Validator validator) {
+    public ValidatingDynamoDBEventListener(@NonNull Validator validator) {
         Assert.notNull(validator, "validator must not be null!");
         this.validator = validator;
     }

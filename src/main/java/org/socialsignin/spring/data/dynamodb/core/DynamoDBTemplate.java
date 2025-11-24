@@ -24,6 +24,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.mapping.callback.EntityCallbacks;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
@@ -46,12 +47,17 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextAware {
+    @NonNull
     private final DynamoDbEnhancedClient enhancedClient;
+    @NonNull
     private final DynamoDbClient amazonDynamoDB;
+    @Nullable
     private final TableNameResolver tableNameResolver;
+    @NonNull
     private final DynamoDBMappingContext mappingContext;
     private final Map<Class<?>, DynamoDbTable<?>> tableCache = new ConcurrentHashMap<>();
     private ApplicationEventPublisher eventPublisher;
+    @Nullable
     private EntityCallbacks entityCallbacks;
 
     /**
@@ -67,10 +73,10 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
      *            The DynamoDB mapping context (uses default SDK_V2_NATIVE if null)
      * @since 7.0.0
      */
-    public DynamoDBTemplate(DynamoDbClient amazonDynamoDB,
-                           DynamoDbEnhancedClient enhancedClient,
-                           @Nullable TableNameResolver tableNameResolver,
-                           @Nullable DynamoDBMappingContext mappingContext) {
+    public DynamoDBTemplate(@NonNull DynamoDbClient amazonDynamoDB,
+                            @NonNull DynamoDbEnhancedClient enhancedClient,
+                            @Nullable TableNameResolver tableNameResolver,
+                            @Nullable DynamoDBMappingContext mappingContext) {
         Assert.notNull(amazonDynamoDB, "amazonDynamoDB must not be null!");
         Assert.notNull(enhancedClient, "enhancedClient must not be null!");
 
@@ -108,7 +114,7 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
      * @return The DynamoDbTable instance for the given class
      */
     @SuppressWarnings("unchecked")
-    private <T> DynamoDbTable<T> getTable(Class<T> domainClass) {
+    private <T> DynamoDbTable<T> getTable(@NonNull Class<T> domainClass) {
         return (DynamoDbTable<T>) tableCache.computeIfAbsent(domainClass, clazz -> {
             MarshallingMode mode = mappingContext.getMarshallingMode();
             TableSchema<T> schema = TableSchemaFactory.createTableSchema(domainClass);
@@ -124,7 +130,7 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
      * @param domainClass The domain class
      * @return The resolved table name
      */
-    private <T> String resolveTableName(Class<T> domainClass) {
+    private <T> String resolveTableName(@NonNull Class<T> domainClass) {
         // Use class simple name as base table name
         // In SDK v2, the table name is not stored in the @DynamoDbBean annotation
         // It must be explicitly provided when creating the table or via TableNameResolver
@@ -145,7 +151,8 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
      * @param rangeKeyValue The sort key value (can be null for hash-key-only tables)
      * @return The constructed Key
      */
-    private Key buildKey(Object hashKeyValue, @Nullable Object rangeKeyValue) {
+    @NonNull
+    private Key buildKey(@NonNull Object hashKeyValue, @Nullable Object rangeKeyValue) {
         Key.Builder keyBuilder = Key.builder()
                 .partitionValue(toAttributeValue(hashKeyValue));
 
@@ -163,7 +170,7 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
      * @param value The Java object to convert
      * @return The SDK v2 AttributeValue
      */
-    private AttributeValue toAttributeValue(Object value) {
+    private AttributeValue toAttributeValue(@NonNull Object value) {
         switch (value) {
             case null -> {
                 return AttributeValue.builder().nul(true).build();
@@ -224,7 +231,7 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
     }
 
     @Override
-    public <T> T load(Class<T> domainClass, Object hashKey, Object rangeKey) {
+    public <T> T load(@NonNull Class<T> domainClass, @NonNull Object hashKey, Object rangeKey) {
         DynamoDbTable<T> table = getTable(domainClass);
         Key key = buildKey(hashKey, rangeKey);
         T entity = table.getItem(key);
@@ -234,7 +241,7 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
     }
 
     @Override
-    public <T> T load(Class<T> domainClass, Object hashKey) {
+    public <T> T load(@NonNull Class<T> domainClass, @NonNull Object hashKey) {
         DynamoDbTable<T> table = getTable(domainClass);
         Key key = buildKey(hashKey, null);
         T entity = table.getItem(key);
@@ -243,9 +250,10 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
         return entity;
     }
 
+    @NonNull
     @SuppressWarnings("unchecked")
     @Override
-    public <T> List<T> batchLoad(Map<Class<?>, List<Key>> itemsToGet) {
+    public <T> List<T> batchLoad(@NonNull Map<Class<?>, List<Key>> itemsToGet) {
         // Pre-allocate result list to avoid resizing
         int totalKeys = itemsToGet.values().stream().mapToInt(List::size).sum();
         List<T> results = new ArrayList<>(totalKeys);
@@ -341,15 +349,16 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
      * @param <T> entity type
      * @return the potentially modified entity
      */
-    private <T> T maybeCallBeforeConvert(T entity, String tableName) {
+    private <T> T maybeCallBeforeConvert(@NonNull T entity, String tableName) {
         if (entityCallbacks != null) {
             return entityCallbacks.callback(BeforeConvertCallback.class, entity, tableName);
         }
         return entity;
     }
 
+    @NonNull
     @Override
-    public List<BatchWriteResult> batchSave(Iterable<?> entities) {
+    public List<BatchWriteResult> batchSave(@NonNull Iterable<?> entities) {
         // Process auto-generated keys for SDK_V1_COMPATIBLE mode
         if (mappingContext.getMarshallingMode() == MarshallingMode.SDK_V1_COMPATIBLE) {
             entities.forEach(AutoGeneratedKeyHelper::processAutoGeneratedKeys);
@@ -420,8 +429,9 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
         return results;
     }
 
+    @NonNull
     @Override
-    public <T> T delete(T entity) {
+    public <T> T delete(@NonNull T entity) {
         maybeEmitEvent(entity, BeforeDeleteEvent::new);
 
         @SuppressWarnings("unchecked")
@@ -432,8 +442,9 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
         return entity;
     }
 
+    @NonNull
     @Override
-    public List<BatchWriteResult> batchDelete(Iterable<?> entities) {
+    public List<BatchWriteResult> batchDelete(@NonNull Iterable<?> entities) {
         entities.forEach(it -> maybeEmitEvent(it, BeforeDeleteEvent::new));
 
         // Group entities by class
@@ -509,9 +520,10 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
      * @param entitiesByClass Original entities grouped by class (used to get table references)
      * @return List of unprocessed entity objects that failed to be saved
      */
+    @NonNull
     public List<Object> extractUnprocessedPutItems(
-            List<BatchWriteResult> results,
-            Map<Class<?>, List<Object>> entitiesByClass) {
+            @NonNull List<BatchWriteResult> results,
+            @NonNull Map<Class<?>, List<Object>> entitiesByClass) {
 
         List<Object> unprocessedEntities = new ArrayList<>();
 
@@ -543,9 +555,10 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
      * @param entitiesByClass Original entities grouped by class (used to get table references and match keys)
      * @return List of unprocessed entity objects that failed to be deleted
      */
+    @NonNull
     public List<Object> extractUnprocessedDeleteItems(
-            List<BatchWriteResult> results,
-            Map<Class<?>, List<Object>> entitiesByClass) {
+            @NonNull List<BatchWriteResult> results,
+            @NonNull Map<Class<?>, List<Object>> entitiesByClass) {
 
         List<Object> unprocessedEntities = new ArrayList<>();
 
@@ -579,8 +592,9 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
         return unprocessedEntities;
     }
 
+    @NonNull
     @Override
-    public <T> PageIterable<T> query(Class<T> clazz, QueryRequest queryRequest) {
+    public <T> PageIterable<T> query(@NonNull Class<T> clazz, QueryRequest queryRequest) {
         DynamoDbTable<T> table = getTable(clazz);
 
         // Manually paginate through query results to avoid infinite iterator issue
@@ -615,7 +629,7 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
     }
 
     @Override
-    public <T> PageIterable<T> query(Class<T> domainClass, QueryEnhancedRequest queryRequest) {
+    public <T> PageIterable<T> query(@NonNull Class<T> domainClass, QueryEnhancedRequest queryRequest) {
         DynamoDbTable<T> table = getTable(domainClass);
         PageIterable<T> results = table.query(queryRequest);
         maybeEmitEvent(results, AfterQueryEvent::new);
@@ -623,7 +637,7 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
     }
 
     @Override
-    public <T> PageIterable<T> scan(Class<T> domainClass, ScanEnhancedRequest scanRequest) {
+    public <T> PageIterable<T> scan(@NonNull Class<T> domainClass, ScanEnhancedRequest scanRequest) {
         DynamoDbTable<T> table = getTable(domainClass);
         PageIterable<T> results = table.scan(scanRequest);
         maybeEmitEvent(results, AfterScanEvent::new);
@@ -631,7 +645,7 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
     }
 
     @Override
-    public <T> int count(Class<T> domainClass, QueryEnhancedRequest queryRequest) {
+    public <T> int count(@NonNull Class<T> domainClass, QueryEnhancedRequest queryRequest) {
         DynamoDbTable<T> table = getTable(domainClass);
         PageIterable<T> results = table.query(queryRequest);
 
@@ -644,7 +658,7 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
     }
 
     @Override
-    public <T> int count(Class<T> domainClass, ScanEnhancedRequest scanRequest) {
+    public <T> int count(@NonNull Class<T> domainClass, @NonNull ScanEnhancedRequest scanRequest) {
         DynamoDbTable<T> table = getTable(domainClass);
         String tableName = table.tableName();
 
@@ -738,7 +752,7 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
         return mappingContext;
     }
 
-    protected <T> void maybeEmitEvent(@Nullable T source, Function<T, DynamoDBMappingEvent<T>> factory) {
+    protected <T> void maybeEmitEvent(@Nullable T source, @NonNull Function<T, DynamoDBMappingEvent<T>> factory) {
         if (eventPublisher != null) {
             if (source != null) {
                 DynamoDBMappingEvent<T> event = factory.apply(source);

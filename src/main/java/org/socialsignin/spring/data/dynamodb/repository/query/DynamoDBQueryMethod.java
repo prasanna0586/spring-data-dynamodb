@@ -21,6 +21,8 @@ import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBEntityMe
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethod;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 import java.lang.reflect.Method;
@@ -33,17 +35,23 @@ import static org.socialsignin.spring.data.dynamodb.repository.QueryConstants.QU
  */
 public class DynamoDBQueryMethod<T, ID> extends QueryMethod {
 
+    @NonNull
     private final Method method;
     private final boolean scanEnabledForRepository;
     private final boolean scanCountEnabledForRepository;
+    @NonNull
     private final Optional<String> projectionExpression;
+    @NonNull
     private final Optional<Integer> limitResults;
+    @NonNull
     private final Optional<String> filterExpression;
+    @Nullable
     private final ExpressionAttribute[] expressionAttributeNames;
+    @Nullable
     private final ExpressionAttribute[] expressionAttributeValues;
     private final QueryConstants.ConsistentReadMode consistentReadMode;
 
-    public DynamoDBQueryMethod(Method method, RepositoryMetadata metadata, ProjectionFactory factory) {
+    public DynamoDBQueryMethod(@NonNull Method method, @NonNull RepositoryMetadata metadata, @NonNull ProjectionFactory factory) {
         super(method, metadata, factory);
         this.method = method;
         this.scanEnabledForRepository = metadata.getRepositoryInterface().isAnnotationPresent(EnableScan.class);
@@ -95,12 +103,14 @@ public class DynamoDBQueryMethod<T, ID> extends QueryMethod {
      * (non-Javadoc)
      * @see org.springframework.data.repository.query.QueryMethod#getEntityInformation ()
      */
+    @NonNull
     @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public DynamoDBEntityInformation<T, ID> getEntityInformation() {
         return new DynamoDBEntityMetadataSupport(getDomainClass()).getEntityInformation();
     }
 
+    @NonNull
     public Class<T> getEntityType() {
 
         return getEntityInformation().getJavaType();
@@ -122,6 +132,7 @@ public class DynamoDBQueryMethod<T, ID> extends QueryMethod {
         return this.filterExpression;
     }
 
+    @Nullable
     public ExpressionAttribute[] getExpressionAttributeNames() {
         if (expressionAttributeNames != null) {
             return expressionAttributeNames.clone();
@@ -129,6 +140,7 @@ public class DynamoDBQueryMethod<T, ID> extends QueryMethod {
         return null;
     }
 
+    @Nullable
     public ExpressionAttribute[] getExpressionAttributeValues() {
         if (expressionAttributeValues != null) {
             return expressionAttributeValues.clone();

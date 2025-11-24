@@ -21,21 +21,26 @@ import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.parser.PartTree;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Prasanna Kumar Ramachandran
  */
 public class PartTreeDynamoDBQuery<T, ID> extends AbstractDynamoDBQuery<T, ID> implements RepositoryQuery {
 
+    @NonNull
     private final Parameters<?, ?> parameters;
+    @NonNull
     private final PartTree tree;
 
-    public PartTreeDynamoDBQuery(DynamoDBOperations dynamoDBOperations, DynamoDBQueryMethod<T, ID> method) {
+    public PartTreeDynamoDBQuery(DynamoDBOperations dynamoDBOperations, @NonNull DynamoDBQueryMethod<T, ID> method) {
         super(dynamoDBOperations, method);
         this.parameters = method.getParameters();
         this.tree = new PartTree(method.getName(), method.getEntityType());
     }
 
+    @NonNull
     protected DynamoDBQueryCreator<T, ID> createQueryCreator(ParametersParameterAccessor accessor) {
         DynamoDBQueryMethod<T, ID> queryMethod = getQueryMethod();
         return new DynamoDBQueryCreator<>(tree, accessor, queryMethod.getEntityInformation(),
@@ -45,24 +50,27 @@ public class PartTreeDynamoDBQuery<T, ID> extends AbstractDynamoDBQuery<T, ID> i
                 dynamoDBOperations);
     }
 
+    @NonNull
     protected DynamoDBCountQueryCreator<T, ID> createCountQueryCreator(ParametersParameterAccessor accessor,
-            boolean pageQuery) {
+                                                                       boolean pageQuery) {
         DynamoDBQueryMethod<T, ID> queryMethod = getQueryMethod();
         return new DynamoDBCountQueryCreator<>(tree, accessor, queryMethod.getEntityInformation(),
                 queryMethod.getFilterExpression(), queryMethod.getExpressionAttributeNames(),
                 queryMethod.getExpressionAttributeValues(), dynamoDBOperations, pageQuery);
     }
 
+    @NonNull
     @Override
-    public Query<T> doCreateQuery(Object[] values) {
+    public Query<T> doCreateQuery(@NonNull Object[] values) {
         ParametersParameterAccessor accessor = new ParametersParameterAccessor(parameters, values);
         DynamoDBQueryCreator<T, ID> queryCreator = createQueryCreator(accessor);
         return queryCreator.createQuery();
 
     }
 
+    @NonNull
     @Override
-    public Query<Long> doCreateCountQuery(Object[] values, boolean pageQuery) {
+    public Query<Long> doCreateCountQuery(@NonNull Object[] values, boolean pageQuery) {
         ParametersParameterAccessor accessor = new ParametersParameterAccessor(parameters, values);
         DynamoDBCountQueryCreator<T, ID> queryCreator = createCountQueryCreator(accessor, pageQuery);
         return queryCreator.createQuery();
@@ -84,6 +92,7 @@ public class PartTreeDynamoDBQuery<T, ID> extends AbstractDynamoDBQuery<T, ID> i
         return tree.isDelete();
     }
 
+    @Nullable
     @Override
     protected Integer getResultsRestrictionIfApplicable() {
 

@@ -15,6 +15,8 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
@@ -32,12 +34,15 @@ import java.util.Set;
 public class DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl<T, ID> extends DynamoDBEntityMetadataSupport<T, ID>
         implements DynamoDBHashAndRangeKeyExtractingEntityMetadata<T, ID> {
 
+    @NonNull
     private final DynamoDBHashAndRangeKeyMethodExtractor<T> hashAndRangeKeyMethodExtractor;
 
+    @Nullable
     private Method hashKeySetterMethod;
+    @Nullable
     private Field hashKeyField;
 
-    public DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl(final Class<T> domainType) {
+    public DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl(@NonNull final Class<T> domainType) {
         super(domainType);
         this.hashAndRangeKeyMethodExtractor = new DynamoDBHashAndRangeKeyMethodExtractorImpl<>(getJavaType());
         ReflectionUtils.doWithMethods(domainType, method -> {
@@ -63,6 +68,7 @@ public class DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl<T, ID> extends 
 
     }
 
+    @NonNull
     @Override
     public <H> HashAndRangeKeyExtractor<ID, H> getHashAndRangeKeyExtractor(Class<ID> idClass) {
         return new CompositeIdHashAndRangeKeyExtractor<>(idClass);
@@ -73,6 +79,7 @@ public class DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl<T, ID> extends 
         return getPropertyNameForAccessorMethod(hashAndRangeKeyMethodExtractor.getRangeKeyMethod());
     }
 
+    @NonNull
     @Override
     public Set<String> getIndexRangeKeyPropertyNames() {
         final Set<String> propertyNames = new HashSet<>();
@@ -95,6 +102,7 @@ public class DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl<T, ID> extends 
         return propertyNames;
     }
 
+    @NonNull
     public T getHashKeyPropotypeEntityForHashKey(Object hashKey) {
 
         try {

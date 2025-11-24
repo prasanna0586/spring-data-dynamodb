@@ -15,6 +15,8 @@
  */
 package org.socialsignin.spring.data.dynamodb.marshaller;
 
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
 import software.amazon.awssdk.enhanced.dynamodb.AttributeValueType;
 import software.amazon.awssdk.enhanced.dynamodb.EnhancedType;
@@ -36,7 +38,7 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 public class BooleanNumberAttributeConverter implements AttributeConverter<Boolean> {
 
     @Override
-    public AttributeValue transformFrom(Boolean input) {
+    public AttributeValue transformFrom(@Nullable Boolean input) {
         if (input == null) {
             return AttributeValue.builder().nul(true).build();
         }
@@ -44,8 +46,9 @@ public class BooleanNumberAttributeConverter implements AttributeConverter<Boole
         return AttributeValue.builder().n(input ? "1" : "0").build();
     }
 
+    @Nullable
     @Override
-    public Boolean transformTo(AttributeValue input) {
+    public Boolean transformTo(@Nullable AttributeValue input) {
         if (input == null || Boolean.TRUE.equals(input.nul())) {
             return null;
         }
@@ -68,11 +71,13 @@ public class BooleanNumberAttributeConverter implements AttributeConverter<Boole
         return false;
     }
 
+    @NonNull
     @Override
     public EnhancedType<Boolean> type() {
         return EnhancedType.of(Boolean.class);
     }
 
+    @NonNull
     @Override
     public AttributeValueType attributeValueType() {
         return AttributeValueType.N;

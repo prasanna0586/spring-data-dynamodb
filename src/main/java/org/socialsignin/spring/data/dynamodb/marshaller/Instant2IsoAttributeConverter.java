@@ -15,6 +15,8 @@
  */
 package org.socialsignin.spring.data.dynamodb.marshaller;
 
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
 import software.amazon.awssdk.enhanced.dynamodb.AttributeValueType;
 import software.amazon.awssdk.enhanced.dynamodb.EnhancedType;
@@ -31,7 +33,7 @@ public class Instant2IsoAttributeConverter implements AttributeConverter<Instant
     private final Instant2IsoDynamoDBMarshaller marshaller = new Instant2IsoDynamoDBMarshaller();
 
     @Override
-    public AttributeValue transformFrom(Instant input) {
+    public AttributeValue transformFrom(@Nullable Instant input) {
         if (input == null) {
             return AttributeValue.builder().nul(true).build();
         }
@@ -39,19 +41,22 @@ public class Instant2IsoAttributeConverter implements AttributeConverter<Instant
         return AttributeValue.builder().s(marshalled).build();
     }
 
+    @Nullable
     @Override
-    public Instant transformTo(AttributeValue input) {
+    public Instant transformTo(@Nullable AttributeValue input) {
         if (input == null || Boolean.TRUE.equals(input.nul())) {
             return null;
         }
         return marshaller.unmarshall(input.s());
     }
 
+    @NonNull
     @Override
     public EnhancedType<Instant> type() {
         return EnhancedType.of(Instant.class);
     }
 
+    @NonNull
     @Override
     public AttributeValueType attributeValueType() {
         return AttributeValueType.S;

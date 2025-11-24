@@ -18,6 +18,7 @@ package org.socialsignin.spring.data.dynamodb.mapping;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.NonNull;
 
 import java.util.Comparator;
 
@@ -27,8 +28,8 @@ import java.util.Comparator;
  */
 public class DynamoDBPersistentEntityImpl<T> extends BasicPersistentEntity<T, DynamoDBPersistentProperty>
         implements DynamoDBPersistentEntity<T> {
-    public DynamoDBPersistentEntityImpl(TypeInformation<T> information,
-            Comparator<DynamoDBPersistentProperty> comparator) {
+    public DynamoDBPersistentEntityImpl(@NonNull TypeInformation<T> information,
+                                        Comparator<DynamoDBPersistentProperty> comparator) {
         super(information, comparator);
     }
 
@@ -41,7 +42,7 @@ public class DynamoDBPersistentEntityImpl<T> extends BasicPersistentEntity<T, Dy
      * @return the given id property or {@literal null} if the given property is not an id property.
      */
     protected DynamoDBPersistentProperty returnPropertyIfBetterIdPropertyCandidateOrNull(
-            DynamoDBPersistentProperty property) {
+            @NonNull DynamoDBPersistentProperty property) {
 
         if (!property.isIdProperty()) {
             return null;

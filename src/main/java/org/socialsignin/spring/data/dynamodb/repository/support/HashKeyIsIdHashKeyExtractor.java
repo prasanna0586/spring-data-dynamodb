@@ -15,6 +15,7 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
+import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 
 /**
@@ -28,8 +29,9 @@ public class HashKeyIsIdHashKeyExtractor<ID> implements HashKeyExtractor<ID, ID>
         this.idAndHashKeyType = idAndHashKeyType;
     }
 
+    @NonNull
     @Override
-    public ID getHashKey(ID id) {
+    public ID getHashKey(@NonNull ID id) {
         Assert.isAssignable(idAndHashKeyType, id.getClass(),
                 "Expected ID type to be the same as the return type of the hash key method ( " + idAndHashKeyType
                         + " ) : ");

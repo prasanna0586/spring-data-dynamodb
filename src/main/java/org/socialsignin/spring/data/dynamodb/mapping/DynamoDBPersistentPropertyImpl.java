@@ -22,6 +22,7 @@ import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.lang.NonNull;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbIgnore;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 
@@ -38,7 +39,9 @@ import java.util.Set;
 class DynamoDBPersistentPropertyImpl extends AnnotationBasedPersistentProperty<DynamoDBPersistentProperty>
         implements DynamoDBPersistentProperty {
 
+    @NonNull
     private static final Collection<Class<? extends Annotation>> ASSOCIATION_ANNOTATIONS;
+    @NonNull
     private static final Collection<Class<? extends Annotation>> ID_ANNOTATIONS;
 
     static {
@@ -65,8 +68,8 @@ class DynamoDBPersistentPropertyImpl extends AnnotationBasedPersistentProperty<D
      *            must not be {@literal null}.
      */
 
-    public DynamoDBPersistentPropertyImpl(Property property, DynamoDBPersistentEntityImpl<?> owner,
-            SimpleTypeHolder simpleTypeHolder) {
+    public DynamoDBPersistentPropertyImpl(@NonNull Property property, @NonNull DynamoDBPersistentEntityImpl<?> owner,
+                                          @NonNull SimpleTypeHolder simpleTypeHolder) {
         super(property, owner, simpleTypeHolder);
     }
 
@@ -147,6 +150,7 @@ class DynamoDBPersistentPropertyImpl extends AnnotationBasedPersistentProperty<D
      * (non-Javadoc)
      * @see org.springframework.data.mapping.model.AbstractPersistentProperty# createAssociation()
      */
+    @NonNull
     @Override
     protected Association<DynamoDBPersistentProperty> createAssociation() {
         return new Association<>(this, null);

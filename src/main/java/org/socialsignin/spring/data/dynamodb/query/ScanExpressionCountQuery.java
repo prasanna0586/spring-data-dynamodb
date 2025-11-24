@@ -16,6 +16,7 @@
 package org.socialsignin.spring.data.dynamodb.query;
 
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
+import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 
@@ -35,6 +36,7 @@ public class ScanExpressionCountQuery<T> extends AbstractSingleEntityQuery<Long>
         this.pageQuery = pageQuery;
     }
 
+    @NonNull
     @Override
     public Long getSingleResult() {
         assertScanCountEnabled(isScanCountEnabled());

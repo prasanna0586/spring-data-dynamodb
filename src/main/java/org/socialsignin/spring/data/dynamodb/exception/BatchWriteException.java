@@ -16,6 +16,8 @@
 package org.socialsignin.spring.data.dynamodb.exception;
 
 import org.springframework.dao.DataAccessException;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 
 import java.util.Collections;
 import java.util.List;
@@ -36,6 +38,7 @@ import java.util.stream.Collectors;
 @SuppressWarnings("serial")
 public class BatchWriteException extends DataAccessException {
 
+    @NonNull
     private final List<Object> unprocessedEntities;
     private final int retriesAttempted;
 
@@ -47,7 +50,7 @@ public class BatchWriteException extends DataAccessException {
      * @param retriesAttempted Number of retry attempts that were made
      * @param cause Original exception if one was thrown, or null if items were just unprocessed
      */
-    public BatchWriteException(String msg, List<Object> unprocessedEntities, int retriesAttempted, Throwable cause) {
+    public BatchWriteException(String msg, @Nullable List<Object> unprocessedEntities, int retriesAttempted, Throwable cause) {
         super(msg, cause);
         this.unprocessedEntities = unprocessedEntities != null
             ? Collections.unmodifiableList(unprocessedEntities)
@@ -73,7 +76,8 @@ public class BatchWriteException extends DataAccessException {
      * @param <T> The entity type
      * @return List of unprocessed entities of the specified type
      */
-    public <T> List<T> getUnprocessedEntities(Class<T> entityClass) {
+    @NonNull
+    public <T> List<T> getUnprocessedEntities(@NonNull Class<T> entityClass) {
         return unprocessedEntities.stream()
                 .filter(entityClass::isInstance)
                 .map(entityClass::cast)
@@ -125,6 +129,7 @@ public class BatchWriteException extends DataAccessException {
         return unprocessedEntities.size();
     }
 
+    @NonNull
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(super.toString());

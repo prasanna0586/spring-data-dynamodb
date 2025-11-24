@@ -28,6 +28,8 @@ import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.util.Version;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import software.amazon.awssdk.core.SdkClient;
 
 import java.util.Optional;
@@ -68,7 +70,7 @@ public class DynamoDBRepositoryFactory extends RepositoryFactorySupport {
         }
     }
 
-    protected static boolean isCompatible(String spec, String impl) {
+    protected static boolean isCompatible(@Nullable String spec, @Nullable String impl) {
         if (spec == null && impl == null) {
             return false;
         } else if (spec == null) {
@@ -94,6 +96,7 @@ public class DynamoDBRepositoryFactory extends RepositoryFactorySupport {
         this.dynamoDBOperations = dynamoDBOperations;
     }
 
+    @NonNull
     @Override
     public <T, ID> DynamoDBEntityInformation<T, ID> getEntityInformation(final Class<T> domainClass) {
 
@@ -102,6 +105,7 @@ public class DynamoDBRepositoryFactory extends RepositoryFactorySupport {
         return metadata.getEntityInformation();
     }
 
+    @NonNull
     @Override
     protected Optional<QueryLookupStrategy> getQueryLookupStrategy(Key key,
             ValueExpressionDelegate valueExpressionDelegate) {
@@ -122,28 +126,32 @@ public class DynamoDBRepositoryFactory extends RepositoryFactorySupport {
      *
      * @return the created {@link DynamoDBCrudRepository} instance
      */
+    @NonNull
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    protected <T, ID> DynamoDBCrudRepository<?, ?> getDynamoDBRepository(RepositoryMetadata metadata) {
+    protected <T, ID> DynamoDBCrudRepository<?, ?> getDynamoDBRepository(@NonNull RepositoryMetadata metadata) {
         return new SimpleDynamoDBPagingAndSortingRepository(getEntityInformation(metadata.getDomainType()),
                 dynamoDBOperations, getEnableScanPermissions(metadata));
     }
 
-    protected EnableScanPermissions getEnableScanPermissions(RepositoryMetadata metadata) {
+    @NonNull
+    protected EnableScanPermissions getEnableScanPermissions(@NonNull RepositoryMetadata metadata) {
         return new EnableScanAnnotationPermissions(metadata.getRepositoryInterface());
     }
 
+    @NonNull
     @Override
-    protected Class<?> getRepositoryBaseClass(RepositoryMetadata metadata) {
+    protected Class<?> getRepositoryBaseClass(@NonNull RepositoryMetadata metadata) {
         if (isQueryDslRepository(metadata.getRepositoryInterface())) {
             throw new IllegalArgumentException("QueryDsl Support has not been implemented yet.");
         }
         return SimpleDynamoDBPagingAndSortingRepository.class;
     }
 
-    private static boolean isQueryDslRepository(Class<?> repositoryInterface) {
+    private static boolean isQueryDslRepository(@NonNull Class<?> repositoryInterface) {
         return QUERY_DSL_PRESENT && QuerydslPredicateExecutor.class.isAssignableFrom(repositoryInterface);
     }
 
+    @NonNull
     @Override
     protected Object getTargetRepository(RepositoryInformation metadata) {
         return getDynamoDBRepository(metadata);

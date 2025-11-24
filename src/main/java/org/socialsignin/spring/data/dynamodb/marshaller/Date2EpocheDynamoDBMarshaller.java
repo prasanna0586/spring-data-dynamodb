@@ -15,6 +15,8 @@
  */
 package org.socialsignin.spring.data.dynamodb.marshaller;
 
+import org.springframework.lang.NonNull;
+
 import java.io.Serial;
 import java.text.DateFormat;
 import java.text.FieldPosition;
@@ -36,15 +38,17 @@ public class Date2EpocheDynamoDBMarshaller extends DateDynamoDBMarshaller {
         @Serial
         private static final long serialVersionUID = 2969564523817434535L;
 
+        @NonNull
         @Override
-        public StringBuffer format(Date date, StringBuffer toAppendTo, FieldPosition fieldPosition) {
+        public StringBuffer format(@NonNull Date date, @NonNull StringBuffer toAppendTo, FieldPosition fieldPosition) {
             long epoche = date.getTime();
             toAppendTo.append(epoche);
             return toAppendTo;
         }
 
+        @NonNull
         @Override
-        public Date parse(String source, ParsePosition pos) {
+        public Date parse(@NonNull String source, @NonNull ParsePosition pos) {
             long epoche = Long.parseLong(source);
             pos.setIndex(source.length());
             return new Date(epoche);
@@ -52,6 +56,7 @@ public class Date2EpocheDynamoDBMarshaller extends DateDynamoDBMarshaller {
 
     };
 
+    @NonNull
     @Override
     public DateFormat getDateFormat() {
         return new EpcoheDateFormat();

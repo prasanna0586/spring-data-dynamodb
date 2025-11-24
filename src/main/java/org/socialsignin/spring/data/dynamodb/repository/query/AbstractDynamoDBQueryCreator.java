@@ -29,6 +29,8 @@ import org.springframework.data.repository.query.parser.AbstractQueryCreator;
 import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.Part.IgnoreCaseType;
 import org.springframework.data.repository.query.parser.PartTree;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -49,15 +51,17 @@ public abstract class AbstractDynamoDBQueryCreator<T, ID, R>
     protected final Optional<String> projection;
     protected final Optional<Integer> limit;
     protected final Optional<String> filterExpression;
+    @Nullable
     protected final ExpressionAttribute[] expressionAttributeNames;
+    @Nullable
     protected final ExpressionAttribute[] expressionAttributeValues;
     protected final Map<String, String> mappedExpressionValues = new HashMap<>();
     protected final QueryConstants.ConsistentReadMode consistentReads;
 
-    public AbstractDynamoDBQueryCreator(PartTree tree, DynamoDBEntityInformation<T, ID> entityMetadata,
-            Optional<String> projection, Optional<Integer> limitResults,
-            QueryConstants.ConsistentReadMode consistentReads, Optional<String> filterExpression,
-            ExpressionAttribute[] names, ExpressionAttribute[] values, DynamoDBOperations dynamoDBOperations) {
+    public AbstractDynamoDBQueryCreator(@NonNull PartTree tree, DynamoDBEntityInformation<T, ID> entityMetadata,
+                                        Optional<String> projection, Optional<Integer> limitResults,
+                                        QueryConstants.ConsistentReadMode consistentReads, Optional<String> filterExpression,
+                                        @Nullable ExpressionAttribute[] names, @Nullable ExpressionAttribute[] values, DynamoDBOperations dynamoDBOperations) {
         super(tree);
         this.entityMetadata = entityMetadata;
         this.projection = projection;
@@ -77,11 +81,11 @@ public abstract class AbstractDynamoDBQueryCreator<T, ID, R>
         this.dynamoDBOperations = dynamoDBOperations;
     }
 
-    public AbstractDynamoDBQueryCreator(PartTree tree, ParameterAccessor parameterAccessor,
-            DynamoDBEntityInformation<T, ID> entityMetadata, Optional<String> projection,
-            Optional<Integer> limitResults, QueryConstants.ConsistentReadMode consistentReads,
-            Optional<String> filterExpression, ExpressionAttribute[] names, ExpressionAttribute[] values,
-            DynamoDBOperations dynamoDBOperations) {
+    public AbstractDynamoDBQueryCreator(@NonNull PartTree tree, @NonNull ParameterAccessor parameterAccessor,
+                                        DynamoDBEntityInformation<T, ID> entityMetadata, Optional<String> projection,
+                                        Optional<Integer> limitResults, QueryConstants.ConsistentReadMode consistentReads,
+                                        Optional<String> filterExpression, @Nullable ExpressionAttribute[] names, @Nullable ExpressionAttribute[] values,
+                                        DynamoDBOperations dynamoDBOperations) {
         super(tree, parameterAccessor);
         this.entityMetadata = entityMetadata;
         this.projection = projection;
@@ -111,6 +115,7 @@ public abstract class AbstractDynamoDBQueryCreator<T, ID, R>
         this.dynamoDBOperations = dynamoDBOperations;
     }
 
+    @NonNull
     @Override
     protected DynamoDBQueryCriteria<T, ID> create(Part part, Iterator<Object> iterator) {
         final TableSchema<T> tableModel = dynamoDBOperations.getTableModel(entityMetadata.getJavaType());
@@ -123,8 +128,8 @@ public abstract class AbstractDynamoDBQueryCreator<T, ID, R>
         return addCriteria(criteria, part, iterator);
     }
 
-    protected DynamoDBQueryCriteria<T, ID> addCriteria(DynamoDBQueryCriteria<T, ID> criteria, Part part,
-            Iterator<Object> iterator) {
+    protected DynamoDBQueryCriteria<T, ID> addCriteria(@NonNull DynamoDBQueryCriteria<T, ID> criteria, @NonNull Part part,
+                                                       @NonNull Iterator<Object> iterator) {
         if (part.shouldIgnoreCase().equals(IgnoreCaseType.ALWAYS))
             throw new UnsupportedOperationException("Case insensitivity not supported");
 
@@ -188,9 +193,9 @@ public abstract class AbstractDynamoDBQueryCreator<T, ID, R>
 
     }
 
-    private DynamoDBQueryCriteria<T, ID> getItemsProperty(DynamoDBQueryCriteria<T, ID> criteria,
-            ComparisonOperator comparisonOperator, Iterator<Object> iterator, Class<?> leafNodePropertyType,
-            String leafNodePropertyName) {
+    private DynamoDBQueryCriteria<T, ID> getItemsProperty(@NonNull DynamoDBQueryCriteria<T, ID> criteria,
+                                                          ComparisonOperator comparisonOperator, @NonNull Iterator<Object> iterator, Class<?> leafNodePropertyType,
+                                                          String leafNodePropertyName) {
         Object in = iterator.next();
         Assert.notNull(in, "Creating conditions on null parameters not supported: please specify a value for '"
                 + leafNodePropertyName + "'");
@@ -228,8 +233,8 @@ public abstract class AbstractDynamoDBQueryCreator<T, ID, R>
         }
     }
 
-    private DynamoDBQueryCriteria<T, ID> getInProperty(DynamoDBQueryCriteria<T, ID> criteria, Iterator<Object> iterator,
-            Class<?> leafNodePropertyType, String leafNodePropertyName) {
+    private DynamoDBQueryCriteria<T, ID> getInProperty(@NonNull DynamoDBQueryCriteria<T, ID> criteria, @NonNull Iterator<Object> iterator,
+                                                       Class<?> leafNodePropertyType, String leafNodePropertyName) {
         Object in = iterator.next();
         Assert.notNull(in, "Creating conditions on null parameters not supported: please specify a value for '"
                 + leafNodePropertyName + "'");
@@ -240,6 +245,7 @@ public abstract class AbstractDynamoDBQueryCreator<T, ID, R>
         return criteria.withPropertyIn(leafNodePropertyName, iterable, leafNodePropertyType);
     }
 
+    @NonNull
     @Override
     protected DynamoDBQueryCriteria<T, ID> and(Part part, DynamoDBQueryCriteria<T, ID> base,
             Iterator<Object> iterator) {
@@ -247,6 +253,7 @@ public abstract class AbstractDynamoDBQueryCreator<T, ID, R>
 
     }
 
+    @NonNull
     @Override
     protected DynamoDBQueryCriteria<T, ID> or(DynamoDBQueryCriteria<T, ID> base,
             DynamoDBQueryCriteria<T, ID> criteria) {

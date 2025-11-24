@@ -15,6 +15,8 @@
  */
 package org.socialsignin.spring.data.dynamodb.query;
 
+import org.springframework.lang.Nullable;
+
 import java.util.List;
 
 public interface Query<T> {
@@ -27,6 +29,7 @@ public interface Query<T> {
      * @throws IllegalStateException
      *             if called for a Java Persistence query language UPDATE or DELETE statement
      */
+    @Nullable
     List<T> getResultList();
 
     /**
@@ -34,6 +37,7 @@ public interface Query<T> {
      *
      * @return the result
      */
+    @Nullable
     T getSingleResult();
 
     void setScanEnabled(boolean scanEnabled);

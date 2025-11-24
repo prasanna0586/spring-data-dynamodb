@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
+import org.springframework.lang.NonNull;
 
 import java.io.Serializable;
 
@@ -41,10 +42,11 @@ public class DynamoDBRepositoryFactoryBean<T extends Repository<S, ID>, S, ID ex
     private Entity2DynamoDBTableSynchronizer<S, ID> tableSynchronizer;
     private DynamoDBMappingContextProcessor<S, ID> dynamoDBMappingContextProcessor;
 
-    public DynamoDBRepositoryFactoryBean(Class<? extends T> repositoryInterface) {
+    public DynamoDBRepositoryFactoryBean(@NonNull Class<? extends T> repositoryInterface) {
         super(repositoryInterface);
     }
 
+    @NonNull
     @Override
     protected RepositoryFactorySupport createRepositoryFactory() {
         assert dynamoDBOperations != null;
@@ -73,7 +75,7 @@ public class DynamoDBRepositoryFactoryBean<T extends Repository<S, ID>, S, ID ex
     }
 
     @Autowired
-    public void setDynamoDBMappingContext(DynamoDBMappingContext dynamoDBMappingContext) {
+    public void setDynamoDBMappingContext(@NonNull DynamoDBMappingContext dynamoDBMappingContext) {
         setMappingContext(dynamoDBMappingContext);
     }
 }

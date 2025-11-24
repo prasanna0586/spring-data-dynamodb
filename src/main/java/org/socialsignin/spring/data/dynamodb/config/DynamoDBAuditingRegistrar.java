@@ -29,6 +29,7 @@ import org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarS
 import org.springframework.data.auditing.config.AuditingConfiguration;
 import org.springframework.data.config.ParsingUtils;
 import org.springframework.data.repository.config.PersistentEntitiesFactoryBean;
+import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 
 import java.lang.annotation.Annotation;
@@ -49,6 +50,7 @@ class DynamoDBAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
      * (non-Javadoc)
      * @see org.springframework.data.auditing.config. AuditingBeanDefinitionRegistrarSupport#getAnnotation()
      */
+    @NonNull
     @Override
     protected Class<? extends Annotation> getAnnotation() {
         return EnableDynamoDBAuditing.class;
@@ -59,6 +61,7 @@ class DynamoDBAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
      * @see org.springframework.data.auditing.config.
      * AuditingBeanDefinitionRegistrarSupport#getAuditingHandlerBeanName()
      */
+    @NonNull
     @Override
     protected String getAuditingHandlerBeanName() {
         return "dynamoDBAuditingHandler";
@@ -86,6 +89,7 @@ class DynamoDBAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
      * AuditingBeanDefinitionRegistrarSupport#getAuditHandlerBeanDefinitionBuilder(
      * org.springframework.data.auditing.config.AuditingConfiguration)
      */
+    @NonNull
     @Override
     protected BeanDefinitionBuilder getAuditHandlerBeanDefinitionBuilder(AuditingConfiguration configuration) {
         LOGGER.trace("getAuditHandlerBeanDefinitionBuilder");

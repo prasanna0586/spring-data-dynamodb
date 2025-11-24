@@ -15,6 +15,8 @@
  */
 package org.socialsignin.spring.data.dynamodb.marshaller;
 
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 import java.time.Instant;
@@ -34,6 +36,7 @@ public class Instant2IsoDynamoDBMarshaller {
 
     private static final String PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
+    @NonNull
     private DateTimeFormatter getDateFormat() {
         return DateTimeFormatter.ofPattern(PATTERN).withZone(ZoneOffset.UTC);
     }
@@ -54,7 +57,8 @@ public class Instant2IsoDynamoDBMarshaller {
      * @param getterReturnResult the Instant to marshall
      * @return ISO-8601 String representation
      */
-    public String marshall(Instant getterReturnResult) {
+    @Nullable
+    public String marshall(@Nullable Instant getterReturnResult) {
         if (getterReturnResult == null) {
             return null;
         } else {
@@ -68,7 +72,7 @@ public class Instant2IsoDynamoDBMarshaller {
      * @param object the String to convert
      * @return Instant object
      */
-    public Instant unconvert(String object) {
+    public Instant unconvert(@NonNull String object) {
         return unmarshall(object);
     }
 
@@ -78,7 +82,8 @@ public class Instant2IsoDynamoDBMarshaller {
      * @param obj   the String to unmarshall
      * @return Instant object
      */
-    public Instant unmarshall(String obj) {
+    @Nullable
+    public Instant unmarshall(@NonNull String obj) {
         if (!StringUtils.hasLength(obj)) {
             return null;
         } else {

@@ -27,6 +27,8 @@ import org.springframework.context.event.ApplicationContextEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.ContextStoppedEvent;
 import org.springframework.data.repository.core.support.RepositoryProxyPostProcessor;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ReflectionUtils;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
@@ -60,6 +62,7 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
 
     private final DynamoDbClient amazonDynamoDB;
 
+    @NonNull
     private final Entity2DDL mode;
     private final ProjectionType gsiProjectionType;
     private final ProjectionType lsiProjectionType;
@@ -69,9 +72,9 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
     private final Collection<DynamoDBEntityInformation<T, ID>> registeredEntities = new ArrayList<>();
 
     public Entity2DynamoDBTableSynchronizer(DynamoDbClient amazonDynamoDB,
-            DynamoDbEnhancedClient enhancedClient,
-            DynamoDBMappingContext mappingContext,
-            Entity2DDL mode) {
+                                            DynamoDbEnhancedClient enhancedClient,
+                                            DynamoDBMappingContext mappingContext,
+                                            @NonNull Entity2DDL mode) {
         this(amazonDynamoDB, enhancedClient, mappingContext, mode.getConfigurationValue(),
                 ProjectionType.ALL.name(), ProjectionType.ALL.name(), 10L, 10L);
     }
@@ -99,7 +102,7 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
     }
 
     @Override
-    public void onApplicationEvent(ApplicationContextEvent event) {
+    public void onApplicationEvent(@NonNull ApplicationContextEvent event) {
         LOGGER.info("Checking repository classes with DynamoDB tables {} for {}",
                 registeredEntities.stream().map(DynamoDBHashKeyExtractingEntityMetadata::getDynamoDBTableName).collect(Collectors.joining(", ")),
                 event.getClass().getSimpleName());
@@ -115,7 +118,7 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
         }
     }
 
-    protected void synchronize(DynamoDBEntityInformation<T, ID> entityInformation, ApplicationContextEvent event)
+    protected void synchronize(@NonNull DynamoDBEntityInformation<T, ID> entityInformation, ApplicationContextEvent event)
             throws InterruptedException {
 
         if (event instanceof ContextRefreshedEvent) {
@@ -172,7 +175,7 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
      *
      * @param entityInformation Entity metadata
      */
-    private void performCreate(DynamoDBEntityInformation<T, ID> entityInformation) {
+    private void performCreate(@NonNull DynamoDBEntityInformation<T, ID> entityInformation) {
         Class<T> domainType = entityInformation.getJavaType();
         String tableName = entityInformation.getDynamoDBTableName();
 
@@ -238,7 +241,7 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
         }
     }
 
-    private void performDrop(DynamoDBEntityInformation<T, ID> entityInformation) {
+    private void performDrop(@NonNull DynamoDBEntityInformation<T, ID> entityInformation) {
         Class<T> domainType = entityInformation.getJavaType();
         String tableName = entityInformation.getDynamoDBTableName();
 
@@ -259,7 +262,7 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
      * @param entityInformation The entity to check for it's table
      * @throws IllegalStateException is thrown if the existing table doesn't match the entity's annotation
      */
-    private void performValidate(DynamoDBEntityInformation<T, ID> entityInformation)
+    private void performValidate(@NonNull DynamoDBEntityInformation<T, ID> entityInformation)
             throws IllegalStateException {
         Class<T> domainType = entityInformation.getJavaType();
         String tableName = entityInformation.getDynamoDBTableName();
@@ -288,7 +291,7 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
         LOGGER.info("Validated table {} for entity {}", expected.tableName(), domainType);
     }
 
-    private boolean compareGSI(List<GlobalSecondaryIndex> expected, List<GlobalSecondaryIndexDescription> actual) {
+    private boolean compareGSI(@NonNull List<GlobalSecondaryIndex> expected, @NonNull List<GlobalSecondaryIndexDescription> actual) {
         if (expected.size() != actual.size()) {
             return false;
         }
@@ -315,7 +318,7 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
      * Generates a CreateTableRequest by introspecting the entity class annotations.
      * This replicates the functionality of SDK v1's DynamoDBMapper.generateCreateTableRequest().
      */
-    private CreateTableRequest generateCreateTableRequest(Class<T> domainType, String tableName) {
+    private CreateTableRequest generateCreateTableRequest(@NonNull Class<T> domainType, String tableName) {
 
         // Collect all attribute definitions and key schema
         List<AttributeDefinition> attributeDefinitions = new ArrayList<>();
@@ -412,8 +415,8 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
         return builder.build();
     }
 
-    private void findPartitionKey(Class<T> domainType, List<KeySchemaElement> keySchema,
-                                   Map<String, ScalarAttributeType> attributeTypes) {
+    private void findPartitionKey(@NonNull Class<T> domainType, @NonNull List<KeySchemaElement> keySchema,
+                                  @NonNull Map<String, ScalarAttributeType> attributeTypes) {
         Set<String> partitionKeys = new HashSet<>();
 
         ReflectionUtils.doWithMethods(domainType, method -> {
@@ -459,8 +462,8 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
         }
     }
 
-    private void findSortKey(Class<T> domainType, List<KeySchemaElement> keySchema,
-                             Map<String, ScalarAttributeType> attributeTypes) {
+    private void findSortKey(@NonNull Class<T> domainType, @NonNull List<KeySchemaElement> keySchema,
+                             @NonNull Map<String, ScalarAttributeType> attributeTypes) {
         Set<String> sortKeys = new HashSet<>();
 
         ReflectionUtils.doWithMethods(domainType, method -> {
@@ -498,8 +501,9 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
         }
     }
 
-    private List<GlobalSecondaryIndex> findGlobalSecondaryIndexes(Class<T> domainType,
-                                                                    Map<String, ScalarAttributeType> attributeTypes) {
+    @NonNull
+    private List<GlobalSecondaryIndex> findGlobalSecondaryIndexes(@NonNull Class<T> domainType,
+                                                                  @NonNull Map<String, ScalarAttributeType> attributeTypes) {
         Map<String, GlobalSecondaryIndex.Builder> gsiBuilders = new HashMap<>();
 
         // Track partition and sort keys per index for validation
@@ -736,8 +740,9 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
                 .collect(Collectors.toList());
     }
 
-    private List<LocalSecondaryIndex> findLocalSecondaryIndexes(Class<T> domainType,
-                                                                  Map<String, ScalarAttributeType> attributeTypes) {
+    @NonNull
+    private List<LocalSecondaryIndex> findLocalSecondaryIndexes(@NonNull Class<T> domainType,
+                                                                @NonNull Map<String, ScalarAttributeType> attributeTypes) {
         Map<String, LocalSecondaryIndex.Builder> lsiBuilders = new HashMap<>();
 
         // Track sort keys per LSI for validation
@@ -904,7 +909,7 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
     /**
      * Find the table's partition key attribute name.
      */
-    private String findTablePartitionKeyAttributeName(Class<T> domainType) {
+    private String findTablePartitionKeyAttributeName(@NonNull Class<T> domainType) {
         String[] result = new String[1];
 
         ReflectionUtils.doWithMethods(domainType, method -> {
@@ -927,7 +932,7 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
     /**
      * Find the table's sort key attribute name.
      */
-    private String findTableSortKeyAttributeName(Class<T> domainType) {
+    private String findTableSortKeyAttributeName(@NonNull Class<T> domainType) {
         String[] result = new String[1];
 
         ReflectionUtils.doWithMethods(domainType, method -> {
@@ -950,7 +955,8 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
     /**
      * Find all GSI index names to distinguish them from LSIs.
      */
-    private Set<String> findGsiIndexNames(Class<T> domainType) {
+    @NonNull
+    private Set<String> findGsiIndexNames(@NonNull Class<T> domainType) {
         Set<String> gsiNames = new HashSet<>();
 
         ReflectionUtils.doWithMethods(domainType, method -> {
@@ -972,7 +978,8 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
         return gsiNames;
     }
 
-    private String getAttributeName(Method method) {
+    @NonNull
+    private String getAttributeName(@NonNull Method method) {
         DynamoDbAttribute attr = method.getAnnotation(DynamoDbAttribute.class);
         if (attr != null && !attr.value().isEmpty()) {
             return attr.value();
@@ -988,7 +995,8 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
         return methodName;
     }
 
-    private String getAttributeName(Field field) {
+    @NonNull
+    private String getAttributeName(@NonNull Field field) {
         DynamoDbAttribute attr = field.getAnnotation(DynamoDbAttribute.class);
         if (attr != null && !attr.value().isEmpty()) {
             return attr.value();
@@ -996,7 +1004,8 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
         return field.getName();
     }
 
-    private ScalarAttributeType getScalarType(Class<?> type) {
+    @NonNull
+    private ScalarAttributeType getScalarType(@NonNull Class<?> type) {
         if (String.class.equals(type)) {
             return ScalarAttributeType.S;
         } else if (Number.class.isAssignableFrom(type) || type.isPrimitive()) {
@@ -1013,8 +1022,8 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
      * Ensures that if the same attribute name is defined multiple times (e.g., on method and field),
      * they have the same type.
      */
-    private void addAttributeType(Class<T> domainType, String attributeName, ScalarAttributeType type,
-                                   Map<String, ScalarAttributeType> attributeTypes, String location) {
+    private void addAttributeType(@NonNull Class<T> domainType, String attributeName, ScalarAttributeType type,
+                                  @NonNull Map<String, ScalarAttributeType> attributeTypes, String location) {
         if (attributeTypes.containsKey(attributeName)) {
             ScalarAttributeType existingType = attributeTypes.get(attributeName);
             if (existingType != type) {
@@ -1032,7 +1041,7 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
      * Sorts KeySchemaElement list to ensure HASH key comes before RANGE key.
      * AWS SDK v2 requires this specific order in CreateTableRequest.
      */
-    private void sortKeySchemaElements(List<KeySchemaElement> keySchema) {
+    private void sortKeySchemaElements(@NonNull List<KeySchemaElement> keySchema) {
         keySchema.sort((k1, k2) -> {
             if (k1.keyType() == k2.keyType()) return 0;
             return k1.keyType() == KeyType.HASH ? -1 : 1;
@@ -1043,8 +1052,8 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
      * Warns if an LSI sort key is the same as the table's sort key (redundant but valid).
      * EC-3.3: Validate LSI configuration for redundancy.
      */
-    private void warnIfLsiSortKeyMatchesTableSortKey(Class<T> domainType, String indexName,
-                                                      String attributeName, String tableSortKeyAttributeName) {
+    private void warnIfLsiSortKeyMatchesTableSortKey(@NonNull Class<T> domainType, String indexName,
+                                                     String attributeName, @Nullable String tableSortKeyAttributeName) {
         if (tableSortKeyAttributeName != null && tableSortKeyAttributeName.equals(attributeName)) {
             LOGGER.warn("LSI configuration for entity {}: Index '{}' uses '{}' as sort key, " +
                 "which is the same as the table's sort key. This LSI is redundant and provides no benefit.",

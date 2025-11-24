@@ -15,6 +15,8 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.util;
 
+import org.springframework.lang.NonNull;
+
 /**
  * Configuration key is {@code spring.data.dynamodb.entity2ddl.auto} Inspired by Hibernate's hbm2ddl
  *
@@ -67,6 +69,7 @@ public enum Entity2DDL {
      * @throws IllegalArgumentException
      *             If the specified value does not map to one of the known values in this enum.
      */
+    @NonNull
     public static Entity2DDL fromValue(String value) {
         for (Entity2DDL resolvedConfig : Entity2DDL.values()) {
             if (resolvedConfig.configurationValue.equals(value)) {

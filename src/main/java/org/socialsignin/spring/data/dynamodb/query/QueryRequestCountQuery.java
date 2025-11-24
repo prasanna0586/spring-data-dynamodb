@@ -16,6 +16,7 @@
 package org.socialsignin.spring.data.dynamodb.query;
 
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
+import org.springframework.lang.NonNull;
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
 
 public class QueryRequestCountQuery extends AbstractSingleEntityQuery<Long> {
@@ -29,6 +30,7 @@ public class QueryRequestCountQuery extends AbstractSingleEntityQuery<Long> {
         this.dynamoDBOperations = dynamoDBOperations;
     }
 
+    @NonNull
     @Override
     public Long getSingleResult() {
         return (long) dynamoDBOperations.count(clazz, queryRequest);

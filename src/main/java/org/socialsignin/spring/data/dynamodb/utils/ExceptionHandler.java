@@ -18,6 +18,8 @@ package org.socialsignin.spring.data.dynamodb.utils;
 import org.socialsignin.spring.data.dynamodb.exception.BatchDeleteException;
 import org.socialsignin.spring.data.dynamodb.exception.BatchWriteException;
 import org.springframework.dao.DataAccessException;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteResult;
 
 import java.util.List;
@@ -50,11 +52,12 @@ public interface ExceptionHandler {
      * @param <T> Exception type extending DataAccessException
      * @return Exception instance with full failure context
      */
+    @NonNull
     default <T extends DataAccessException> T repackageToException(
-            List<Object> unprocessedEntities,
+            @NonNull List<Object> unprocessedEntities,
             int retriesAttempted,
-            Throwable cause,
-            Class<T> targetType) {
+            @Nullable Throwable cause,
+            @NonNull Class<T> targetType) {
 
         // SDK v2: After retry exhaustion, expose unprocessed items for consumer handling
         // Unprocessed items typically indicate persistent throttling, capacity limits, or transaction conflicts
@@ -102,10 +105,11 @@ public interface ExceptionHandler {
      *
      * @deprecated Use {@link #repackageToException(List, int, Throwable, Class)} instead
      */
+    @NonNull
     @Deprecated
     default <T extends DataAccessException> T repackageToException(
-            List<BatchWriteResult> failedBatches,
-            Class<T> targetType) {
+            @NonNull List<BatchWriteResult> failedBatches,
+            @NonNull Class<T> targetType) {
 
         // Temporary implementation until DynamoDBTemplate is migrated
         // Cannot extract actual unprocessed entities without table references

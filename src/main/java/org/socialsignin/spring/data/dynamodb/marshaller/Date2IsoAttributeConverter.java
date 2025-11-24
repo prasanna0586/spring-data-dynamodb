@@ -15,6 +15,8 @@
  */
 package org.socialsignin.spring.data.dynamodb.marshaller;
 
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
 import software.amazon.awssdk.enhanced.dynamodb.AttributeValueType;
 import software.amazon.awssdk.enhanced.dynamodb.EnhancedType;
@@ -31,7 +33,7 @@ public class Date2IsoAttributeConverter implements AttributeConverter<Date> {
     private final Date2IsoDynamoDBMarshaller marshaller = new Date2IsoDynamoDBMarshaller();
 
     @Override
-    public AttributeValue transformFrom(Date input) {
+    public AttributeValue transformFrom(@Nullable Date input) {
         if (input == null) {
             return AttributeValue.builder().nul(true).build();
         }
@@ -39,19 +41,22 @@ public class Date2IsoAttributeConverter implements AttributeConverter<Date> {
         return AttributeValue.builder().s(marshalled).build();
     }
 
+    @Nullable
     @Override
-    public Date transformTo(AttributeValue input) {
+    public Date transformTo(@Nullable AttributeValue input) {
         if (input == null || Boolean.TRUE.equals(input.nul())) {
             return null;
         }
         return marshaller.unmarshall(input.s());
     }
 
+    @NonNull
     @Override
     public EnhancedType<Date> type() {
         return EnhancedType.of(Date.class);
     }
 
+    @NonNull
     @Override
     public AttributeValueType attributeValueType() {
         return AttributeValueType.S;

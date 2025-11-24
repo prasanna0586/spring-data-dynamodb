@@ -18,6 +18,7 @@ package org.socialsignin.spring.data.dynamodb.repository.support;
 import org.socialsignin.spring.data.dynamodb.repository.EnableScan;
 import org.socialsignin.spring.data.dynamodb.repository.EnableScanCount;
 import org.springframework.data.domain.Pageable;
+import org.springframework.lang.NonNull;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Method;
@@ -35,7 +36,7 @@ public class EnableScanAnnotationPermissions implements EnableScanPermissions {
     private boolean countUnpaginatedScanEnabled = false;
     private boolean deleteAllUnpaginatedScanEnabled = false;
 
-    public EnableScanAnnotationPermissions(Class<?> repositoryInterface) {
+    public EnableScanAnnotationPermissions(@NonNull Class<?> repositoryInterface) {
         // Check to see if global EnableScan is declared at interface level
         if (repositoryInterface.isAnnotationPresent(EnableScan.class)) {
             this.findAllUnpaginatedScanEnabled = true;

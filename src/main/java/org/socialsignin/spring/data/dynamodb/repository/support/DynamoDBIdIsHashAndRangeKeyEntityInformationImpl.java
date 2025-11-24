@@ -16,6 +16,7 @@
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.lang.NonNull;
 import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
 
 import java.util.Map;
@@ -37,18 +38,20 @@ public class DynamoDBIdIsHashAndRangeKeyEntityInformationImpl<T, ID>
     private final Optional<String> projection = Optional.empty();
     private final Optional<Integer> limit = Optional.empty();
 
-    public DynamoDBIdIsHashAndRangeKeyEntityInformationImpl(Class<T> domainClass,
-            DynamoDBHashAndRangeKeyExtractingEntityMetadata<T, ID> metadata) {
+    public DynamoDBIdIsHashAndRangeKeyEntityInformationImpl(@NonNull Class<T> domainClass,
+                                                            @NonNull DynamoDBHashAndRangeKeyExtractingEntityMetadata<T, ID> metadata) {
         super(domainClass, Id.class);
         this.metadata = metadata;
         this.hashAndRangeKeyExtractor = metadata.getHashAndRangeKeyExtractor(getIdType());
     }
 
+    @NonNull
     @Override
     public Optional<String> getProjection() {
         return projection;
     }
 
+    @NonNull
     @Override
     public Optional<Integer> getLimit() {
         return limit;

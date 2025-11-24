@@ -51,8 +51,8 @@ public class SimpleDynamoDBCrudRepository<T, ID>
 
     protected DynamoDBOperations dynamoDBOperations;
 
-    public SimpleDynamoDBCrudRepository(DynamoDBEntityInformation<T, ID> entityInformation,
-            DynamoDBOperations dynamoDBOperations, EnableScanPermissions enableScanPermissions) {
+    public SimpleDynamoDBCrudRepository(@NonNull DynamoDBEntityInformation<T, ID> entityInformation,
+                                        DynamoDBOperations dynamoDBOperations, EnableScanPermissions enableScanPermissions) {
         Assert.notNull(entityInformation, "entityInformation must not be null");
         Assert.notNull(dynamoDBOperations, "dynamoDBOperations must not be null");
 
@@ -68,7 +68,7 @@ public class SimpleDynamoDBCrudRepository<T, ID>
      * @param value The value to convert
      * @return The AttributeValue representation
      */
-    private AttributeValue toAttributeValue(Object value) {
+    private AttributeValue toAttributeValue(@NonNull Object value) {
         return switch (value) {
             case null -> AttributeValue.builder().nul(true).build();
             case String s -> AttributeValue.builder().s(s).build();
@@ -80,6 +80,7 @@ public class SimpleDynamoDBCrudRepository<T, ID>
 
     }
 
+    @NonNull
     @Override
     public Optional<T> findById(ID id) {
 
@@ -96,6 +97,7 @@ public class SimpleDynamoDBCrudRepository<T, ID>
         return Optional.ofNullable(result);
     }
 
+    @NonNull
     @Override
     public List<T> findAllById(Iterable<ID> ids) {
 
@@ -123,6 +125,7 @@ public class SimpleDynamoDBCrudRepository<T, ID>
         return dynamoDBOperations.batchLoad(keysMap);
     }
 
+    @NonNull
     @Override
     public <S extends T> S save(S entity) {
         // Return the saved entity from DynamoDBOperations.save() to properly handle
@@ -136,6 +139,7 @@ public class SimpleDynamoDBCrudRepository<T, ID>
      * @throws BatchWriteException
      *             in case of an error during saving
      */
+    @NonNull
     @Override
     public <S extends T> Iterable<S> saveAll(Iterable<S> entities)
             throws BatchWriteException, IllegalArgumentException {
@@ -181,6 +185,7 @@ public class SimpleDynamoDBCrudRepository<T, ID>
                 + "enable scanning for all repository methods by annotating your repository interface with @EnableScan");
     }
 
+    @NonNull
     @Override
     public List<T> findAll() {
 
@@ -219,7 +224,7 @@ public class SimpleDynamoDBCrudRepository<T, ID>
     }
 
     @Override
-    public void deleteAllById(Iterable<? extends ID> ids) {
+    public void deleteAllById(@NonNull Iterable<? extends ID> ids) {
         var bla = StreamSupport.stream(ids.spliterator(), false).map(id -> (ID) id).toList();
         deleteAll(findAllById(bla));
     }

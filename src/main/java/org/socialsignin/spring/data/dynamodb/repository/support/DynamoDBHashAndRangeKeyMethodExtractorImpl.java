@@ -15,6 +15,7 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
+import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.ReflectionUtils.FieldCallback;
@@ -30,6 +31,7 @@ import java.lang.reflect.Method;
  */
 public class DynamoDBHashAndRangeKeyMethodExtractorImpl<T> implements DynamoDBHashAndRangeKeyMethodExtractor<T> {
 
+    @NonNull
     private final Class<T> idType;
     private Method hashKeyMethod;
     private Method rangeKeyMethod;
@@ -43,7 +45,7 @@ public class DynamoDBHashAndRangeKeyMethodExtractorImpl<T> implements DynamoDBHa
      * @param idType
      *            must not be {@literal null}.
      */
-    public DynamoDBHashAndRangeKeyMethodExtractorImpl(final Class<T> idType) {
+    public DynamoDBHashAndRangeKeyMethodExtractorImpl(@NonNull final Class<T> idType) {
 
         Assert.notNull(idType, "Id type must not be null!");
         this.idType = idType;
@@ -98,6 +100,7 @@ public class DynamoDBHashAndRangeKeyMethodExtractorImpl<T> implements DynamoDBHa
         }
     }
 
+    @NonNull
     @Override
     public Class<T> getJavaType() {
         return idType;

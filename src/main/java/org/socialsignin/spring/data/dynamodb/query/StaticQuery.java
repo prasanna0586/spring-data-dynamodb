@@ -15,12 +15,15 @@
  */
 package org.socialsignin.spring.data.dynamodb.query;
 
+import org.springframework.lang.NonNull;
+
 import java.util.Collections;
 import java.util.List;
 
 public class StaticQuery<T> extends AbstractQuery<T> {
 
     private final T result;
+    @NonNull
     private final List<T> resultList;
 
     public StaticQuery(T result) {

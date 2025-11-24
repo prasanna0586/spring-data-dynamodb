@@ -18,6 +18,7 @@ package org.socialsignin.spring.data.dynamodb.repository.util;
 import org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext;
 import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBEntityInformation;
 import org.springframework.data.repository.core.support.RepositoryProxyPostProcessor;
+import org.springframework.lang.NonNull;
 
 public class DynamoDBMappingContextProcessor<T, ID> extends EntityInformationProxyPostProcessor<T, ID>
         implements RepositoryProxyPostProcessor {
@@ -29,7 +30,7 @@ public class DynamoDBMappingContextProcessor<T, ID> extends EntityInformationPro
     }
 
     @Override
-    protected void registeredEntity(DynamoDBEntityInformation<T, ID> entityInformation) {
+    protected void registeredEntity(@NonNull DynamoDBEntityInformation<T, ID> entityInformation) {
         // register entities
         context.getPersistentEntity(entityInformation.getJavaType());
     }

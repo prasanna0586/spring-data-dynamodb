@@ -22,6 +22,8 @@ import org.springframework.data.mapping.context.AbstractMappingContext;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbImmutable;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
@@ -40,6 +42,7 @@ public class DynamoDBMappingContext
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DynamoDBMappingContext.class);
 
+    @NonNull
     private final MarshallingMode marshallingMode;
 
     /**
@@ -48,7 +51,7 @@ public class DynamoDBMappingContext
      * @param marshallingMode The marshalling mode to use for type conversions
      * @since 7.0.0
      */
-    public DynamoDBMappingContext(MarshallingMode marshallingMode) {
+    public DynamoDBMappingContext(@Nullable MarshallingMode marshallingMode) {
         this.marshallingMode = marshallingMode != null ? marshallingMode : MarshallingMode.SDK_V2_NATIVE;
         LOGGER.info("DynamoDBMappingContext initialized with Marshalling Mode: {}", this.marshallingMode);
     }
@@ -75,6 +78,7 @@ public class DynamoDBMappingContext
      * @see org.springframework.data.mapping.context.AbstractMappingContext# shouldCreatePersistentEntityFor
      * (org.springframework.data.util.TypeInformation)
      */
+    @NonNull
     @Override
     protected <T> DynamoDBPersistentEntityImpl<?> createPersistentEntity(TypeInformation<T> typeInformation) {
         return new DynamoDBPersistentEntityImpl<>(typeInformation, null);
@@ -87,6 +91,7 @@ public class DynamoDBMappingContext
      * java.beans.PropertyDescriptor, org.springframework.data.mapping.MutablePersistentEntity,
      * org.springframework.data.mapping.SimpleTypeHolder)
      */
+    @NonNull
     @Override
     protected DynamoDBPersistentProperty createPersistentProperty(Property property,
             DynamoDBPersistentEntityImpl<?> owner, SimpleTypeHolder simpleTypeHolder) {
@@ -99,7 +104,7 @@ public class DynamoDBMappingContext
      * (org.springframework.data.util.TypeInformation)
      */
     @Override
-    protected boolean shouldCreatePersistentEntityFor(TypeInformation<?> type) {
+    protected boolean shouldCreatePersistentEntityFor(@NonNull TypeInformation<?> type) {
 
         boolean hasPartitionKey = false;
         boolean hasSortKey = false;

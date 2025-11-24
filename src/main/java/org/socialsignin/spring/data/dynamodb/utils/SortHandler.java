@@ -17,6 +17,7 @@ package org.socialsignin.spring.data.dynamodb.utils;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.lang.NonNull;
 
 /**
  * Some helper methods to deal with {@link Sort}.
@@ -28,7 +29,7 @@ public interface SortHandler {
      * @param pageable
      *            The {@link Pageable} to check that no sort is specified
      */
-    default void ensureNoSort(Pageable pageable) {
+    default void ensureNoSort(@NonNull Pageable pageable) {
         Sort sort = pageable.getSort();
         ensureNoSort(sort);
     }

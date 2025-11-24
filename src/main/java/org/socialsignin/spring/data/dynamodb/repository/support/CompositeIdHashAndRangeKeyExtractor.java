@@ -15,6 +15,8 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Method;
@@ -24,12 +26,14 @@ import java.lang.reflect.Method;
  */
 public class CompositeIdHashAndRangeKeyExtractor<ID, H> implements HashAndRangeKeyExtractor<ID, H> {
 
+    @NonNull
     private final DynamoDBHashAndRangeKeyMethodExtractor<ID> hashAndRangeKeyMethodExtractor;
 
     public CompositeIdHashAndRangeKeyExtractor(Class<ID> idClass) {
         this.hashAndRangeKeyMethodExtractor = new DynamoDBHashAndRangeKeyMethodExtractorImpl<>(idClass);
     }
 
+    @Nullable
     @SuppressWarnings("unchecked")
     @Override
     public H getHashKey(ID id) {
@@ -41,6 +45,7 @@ public class CompositeIdHashAndRangeKeyExtractor<ID, H> implements HashAndRangeK
         }
     }
 
+    @Nullable
     @Override
     public Object getRangeKey(ID id) {
         Method method = hashAndRangeKeyMethodExtractor.getRangeKeyMethod();

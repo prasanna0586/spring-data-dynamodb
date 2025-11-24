@@ -29,6 +29,7 @@ import org.socialsignin.spring.data.dynamodb.utils.SortHandler;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.*;
 import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
@@ -44,7 +45,9 @@ import java.util.Map.Entry;
 public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQueryCriteria<T, ID>, SortHandler {
 
     protected Class<T> clazz;
+    @NonNull
     private final DynamoDBEntityInformation<T, ID> entityInformation;
+    @NonNull
     private final Map<String, String> attributeNamesByPropertyName;
     private final String hashKeyPropertyName;
     protected final DynamoDBMappingContext mappingContext;
@@ -54,6 +57,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
 
     protected Object hashKeyAttributeValue;
     protected Object hashKeyPropertyValue;
+    @Nullable
     protected String globalSecondaryIndexName;
     protected Sort sort = Sort.unsorted();
     protected Optional<String> projection = Optional.empty();
@@ -67,8 +71,8 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
     public abstract boolean isApplicableForLoad();
 
     protected QueryRequest buildQueryRequest(String tableName, String theIndexName, String hashKeyAttributeName,
-            String rangeKeyAttributeName, String rangeKeyPropertyName, List<Condition> hashKeyConditions,
-            List<Condition> rangeKeyConditions) {
+                                             @Nullable String rangeKeyAttributeName, @Nullable String rangeKeyPropertyName, @Nullable List<Condition> hashKeyConditions,
+                                             @Nullable List<Condition> rangeKeyConditions) {
 
         // SDK v2: Build QueryRequest using modern keyConditionExpression
         QueryRequest queryRequest = QueryRequest.builder()
@@ -356,7 +360,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return queryRequest;
     }
 
-    protected QueryRequest applyConsistentReads(QueryRequest queryRequest) {
+    protected QueryRequest applyConsistentReads(@NonNull QueryRequest queryRequest) {
         return switch (consistentReads) {
             case CONSISTENT -> queryRequest.toBuilder().consistentRead(true).build();
             case EVENTUAL -> queryRequest.toBuilder().consistentRead(false).build();
@@ -364,7 +368,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         };
     }
 
-    protected QueryRequest applySortIfSpecified(QueryRequest queryRequest, List<String> permittedPropertyNames) {
+    protected QueryRequest applySortIfSpecified(@NonNull QueryRequest queryRequest, @NonNull List<String> permittedPropertyNames) {
         if (permittedPropertyNames.size() > 2) {
             throw new UnsupportedOperationException("Can only sort by at most a single global hash and range key");
         }
@@ -407,8 +411,9 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
      * @param expressionValues    Map to populate with expression attribute values
      * @return The key condition expression string
      */
-    private String buildKeyConditionPart(String namePlaceholder, Condition condition, int startValueCounter,
-            Map<String, AttributeValue> expressionValues) {
+    @NonNull
+    private String buildKeyConditionPart(String namePlaceholder, @NonNull Condition condition, int startValueCounter,
+                                         @NonNull Map<String, AttributeValue> expressionValues) {
 
         ComparisonOperator operator = condition.comparisonOperator();
         List<AttributeValue> attributeValueList = condition.attributeValueList();
@@ -475,6 +480,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return true;
     }
 
+    @Nullable
     protected List<Condition> getHashKeyConditions() {
         List<Condition> hashKeyConditions = null;
         // For LSI: hash key is the table's partition key (not in globalSecondaryIndexNames map), only when using an index
@@ -502,7 +508,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return hashKeyConditions;
     }
 
-    public AbstractDynamoDBQueryCriteria(DynamoDBEntityInformation<T, ID> dynamoDBEntityInformation,
+    public AbstractDynamoDBQueryCriteria(@NonNull DynamoDBEntityInformation<T, ID> dynamoDBEntityInformation,
                                          DynamoDBMappingContext mappingContext) {
         this.clazz = dynamoDBEntityInformation.getJavaType();
         this.attributeConditions = new LinkedMultiValueMap<>();
@@ -515,8 +521,9 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         this.mappingContext = mappingContext;
     }
 
-    private String getFirstDeclaredIndexNameForAttribute(Map<String, String[]> indexNamesByAttributeName,
-            List<String> indexNamesToCheck, String attributeName) {
+    @Nullable
+    private String getFirstDeclaredIndexNameForAttribute(@NonNull Map<String, String[]> indexNamesByAttributeName,
+                                                         @NonNull List<String> indexNamesToCheck, String attributeName) {
         String indexName = null;
         String[] declaredOrderedIndexNamesForAttribute = indexNamesByAttributeName.get(attributeName);
         for (String declaredOrderedIndexNameForAttribute : declaredOrderedIndexNamesForAttribute) {
@@ -528,6 +535,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return indexName;
     }
 
+    @Nullable
     protected String getGlobalSecondaryIndexName() {
 
         // Lazy evaluate the globalSecondaryIndexName if not already set
@@ -738,6 +746,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
 
     }
 
+    @NonNull
     public DynamoDBQueryCriteria<T, ID> withHashKeyEquals(Object value) {
         Assert.notNull(value, "Creating conditions on null hash keys not supported: please specify a value for '"
                 + getHashKeyPropertyName() + "'");
@@ -770,23 +779,23 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
     }
 
     @Override
-    public DynamoDBQueryCriteria<T, ID> withPropertyBetween(String propertyName, Object value1, Object value2,
-            Class<?> type) {
+    public DynamoDBQueryCriteria<T, ID> withPropertyBetween(@NonNull String propertyName, Object value1, Object value2,
+                                                            Class<?> type) {
         Condition condition = createCollectionCondition(propertyName, ComparisonOperator.BETWEEN,
                 Arrays.asList(value1, value2), type);
         return withCondition(propertyName, condition);
     }
 
     @Override
-    public DynamoDBQueryCriteria<T, ID> withPropertyIn(String propertyName, Iterable<?> value, Class<?> propertyType) {
+    public DynamoDBQueryCriteria<T, ID> withPropertyIn(@NonNull String propertyName, @NonNull Iterable<?> value, Class<?> propertyType) {
 
         Condition condition = createCollectionCondition(propertyName, ComparisonOperator.IN, value, propertyType);
         return withCondition(propertyName, condition);
     }
 
     @Override
-    public DynamoDBQueryCriteria<T, ID> withSingleValueCriteria(String propertyName,
-            ComparisonOperator comparisonOperator, Object value, Class<?> propertyType) {
+    public DynamoDBQueryCriteria<T, ID> withSingleValueCriteria(@NonNull String propertyName,
+                                                                @NonNull ComparisonOperator comparisonOperator, Object value, Class<?> propertyType) {
         if (comparisonOperator.equals(ComparisonOperator.EQ)) {
             return withPropertyEquals(propertyName, value, propertyType);
         } else {
@@ -825,14 +834,15 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
     protected abstract boolean isOnlyHashKeySpecified();
 
     @Override
-    public DynamoDBQueryCriteria<T, ID> withNoValuedCriteria(String propertyName,
-            ComparisonOperator comparisonOperator) {
+    public DynamoDBQueryCriteria<T, ID> withNoValuedCriteria(@NonNull String propertyName,
+                                                             ComparisonOperator comparisonOperator) {
         Condition condition = createNoValueCondition(comparisonOperator);
         return withCondition(propertyName, condition);
 
     }
 
-    public DynamoDBQueryCriteria<T, ID> withCondition(String propertyName, Condition condition) {
+    @NonNull
+    public DynamoDBQueryCriteria<T, ID> withCondition(@NonNull String propertyName, Condition condition) {
         attributeConditions.add(getAttributeName(propertyName), condition);
         propertyConditions.add(propertyName, condition);
 
@@ -863,7 +873,8 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
                 .build();
     }
 
-    private List<String> getNumberListAsStringList(List<Number> numberList) {
+    @NonNull
+    private List<String> getNumberListAsStringList(@NonNull List<Number> numberList) {
         List<String> list = new ArrayList<>();
         for (Number number : numberList) {
             if (number != null) {
@@ -875,8 +886,9 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return list;
     }
 
+    @NonNull
     @SuppressWarnings("deprecation")
-    private List<String> getDateListAsStringList(List<Date> dateList, MarshallingMode mode) {
+    private List<String> getDateListAsStringList(@NonNull List<Date> dateList, MarshallingMode mode) {
         List<String> list = new ArrayList<>();
         if (mode == MarshallingMode.SDK_V1_COMPATIBLE) {
             // SDK v1 compatibility: Date marshalled to ISO format string
@@ -901,8 +913,9 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return list;
     }
 
+    @NonNull
     @SuppressWarnings("deprecation")
-    private List<String> getInstantListAsStringList(List<Instant> dateList, MarshallingMode mode) {
+    private List<String> getInstantListAsStringList(@NonNull List<Instant> dateList, MarshallingMode mode) {
         // Both SDK v1 and v2 store Instant as String (ISO-8601 format)
         // AWS SDK v2 uses InstantAsStringAttributeConverter by default
         List<String> list = new ArrayList<>();
@@ -930,7 +943,8 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return list;
     }
 
-    private List<String> getBooleanListAsStringList(List<Boolean> booleanList) {
+    @NonNull
+    private List<String> getBooleanListAsStringList(@NonNull List<Boolean> booleanList) {
         // Note: DynamoDB doesn't support a BOOL set type (only SS/NS/BS)
         // Boolean lists must always be stored as Number set "1"/"0" regardless of marshalling mode
         List<String> list = new ArrayList<>();
@@ -962,8 +976,8 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return null;
     }
 
-    protected <P> void addAttributeValue(List<AttributeValue> attributeValueList,
-                                         @Nullable Object attributeValue, Class<P> propertyType, boolean expandCollectionValues) {
+    protected <P> void addAttributeValue(@NonNull List<AttributeValue> attributeValueList,
+                                         @Nullable Object attributeValue, @NonNull Class<P> propertyType, boolean expandCollectionValues) {
         AttributeValue.Builder attributeValueBuilder = AttributeValue.builder();
 
         if (ClassUtils.isAssignable(String.class, propertyType)) {
@@ -1084,7 +1098,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
     }
 
     protected Condition createCollectionCondition(String propertyName, ComparisonOperator comparisonOperator,
-            Iterable<?> o, Class<?> propertyType) {
+                                                  @NonNull Iterable<?> o, Class<?> propertyType) {
 
         Assert.notNull(o, "Creating conditions on null property values not supported: please specify a value for '"
                 + propertyName + "'");
@@ -1130,13 +1144,13 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
     }
 
     @Override
-    public void withExpressionAttributeNames(ExpressionAttribute[] names) {
+    public void withExpressionAttributeNames(@Nullable ExpressionAttribute[] names) {
         if (names != null)
             this.expressionAttributeNames = names.clone();
     }
 
     @Override
-    public void withExpressionAttributeValues(ExpressionAttribute[] values) {
+    public void withExpressionAttributeValues(@Nullable ExpressionAttribute[] values) {
         if (values != null)
             this.expressionAttributeValues = values.clone();
     }

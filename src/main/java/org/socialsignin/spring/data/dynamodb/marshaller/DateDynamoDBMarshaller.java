@@ -15,6 +15,7 @@
  */
 package org.socialsignin.spring.data.dynamodb.marshaller;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 import java.text.DateFormat;
@@ -50,7 +51,8 @@ public abstract class DateDynamoDBMarshaller {
      * @param getterReturnResult the Date to marshall
      * @return String representation of the date
      */
-    public String marshall(Date getterReturnResult) {
+    @Nullable
+    public String marshall(@Nullable Date getterReturnResult) {
         if (getterReturnResult == null) {
             return null;
         } else {
@@ -74,6 +76,7 @@ public abstract class DateDynamoDBMarshaller {
      * @param obj   the String to unmarshall
      * @return Date object
      */
+    @Nullable
     public Date unmarshall(String obj) {
         if (!StringUtils.hasLength(obj)) {
             return null;

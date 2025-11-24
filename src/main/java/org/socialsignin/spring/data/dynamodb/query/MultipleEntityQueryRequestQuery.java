@@ -16,6 +16,7 @@
 package org.socialsignin.spring.data.dynamodb.query;
 
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
+import org.springframework.lang.NonNull;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
@@ -35,6 +36,7 @@ public class MultipleEntityQueryRequestQuery<T> extends AbstractMultipleEntityQu
         this.dynamoDBOperations = dynamoDBOperations;
     }
 
+    @NonNull
     @Override
     public List<T> getResultList() {
         // SDK v2: query() returns PageIterable<T>, convert to List<T>

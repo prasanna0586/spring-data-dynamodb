@@ -25,6 +25,8 @@ import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.RepositoryQuery;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteResult;
 
 import java.util.*;
@@ -42,6 +44,7 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
         this.method = method;
     }
 
+    @NonNull
     protected QueryExecution<T, ID> getExecution() {
         if (method.isCollectionQuery() && !isSingleEntityResultsRestriction()) {
             return new CollectionExecution();
@@ -74,12 +77,14 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
 
     protected abstract boolean isSingleEntityResultsRestriction();
 
+    @NonNull
     protected Query<T> doCreateQueryWithPermissions(Object[] values) {
         Query<T> query = doCreateQuery(values);
         query.setScanEnabled(method.isScanEnabled());
         return query;
     }
 
+    @NonNull
     protected Query<Long> doCreateCountQueryWithPermissions(Object[] values, boolean pageQuery) {
         Query<Long> query = doCreateCountQuery(values, pageQuery);
         query.setScanCountEnabled(method.isScanCountEnabled());
@@ -87,13 +92,14 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
     }
 
     protected interface QueryExecution<T, ID> {
+        @Nullable
         Object execute(AbstractDynamoDBQuery<T, ID> query, Object[] values);
     }
 
     class CollectionExecution implements QueryExecution<T, ID> {
 
         @Override
-        public Object execute(AbstractDynamoDBQuery<T, ID> dynamoDBQuery, Object[] values) {
+        public Object execute(@NonNull AbstractDynamoDBQuery<T, ID> dynamoDBQuery, Object[] values) {
             Query<T> query = dynamoDBQuery.doCreateQueryWithPermissions(values);
             if (getResultsRestrictionIfApplicable() != null) {
                 return restrictMaxResultsIfNecessary(query.getResultList().iterator());
@@ -101,7 +107,8 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
                 return query.getResultList();
         }
 
-        private List<T> restrictMaxResultsIfNecessary(Iterator<T> iterator) {
+        @NonNull
+        private List<T> restrictMaxResultsIfNecessary(@NonNull Iterator<T> iterator) {
             int processed = 0;
             List<T> resultsPage = new ArrayList<>();
             while (iterator.hasNext() && processed < getResultsRestrictionIfApplicable()) {
@@ -125,7 +132,7 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
             this.parameters = parameters;
         }
 
-        private long scanThroughResults(Iterator<T> iterator, long resultsToScan) {
+        private long scanThroughResults(@NonNull Iterator<T> iterator, long resultsToScan) {
             long processed = 0;
             while (iterator.hasNext() && processed < resultsToScan) {
                 iterator.next();
@@ -134,7 +141,8 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
             return processed;
         }
 
-        private List<T> readPageOfResultsRestrictMaxResultsIfNecessary(Iterator<T> iterator, int pageSize) {
+        @NonNull
+        private List<T> readPageOfResultsRestrictMaxResultsIfNecessary(@NonNull Iterator<T> iterator, int pageSize) {
             int processed = 0;
             int toProcess = getResultsRestrictionIfApplicable() != null
                     ? Math.min(pageSize, getResultsRestrictionIfApplicable())
@@ -147,8 +155,9 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
             return resultsPage;
         }
 
+        @NonNull
         @Override
-        public Object execute(AbstractDynamoDBQuery<T, ID> dynamoDBQuery, Object[] values) {
+        public Object execute(@NonNull AbstractDynamoDBQuery<T, ID> dynamoDBQuery, @NonNull Object[] values) {
 
             ParameterAccessor accessor = new ParametersParameterAccessor(parameters, values);
             Pageable pageable = accessor.getPageable();
@@ -158,8 +167,9 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
             return createPage(results, pageable, dynamoDBQuery, values);
         }
 
-        private Page<T> createPage(List<T> allResults, Pageable pageable, AbstractDynamoDBQuery<T, ID> dynamoDBQuery,
-                Object[] values) {
+        @NonNull
+        private Page<T> createPage(@NonNull List<T> allResults, @NonNull Pageable pageable, @NonNull AbstractDynamoDBQuery<T, ID> dynamoDBQuery,
+                                   Object[] values) {
 
             // Get the result = this list might be a lazy list
             Iterator<T> iterator = allResults.iterator();
@@ -201,7 +211,7 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
             this.parameters = parameters;
         }
 
-        private long scanThroughResults(Iterator<T> iterator, long resultsToScan) {
+        private long scanThroughResults(@NonNull Iterator<T> iterator, long resultsToScan) {
             long processed = 0;
             while (iterator.hasNext() && processed < resultsToScan) {
                 iterator.next();
@@ -210,7 +220,8 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
             return processed;
         }
 
-        private List<T> readPageOfResultsRestrictMaxResultsIfNecessary(Iterator<T> iterator, int pageSize) {
+        @NonNull
+        private List<T> readPageOfResultsRestrictMaxResultsIfNecessary(@NonNull Iterator<T> iterator, int pageSize) {
             int processed = 0;
             int toProcess = getResultsRestrictionIfApplicable() != null
                     ? Math.min(pageSize, getResultsRestrictionIfApplicable())
@@ -224,8 +235,9 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
             return resultsPage;
         }
 
+        @NonNull
         @Override
-        public Object execute(AbstractDynamoDBQuery<T, ID> dynamoDBQuery, Object[] values) {
+        public Object execute(@NonNull AbstractDynamoDBQuery<T, ID> dynamoDBQuery, @NonNull Object[] values) {
 
             ParameterAccessor accessor = new ParametersParameterAccessor(parameters, values);
             Pageable pageable = accessor.getPageable();
@@ -234,7 +246,8 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
             return createSlice(results, pageable);
         }
 
-        private Slice<T> createSlice(List<T> allResults, Pageable pageable) {
+        @NonNull
+        private Slice<T> createSlice(@NonNull List<T> allResults, @NonNull Pageable pageable) {
 
             Iterator<T> iterator = allResults.iterator();
             if (pageable.getOffset() > 0) {
@@ -253,8 +266,9 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
 
     class DeleteExecution implements QueryExecution<T, ID> {
 
+        @NonNull
         @Override
-        public Object execute(AbstractDynamoDBQuery<T, ID> dynamoDBQuery, Object[] values) throws BatchDeleteException {
+        public Object execute(@NonNull AbstractDynamoDBQuery<T, ID> dynamoDBQuery, Object[] values) throws BatchDeleteException {
             List<T> entities = dynamoDBQuery.doCreateQueryWithPermissions(values).getResultList();
 
             // Group entities by class for extraction if needed
@@ -286,7 +300,7 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
     class SingleEntityExecution implements QueryExecution<T, ID> {
 
         @Override
-        public Object execute(AbstractDynamoDBQuery<T, ID> dynamoDBQuery, Object[] values) {
+        public Object execute(@NonNull AbstractDynamoDBQuery<T, ID> dynamoDBQuery, Object[] values) {
             if (isCountQuery()) {
                 return dynamoDBQuery.doCreateCountQueryWithPermissions(values, false).getSingleResult();
             } else if (isExistsQuery()) {
@@ -300,8 +314,9 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
 
     class SingleEntityLimitedExecution implements QueryExecution<T, ID> {
 
+        @Nullable
         @Override
-        public Object execute(AbstractDynamoDBQuery<T, ID> dynamoDBQuery, Object[] values) {
+        public Object execute(@NonNull AbstractDynamoDBQuery<T, ID> dynamoDBQuery, Object[] values) {
             if (isCountQuery()) {
                 return dynamoDBQuery.doCreateCountQueryWithPermissions(values, false).getSingleResult();
             } else {
@@ -322,6 +337,7 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
         return getExecution().execute(this, parameters);
     }
 
+    @NonNull
     @Override
     public DynamoDBQueryMethod<T, ID> getQueryMethod() {
         return this.method;

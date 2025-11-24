@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.lang.NonNull;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
@@ -51,6 +52,7 @@ public abstract class AbstractDynamoDBConfiguration {
      * @return the base package to scan for mapped {@link DynamoDbBean} classes or {@literal null} to not enable
      *         scanning for entities.
      */
+    @NonNull
     protected String[] getMappingBasePackages() {
 
         Package mappingBasePackage = getClass().getPackage();
@@ -69,6 +71,7 @@ public abstract class AbstractDynamoDBConfiguration {
      * @throws ClassNotFoundException
      *             if the class with {@link DynamoDbBean} annotation can't be loaded
      */
+    @NonNull
     @Bean
     public DynamoDBMappingContext dynamoDBMappingContext() throws ClassNotFoundException {
 
@@ -88,6 +91,7 @@ public abstract class AbstractDynamoDBConfiguration {
      * @throws ClassNotFoundException
      *             if the class with {@link DynamoDbBean} annotation can't be loaded
      */
+    @NonNull
     protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
 
         Set<Class<?>> initialEntitySet = new HashSet<>();

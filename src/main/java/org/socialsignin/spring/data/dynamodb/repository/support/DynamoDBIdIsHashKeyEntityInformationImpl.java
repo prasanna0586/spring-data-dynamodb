@@ -15,6 +15,7 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
+import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
@@ -34,29 +35,32 @@ public class DynamoDBIdIsHashKeyEntityInformationImpl<T, ID> extends FieldAndGet
         implements DynamoDBEntityInformation<T, ID> {
 
     private final DynamoDBHashKeyExtractingEntityMetadata<T> metadata;
+    @NonNull
     private final HashKeyExtractor<ID, ID> hashKeyExtractor;
     private final Optional<String> projection = Optional.empty();
     private final Optional<Integer> limit = Optional.empty();
 
-    public DynamoDBIdIsHashKeyEntityInformationImpl(Class<T> domainClass,
-            DynamoDBHashKeyExtractingEntityMetadata<T> metadata) {
+    public DynamoDBIdIsHashKeyEntityInformationImpl(@NonNull Class<T> domainClass,
+                                                    DynamoDBHashKeyExtractingEntityMetadata<T> metadata) {
         super(domainClass, DynamoDbPartitionKey.class);
         this.metadata = metadata;
         this.hashKeyExtractor = new HashKeyIsIdHashKeyExtractor<>(getIdType());
     }
 
+    @NonNull
     @Override
     public Optional<String> getProjection() {
         return projection;
     }
 
+    @NonNull
     @Override
     public Optional<Integer> getLimit() {
         return limit;
     }
 
     @Override
-    public Object getHashKey(final ID id) {
+    public Object getHashKey(@NonNull final ID id) {
         Assert.isAssignable(getIdType(), id.getClass(),
                 "Expected ID type to be the same as the return type of the hash key method ( " + getIdType() + " ) : ");
         return hashKeyExtractor.getHashKey(id);
