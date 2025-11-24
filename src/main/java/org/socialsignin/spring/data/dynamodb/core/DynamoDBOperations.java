@@ -1,12 +1,12 @@
 /**
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -60,11 +60,10 @@ public interface DynamoDBOperations {
 
     /**
      * Extracts unprocessed put items (saves) from batch write results.
-     *
+     * <p>
      * This method is used to extract the actual entity objects that failed to be written
      * after batch save operations, so they can be included in BatchWriteException for
      * consumer handling (retry, DLQ, alerting, etc.).
-     *
      * @param results List of BatchWriteResult from batch save operations
      * @param entitiesByClass Original entities grouped by class (used to get table references)
      * @return List of unprocessed entity objects that failed to be saved
@@ -76,11 +75,10 @@ public interface DynamoDBOperations {
 
     /**
      * Extracts unprocessed delete items from batch write results.
-     *
+     * <p>
      * This method extracts the entity objects that failed to be deleted after batch
      * delete operations. Note that for deletes, SDK v2 returns Key objects, so we
      * reconstruct the entities from the original list.
-     *
      * @param results List of BatchWriteResult from batch delete operations
      * @param entitiesByClass Original entities grouped by class (used to get table references and match keys)
      * @return List of unprocessed entity objects that failed to be deleted
@@ -94,12 +92,10 @@ public interface DynamoDBOperations {
 
     /**
      * Provides access to the DynamoDB table schema of the underlying domain type.
-     *
      * @param <T>
      *            The type of the domain type itself
      * @param domainClass
      *            A domain type
-     *
      * @return Corresponding DynamoDB table schema
      */
     <T> TableSchema<T> getTableModel(Class<T> domainClass);
@@ -107,7 +103,7 @@ public interface DynamoDBOperations {
     /**
      * Provides access to the DynamoDB mapping context which contains configuration
      * such as marshalling mode for type conversions.
-     *
+     * <p>
      * @return The DynamoDB mapping context
      * @since 7.0.0
      */

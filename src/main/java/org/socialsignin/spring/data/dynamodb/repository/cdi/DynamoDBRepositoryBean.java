@@ -1,12 +1,12 @@
 /**
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,7 +37,6 @@ import java.util.Set;
  * <p>Migrated to AWS SDK v2. Uses DynamoDbClient and DynamoDbEnhancedClient
  * instead of SDK v1's AmazonDynamoDB and DynamoDBMapper.
  * @author Prasanna Kumar Ramachandran
- *
  * @param <T>
  *            The type of the repository.
  * @since 7.0.0
@@ -54,7 +53,6 @@ class DynamoDBRepositoryBean<T> extends CdiRepositoryBean<T> {
 
     /**
      * Constructs a {@link DynamoDBRepositoryBean}.
-     *
      * @param beanManager
      *            must not be {@literal null}.
      * @param dynamoDbClientBean
@@ -89,8 +87,7 @@ class DynamoDBRepositoryBean<T> extends CdiRepositoryBean<T> {
 
     /*
      * (non-Javadoc)
-     * @see jakarta.enterprise.context.spi.Contextual#create(jakarta.enterprise .context.spi.CreationalContext,
-     * Class<T>, Optional<Object>)
+     * @see jakarta.enterprise.context.spi.Contextual#create(jakarta.enterprise.context.spi.CreationalContext, Class, java.util.Optional)
      */
     @NonNull
     @Override

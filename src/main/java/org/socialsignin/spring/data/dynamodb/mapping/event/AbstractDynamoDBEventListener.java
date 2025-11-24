@@ -1,12 +1,12 @@
 /**
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,6 +43,7 @@ import java.util.stream.StreamSupport;
 
 /**
  * Base class to implement domain class specific {@link ApplicationListener}s.
+ * @param <E> the entity type
  * @author Prasanna Kumar Ramachandran
  */
 public abstract class AbstractDynamoDBEventListener<E> implements ApplicationListener<DynamoDBMappingEvent<?>> {
@@ -60,6 +61,10 @@ public abstract class AbstractDynamoDBEventListener<E> implements ApplicationLis
         this.domainClass = typeArgument == null ? Object.class : typeArgument;
     }
 
+    /**
+     * Gets the domain class for this event listener.
+     * @return the domain class type
+     */
     @NonNull
     protected Class<?> getDomainClass() {
         return this.domainClass;
@@ -67,8 +72,7 @@ public abstract class AbstractDynamoDBEventListener<E> implements ApplicationLis
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.context.ApplicationListener#onApplicationEvent(org
-     * .springframework.context.ApplicationEvent)
+     * @see org.springframework.context.ApplicationListener#onApplicationEvent(org.springframework.context.ApplicationEvent)
      */
     @Override
     public void onApplicationEvent(@NonNull DynamoDBMappingEvent<?> event) {
@@ -128,30 +132,58 @@ public abstract class AbstractDynamoDBEventListener<E> implements ApplicationLis
                 .forEach(publishMethod);
     }
 
+    /**
+     * Invoked before the entity is saved to DynamoDB.
+     * @param source the entity being saved
+     */
     public void onBeforeSave(E source) {
         LOG.debug("onBeforeSave({})", source);
     }
 
+    /**
+     * Invoked after the entity is saved to DynamoDB.
+     * @param source the entity that was saved
+     */
     public void onAfterSave(E source) {
         LOG.debug("onAfterSave({})", source);
     }
 
+    /**
+     * Invoked after the entity is loaded from DynamoDB.
+     * @param source the entity that was loaded
+     */
     public void onAfterLoad(E source) {
         LOG.debug("onAfterLoad({})", source);
     }
 
+    /**
+     * Invoked after the entity is deleted from DynamoDB.
+     * @param source the entity that was deleted
+     */
     public void onAfterDelete(E source) {
         LOG.debug("onAfterDelete({})", source);
     }
 
+    /**
+     * Invoked before the entity is deleted from DynamoDB.
+     * @param source the entity being deleted
+     */
     public void onBeforeDelete(E source) {
         LOG.debug("onBeforeDelete({})", source);
     }
 
+    /**
+     * Invoked after scanning entities from DynamoDB.
+     * @param source the entity from the scan result
+     */
     public void onAfterScan(E source) {
         LOG.debug("onAfterScan({})", source);
     }
 
+    /**
+     * Invoked after querying entities from DynamoDB.
+     * @param source the entity from the query result
+     */
     public void onAfterQuery(E source) {
         LOG.debug("onAfterQuery({})", source);
     }

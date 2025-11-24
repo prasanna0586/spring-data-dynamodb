@@ -1,12 +1,12 @@
 /**
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -41,26 +41,80 @@ import software.amazon.awssdk.services.dynamodb.model.ComparisonOperator;
 import java.util.*;
 
 /**
+ * Abstract base class for creating DynamoDB queries from a PartTree structure.
+ * Extends Spring's AbstractQueryCreator to provide DynamoDB-specific query creation logic.
+ * @param <T> the entity type
+ * @param <ID> the ID type of the entity
+ * @param <R> the return type of the query (typically the entity type or a count)
  * @author Prasanna Kumar Ramachandran
  */
 public abstract class AbstractDynamoDBQueryCreator<T, ID, R>
         extends AbstractQueryCreator<Query<R>, DynamoDBQueryCriteria<T, ID>> {
 
+    /**
+     * Metadata information about the DynamoDB entity being queried,
+     * including hash key and range key information.
+     */
     protected final DynamoDBEntityInformation<T, ID> entityMetadata;
+    /**
+     * DynamoDB operations instance used to execute queries against DynamoDB.
+     */
     protected final DynamoDBOperations dynamoDBOperations;
+    /**
+     * Optional projection expression specifying which attributes to retrieve.
+     * If null, all attributes are retrieved.
+     */
     @Nullable
     protected final String projection;
+    /**
+     * Optional limit on the maximum number of items to evaluate before returning results.
+     * If null, no evaluation limit is applied.
+     */
     @Nullable
     protected final Integer limit;
+    /**
+     * Optional filter expression string to apply additional filtering beyond key conditions.
+     * If null, no additional filter is applied.
+     */
     @Nullable
     protected final String filterExpression;
+    /**
+     * Optional array of expression attribute names for substitution in filter expressions.
+     * Used to handle reserved words and nested attributes in expressions.
+     * If null, no expression attribute names are used.
+     */
     @Nullable
     protected final ExpressionAttribute[] expressionAttributeNames;
+    /**
+     * Optional array of expression attribute values for substitution in filter expressions.
+     * Used to provide values referenced in filter expressions.
+     * If null, no expression attribute values are used.
+     */
     @Nullable
     protected final ExpressionAttribute[] expressionAttributeValues;
+    /**
+     * Mapping of expression attribute value parameter names to their actual string representations.
+     * Built from expressionAttributeValues during construction.
+     */
     protected final Map<String, String> mappedExpressionValues = new HashMap<>();
+    /**
+     * The consistency read mode to use for queries (DEFAULT, CONSISTENT, EVENTUAL).
+     */
     protected final QueryConstants.ConsistentReadMode consistentReads;
 
+    /**
+     * Constructs an AbstractDynamoDBQueryCreator from a PartTree without parameter bindings.
+     * Used for creating query creators that don't need to bind parameter values.
+     * @param tree the PartTree representing the query method structure
+     * @param entityMetadata metadata information about the entity being queried
+     * @param projection optional projection expression for selecting specific attributes
+     * @param limitResults optional limit on the number of items to evaluate
+     * @param consistentReads the consistency read mode for queries
+     * @param filterExpression optional filter expression for additional filtering
+     * @param names optional array of expression attribute names for substitution
+     * @param values optional array of expression attribute values for substitution
+     * @param dynamoDBOperations the DynamoDB operations instance for query execution
+     */
     public AbstractDynamoDBQueryCreator(@NonNull PartTree tree, DynamoDBEntityInformation<T, ID> entityMetadata,
                                         @Nullable String projection, @Nullable Integer limitResults,
                                         QueryConstants.ConsistentReadMode consistentReads, @Nullable String filterExpression,
@@ -84,6 +138,20 @@ public abstract class AbstractDynamoDBQueryCreator<T, ID, R>
         this.dynamoDBOperations = dynamoDBOperations;
     }
 
+    /**
+     * Constructs an AbstractDynamoDBQueryCreator from a PartTree with parameter bindings.
+     * This constructor processes expression attribute values and binds them to method parameters.
+     * @param tree the PartTree representing the query method structure
+     * @param parameterAccessor accessor for retrieving parameter values from the query method
+     * @param entityMetadata metadata information about the entity being queried
+     * @param projection optional projection expression for selecting specific attributes
+     * @param limitResults optional limit on the number of items to evaluate
+     * @param consistentReads the consistency read mode for queries
+     * @param filterExpression optional filter expression for additional filtering
+     * @param names optional array of expression attribute names for substitution
+     * @param values optional array of expression attribute values for substitution
+     * @param dynamoDBOperations the DynamoDB operations instance for query execution
+     */
     public AbstractDynamoDBQueryCreator(@NonNull PartTree tree, @NonNull ParameterAccessor parameterAccessor,
                                         DynamoDBEntityInformation<T, ID> entityMetadata, @Nullable String projection,
                                         @Nullable Integer limitResults, QueryConstants.ConsistentReadMode consistentReads,
@@ -131,6 +199,17 @@ public abstract class AbstractDynamoDBQueryCreator<T, ID, R>
         return addCriteria(criteria, part, iterator);
     }
 
+    /**
+     * Adds query criteria to the provided DynamoDBQueryCriteria based on the Part and iterator values.
+     * Handles different comparison types (equals, contains, between, etc.) and constructs appropriate
+     * DynamoDB query conditions.
+     * <p>
+     * @param criteria the DynamoDBQueryCriteria to add conditions to
+     * @param part the query part representing a specific condition in the query method name
+     * @param iterator an iterator providing the parameter values for this condition
+     * @return the updated DynamoDBQueryCriteria with the new condition added
+     * @throws UnsupportedOperationException if case insensitivity is requested or unsupported comparison types are used
+     */
     protected DynamoDBQueryCriteria<T, ID> addCriteria(@NonNull DynamoDBQueryCriteria<T, ID> criteria, @NonNull Part part,
                                                        @NonNull Iterator<Object> iterator) {
         if (part.shouldIgnoreCase().equals(IgnoreCaseType.ALWAYS))

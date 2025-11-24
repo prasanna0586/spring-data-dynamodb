@@ -1,12 +1,12 @@
 /**
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,6 +35,10 @@ import java.util.*;
 import java.util.Map.Entry;
 
 /**
+ * Query criteria for DynamoDB entities with both hash and range keys.
+ * Handles query and scan operations with support for single entity loads and complex attribute conditions.
+ * @param <T> the entity type
+ * @param <ID> the ID type
  * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDynamoDBQueryCriteria<T, ID> {
@@ -301,7 +305,7 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
 
         // Hash and Range Entities store range key equals conditions as
         // rangeKeyAttributeValue attribute instead of as property condition
-        // Check this attribute and if specified in the query conditions and
+        // Check this attribute and if specified in the query conditions, and
         // it's the only global secondary index range candidate,
         // then set the index range key to be that associated with the range key
         if (globalSecondaryIndexName == null) {
@@ -319,9 +323,10 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
     /**
      * Get the Local Secondary Index (LSI) name for queries that use an LSI.
      * LSI queries are identified by:
+     * <p>
      * 1. Hash key condition + LSI range key condition, OR
      * 2. Hash key only + OrderBy on LSI range key
-     *
+     * <p>
      * @return LSI index name if applicable, null otherwise
      */
     @Nullable
@@ -359,7 +364,7 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
     /**
      * Detect which LSI property (if any) has a condition.
      * This is used to determine the correct range key for LSI queries.
-     *
+     * <p>
      * @return LSI property name that has a condition, or null if none
      */
     @Nullable
@@ -467,6 +472,7 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
      * Converts SDK v1 Condition object to SDK v2 Expression syntax string.
      * Also populates the expressionValues and expressionNames maps with the necessary values.
      * Uses expression attribute names for all attributes to handle reserved keywords defensively.
+     * <p>
      */
     @NonNull
     private String convertConditionToExpression(String attributeName, @NonNull Condition condition, int startNameCounter,
@@ -555,8 +561,10 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
     /**
      * Converts a Java object to SDK v2 AttributeValue.
      * Marshalling behavior depends on the configured MarshallingMode:
+     * <p>
      * - SDK_V2_NATIVE: Uses AWS SDK v2's native type mappings (Boolean → BOOL)
      * - SDK_V1_COMPATIBLE: Maintains backward compatibility (Boolean → Number "1"/"0", Date/Instant → ISO String)
+     * <p>
      */
     private AttributeValue convertToAttributeValue(@NonNull Object value) {
         switch (value) {

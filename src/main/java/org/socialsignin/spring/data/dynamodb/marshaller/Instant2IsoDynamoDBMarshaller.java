@@ -1,12 +1,12 @@
 /**
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,7 +26,6 @@ import java.time.format.DateTimeFormatter;
 /**
  * Marshaller for converting Instant to ISO-8601 String format with millisecond precision.
  * Format: "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
- *
  * @deprecated This class was created for SDK v1 compatibility. For new code using SDK v2,
  *             consider using AttributeConverter instead.
  * @since 1.0.0
@@ -43,7 +42,6 @@ public class Instant2IsoDynamoDBMarshaller {
 
     /**
      * Converts an Instant to String representation.
-     *
      * @param object the Instant to convert
      * @return ISO-8601 String representation
      */
@@ -54,7 +52,6 @@ public class Instant2IsoDynamoDBMarshaller {
 
     /**
      * Marshalls an Instant to ISO-8601 String format.
-     *
      * @param getterReturnResult the Instant to marshall
      * @return ISO-8601 String representation
      */
@@ -69,7 +66,6 @@ public class Instant2IsoDynamoDBMarshaller {
 
     /**
      * Converts a String back to Instant.
-     *
      * @param object the String to convert
      * @return Instant object
      */
@@ -80,7 +76,6 @@ public class Instant2IsoDynamoDBMarshaller {
 
     /**
      * Unmarshalls a String to Instant.
-     *
      * @param obj   the String to unmarshall
      * @return Instant object
      */

@@ -1,12 +1,12 @@
 /**
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -62,7 +62,6 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
 
     /**
      * Initializes a new {@code DynamoDBTemplate} using AWS SDK v2.
-     *
      * @param amazonDynamoDB
      *            The low-level DynamoDB client for direct operations, must not be {@code null}
      * @param enhancedClient
@@ -102,13 +101,12 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
     /**
      * Gets or creates a DynamoDbTable instance for the given domain class.
      * Tables are cached for performance.
-     *
-     * <p>The TableSchema is created based on the marshalling mode configured in the mapping context:
+     * <p>
+     * The TableSchema is created based on the marshalling mode configured in the mapping context:
      * <ul>
      * <li>SDK_V2_NATIVE: Uses standard SDK v2 type mappings</li>
      * <li>SDK_V1_COMPATIBLE: Supports SDK v1-compatible attribute converters (requires @DynamoDbConvertedBy annotations)</li>
      * </ul>
-     *
      * @param <T>         The domain class type
      * @param domainClass The domain class
      * @return The DynamoDbTable instance for the given class
@@ -125,7 +123,6 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
 
     /**
      * Resolves the table name for the given domain class, applying any configured overrides.
-     *
      * @param <T>         The domain class type
      * @param domainClass The domain class
      * @return The resolved table name
@@ -146,7 +143,6 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
 
     /**
      * Builds a Key object for SDK v2 operations.
-     *
      * @param hashKeyValue  The partition key value
      * @param rangeKeyValue The sort key value (can be null for hash-key-only tables)
      * @return The constructed Key
@@ -165,8 +161,8 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
 
     /**
      * Converts a Java object to SDK v2 AttributeValue.
+     * <p>
      * Marshalling behavior depends on the configured MarshallingMode.
-     *
      * @param value The Java object to convert
      * @return The SDK v2 AttributeValue
      */
@@ -311,7 +307,7 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
         // IMPORTANT: Call BeforeConvertCallback BEFORE auto-generation.
         // This ensures the auditing handler determines "isNew" based on the entity's actual state.
         // Then auto-generation sets the ID, making the entity ready for persistence.
-
+        //
         // Call BeforeConvertCallback - allows entity modification (e.g., auditing)
         entity = maybeCallBeforeConvert(entity, resolveTableName(entity.getClass()));
 
@@ -330,6 +326,7 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
         // AWS SDK v2 Enhanced Client's putItem does not update the local object's version field,
         // but updateItem returns the complete updated entity with the new version.
         // updateItem works for both new items (insert) and existing items (update).
+        //
         // See: https://github.com/aws/aws-sdk-java-v2/issues/3278
         T savedEntity = table.updateItem(entity);
 
@@ -339,8 +336,8 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
 
     /**
      * Invokes {@link BeforeConvertCallback} if {@link EntityCallbacks} are available.
+     * <p>
      * Returns the potentially modified entity.
-     *
      * @param entity the entity to process
      * @param tableName the table name
      * @param <T> entity type
@@ -510,10 +507,10 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
 
     /**
      * Extracts unprocessed put items (saves) from batch write results.
+     * <p>
      * This method is used to extract the actual entity objects that failed to be written
      * after batch save operations, so they can be included in BatchWriteException for
      * consumer handling (retry, DLQ, alerting, etc.).
-     *
      * @param results List of BatchWriteResult from batch save operations
      * @param entitiesByClass Original entities grouped by class (used to get table references)
      * @return List of unprocessed entity objects that failed to be saved
@@ -545,10 +542,10 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
 
     /**
      * Extracts unprocessed delete items from batch write results.
+     * <p>
      * This method extracts the entity objects that failed to be deleted after batch
      * delete operations. Note that for deletes, SDK v2 returns Key objects, so we
      * reconstruct the entities from the original list.
-     *
      * @param results List of BatchWriteResult from batch delete operations
      * @param entitiesByClass Original entities grouped by class (used to get table references and match keys)
      * @return List of unprocessed entity objects that failed to be deleted

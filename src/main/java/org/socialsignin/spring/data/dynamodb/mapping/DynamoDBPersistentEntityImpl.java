@@ -1,12 +1,12 @@
 /**
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,7 +23,8 @@ import org.springframework.lang.NonNull;
 import java.util.Comparator;
 
 /**
- * DynamoDB specific {@link DynamoDBPersistentEntity} implementation
+ * DynamoDB specific {@link DynamoDBPersistentEntity} implementation.
+ * @param <T> the entity type
  * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBPersistentEntityImpl<T> extends BasicPersistentEntity<T, DynamoDBPersistentProperty>
@@ -35,10 +36,9 @@ public class DynamoDBPersistentEntityImpl<T> extends BasicPersistentEntity<T, Dy
 
     /**
      * Returns the given property if it is a better candidate for the id property than the current id property.
-     *
+     * <p>
      * @param property
      *            the new id property candidate, will never be {@literal null}.
-     *
      * @return the given id property or {@literal null} if the given property is not an id property.
      */
     protected DynamoDBPersistentProperty returnPropertyIfBetterIdPropertyCandidateOrNull(

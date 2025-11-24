@@ -1,12 +1,12 @@
 /**
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,7 +47,6 @@ public class DynamoDBMappingContext
 
     /**
      * Creates a new DynamoDBMappingContext with the specified marshalling mode.
-     *
      * @param marshallingMode The marshalling mode to use for type conversions
      * @since 7.0.0
      */
@@ -65,7 +64,6 @@ public class DynamoDBMappingContext
 
     /**
      * Returns the marshalling mode configured for this mapping context.
-     *
      * @return The marshalling mode
      * @since 7.0.0
      */
@@ -76,8 +74,7 @@ public class DynamoDBMappingContext
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.data.mapping.context.AbstractMappingContext# shouldCreatePersistentEntityFor
-     * (org.springframework.data.util.TypeInformation)
+     * @see org.springframework.data.mapping.context.AbstractMappingContext#shouldCreatePersistentEntityFor(org.springframework.data.util.TypeInformation)
      */
     @NonNull
     @Override
@@ -88,9 +85,7 @@ public class DynamoDBMappingContext
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.data.mapping.AbstractMappingContext# createPersistentProperty(java.lang.reflect.Field,
-     * java.beans.PropertyDescriptor, org.springframework.data.mapping.MutablePersistentEntity,
-     * org.springframework.data.mapping.SimpleTypeHolder)
+     * @see org.springframework.data.mapping.AbstractMappingContext#createPersistentProperty(java.lang.reflect.Field, java.beans.PropertyDescriptor, org.springframework.data.mapping.MutablePersistentEntity, org.springframework.data.mapping.SimpleTypeHolder)
      */
     @NonNull
     @Override
@@ -101,8 +96,7 @@ public class DynamoDBMappingContext
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.data.mapping.context.AbstractMappingContext# shouldCreatePersistentEntityFor
-     * (org.springframework.data.util.TypeInformation)
+     * @see org.springframework.data.mapping.context.AbstractMappingContext#shouldCreatePersistentEntityFor(org.springframework.data.util.TypeInformation)
      */
     @Override
     protected boolean shouldCreatePersistentEntityFor(@NonNull TypeInformation<?> type) {

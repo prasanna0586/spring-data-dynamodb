@@ -1,12 +1,12 @@
 /**
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,7 +25,6 @@ import java.util.Date;
 /**
  * Abstract base class for Date marshalling.
  * Provides conversion between Date objects and String representations.
- *
  * @deprecated This class was created for SDK v1 compatibility. For new code using SDK v2,
  *             consider using AttributeConverter instead.
  * @since 1.0.0
@@ -33,11 +32,20 @@ import java.util.Date;
 @Deprecated
 public abstract class DateDynamoDBMarshaller {
 
+    /**
+     * Constructs a new DateDynamoDBMarshaller.
+     */
+    public DateDynamoDBMarshaller() {
+    }
+
+    /**
+     * Returns the DateFormat to use for marshalling and unmarshalling operations.
+     * @return a DateFormat instance
+     */
     public abstract DateFormat getDateFormat();
 
     /**
      * Converts a Date to String representation.
-     *
      * @param object the Date to convert
      * @return String representation of the date
      */
@@ -48,7 +56,6 @@ public abstract class DateDynamoDBMarshaller {
 
     /**
      * Marshalls a Date to String format.
-     *
      * @param getterReturnResult the Date to marshall
      * @return String representation of the date
      */
@@ -63,7 +70,6 @@ public abstract class DateDynamoDBMarshaller {
 
     /**
      * Converts a String back to Date.
-     *
      * @param object the String to convert
      * @return Date object
      */
@@ -74,7 +80,6 @@ public abstract class DateDynamoDBMarshaller {
 
     /**
      * Unmarshalls a String to Date.
-     *
      * @param obj   the String to unmarshall
      * @return Date object
      */

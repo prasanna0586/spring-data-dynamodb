@@ -1,12 +1,12 @@
 /**
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,13 +21,11 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Date;
 
-/**
+/*
  * @author Prasanna Kumar Ramachandran
- *
  * @deprecated This class was created for SDK v1 compatibility. {@link DateFormat} is not thread-safe.
  *             <br>
  *             For new code using SDK v2, use {@link org.socialsignin.spring.data.dynamodb.marshaller.DateDynamoDBMarshaller} instead.
- *
  * @see org.socialsignin.spring.data.dynamodb.marshaller.DateDynamoDBMarshaller
  */
 @Deprecated
@@ -35,13 +33,16 @@ public class AbstractDynamoDBDateMarshaller {
 
     private final DateFormat dateFormat;
 
+    /**
+     * Creates a new {@link AbstractDynamoDBDateMarshaller}.
+     * @param dateFormat the {@link DateFormat} to use for date marshalling and unmarshalling
+     */
     public AbstractDynamoDBDateMarshaller(DateFormat dateFormat) {
         this.dateFormat = dateFormat;
     }
 
     /**
      * Marshalls a Date to String format.
-     *
      * @param getterReturnResult the Date to marshall
      * @return String representation of the date
      */
@@ -56,7 +57,6 @@ public class AbstractDynamoDBDateMarshaller {
 
     /**
      * Unmarshalls a String to Date.
-     *
      * @param obj   the String to unmarshall
      * @return Date object
      * @throws IllegalArgumentException if parsing fails

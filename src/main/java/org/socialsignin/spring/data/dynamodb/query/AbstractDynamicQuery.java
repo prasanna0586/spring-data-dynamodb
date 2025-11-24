@@ -14,11 +14,31 @@ package org.socialsignin.spring.data.dynamodb.query;
 
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 
+/**
+ * Abstract base class for dynamic query implementations.
+ * <p>
+ * This class provides a common foundation for query operations that dynamically
+ * construct and execute queries against DynamoDB. Subclasses should implement
+ * specific query execution logic.
+ * @param <T> the domain class type for this query
+ */
 public abstract class AbstractDynamicQuery<T> extends AbstractQuery<T> {
 
+    /**
+     * The DynamoDB operations instance used to perform database operations.
+     */
     protected final DynamoDBOperations dynamoDBOperations;
+
+    /**
+     * The domain class type for entities returned by this query.
+     */
     protected final Class<T> clazz;
 
+    /**
+     * Constructs an AbstractDynamicQuery with the specified DynamoDB operations and domain class.
+     * @param dynamoDBOperations the DynamoDB operations instance
+     * @param clazz the domain class type
+     */
     public AbstractDynamicQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz) {
         this.dynamoDBOperations = dynamoDBOperations;
         this.clazz = clazz;

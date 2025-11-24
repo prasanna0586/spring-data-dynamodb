@@ -1,12 +1,12 @@
 /**
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -48,7 +48,7 @@ class DynamoDBAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.data.auditing.config. AuditingBeanDefinitionRegistrarSupport#getAnnotation()
+     * @see org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport#getAnnotation()
      */
     @NonNull
     @Override
@@ -58,8 +58,7 @@ class DynamoDBAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.data.auditing.config.
-     * AuditingBeanDefinitionRegistrarSupport#getAuditingHandlerBeanName()
+     * @see org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport#getAuditingHandlerBeanName()
      */
     @NonNull
     @Override
@@ -69,9 +68,7 @@ class DynamoDBAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.data.auditing.config.
-     * AuditingBeanDefinitionRegistrarSupport#registerBeanDefinitions(org. springframework.core.type.AnnotationMetadata,
-     * org.springframework.beans.factory.support.BeanDefinitionRegistry)
+     * @see org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport#registerBeanDefinitions(org.springframework.core.type.AnnotationMetadata, org.springframework.beans.factory.support.BeanDefinitionRegistry)
      */
     @Override
     public void registerBeanDefinitions(@NonNull AnnotationMetadata annotationMetadata, @NonNull BeanDefinitionRegistry registry) {
@@ -85,9 +82,7 @@ class DynamoDBAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.data.auditing.config.
-     * AuditingBeanDefinitionRegistrarSupport#getAuditHandlerBeanDefinitionBuilder(
-     * org.springframework.data.auditing.config.AuditingConfiguration)
+     * @see org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport#getAuditHandlerBeanDefinitionBuilder(org.springframework.data.auditing.config.AuditingConfiguration)
      */
     @NonNull
     @Override
@@ -105,9 +100,7 @@ class DynamoDBAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.data.auditing.config. AuditingBeanDefinitionRegistrarSupport#registerAuditListener(org.
-     * springframework.beans.factory.config.BeanDefinition,
-     * org.springframework.beans.factory.support.BeanDefinitionRegistry)
+     * @see org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport#registerAuditListenerBeanDefinition(org.springframework.beans.factory.config.BeanDefinition, org.springframework.beans.factory.support.BeanDefinitionRegistry)
      */
     @Override
     protected void registerAuditListenerBeanDefinition(@NonNull BeanDefinition auditingHandlerDefinition,
@@ -138,13 +131,13 @@ class DynamoDBAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
     /**
      * This method no longer creates a default {@link DynamoDBMappingContext} bean.
      * The mapping context should be provided by:
+     * <p>
      * 1. @EnableDynamoDBRepositories (which creates it with the appropriate marshalling mode), or
      * 2. A user-defined @Bean
-     *
+     * <p>
      * This matches the pattern used by Spring Data MongoDB's MongoAuditingRegistrar, which
      * relies on Spring's dependency injection to fail with a clear error if the required
      * mapping context bean is not available.
-     *
      */
     private void defaultDependenciesIfNecessary() {
         // No longer create a default mapping context bean.

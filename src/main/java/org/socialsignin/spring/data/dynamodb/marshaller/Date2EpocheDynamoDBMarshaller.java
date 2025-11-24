@@ -1,12 +1,12 @@
 /**
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,13 +26,18 @@ import java.util.Date;
 /**
  * Marshaller for converting Date to epoch milliseconds stored as String.
  * Format: String representation of milliseconds since Unix epoch (1970-01-01T00:00:00Z)
- *
  * @deprecated This class was created for SDK v1 compatibility. For new code using SDK v2,
  *             consider using AttributeConverter instead.
  * @since 1.0.0
  */
 @Deprecated
 public class Date2EpocheDynamoDBMarshaller extends DateDynamoDBMarshaller {
+
+    /**
+     * Constructs a new Date2EpocheDynamoDBMarshaller.
+     */
+    public Date2EpocheDynamoDBMarshaller() {
+    }
 
     private static final class EpcoheDateFormat extends DateFormat {
         @Serial

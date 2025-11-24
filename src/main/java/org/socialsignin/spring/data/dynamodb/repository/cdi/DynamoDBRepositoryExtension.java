@@ -1,12 +1,12 @@
 /**
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -56,13 +56,12 @@ public class DynamoDBRepositoryExtension extends CdiRepositoryExtensionSupport {
     }
 
     /**
-     * Implementation of a an observer which checks for DynamoDbClient beans and stores them in
-     * {@link #amazonDynamoDBClients} for later association with corresponding repository beans.
-     *
+     * Implementation of a observer which checks for DynamoDbClient beans and stores them in
+     * {@link #amazonDynamoDBs} for later association with corresponding repository beans.
      * @param <X>
      *            The type.
-     * @param processAnnotatedType
-     *            The annotated type as defined by CDI.
+     * @param processBean
+     *            The process bean event as defined by CDI.
      */
     @SuppressWarnings("unchecked")
     <X> void processBean(@NonNull @Observes ProcessBean<X> processBean) {
@@ -100,11 +99,10 @@ public class DynamoDBRepositoryExtension extends CdiRepositoryExtensionSupport {
     }
 
     /**
-     * Implementation of a an observer which registers beans to the CDI container for the detected Spring Data
+     * Implementation of a observer which registers beans to the CDI container for the detected Spring Data
      * repositories.
      * <p>
      * The repository beans are associated to the EntityManagers using their qualifiers.
-     *
      * @param beanManager
      *            The BeanManager instance.
      */
@@ -124,14 +122,12 @@ public class DynamoDBRepositoryExtension extends CdiRepositoryExtensionSupport {
 
     /**
      * Creates a {@link Bean}.
-     *
      * @param <T>
      *            The type of the repository.
      * @param repositoryType
      *            The class representing the repository.
      * @param beanManager
      *            The BeanManager instance.
-     *
      * @return The bean.
      */
     @NonNull

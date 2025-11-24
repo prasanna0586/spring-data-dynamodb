@@ -1,12 +1,12 @@
 /**
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -44,8 +44,9 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * jakarta.validation dependant entities validator. When it is registered as Spring component its automatically invoked
+ * jakarta.validation dependant entities' validator. When it is registered as Spring component its automatically invoked
  * before entities are saved in database.
+ * <p>
  * @author Prasanna Kumar Ramachandran
  */
 public class ValidatingDynamoDBEventListener extends AbstractDynamoDBEventListener<Object> {
@@ -57,7 +58,6 @@ public class ValidatingDynamoDBEventListener extends AbstractDynamoDBEventListen
 
     /**
      * Creates a new {@link ValidatingDynamoDBEventListener} using the given {@link Validator}.
-     *
      * @param validator
      *            must not be {@literal null}.
      */
@@ -68,8 +68,7 @@ public class ValidatingDynamoDBEventListener extends AbstractDynamoDBEventListen
 
     /*
      * (non-Javadoc)
-     * @see org.socialsignin.spring.data.dynamodb.mapping.event.
-     * AbstractDynamoDBEventListener#onBeforeSave(java.lang.Object)
+     * @see org.socialsignin.spring.data.dynamodb.mapping.event.AbstractDynamoDBEventListener#onBeforeSave(java.lang.Object)
      */
     @Override
     public void onBeforeSave(Object source) {

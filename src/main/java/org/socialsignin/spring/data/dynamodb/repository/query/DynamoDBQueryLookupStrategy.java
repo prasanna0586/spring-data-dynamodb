@@ -1,12 +1,12 @@
 /**
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,6 +28,8 @@ import org.springframework.lang.Nullable;
 import java.lang.reflect.Method;
 
 /**
+ * Factory class for creating {@link QueryLookupStrategy} implementations for DynamoDB repositories.
+ * Supports different lookup strategies including CREATE, CREATE_IF_NOT_FOUND, and DECLARED query patterns.
  * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBQueryLookupStrategy {
@@ -40,8 +42,8 @@ public class DynamoDBQueryLookupStrategy {
     }
 
     /**
-     * Base class for {@link QueryLookupStrategy} implementations that need access to an
-     * {@link com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper}.
+     * Base class for {@link QueryLookupStrategy} implementations that need access to DynamoDB operations.
+     * <p>
      * @author Prasanna Kumar Ramachandran
      */
     private abstract static class AbstractQueryLookupStrategy implements QueryLookupStrategy {
@@ -55,9 +57,7 @@ public class DynamoDBQueryLookupStrategy {
 
         /*
          * (non-Javadoc)
-         * @see org.springframework.data.repository.query.QueryLookupStrategy# resolveQuery(java.lang.reflect.Method,
-         * org.springframework.data.repository.core.RepositoryMetadata,
-         * org.springframework.data.repository.core.NamedQueries)
+         * @see org.springframework.data.repository.query.QueryLookupStrategy#resolveQuery(java.lang.reflect.Method, org.springframework.data.repository.core.RepositoryMetadata, org.springframework.data.repository.core.NamedQueries)
          */
         @NonNull
         @Override
@@ -74,6 +74,7 @@ public class DynamoDBQueryLookupStrategy {
 
     /**
      * {@link QueryLookupStrategy} to create a query from the method name.
+     * <p>
      * @author Prasanna Kumar Ramachandran
      */
     private static class CreateQueryLookupStrategy extends AbstractQueryLookupStrategy {
@@ -101,6 +102,7 @@ public class DynamoDBQueryLookupStrategy {
     /**
      * {@link QueryLookupStrategy} that tries to detect a declared query declared via
      * {@link org.socialsignin.spring.data.dynamodb.query.Query} annotation
+     * <p>
      * @author Prasanna Kumar Ramachandran
      */
     private static class DeclaredQueryLookupStrategy extends AbstractQueryLookupStrategy {
@@ -119,8 +121,9 @@ public class DynamoDBQueryLookupStrategy {
     }
 
     /**
-     * {@link QueryLookupStrategy} to try to detect a declared query first (
-     * {@link org.springframework.data.jpa.repository.Query}. In case none is found we fall back on query creation.
+     * {@link QueryLookupStrategy} to try to detect a declared query first
+     * (e.g., {@link org.socialsignin.spring.data.dynamodb.repository.Query}). In case none is found we fall back on query creation.
+     * <p>
      * @author Prasanna Kumar Ramachandran
      */
     private static class CreateIfNotFoundQueryLookupStrategy extends AbstractQueryLookupStrategy {
@@ -152,14 +155,12 @@ public class DynamoDBQueryLookupStrategy {
     }
 
     /**
-     * Creates a {@link QueryLookupStrategy} for the given
-     * {@link com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper} and {@link Key}.
-     *
+     * Creates a {@link QueryLookupStrategy} for the given DynamoDB operations.
+     * <p>
      * @param dynamoDBOperations
      *            The current operation
      * @param key
      *            The key of the entity
-     *
      * @return The created {@link QueryLookupStrategy}
      */
     @NonNull

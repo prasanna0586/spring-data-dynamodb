@@ -1,12 +1,12 @@
 /**
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,13 +33,17 @@ import static org.springframework.data.config.ParsingUtils.getObjectFactoryBeanD
 /**
  * {@link org.springframework.beans.factory.xml.BeanDefinitionParser} to register a {@link AuditingEventListener} to
  * transparently set auditing information on an entity.
+ * <p>
+ * This parser is used when parsing DynamoDB auditing XML configuration elements.
+ * It handles the registration of the auditing event listener and configures the mapping context
+ * reference for auditing to work properly with DynamoDB entities.
  * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBAuditingBeanDefinitionParser extends AbstractSingleBeanDefinitionParser {
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser# getBeanClass(org.w3c.dom.Element)
+     * @see org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser#getBeanClass(org.w3c.dom.Element)
      */
     @Override
     protected Class<?> getBeanClass(@NonNull Element element) {
@@ -48,7 +52,7 @@ public class DynamoDBAuditingBeanDefinitionParser extends AbstractSingleBeanDefi
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.beans.factory.xml.AbstractBeanDefinitionParser# shouldGenerateId()
+     * @see org.springframework.beans.factory.xml.AbstractBeanDefinitionParser#shouldGenerateId()
      */
     @Override
     protected boolean shouldGenerateId() {
@@ -57,9 +61,7 @@ public class DynamoDBAuditingBeanDefinitionParser extends AbstractSingleBeanDefi
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser# doParse(org.w3c.dom.Element,
-     * org.springframework.beans.factory.xml.ParserContext,
-     * org.springframework.beans.factory.support.BeanDefinitionBuilder)
+     * @see org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser#doParse(org.w3c.dom.Element, org.springframework.beans.factory.xml.ParserContext, org.springframework.beans.factory.support.BeanDefinitionBuilder)
      */
     @Override
     protected void doParse(@NonNull Element element, @NonNull ParserContext parserContext, @NonNull BeanDefinitionBuilder builder) {

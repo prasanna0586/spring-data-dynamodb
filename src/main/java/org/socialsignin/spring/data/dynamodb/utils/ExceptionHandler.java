@@ -1,12 +1,12 @@
 /**
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,7 +26,7 @@ import java.util.List;
 
 /**
  * Interface for handling exceptions in batch operations (write and delete).
- *
+ * <p>
  * This interface provides methods to convert SDK v2 batch operation failures
  * into rich exception objects that expose unprocessed entities for consumer handling.
  */
@@ -34,17 +34,16 @@ public interface ExceptionHandler {
 
     /**
      * Repackages batch operation failures into a rich exception with unprocessed entity information.
-     *
+     * <p>
      * This method is called after retry logic has been exhausted. It creates an exception that:
      * - Exposes unprocessed entities for custom recovery logic
      * - Includes retry attempt count
      * - Preserves any thrown exceptions
-     *
+     * <p>
      * Following AWS SDK v2 best practices, unprocessed items are returned to the caller
      * for custom handling (e.g., dead letter queue, custom retry, alerting).
-     *
+     * <p>
      * Supports both batch write and batch delete operations.
-     *
      * @param unprocessedEntities List of entity objects that could not be written/deleted after retries
      * @param retriesAttempted Number of retry attempts that were made
      * @param cause Original exception if one was thrown, or null if items were just unprocessed
@@ -102,7 +101,12 @@ public interface ExceptionHandler {
     /**
      * Legacy method signature maintained for internal compatibility during migration.
      * This will be removed once DynamoDBTemplate is fully migrated to SDK v2.
-     *
+     * <p>
+     * Converts failed batch results into a rich exception with unprocessed entity information.
+     * @param <T> Exception type extending DataAccessException
+     * @param failedBatches List of batch results containing unprocessed items
+     * @param targetType The exception class to instantiate (BatchWriteException or BatchDeleteException)
+     * @return Exception instance with failure context
      * @deprecated Use {@link #repackageToException(List, int, Throwable, Class)} instead
      */
     @NonNull

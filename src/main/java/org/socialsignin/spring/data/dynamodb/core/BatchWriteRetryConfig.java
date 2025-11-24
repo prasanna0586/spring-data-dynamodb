@@ -1,12 +1,12 @@
 /**
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -22,11 +22,10 @@ import java.util.Random;
 
 /**
  * Configuration for batch write operation retry behavior.
- *
+ * <p>
  * AWS recommends using exponential backoff when retrying batch operations with unprocessed items.
  * This configuration allows customization of the retry strategy while providing sensible defaults
  * based on AWS best practices.
- *
  * @see <a href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html">
  *      AWS DynamoDB Error Handling</a>
  */
@@ -40,6 +39,7 @@ public class BatchWriteRetryConfig {
 
     /**
      * Default base delay in milliseconds before the first retry.
+     * <p>
      * AWS SDK for Java 2.x uses 100ms for non-throttling exceptions.
      * Unprocessed items in batch operations are typically throttling-related,
      * but we use 100ms as a conservative starting point.
@@ -48,12 +48,14 @@ public class BatchWriteRetryConfig {
 
     /**
      * Default maximum delay in milliseconds between retries.
+     * <p>
      * AWS SDK for Java 2.x uses 20 seconds as the maximum delay.
      */
     public static final long DEFAULT_MAX_DELAY_MS = 20000L; // 20 seconds
 
     /**
      * Default setting for jitter.
+     * <p>
      * AWS recommends using jitter to prevent thundering herd problem.
      */
     public static final boolean DEFAULT_USE_JITTER = true;
@@ -78,7 +80,6 @@ public class BatchWriteRetryConfig {
 
     /**
      * Creates a custom retry configuration.
-     *
      * @param maxRetries Maximum number of retry attempts (must be >= 0)
      * @param baseDelayMs Base delay in milliseconds before first retry (must be > 0)
      * @param maxDelayMs Maximum delay in milliseconds between retries (must be >= baseDelayMs)
@@ -104,10 +105,10 @@ public class BatchWriteRetryConfig {
 
     /**
      * Calculates the delay before the next retry using exponential backoff.
-     *
+     * <p>
      * Formula: min(baseDelay * 2^retryCount, maxDelay)
+     * <p>
      * With jitter: delay * (0.5 + random(0, 0.5))
-     *
      * @param retryCount The current retry attempt (0-based)
      * @return Delay in milliseconds before the next retry
      */
@@ -138,24 +139,53 @@ public class BatchWriteRetryConfig {
         return delay;
     }
 
+    /**
+     * Gets the maximum number of retry attempts.
+     * @return The maximum number of retries
+     */
     public int getMaxRetries() {
         return maxRetries;
     }
 
+    /**
+     * Gets the base delay in milliseconds before the first retry.
+     * @return The base delay in milliseconds
+     */
     public long getBaseDelayMs() {
         return baseDelayMs;
     }
 
+    /**
+     * Gets the maximum delay in milliseconds between retries.
+     * @return The maximum delay in milliseconds
+     */
     public long getMaxDelayMs() {
         return maxDelayMs;
     }
 
+    /**
+     * Whether jitter is enabled for retry delays.
+     * @return True if jitter is enabled, false otherwise
+     */
     public boolean isUseJitter() {
         return useJitter;
     }
 
     /**
      * Builder for creating custom BatchWriteRetryConfig instances.
+     * <p>
+     * Uses fluent builder pattern to customize batch write retry configuration.
+     * All configuration values have sensible defaults based on AWS SDK for Java 2.x.
+     * <p>
+     * Example usage:
+     * <pre>
+     * BatchWriteRetryConfig config = new BatchWriteRetryConfig.Builder()
+     *     .maxRetries(5)
+     *     .baseDelayMs(200)
+     *     .maxDelayMs(10000)
+     *     .useJitter(true)
+     *     .build();
+     * </pre>
      */
     public static class Builder {
         private int maxRetries = DEFAULT_MAX_RETRIES;
@@ -163,24 +193,44 @@ public class BatchWriteRetryConfig {
         private long maxDelayMs = DEFAULT_MAX_DELAY_MS;
         private boolean useJitter = DEFAULT_USE_JITTER;
 
+        /**
+         * Sets the maximum number of retry attempts.
+         * @param maxRetries Maximum number of retries (must be >= 0)
+         * @return This builder instance for method chaining
+         */
         @NonNull
         public Builder maxRetries(int maxRetries) {
             this.maxRetries = maxRetries;
             return this;
         }
 
+        /**
+         * Sets the base delay in milliseconds before the first retry.
+         * @param baseDelayMs Base delay in milliseconds (must be > 0)
+         * @return This builder instance for method chaining
+         */
         @NonNull
         public Builder baseDelayMs(long baseDelayMs) {
             this.baseDelayMs = baseDelayMs;
             return this;
         }
 
+        /**
+         * Sets the maximum delay in milliseconds between retries.
+         * @param maxDelayMs Maximum delay in milliseconds (must be >= baseDelayMs)
+         * @return This builder instance for method chaining
+         */
         @NonNull
         public Builder maxDelayMs(long maxDelayMs) {
             this.maxDelayMs = maxDelayMs;
             return this;
         }
 
+        /**
+         * Sets whether to add random jitter to retry delays.
+         * @param useJitter True to enable jitter, false to disable
+         * @return This builder instance for method chaining
+         */
         @NonNull
         public Builder useJitter(boolean useJitter) {
             this.useJitter = useJitter;
@@ -188,7 +238,8 @@ public class BatchWriteRetryConfig {
         }
 
         /**
-         * Disables retry logic completely (maxRetries = 0).
+         * Disables retry logic completely by setting maxRetries to 0.
+         * @return This builder instance for method chaining
          */
         @NonNull
         public Builder disableRetries() {
@@ -196,6 +247,11 @@ public class BatchWriteRetryConfig {
             return this;
         }
 
+        /**
+         * Builds and returns a new BatchWriteRetryConfig instance with the configured settings.
+         * @return A new BatchWriteRetryConfig instance
+         * @throws IllegalArgumentException if the configuration is invalid
+         */
         @NonNull
         public BatchWriteRetryConfig build() {
             return new BatchWriteRetryConfig(maxRetries, baseDelayMs, maxDelayMs, useJitter);

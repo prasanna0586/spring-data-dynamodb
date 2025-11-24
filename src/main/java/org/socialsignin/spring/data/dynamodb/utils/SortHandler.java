@@ -1,12 +1,12 @@
 /**
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,8 +26,11 @@ import org.springframework.lang.NonNull;
 public interface SortHandler {
 
     /**
+     * Ensures that the given pageable has no sort specified.
      * @param pageable
      *            The {@link Pageable} to check that no sort is specified
+     * @throws UnsupportedOperationException
+     *             if a sort is initialized (non-null &amp;&amp; not {@link Sort#unsorted()}
      */
     default void ensureNoSort(@NonNull Pageable pageable) {
         Sort sort = pageable.getSort();
@@ -35,9 +38,9 @@ public interface SortHandler {
     }
 
     /**
+     * Ensures that the given sort is not specified.
      * @param sort
      *            The {@link Sort} to check that no sort is specified
-     *
      * @throws UnsupportedOperationException
      *             if a {@code sort} is initialized (non-null &amp;&amp; not {@link Sort#unsorted()}
      */

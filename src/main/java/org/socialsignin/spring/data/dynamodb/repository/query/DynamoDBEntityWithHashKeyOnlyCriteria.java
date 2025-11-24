@@ -1,12 +1,12 @@
 /**
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,6 +32,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * Query criteria for DynamoDB entities with only a hash key (no range key).
+ * Handles query and scan operations optimized for hash-key-only table schemas.
+ * @param <T> the entity type
+ * @param <ID> the ID type
  * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBEntityWithHashKeyOnlyCriteria<T, ID> extends AbstractDynamoDBQueryCriteria<T, ID> {
@@ -112,16 +116,16 @@ public class DynamoDBEntityWithHashKeyOnlyCriteria<T, ID> extends AbstractDynamo
     }
 
     /**
-     * Determines whether this criteria is applicable for a DynamoDB Query operation.
-     *
-     * <p>A Query operation can be used in the following cases:
+     * Determines whether these criteria are applicable for a DynamoDB Query operation.
+     * <p>
+     * A Query operation can be used in the following cases:
      * <ul>
      *   <li>Hash key only query on main table (e.g., findByCustomerId where customerId is the table's partition key)</li>
      *   <li>Global Secondary Index query (e.g., findByMerchantId where merchantId is a GSI partition key)</li>
      * </ul>
-     *
-     * <p>If this returns false, the query must fall back to a Scan operation.
-     *
+     * <p>
+     * If this returns false, the query must fall back to a Scan operation.
+     * <p>
      * @return true if Query operation is applicable, false if Scan is required
      */
     public boolean isApplicableForQuery() {
@@ -202,6 +206,7 @@ public class DynamoDBEntityWithHashKeyOnlyCriteria<T, ID> extends AbstractDynamo
      * Converts SDK v1 Condition object to SDK v2 Expression syntax string.
      * Also populates the expressionValues and expressionNames maps with the necessary values.
      * Uses expression attribute names for all attributes to handle reserved keywords defensively.
+     * <p>
      */
     @NonNull
     private String convertConditionToExpression(String attributeName, @NonNull Condition condition, int startNameCounter,
@@ -300,8 +305,10 @@ public class DynamoDBEntityWithHashKeyOnlyCriteria<T, ID> extends AbstractDynamo
     /**
      * Converts a Java object to SDK v2 AttributeValue.
      * Marshalling behavior depends on the configured MarshallingMode:
+     * <p>
      * - SDK_V2_NATIVE: Uses AWS SDK v2's native type mappings (Boolean → BOOL)
      * - SDK_V1_COMPATIBLE: Maintains backward compatibility (Boolean → Number "1"/"0", Date/Instant → ISO String)
+     * <p>
      */
     private AttributeValue convertToAttributeValue(@NonNull Object value) {
         switch (value) {

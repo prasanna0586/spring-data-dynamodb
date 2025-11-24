@@ -1,12 +1,12 @@
 /**
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,12 +42,15 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * This is the base class for all classes performing the validation or auto-creation of tables based on the entity
- * classes. //TODO: It would be nice if the checks would run in parallel via a TaskScheduler (if available)
+ * Synchronizes DynamoDB tables with entity class definitions.
+ * This class performs validation or auto-creation of DynamoDB tables based on entity classes.
  *
  * <p>This implementation uses SDK v2 APIs to introspect entity classes and generate CreateTableRequest objects
  * based on the @DynamoDbPartitionKey, @DynamoDbSortKey, @DynamoDbSecondaryPartitionKey annotations.</p>
  *
+ * <p>TODO: It would be nice if the checks would run in parallel via a TaskScheduler (if available)</p>
+ * @param <T> the entity type
+ * @param <ID> the ID type
  * @see Entity2DDL
  */
 public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationProxyPostProcessor<T, ID>
@@ -171,7 +174,6 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
      *   <li>Global Secondary Index (GSI) creation</li>
      *   <li>Correct key ordering</li>
      * </ul>
-     *
      * @param entityInformation Entity metadata
      */
     private void performCreate(@NonNull DynamoDBEntityInformation<T, ID> entityInformation) {
@@ -257,7 +259,7 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
         }
     }
 
-    /**
+    /*
      * @param entityInformation The entity to check for it's table
      * @throws IllegalStateException is thrown if the existing table doesn't match the entity's annotation
      */

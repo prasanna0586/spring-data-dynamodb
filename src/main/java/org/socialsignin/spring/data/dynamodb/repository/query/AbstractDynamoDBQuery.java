@@ -1,12 +1,12 @@
 /**
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,18 +32,36 @@ import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteResult;
 import java.util.*;
 
 /**
+ * Abstract base class for DynamoDB repository queries that handles execution of queries
+ * and manages different execution strategies (collection, paged, sliced, single entity, delete, etc.).
+ * @param <T> the entity type
+ * @param <ID> the ID type of the entity
  * @author Prasanna Kumar Ramachandran
  */
 public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, ExceptionHandler {
 
+    /**
+     * DynamoDB operations instance used to execute queries against DynamoDB.
+     */
     protected final DynamoDBOperations dynamoDBOperations;
     private final DynamoDBQueryMethod<T, ID> method;
 
+    /**
+     * Constructs an AbstractDynamoDBQuery with the provided DynamoDB operations and query method.
+     * @param dynamoDBOperations the DynamoDB operations instance to use for query execution
+     * @param method the query method metadata containing method-specific query information
+     */
     public AbstractDynamoDBQuery(DynamoDBOperations dynamoDBOperations, DynamoDBQueryMethod<T, ID> method) {
         this.dynamoDBOperations = dynamoDBOperations;
         this.method = method;
     }
 
+    /**
+     * Determines and returns the appropriate query execution strategy based on the query method type
+     * and result restriction settings.
+     * @return a QueryExecution instance configured for the appropriate result type
+     *         (collection, slice, page, single entity, or delete)
+     */
     @NonNull
     protected QueryExecution<T, ID> getExecution() {
         if (method.isCollectionQuery() && !isSingleEntityResultsRestriction()) {
@@ -63,21 +81,65 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
         }
     }
 
+    /**
+     * Creates a Query object for retrieving entities based on the provided parameter values.
+     * This method is implemented by subclasses to provide specific query creation logic.
+     * @param values the parameter values passed to the query method
+     * @return a Query object for retrieving entities of type T
+     */
     protected abstract Query<T> doCreateQuery(Object[] values);
 
+    /**
+     * Creates a Query object for counting entities based on the provided parameter values.
+     * This method is implemented by subclasses to provide specific count query creation logic.
+     * @param values the parameter values passed to the query method
+     * @param pageQuery true if this is a count query for pagination, false otherwise
+     * @return a Query object that returns the count as a Long
+     */
     protected abstract Query<Long> doCreateCountQuery(Object[] values, boolean pageQuery);
 
+    /**
+     * Determines if this is a count query that should return the number of entities
+     * matching the query criteria.
+     * @return true if this is a count query, false otherwise
+     */
     protected abstract boolean isCountQuery();
 
+    /**
+     * Determines if this is an exists query that checks for the presence of entities
+     * matching the query criteria.
+     * @return true if this is an exists query, false otherwise
+     */
     protected abstract boolean isExistsQuery();
 
+    /**
+     * Determines if this is a delete query that should delete entities matching
+     * the query criteria.
+     * @return true if this is a delete query, false otherwise
+     */
     protected abstract boolean isDeleteQuery();
 
+    /**
+     * Returns the maximum number of results to retrieve from the query, if applicable.
+     * This is used to limit the result set size.
+     * @return the maximum number of results as an Integer, or null if no limit is applied
+     */
     @Nullable
     protected abstract Integer getResultsRestrictionIfApplicable();
 
+    /**
+     * Determines if the query results should be restricted to a single entity.
+     * This is typically true for query methods that return a single entity rather than a collection.
+     * @return true if results should be restricted to a single entity, false otherwise
+     */
     protected abstract boolean isSingleEntityResultsRestriction();
 
+    /**
+     * Creates a Query object with scan permissions configured based on the query method settings.
+     * This method wraps doCreateQuery() and sets scan permissions if enabled.
+     * @param values the parameter values passed to the query method
+     * @return a Query object with scan permissions configured
+     */
     @NonNull
     protected Query<T> doCreateQueryWithPermissions(Object[] values) {
         Query<T> query = doCreateQuery(values);
@@ -85,6 +147,13 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
         return query;
     }
 
+    /**
+     * Creates a count Query object with scan count permissions configured based on the query method settings.
+     * This method wraps doCreateCountQuery() and sets scan count permissions if enabled.
+     * @param values the parameter values passed to the query method
+     * @param pageQuery true if this is a count query for pagination, false otherwise
+     * @return a Query object that returns a count with scan count permissions configured
+     */
     @NonNull
     protected Query<Long> doCreateCountQueryWithPermissions(Object[] values, boolean pageQuery) {
         Query<Long> query = doCreateCountQuery(values, pageQuery);
@@ -92,7 +161,19 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
         return query;
     }
 
+    /**
+     * Interface that defines the execution strategy for DynamoDB queries.
+     * Implementations handle different return types such as collections, pages, slices, single entities, and deletes.
+     * @param <T> the entity type
+     * @param <ID> the ID type of the entity
+     */
     protected interface QueryExecution<T, ID> {
+        /**
+         * Executes a query and returns the result.
+         * @param query the AbstractDynamoDBQuery instance executing the query
+         * @param values the parameter values passed to the query method
+         * @return the query result, which can be null, a single entity, a collection, a page, a slice, or a count
+         */
         @Nullable
         Object execute(AbstractDynamoDBQuery<T, ID> query, Object[] values);
     }
@@ -353,9 +434,11 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.springframework.data.repository.query.RepositoryQuery#execute(java .lang.Object[])
+    /**
+     * Executes the query using the appropriate execution strategy determined by getExecution().
+     * Delegates to the execution strategy to handle the actual query execution and result processing.
+     * @param parameters the parameter values passed to the query method
+     * @return the query result, which type depends on the query method return type
      */
     public Object execute(@NonNull Object[] parameters) {
 

@@ -1,12 +1,12 @@
 /**
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,10 +40,17 @@ import java.util.*;
 import java.util.Map.Entry;
 
 /**
+ * Abstract base class for DynamoDB query criteria implementations.
+ * Provides common functionality for building and executing DynamoDB queries and scans.
+ * @param <T> the entity type
+ * @param <ID> the ID type
  * @author Prasanna Kumar Ramachandran
  */
 public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQueryCriteria<T, ID>, SortHandler {
 
+    /**
+     * The entity class type for this query criteria.
+     */
     protected final Class<T> clazz;
     @NonNull
     private final DynamoDBEntityInformation<T, ID> entityInformation;
@@ -51,29 +58,100 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
     private final Map<String, String> attributeNamesByPropertyName;
     @Nullable
     private final String hashKeyPropertyName;
+    /**
+     * The DynamoDB mapping context for type conversions and schema information.
+     */
     protected final DynamoDBMappingContext mappingContext;
 
+    /**
+     * Multi-value map of attribute conditions, keyed by attribute name.
+     * Supports multiple conditions on the same attribute.
+     */
     protected final MultiValueMap<String, Condition> attributeConditions;
+    /**
+     * Multi-value map of property conditions, keyed by property name.
+     * Supports multiple conditions on the same property.
+     */
     protected final MultiValueMap<String, Condition> propertyConditions;
 
+    /**
+     * The DynamoDB attribute value for the hash key.
+     * This is the marshalled representation ready for DynamoDB.
+     */
     protected Object hashKeyAttributeValue;
+    /**
+     * The original property value for the hash key (before any type conversions).
+     */
     protected Object hashKeyPropertyValue;
+    /**
+     * The name of the global secondary index (GSI or LSI) to query, or null for main table queries.
+     */
     @Nullable
     protected String globalSecondaryIndexName;
+    /**
+     * The sort specification for the query results.
+     * Defaults to unsorted if not specified.
+     */
     protected Sort sort = Sort.unsorted();
+    /**
+     * The projection expression specifying which attributes to return.
+     * Null means all attributes are returned.
+     */
     @Nullable
     protected String projection = null;
+    /**
+     * The maximum number of items to return from the query.
+     * Null means no limit is applied.
+     */
     @Nullable
     protected Integer limit = null;
+    /**
+     * The filter expression for further filtering query results after key conditions.
+     * Null means no filter is applied.
+     */
     @Nullable
     protected String filterExpression = null;
+    /**
+     * Array of expression attribute names for use in filter expressions.
+     * Maps placeholder names to actual attribute names.
+     */
     protected ExpressionAttribute[] expressionAttributeNames;
+    /**
+     * Array of expression attribute values for use in filter expressions.
+     * Maps placeholder values to actual attribute values.
+     */
     protected ExpressionAttribute[] expressionAttributeValues;
+    /**
+     * Map of expression value parameters to their string representations.
+     * Used for parameter substitution in filter expressions.
+     */
     protected Map<String, String> mappedExpressionValues;
+    /**
+     * The consistent read mode for the query (CONSISTENT, EVENTUAL, or DEFAULT).
+     * Controls whether strongly consistent reads are used.
+     */
     protected QueryConstants.ConsistentReadMode consistentReads = QueryConstants.ConsistentReadMode.DEFAULT;
 
+    /**
+     * Determines if these criteria is applicable for a single entity load operation.
+     * @return true if these criteria represents a single entity load query, false otherwise
+     */
     public abstract boolean isApplicableForLoad();
 
+    /**
+     * Builds a DynamoDB QueryRequest from the specified criteria.
+     * Constructs key condition expressions for hash and range keys, handles projections,
+     * sorting, filtering, and expression attributes.
+     * <p>
+     * @param tableName the DynamoDB table name
+     * @param theIndexName the index name to query (null for main table)
+     * @param hashKeyAttributeName the hash key attribute name
+     * @param rangeKeyAttributeName the range key attribute name (null if not present)
+     * @param rangeKeyPropertyName the range key property name (null if not present)
+     * @param hashKeyConditions conditions on the hash key
+     * @param rangeKeyConditions conditions on the range key
+     * @return a configured QueryRequest ready for DynamoDB
+     */
     protected QueryRequest buildQueryRequest(String tableName, String theIndexName, String hashKeyAttributeName,
                                              @Nullable String rangeKeyAttributeName, @Nullable String rangeKeyPropertyName, @Nullable List<Condition> hashKeyConditions,
                                              @Nullable List<Condition> rangeKeyConditions) {
@@ -166,7 +244,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
 
         // Determine allowed sort properties based on query type
         // Check if this is an LSI query
-        // LSI query: hash key is table partition key + index name is set
+        // : hash key is table partition key + index name is set
         boolean isLSIQuery = false;
         if (isApplicableForGlobalSecondaryIndex() && getHashKeyAttributeValue() != null) {
             String queryHashKeyPropertyName = getHashKeyPropertyName();
@@ -367,6 +445,11 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return queryRequest;
     }
 
+    /**
+     * Applies the consistent read mode to the QueryRequest.
+     * @param queryRequest the QueryRequest to configure
+     * @return the QueryRequest with consistent read setting applied
+     */
     protected QueryRequest applyConsistentReads(@NonNull QueryRequest queryRequest) {
         return switch (consistentReads) {
             case CONSISTENT -> queryRequest.toBuilder().consistentRead(true).build();
@@ -375,6 +458,14 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         };
     }
 
+    /**
+     * Applies sort order to the QueryRequest if sorting is specified and valid.
+     * Validates that sort properties are permitted for the query type.
+     * @param queryRequest the QueryRequest to configure
+     * @param permittedPropertyNames the properties that are allowed to be sorted
+     * @return the QueryRequest with sort order applied
+     * @throws UnsupportedOperationException if sorting by invalid properties or multiple attributes
+     */
     protected QueryRequest applySortIfSpecified(@NonNull QueryRequest queryRequest, @NonNull List<String> permittedPropertyNames) {
         if (permittedPropertyNames.size() > 2) {
             throw new UnsupportedOperationException("Can only sort by at most a single global hash and range key");
@@ -411,7 +502,6 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
     /**
      * Builds a key condition expression part from a Condition object.
      * Supports EQ, LT, LE, GT, GE, BETWEEN, and BEGINS_WITH operators (valid for key conditions).
-     *
      * @param namePlaceholder     The expression attribute name placeholder (e.g., "#pk", "#sk")
      * @param condition           The condition to convert
      * @param startValueCounter   Starting counter for value placeholders
@@ -480,6 +570,11 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         }
     }
 
+    /**
+     * Checks if all current attribute conditions use comparison operators that are valid for queries.
+     * Valid operators: EQ, LE, LT, GE, GT, BEGINS_WITH, BETWEEN.
+     * @return true if all conditions use valid query operators, false otherwise
+     */
     public boolean comparisonOperatorsPermittedForQuery() {
         List<ComparisonOperator> comparisonOperatorsPermittedForQuery = Arrays.asList(ComparisonOperator.EQ,
                 ComparisonOperator.LE, ComparisonOperator.LT, ComparisonOperator.GE, ComparisonOperator.GT,
@@ -497,6 +592,11 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return true;
     }
 
+    /**
+     * Gets the conditions on the hash key from the current criteria.
+     * Handles both main table queries and index queries (LSI/GSI).
+     * @return a list of hash key conditions, or null if no hash key conditions exist
+     */
     @Nullable
     protected List<Condition> getHashKeyConditions() {
         List<Condition> hashKeyConditions = null;
@@ -526,6 +626,11 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return hashKeyConditions;
     }
 
+    /**
+     * Constructor for AbstractDynamoDBQueryCriteria.
+     * @param dynamoDBEntityInformation metadata about the DynamoDB entity
+     * @param mappingContext the DynamoDB mapping context for type conversions
+     */
     public AbstractDynamoDBQueryCriteria(@NonNull DynamoDBEntityInformation<T, ID> dynamoDBEntityInformation,
                                          DynamoDBMappingContext mappingContext) {
         this.clazz = dynamoDBEntityInformation.getJavaType();
@@ -539,6 +644,13 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         this.mappingContext = mappingContext;
     }
 
+    /**
+     * Gets the first declared index name for the specified attribute from the given candidate indexes.
+     * @param indexNamesByAttributeName map of attribute names to their declared index names
+     * @param indexNamesToCheck the list of candidate index names to search within
+     * @param attributeName the attribute name to find an index for
+     * @return the first matching index name, or null if no match is found
+     */
     @Nullable
     private String getFirstDeclaredIndexNameForAttribute(@NonNull Map<String, String[]> indexNamesByAttributeName,
                                                          @NonNull List<String> indexNamesToCheck, String attributeName) {
@@ -553,6 +665,15 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return indexName;
     }
 
+    /**
+     * Gets the global secondary index name that should be used for the query.
+     * Performs index selection based on attribute conditions and sort requirements.
+     * Prioritizes exact matches and sort-compatible indexes.
+     * <p>
+     * @return the global secondary index name, or null if the main table should be queried
+     * @throws RuntimeException if multiple indexes are defined on the same attribute set
+     * @throws UnsupportedOperationException if conditions span multiple different GSI indexes
+     */
     @Nullable
     protected String getGlobalSecondaryIndexName() {
 
@@ -573,7 +694,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
             // this will be used to determine which index to use if multiple indexes are
             // applicable
             Map<String, String[]> indexNamesByAttributeName = new HashMap<>();
-
+            // <p>
             // Declare map of attribute lists by index name which we will populate below -
             // this will be used to determine whether we have an exact match index for
             // specified attribute conditions
@@ -681,6 +802,11 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return globalSecondaryIndexName;
     }
 
+    /**
+     * Determines whether index selection should be performed based on query conditions and sort requirements.
+     * @param hasSortRequirement whether the query has a sort requirement
+     * @return true if index selection should be performed, false to use main table
+     */
     private boolean isShouldSelectIndex(boolean hasSortRequirement) {
         boolean hashKeyIsGSIPartitionKey = entityInformation.getGlobalSecondaryIndexNamesByPropertyName()
                 .containsKey(getHashKeyPropertyName());
@@ -692,19 +818,37 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
                (hashKeyIsGSIPartitionKey && hasSortRequirement);
     }
 
+    /**
+     * Checks if the specified property name is the hash key property.
+     * @param propertyName the property name to check
+     * @return true if the property is the hash key, false otherwise
+     */
     protected boolean isHashKeyProperty(String propertyName) {
         return hashKeyPropertyName != null && hashKeyPropertyName.equals(propertyName);
     }
 
+    /**
+     * Gets the hash key property name.
+     * @return the hash key property name, or null if not set
+     */
     @Nullable
     protected String getHashKeyPropertyName() {
         return hashKeyPropertyName;
     }
 
+    /**
+     * Gets the DynamoDB attribute name for the hash key property.
+     * @return the hash key attribute name
+     */
     protected String getHashKeyAttributeName() {
         return getAttributeName(getHashKeyPropertyName());
     }
 
+    /**
+     * Checks if there is an equality condition on the index hash key.
+     * Handles both GSI and LSI hash keys.
+     * @return true if an equality condition exists on the index hash key, false otherwise
+     */
     protected boolean hasIndexHashKeyEqualCondition() {
         boolean hasIndexHashKeyEqualCondition = false;
         for (Map.Entry<String, List<Condition>> propertyConditionList : propertyConditions.entrySet()) {
@@ -734,6 +878,11 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return hasIndexHashKeyEqualCondition;
     }
 
+    /**
+     * Checks if there is a condition on an index range key.
+     * Handles both GSI and LSI range keys.
+     * @return true if a condition exists on an index range key, false otherwise
+     */
     protected boolean hasIndexRangeKeyCondition() {
         boolean hasIndexRangeKeyCondition = false;
         for (Map.Entry<String, List<Condition>> propertyConditionList : propertyConditions.entrySet()) {
@@ -747,6 +896,11 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return hasIndexRangeKeyCondition;
     }
 
+    /**
+     * Determines if these criteria is applicable for querying a global secondary index (GSI or LSI).
+     * Validates that the selected index has appropriate conditions and attributes.
+     * @return true if the criteria can be executed against a secondary index, false if main table should be used
+     */
     protected boolean isApplicableForGlobalSecondaryIndex() {
         boolean global = this.getGlobalSecondaryIndexName() != null;
         if (global && getHashKeyAttributeValue() != null) {
@@ -772,6 +926,12 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
 
     }
 
+    /**
+     * Sets the hash key value for the query.
+     * @param value the hash key value to set
+     * @return this query criteria for method chaining
+     * @throws IllegalArgumentException if value is null
+     */
     @NonNull
     public DynamoDBQueryCriteria<T, ID> withHashKeyEquals(Object value) {
         Assert.notNull(value, "Creating conditions on null hash keys not supported: please specify a value for '"
@@ -782,18 +942,36 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return this;
     }
 
+    /**
+     * Checks if a hash key value has been specified.
+     * @return true if a hash key value is set, false otherwise
+     */
     public boolean isHashKeySpecified() {
         return getHashKeyAttributeValue() != null;
     }
 
+    /**
+     * Gets the hash key attribute value.
+     * @return the hash key attribute value
+     */
     public Object getHashKeyAttributeValue() {
         return hashKeyAttributeValue;
     }
 
+    /**
+     * Gets the original hash key property value (before any type conversions).
+     * @return the hash key property value
+     */
     public Object getHashKeyPropertyValue() {
         return hashKeyPropertyValue;
     }
 
+    /**
+     * Gets the DynamoDB attribute name for the specified property name.
+     * Caches the result for performance.
+     * @param propertyName the property name to convert
+     * @return the DynamoDB attribute name
+     */
     protected String getAttributeName(String propertyName) {
         String attributeName = attributeNamesByPropertyName.get(propertyName);
         if (attributeName == null) {
@@ -804,6 +982,15 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
 
     }
 
+    /**
+     * Adds a BETWEEN criteria on the specified property.
+     * Implementation of interface method.
+     * @param propertyName the property name to filter on
+     * @param value1 the lower bound value (inclusive)
+     * @param value2 the upper bound value (inclusive)
+     * @param type the type of the property
+     * @return this query criteria for method chaining
+     */
     @NonNull
     @Override
     public DynamoDBQueryCriteria<T, ID> withPropertyBetween(@NonNull String propertyName, Object value1, Object value2,
@@ -813,6 +1000,14 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return withCondition(propertyName, condition);
     }
 
+    /**
+     * Adds an IN (membership) criteria on the specified property.
+     * Implementation of interface method.
+     * @param propertyName the property name to filter on
+     * @param value an iterable of values to match against
+     * @param propertyType the type of the property
+     * @return this query criteria for method chaining
+     */
     @NonNull
     @Override
     public DynamoDBQueryCriteria<T, ID> withPropertyIn(@NonNull String propertyName, @NonNull Iterable<?> value, Class<?> propertyType) {
@@ -821,6 +1016,15 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return withCondition(propertyName, condition);
     }
 
+    /**
+     * Adds a single-value criteria to the query using the specified comparison operator.
+     * Implementation of interface method.
+     * @param propertyName the property name to filter on
+     * @param comparisonOperator the comparison operator to apply
+     * @param value the value to compare against
+     * @param propertyType the type of the property
+     * @return this query criteria for method chaining
+     */
     @Override
     public DynamoDBQueryCriteria<T, ID> withSingleValueCriteria(@NonNull String propertyName,
                                                                 @NonNull ComparisonOperator comparisonOperator, Object value, Class<?> propertyType) {
@@ -833,6 +1037,12 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         }
     }
 
+    /**
+     * Builds a query object that can be executed to fetch results.
+     * Implementation of interface method.
+     * @param dynamoDBOperations the DynamoDB operations instance to use for execution
+     * @return a Query object configured with the criteria
+     */
     @Override
     public Query<T> buildQuery(DynamoDBOperations dynamoDBOperations) {
         if (isApplicableForLoad()) {
@@ -842,6 +1052,13 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         }
     }
 
+    /**
+     * Builds a count query that returns the number of matching items.
+     * Implementation of interface method.
+     * @param dynamoDBOperations the DynamoDB operations instance to use for execution
+     * @param pageQuery whether this is for paginated query counting
+     * @return a Query object that returns the count of matching items
+     */
     @Override
     public Query<Long> buildCountQuery(DynamoDBOperations dynamoDBOperations, boolean pageQuery) {
         if (isApplicableForLoad()) {
@@ -851,16 +1068,53 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         }
     }
 
+    /**
+     * Builds a query for loading a single entity by its keys.
+     * Must be implemented by subclasses.
+     * @param dynamoDBOperations the DynamoDB operations instance
+     * @return a Query object for single entity load
+     */
     protected abstract Query<T> buildSingleEntityLoadQuery(DynamoDBOperations dynamoDBOperations);
 
+    /**
+     * Builds a count query for a single entity.
+     * Must be implemented by subclasses.
+     * @param dynamoDBOperations the DynamoDB operations instance
+     * @return a count Query object
+     */
     protected abstract Query<Long> buildSingleEntityCountQuery(DynamoDBOperations dynamoDBOperations);
 
+    /**
+     * Builds a finder query that returns zero or more entities matching the criteria.
+     * Must be implemented by subclasses.
+     * @param dynamoDBOperations the DynamoDB operations instance
+     * @return a Query object for finder operations
+     */
     protected abstract Query<T> buildFinderQuery(DynamoDBOperations dynamoDBOperations);
 
+    /**
+     * Builds a count query for finder operations.
+     * Must be implemented by subclasses.
+     * @param dynamoDBOperations the DynamoDB operations instance
+     * @param pageQuery whether this is for paginated query counting
+     * @return a count Query object
+     */
     protected abstract Query<Long> buildFinderCountQuery(DynamoDBOperations dynamoDBOperations, boolean pageQuery);
 
+    /**
+     * Checks if only the hash key is specified without any other conditions.
+     * Must be implemented by subclasses.
+     * @return true if only hash key is specified, false otherwise
+     */
     protected abstract boolean isOnlyHashKeySpecified();
 
+    /**
+     * Adds a criteria with no value (e.g., NULL or NOT_NULL checks).
+     * Implementation of interface method.
+     * @param propertyName the property name to filter on
+     * @param comparisonOperator the comparison operator for no-value conditions
+     * @return this query criteria for method chaining
+     */
     @NonNull
     @Override
     public DynamoDBQueryCriteria<T, ID> withNoValuedCriteria(@NonNull String propertyName,
@@ -870,6 +1124,12 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
 
     }
 
+    /**
+     * Adds a condition to the query criteria for the specified property.
+     * @param propertyName the property name to add the condition for
+     * @param condition the condition to add
+     * @return this query criteria for method chaining
+     */
     @NonNull
     public DynamoDBQueryCriteria<T, ID> withCondition(@NonNull String propertyName, Condition condition) {
         attributeConditions.add(getAttributeName(propertyName), condition);
@@ -878,6 +1138,13 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return this;
     }
 
+    /**
+     * Gets the property attribute value, applying any custom attribute converters if configured.
+     * @param <V> the type of the property value
+     * @param propertyName the property name
+     * @param value the property value
+     * @return the converted attribute value
+     */
     @SuppressWarnings("unchecked")
     protected <V> Object getPropertyAttributeValue(final String propertyName, final V value) {
         // SDK v2: Check for custom attribute converters configured via @DynamoDbConvertedBy
@@ -896,6 +1163,13 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return value;
     }
 
+    /**
+     * Creates a Condition object for operators that do not require a value.
+     * Used for NULL and NOT_NULL comparison operators.
+     * @param <V> the type parameter (unused but preserved for API consistency)
+     * @param comparisonOperator the comparison operator (typically NULL or NOT_NULL)
+     * @return a Condition object with the specified operator but no attribute values
+     */
     protected <V> Condition createNoValueCondition(ComparisonOperator comparisonOperator) {
 
         return Condition.builder().comparisonOperator(comparisonOperator)
@@ -1005,6 +1279,15 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return null;
     }
 
+    /**
+     * Adds an attribute value to the list, handling type conversions and collection expansion.
+     * <p>
+     * @param <P> the type of the property
+     * @param attributeValueList the list to add the attribute value to
+     * @param attributeValue the value to add
+     * @param propertyType the type of the property
+     * @param expandCollectionValues whether to expand collection values into DynamoDB sets
+     */
     protected <P> void addAttributeValue(@NonNull List<AttributeValue> attributeValueList,
                                          @Nullable Object attributeValue, @NonNull Class<P> propertyType, boolean expandCollectionValues) {
         AttributeValue.Builder attributeValueBuilder = AttributeValue.builder();
@@ -1104,6 +1387,17 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
 
     }
 
+    /**
+     * Creates a Condition object with a single value for the specified property.
+     * <p>
+     * @param propertyName the property name
+     * @param comparisonOperator the comparison operator
+     * @param o the condition value
+     * @param propertyType the type of the property
+     * @param alreadyMarshalledIfRequired whether the value is already marshalled
+     * @return a Condition object ready for use in queries
+     * @throws IllegalArgumentException if o is null
+     */
     protected Condition createSingleValueCondition(String propertyName, ComparisonOperator comparisonOperator, Object o,
             Class<?> propertyType, boolean alreadyMarshalledIfRequired) {
 
@@ -1126,6 +1420,17 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
                 .build();
     }
 
+    /**
+     * Creates a Condition object with multiple values for the specified property.
+     * Used for IN and BETWEEN conditions.
+     * <p>
+     * @param propertyName the property name
+     * @param comparisonOperator the comparison operator
+     * @param o an iterable of values for the condition
+     * @param propertyType the type of the property
+     * @return a Condition object ready for use in queries
+     * @throws IllegalArgumentException if o is null or empty
+     */
     protected Condition createCollectionCondition(String propertyName, ComparisonOperator comparisonOperator,
                                                   @NonNull Iterable<?> o, Class<?> propertyType) {
 
@@ -1152,43 +1457,83 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
 
     }
 
+    /**
+     * Sets the sort order for the query results.
+     * Implementation of interface method.
+     * @param sort the sort specification
+     */
     @Override
     public void withSort(Sort sort) {
         this.sort = sort;
     }
 
+    /**
+     * Sets the projection expression to limit the attributes returned.
+     * Implementation of interface method.
+     * @param projection the projection expression specifying which attributes to return
+     */
     @Override
     public void withProjection(@Nullable String projection) {
         this.projection = projection;
     }
 
+    /**
+     * Sets the maximum number of items to return from the query.
+     * Implementation of interface method.
+     * @param limit the maximum number of items to return
+     */
     @Override
     public void withLimit(@Nullable Integer limit) {
         this.limit = limit;
     }
 
+    /**
+     * Sets the filter expression to further filter query results.
+     * Implementation of interface method.
+     * @param filter the filter expression to apply
+     */
     @Override
     public void withFilterExpression(@Nullable String filter) {
         this.filterExpression = filter;
     }
 
+    /**
+     * Sets the expression attribute names for the query.
+     * Implementation of interface method.
+     * @param names an array of expression attribute names
+     */
     @Override
     public void withExpressionAttributeNames(@Nullable ExpressionAttribute[] names) {
         if (names != null)
             this.expressionAttributeNames = names.clone();
     }
 
+    /**
+     * Sets the expression attribute values for the query.
+     * Implementation of interface method.
+     * @param values an array of expression attribute values
+     */
     @Override
     public void withExpressionAttributeValues(@Nullable ExpressionAttribute[] values) {
         if (values != null)
             this.expressionAttributeValues = values.clone();
     }
 
+    /**
+     * Sets the consistent read mode for the query.
+     * Implementation of interface method.
+     * @param consistentReads the consistent read mode
+     */
     @Override
     public void withConsistentReads(QueryConstants.ConsistentReadMode consistentReads) {
         this.consistentReads = consistentReads;
     }
 
+    /**
+     * Sets mapped expression values for parameter substitution.
+     * Implementation of interface method.
+     * @param map a map of parameter names to their string values
+     */
     @Override
     public void withMappedExpressionValues(Map<String, String> map) {
         this.mappedExpressionValues = map;

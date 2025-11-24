@@ -1,12 +1,12 @@
 /**
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,6 +31,10 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 /**
+ * Base support class for DynamoDB entity metadata that handles extraction and caching of hash key information,
+ * attribute name overrides, attribute converters, and global secondary index metadata from DynamoDB-annotated entities.
+ * @param <T> the entity type
+ * @param <ID> the ID type
  * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtractingEntityMetadata<T> {
@@ -56,9 +60,8 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
 
     /**
      * Creates a new {@link DynamoDBEntityMetadataSupport} for the given domain type.
-     *
-     * @param domainType
-     *            must not be {@literal null}.
+     * <p>
+     * @param domainType must not be {@literal null}.
      */
     public DynamoDBEntityMetadataSupport(@NonNull final Class<T> domainType) {
         this(domainType, null);
@@ -66,11 +69,9 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
 
     /**
      * Creates a new {@link DynamoDBEntityMetadataSupport} for the given domain type and dynamoDB mapper config.
-     *
-     * @param domainType
-     *            must not be {@literal null}.
-     * @param dynamoDBOperations
-     *            dynamoDBOperations as populated from Spring Data DynamoDB Configuration
+     * <p>
+     * @param domainType must not be {@literal null}.
+     * @param dynamoDBOperations dynamoDBOperations as populated from Spring Data DynamoDB Configuration
      */
     public DynamoDBEntityMetadataSupport(@NonNull final Class<T> domainType, @Nullable DynamoDBOperations dynamoDBOperations) {
 

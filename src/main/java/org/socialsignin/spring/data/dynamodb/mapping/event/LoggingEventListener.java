@@ -1,12 +1,12 @@
 /**
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * <p>
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -44,8 +44,7 @@ public class LoggingEventListener extends AbstractDynamoDBEventListener<Object> 
 
     /*
      * (non-Javadoc)
-     * @see org.socialsignin.spring.data.dynamodb.mapping.event.
-     * AbstractDynamoDBEventListener#onBeforeSave(java.lang.Object)
+     * @see org.socialsignin.spring.data.dynamodb.mapping.event.AbstractDynamoDBEventListener#onBeforeSave(java.lang.Object)
      */
     @Override
     public void onBeforeSave(Object source) {
@@ -54,8 +53,7 @@ public class LoggingEventListener extends AbstractDynamoDBEventListener<Object> 
 
     /*
      * (non-Javadoc)
-     * @see org.socialsignin.spring.data.dynamodb.mapping.event.
-     * AbstractDynamoDBEventListener#onAfterSave(java.lang.Object,)
+     * @see org.socialsignin.spring.data.dynamodb.mapping.event.AbstractDynamoDBEventListener#onAfterSave(java.lang.Object)
      */
     @Override
     public void onAfterSave(Object source) {
@@ -64,8 +62,7 @@ public class LoggingEventListener extends AbstractDynamoDBEventListener<Object> 
 
     /*
      * (non-Javadoc)
-     * @see org.socialsignin.spring.data.dynamodb.mapping.event.
-     * AbstractDynamoDBEventListener#onAfterDelete(java.lang.Object,)
+     * @see org.socialsignin.spring.data.dynamodb.mapping.event.AbstractDynamoDBEventListener#onAfterDelete(java.lang.Object)
      */
     @Override
     public void onAfterDelete(Object source) {
@@ -74,8 +71,7 @@ public class LoggingEventListener extends AbstractDynamoDBEventListener<Object> 
 
     /*
      * (non-Javadoc)
-     * @see org.socialsignin.spring.data.dynamodb.mapping.event.
-     * AbstractDynamoDBEventListener#onBeforeDelete(java.lang.Object)
+     * @see org.socialsignin.spring.data.dynamodb.mapping.event.AbstractDynamoDBEventListener#onBeforeDelete(java.lang.Object)
      */
     @Override
     public void onBeforeDelete(Object source) {
@@ -84,8 +80,7 @@ public class LoggingEventListener extends AbstractDynamoDBEventListener<Object> 
 
     /*
      * (non-Javadoc)
-     * @see org.socialsignin.spring.data.dynamodb.mapping.event.
-     * AbstractDynamoDBEventListener#onAfterLoad(java.lang.Object)
+     * @see org.socialsignin.spring.data.dynamodb.mapping.event.AbstractDynamoDBEventListener#onAfterLoad(java.lang.Object)
      */
     @Override
     public void onAfterLoad(Object source) {
@@ -94,8 +89,7 @@ public class LoggingEventListener extends AbstractDynamoDBEventListener<Object> 
 
     /*
      * (non-Javadoc)
-     * @see org.socialsignin.spring.data.dynamodb.mapping.event.
-     * AbstractDynamoDBEventListener#onAfterScan(java.lang.Object)
+     * @see org.socialsignin.spring.data.dynamodb.mapping.event.AbstractDynamoDBEventListener#onAfterScan(java.lang.Object)
      */
     @Override
     public void onAfterScan(Object source) {
@@ -104,8 +98,7 @@ public class LoggingEventListener extends AbstractDynamoDBEventListener<Object> 
 
     /*
      * (non-Javadoc)
-     * @see org.socialsignin.spring.data.dynamodb.mapping.event.
-     * AbstractDynamoDBEventListener#onAfterQuery(java.lang.Object)
+     * @see org.socialsignin.spring.data.dynamodb.mapping.event.AbstractDynamoDBEventListener#onAfterQuery(java.lang.Object)
      */
     @Override
     public void onAfterQuery(Object source) {
