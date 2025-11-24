@@ -126,10 +126,10 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
             checkComparisonOperatorPermittedForCompositeHashAndRangeKey(comparisonOperator);
             Object hashKey = entityInformation.getHashKey((ID) value);
             Object rangeKey = entityInformation.getRangeKey((ID) value);
-            if (hashKey != null) {
+            if (hashKey != null && getHashKeyPropertyName() != null) {
                 withSingleValueCriteria(getHashKeyPropertyName(), comparisonOperator, hashKey, hashKey.getClass());
             }
-            if (rangeKey != null) {
+            if (rangeKey != null && getRangeKeyPropertyName() != null) {
                 withSingleValueCriteria(getRangeKeyPropertyName(), comparisonOperator, rangeKey, rangeKey.getClass());
             }
             return this;
@@ -364,7 +364,7 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
      */
     @Nullable
     protected String getLSIPropertyNameWithCondition() {
-        if (indexRangeKeyPropertyNames == null || indexRangeKeyPropertyNames.isEmpty()) {
+        if (indexRangeKeyPropertyNames.isEmpty()) {
             return null;
         }
 
@@ -560,9 +560,6 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
      */
     private AttributeValue convertToAttributeValue(@NonNull Object value) {
         switch (value) {
-            case null -> {
-                return AttributeValue.builder().nul(true).build();
-            }
             case AttributeValue attributeValue -> {
                 // Already an AttributeValue
                 return attributeValue;

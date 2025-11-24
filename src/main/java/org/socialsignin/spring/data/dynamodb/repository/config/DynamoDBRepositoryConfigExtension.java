@@ -206,7 +206,6 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
     @NonNull
     private String registerEntity2DynamoDBTableSynchronizer(@NonNull BeanDefinitionRegistry registry,
                                                             String dynamoDBMappingContextRef) {
-        assert registry != null;
 
         return entity2DynamoDBTableSynchronizerCache.computeIfAbsent(dynamoDBMappingContextRef, ref -> {
             BeanDefinitionBuilder entity2DynamoDBTableSynchronizerBuilder = BeanDefinitionBuilder
@@ -230,7 +229,6 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
     @NonNull
     private String registerDynamoDBMappingContextProcessor(@NonNull BeanDefinitionRegistry registry,
                                                            @NonNull String dynamoDBMappingContextRef) {
-        assert registry != null;
 
         return dynamoDBMappingContextProcessorCache.computeIfAbsent(dynamoDBMappingContextRef, ref -> {
             BeanDefinitionBuilder dynamoDBMappingContextProcessorBuilder = BeanDefinitionBuilder
@@ -249,7 +247,6 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
 
     @NonNull
     private String registerDynamoDBMappingContext(@NonNull BeanDefinitionRegistry registry) {
-        assert registry != null;
 
         // Use the standard bean name to ensure compatibility with @EnableDynamoDBAuditing
         String dynamoDBMappingContextRef = org.socialsignin.spring.data.dynamodb.config.BeanNames.MAPPING_CONTEXT_BEAN_NAME;

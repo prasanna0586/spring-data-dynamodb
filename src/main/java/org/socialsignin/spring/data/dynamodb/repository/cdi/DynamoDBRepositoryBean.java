@@ -101,12 +101,12 @@ class DynamoDBRepositoryBean<T> extends CdiRepositoryBean<T> {
 
         // If DynamoDBOperations is not provided, create it from DynamoDbClient and DynamoDbEnhancedClient
         if (dynamoDBOperations == null) {
-            DynamoDbClient dynamoDbClient = dynamoDbClientBean != null
-                    ? getDependencyInstance(dynamoDbClientBean, DynamoDbClient.class)
-                    : null;
-            DynamoDbEnhancedClient enhancedClient = enhancedClientBean != null
-                    ? getDependencyInstance(enhancedClientBean, DynamoDbEnhancedClient.class)
-                    : null;
+            // Constructor guarantees these beans are non-null if dynamoDBOperationsBean is null
+            Assert.notNull(dynamoDbClientBean, "dynamoDbClientBean must not be null");
+            Assert.notNull(enhancedClientBean, "enhancedClientBean must not be null");
+
+            DynamoDbClient dynamoDbClient = getDependencyInstance(dynamoDbClientBean, DynamoDbClient.class);
+            DynamoDbEnhancedClient enhancedClient = getDependencyInstance(enhancedClientBean, DynamoDbEnhancedClient.class);
 
             // Create DynamoDBTemplate with SDK v2 clients
             dynamoDBOperations = new DynamoDBTemplate(dynamoDbClient, enhancedClient, null, null);
