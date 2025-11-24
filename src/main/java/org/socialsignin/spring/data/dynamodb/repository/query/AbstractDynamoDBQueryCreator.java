@@ -203,7 +203,7 @@ public abstract class AbstractDynamoDBQueryCreator<T, ID, R>
      * Adds query criteria to the provided DynamoDBQueryCriteria based on the Part and iterator values.
      * Handles different comparison types (equals, contains, between, etc.) and constructs appropriate
      * DynamoDB query conditions.
-     * <p>
+     *
      * @param criteria the DynamoDBQueryCriteria to add conditions to
      * @param part the query part representing a specific condition in the query method name
      * @param iterator an iterator providing the parameter values for this condition

@@ -41,6 +41,12 @@ import static org.springframework.data.config.ParsingUtils.getObjectFactoryBeanD
  */
 public class DynamoDBAuditingBeanDefinitionParser extends AbstractSingleBeanDefinitionParser {
 
+    /**
+     * Default constructor for DynamoDBAuditingBeanDefinitionParser.
+     */
+    public DynamoDBAuditingBeanDefinitionParser() {
+    }
+
     /*
      * (non-Javadoc)
      * @see org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser#getBeanClass(org.w3c.dom.Element)

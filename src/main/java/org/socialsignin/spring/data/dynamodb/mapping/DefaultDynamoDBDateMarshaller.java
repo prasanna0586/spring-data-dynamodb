@@ -19,7 +19,9 @@ import java.io.Serial;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
-/*
+/**
+ * Default date marshaller that uses ISO 8601 format with UTC timezone.
+ *
  * @author Prasanna Kumar Ramachandran
  * @deprecated Consider using {@link org.socialsignin.spring.data.dynamodb.marshaller.Date2IsoDynamoDBMarshaller}
  */

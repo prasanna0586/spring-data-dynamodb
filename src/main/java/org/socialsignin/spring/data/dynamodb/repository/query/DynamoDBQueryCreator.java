@@ -27,6 +27,12 @@ import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
+/**
+ * Query creator for DynamoDB entity queries returning entity results.
+ *
+ * @param <T> the entity type
+ * @param <ID> the entity ID type
+ */
 public class DynamoDBQueryCreator<T, ID> extends AbstractDynamoDBQueryCreator<T, ID, T> {
 
     public DynamoDBQueryCreator(@NonNull PartTree tree, @NonNull ParameterAccessor parameterAccessor,

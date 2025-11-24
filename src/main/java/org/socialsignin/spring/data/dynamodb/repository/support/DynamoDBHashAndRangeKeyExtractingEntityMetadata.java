@@ -26,14 +26,44 @@ import java.util.Set;
 public interface DynamoDBHashAndRangeKeyExtractingEntityMetadata<T, ID>
         extends DynamoDBHashKeyExtractingEntityMetadata<T> {
 
+    /**
+     * Gets a hash and range key extractor for the specified ID class.
+     *
+     * @param <H> the hash key type
+     * @param idClass the ID class
+     * @return a hash and range key extractor
+     */
     <H> HashAndRangeKeyExtractor<ID, H> getHashAndRangeKeyExtractor(Class<ID> idClass);
 
+    /**
+     * Gets the name of the range key property.
+     *
+     * @return the range key property name
+     */
     String getRangeKeyPropertyName();
 
+    /**
+     * Gets the names of all index range key properties (local secondary index range keys).
+     *
+     * @return a set of index range key property names
+     */
     Set<String> getIndexRangeKeyPropertyNames();
 
+    /**
+     * Checks if the given property is a composite hash and range key property.
+     *
+     * @param propertyName the property name to check
+     * @return true if the property is a composite hash and range key, false otherwise
+     */
     boolean isCompositeHashAndRangeKeyProperty(String propertyName);
 
+    /**
+     * Creates a prototype entity with only the hash key set.
+     *
+     * @param <H> the hash key type
+     * @param hashKey the hash key value
+     * @return a prototype entity with the hash key set
+     */
     <H> T getHashKeyPropotypeEntityForHashKey(H hashKey);
 
 }

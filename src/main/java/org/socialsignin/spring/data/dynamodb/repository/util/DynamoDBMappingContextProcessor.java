@@ -20,6 +20,12 @@ import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBEntityIn
 import org.springframework.data.repository.core.support.RepositoryProxyPostProcessor;
 import org.springframework.lang.NonNull;
 
+/**
+ * Repository proxy post processor that registers entities with the DynamoDB mapping context.
+ *
+ * @param <T> the entity type
+ * @param <ID> the entity ID type
+ */
 public class DynamoDBMappingContextProcessor<T, ID> extends EntityInformationProxyPostProcessor<T, ID>
         implements RepositoryProxyPostProcessor {
 

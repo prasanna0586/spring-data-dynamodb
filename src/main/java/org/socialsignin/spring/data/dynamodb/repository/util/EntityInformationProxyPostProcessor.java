@@ -25,6 +25,11 @@ import org.springframework.lang.NonNull;
 
 public abstract class EntityInformationProxyPostProcessor<T, ID> implements RepositoryProxyPostProcessor {
 
+    /**
+     * Callback method invoked when an entity is registered.
+     *
+     * @param entityInformation the entity information for the registered entity
+     */
     protected abstract void registeredEntity(DynamoDBEntityInformation<T, ID> entityInformation);
 
     @Override

@@ -32,6 +32,12 @@ import org.springframework.lang.Nullable;
 public class DynamoDBMapperConfigFactory implements FactoryBean<TableNameResolver> {
 
     /**
+     * Default constructor for DynamoDBMapperConfigFactory.
+     */
+    public DynamoDBMapperConfigFactory() {
+    }
+
+    /**
      * Default TableNameResolver that returns the base table name unchanged.
      */
     private static final TableNameResolver DEFAULT = new TableNameResolver() {

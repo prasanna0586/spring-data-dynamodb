@@ -33,21 +33,54 @@ import java.util.Optional;
 public interface DynamoDBEntityInformation<T, ID>
         extends EntityInformation<T, ID>, DynamoDBHashKeyExtractingEntityMetadata<T> {
 
+    /**
+     * Checks if this entity uses a range key in addition to a hash key.
+     *
+     * @return true if the entity has a range key, false otherwise
+     */
     default boolean isRangeKeyAware() {
         return false;
     }
 
+    /**
+     * Checks if the given property is a composite hash and range key property.
+     *
+     * @param propertyName the property name to check
+     * @return true if the property is a composite hash and range key, false otherwise
+     */
     boolean isCompositeHashAndRangeKeyProperty(String propertyName);
 
+    /**
+     * Extracts the hash key value from the given ID.
+     *
+     * @param id the entity ID
+     * @return the hash key value, or null if not available
+     */
     @Nullable
     Object getHashKey(ID id);
 
+    /**
+     * Extracts the range key value from the given ID.
+     *
+     * @param id the entity ID
+     * @return the range key value, or null if not available or not a range key aware entity
+     */
     @Nullable
     default Object getRangeKey(ID id) {
         return null;
     }
 
+    /**
+     * Gets the projection expression for queries.
+     *
+     * @return an Optional containing the projection expression, or empty if no projection is defined
+     */
     Optional<String> getProjection();
 
+    /**
+     * Gets the limit for queries.
+     *
+     * @return an Optional containing the query limit, or empty if no limit is defined
+     */
     Optional<Integer> getLimit();
 }

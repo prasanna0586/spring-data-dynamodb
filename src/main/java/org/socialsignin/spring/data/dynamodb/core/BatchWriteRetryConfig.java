@@ -188,6 +188,12 @@ public class BatchWriteRetryConfig {
      * </pre>
      */
     public static class Builder {
+        /**
+         * Creates a new Builder with default retry configuration values.
+         */
+        public Builder() {
+        }
+
         private int maxRetries = DEFAULT_MAX_RETRIES;
         private long baseDelayMs = DEFAULT_BASE_DELAY_MS;
         private long maxDelayMs = DEFAULT_MAX_DELAY_MS;

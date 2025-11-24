@@ -46,7 +46,7 @@ import java.util.Set;
 /**
  * jakarta.validation dependant entities' validator. When it is registered as Spring component its automatically invoked
  * before entities are saved in database.
- * <p>
+ *
  * @author Prasanna Kumar Ramachandran
  */
 public class ValidatingDynamoDBEventListener extends AbstractDynamoDBEventListener<Object> {

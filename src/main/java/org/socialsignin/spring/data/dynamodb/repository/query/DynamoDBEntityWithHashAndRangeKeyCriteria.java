@@ -55,14 +55,32 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
         return getAttributeName(getRangeKeyPropertyName());
     }
 
+    /**
+     * Gets the range key property name.
+     *
+     * @return the range key property name
+     */
     protected String getRangeKeyPropertyName() {
         return rangeKeyPropertyName;
     }
 
+    /**
+     * Checks if the given property name is the range key property.
+     *
+     * @param propertyName the property name to check
+     * @return true if the property is the range key, false otherwise
+     */
     protected boolean isRangeKeyProperty(String propertyName) {
         return rangeKeyPropertyName.equals(propertyName);
     }
 
+    /**
+     * Creates a new DynamoDBEntityWithHashAndRangeKeyCriteria.
+     *
+     * @param entityInformation the entity information
+     * @param tableModel the table schema
+     * @param mappingContext the DynamoDB mapping context
+     */
     public DynamoDBEntityWithHashAndRangeKeyCriteria(
             @NonNull DynamoDBIdIsHashAndRangeKeyEntityInformation<T, ID> entityInformation,
             TableSchema<T> tableModel,
@@ -78,6 +96,11 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
         this.entityInformation = entityInformation;
     }
 
+    /**
+     * Gets the DynamoDB attribute names for all index range keys.
+     *
+     * @return a set of index range key attribute names
+     */
     @NonNull
     public Set<String> getIndexRangeKeyAttributeNames() {
         Set<String> indexRangeKeyAttributeNames = new HashSet<>();
@@ -87,14 +110,29 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
         return indexRangeKeyAttributeNames;
     }
 
+    /**
+     * Gets the range key attribute value.
+     *
+     * @return the range key attribute value
+     */
     protected Object getRangeKeyAttributeValue() {
         return rangeKeyAttributeValue;
     }
 
+    /**
+     * Gets the range key property value.
+     *
+     * @return the range key property value
+     */
     protected Object getRangeKeyPropertyValue() {
         return rangeKeyPropertyValue;
     }
 
+    /**
+     * Checks if a range key value has been specified.
+     *
+     * @return true if a range key is specified, false otherwise
+     */
     protected boolean isRangeKeySpecified() {
         return getRangeKeyAttributeValue() != null;
     }
@@ -142,6 +180,11 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
         }
     }
 
+    /**
+     * Gets the range key conditions for the query.
+     *
+     * @return list of range key conditions, or null if not applicable
+     */
     @Nullable
     protected List<Condition> getRangeKeyConditions() {
         List<Condition> rangeKeyConditions = null;
@@ -242,10 +285,20 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
         return attributeConditions.isEmpty() && isHashAndRangeKeySpecified();
     }
 
+    /**
+     * Checks if both hash key and range key are specified.
+     *
+     * @return true if both keys are specified, false otherwise
+     */
     protected boolean isHashAndRangeKeySpecified() {
         return isHashKeySpecified() && isRangeKeySpecified();
     }
 
+    /**
+     * Checks if there's only a single attribute condition on either the range key or an index range key.
+     *
+     * @return true if the condition meets the criteria, false otherwise
+     */
     protected boolean isOnlyASingleAttributeConditionAndItIsOnEitherRangeOrIndexRangeKey() {
         boolean isOnlyASingleAttributeConditionAndItIsOnEitherRangeOrIndexRangeKey = false;
         if (!isRangeKeySpecified() && attributeConditions.size() == 1) {
@@ -323,10 +376,10 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
     /**
      * Get the Local Secondary Index (LSI) name for queries that use an LSI.
      * LSI queries are identified by:
-     * <p>
-     * 1. Hash key condition + LSI range key condition, OR
-     * 2. Hash key only + OrderBy on LSI range key
-     * <p>
+     *
+     * <p>1. Hash key condition + LSI range key condition, OR</p>
+     * <p>2. Hash key only + OrderBy on LSI range key</p>
+     *
      * @return LSI index name if applicable, null otherwise
      */
     @Nullable
@@ -364,7 +417,7 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
     /**
      * Detect which LSI property (if any) has a condition.
      * This is used to determine the correct range key for LSI queries.
-     * <p>
+     *
      * @return LSI property name that has a condition, or null if none
      */
     @Nullable
@@ -385,6 +438,11 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
         return null;
     }
 
+    /**
+     * Determines if these criteria can be used for a DynamoDB Query operation.
+     *
+     * @return true if Query is applicable, false if Scan is required
+     */
     public boolean isApplicableForQuery() {
 
         return isOnlyHashKeySpecified()
@@ -395,6 +453,11 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
     }
 
     @NonNull
+    /**
+     * Builds a DynamoDB scan request from these criteria.
+     *
+     * @return the scan request
+     */
     public ScanEnhancedRequest buildScanExpression() {
         ensureNoSort(sort);
 
@@ -625,6 +688,12 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
     }
 
     @NonNull
+    /**
+     * Adds a range key equals condition to these criteria.
+     *
+     * @param value the range key value
+     * @return these criteria with the range key condition added
+     */
     public DynamoDBQueryCriteria<T, ID> withRangeKeyEquals(Object value) {
         Assert.notNull(value, "Creating conditions on null range keys not supported: please specify a value for '"
                 + getRangeKeyPropertyName() + "'");

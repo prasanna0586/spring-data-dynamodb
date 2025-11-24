@@ -47,6 +47,11 @@ public class DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl<T, ID> extends 
     @Nullable
     private Field hashKeyField;
 
+    /**
+     * Creates a new DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl for the given domain type.
+     *
+     * @param domainType the entity class
+     */
     public DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl(@NonNull final Class<T> domainType) {
         super(domainType);
         this.hashAndRangeKeyMethodExtractor = new DynamoDBHashAndRangeKeyMethodExtractorImpl<>(getJavaType());

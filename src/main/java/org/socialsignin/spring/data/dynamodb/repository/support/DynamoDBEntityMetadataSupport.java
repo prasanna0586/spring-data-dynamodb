@@ -60,7 +60,7 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
 
     /**
      * Creates a new {@link DynamoDBEntityMetadataSupport} for the given domain type.
-     * <p>
+     *
      * @param domainType must not be {@literal null}.
      */
     public DynamoDBEntityMetadataSupport(@NonNull final Class<T> domainType) {
@@ -69,7 +69,7 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
 
     /**
      * Creates a new {@link DynamoDBEntityMetadataSupport} for the given domain type and dynamoDB mapper config.
-     * <p>
+     *
      * @param domainType must not be {@literal null}.
      * @param dynamoDBOperations dynamoDBOperations as populated from Spring Data DynamoDB Configuration
      */
@@ -132,6 +132,12 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
         Assert.notNull(hashKeyPropertyName, "Unable to find hash key field or getter method on " + domainType + "!");
     }
 
+    /**
+     * Creates and returns the appropriate DynamoDBEntityInformation implementation based on whether
+     * the entity has a range key.
+     *
+     * @return entity information for this entity type
+     */
     @NonNull
     public DynamoDBEntityInformation<T, ID> getEntityInformation() {
 
@@ -159,6 +165,12 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
         return hashKeyPropertyName != null && hashKeyPropertyName.equals(propertyName);
     }
 
+    /**
+     * Checks if the field for the given property is annotated with @Id.
+     *
+     * @param propertyName the property name
+     * @return true if the field is annotated with @Id, false otherwise
+     */
     protected boolean isFieldAnnotatedWith(@NonNull final String propertyName) {
 
         Field field = findField(propertyName);
@@ -174,6 +186,12 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
         return "get" + methodName;
     }
 
+    /**
+     * Converts an accessor method name to its corresponding setter method name.
+     *
+     * @param method the accessor method
+     * @return the setter method name, or null if conversion is not possible
+     */
     @Nullable
     protected String toSetterMethodNameFromAccessorMethod(@NonNull Method method) {
         String accessorMethodName = method.getName();
@@ -295,6 +313,12 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
         return null;
     }
 
+    /**
+     * Extracts the property name from a getter/accessor method name.
+     *
+     * @param method the accessor method
+     * @return the property name
+     */
     @NonNull
     protected String getPropertyNameForAccessorMethod(@NonNull Method method) {
         String methodName = method.getName();
@@ -311,6 +335,12 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
         return firstLetter.toLowerCase() + remainder;
     }
 
+    /**
+     * Gets the property name from a field.
+     *
+     * @param field the field
+     * @return the property name
+     */
     @NonNull
     protected String getPropertyNameForField(@NonNull Field field) {
         return field.getName();

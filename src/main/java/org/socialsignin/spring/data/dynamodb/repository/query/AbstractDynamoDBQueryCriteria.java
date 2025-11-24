@@ -142,7 +142,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
      * Builds a DynamoDB QueryRequest from the specified criteria.
      * Constructs key condition expressions for hash and range keys, handles projections,
      * sorting, filtering, and expression attributes.
-     * <p>
+     *
      * @param tableName the DynamoDB table name
      * @param theIndexName the index name to query (null for main table)
      * @param hashKeyAttributeName the hash key attribute name
@@ -669,7 +669,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
      * Gets the global secondary index name that should be used for the query.
      * Performs index selection based on attribute conditions and sort requirements.
      * Prioritizes exact matches and sort-compatible indexes.
-     * <p>
+     *
      * @return the global secondary index name, or null if the main table should be queried
      * @throws RuntimeException if multiple indexes are defined on the same attribute set
      * @throws UnsupportedOperationException if conditions span multiple different GSI indexes
@@ -1281,7 +1281,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
 
     /**
      * Adds an attribute value to the list, handling type conversions and collection expansion.
-     * <p>
+     *
      * @param <P> the type of the property
      * @param attributeValueList the list to add the attribute value to
      * @param attributeValue the value to add
@@ -1389,7 +1389,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
 
     /**
      * Creates a Condition object with a single value for the specified property.
-     * <p>
+     *
      * @param propertyName the property name
      * @param comparisonOperator the comparison operator
      * @param o the condition value
@@ -1423,7 +1423,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
     /**
      * Creates a Condition object with multiple values for the specified property.
      * Used for IN and BETWEEN conditions.
-     * <p>
+     *
      * @param propertyName the property name
      * @param comparisonOperator the comparison operator
      * @param o an iterable of values for the condition

@@ -33,6 +33,12 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
  */
 public class DynamoDBMapperFactory implements FactoryBean<DynamoDbEnhancedClient>, BeanFactoryAware {
 
+    /**
+     * Default constructor for DynamoDBMapperFactory.
+     */
+    public DynamoDBMapperFactory() {
+    }
+
     private BeanFactory beanFactory;
 
     @Override

@@ -59,7 +59,7 @@ public class DynamoDBCountQueryCreator<T, ID> extends AbstractDynamoDBQueryCreat
      * Constructs a DynamoDBCountQueryCreator with parameter bindings and filter expression support.
      * This is the primary constructor that supports all count query options including filter expressions
      * and expression attribute substitutions.
-     * <p>
+     *
      * @param tree the PartTree representing the query method structure
      * @param parameterAccessor accessor for retrieving parameter values from the query method
      * @param entityMetadata metadata information about the entity being queried

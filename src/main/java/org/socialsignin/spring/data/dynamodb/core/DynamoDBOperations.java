@@ -32,30 +32,128 @@ import java.util.Map;
  */
 public interface DynamoDBOperations {
 
+    /**
+     * Counts items matching the query request.
+     *
+     * @param <T> the entity type
+     * @param domainClass the entity class
+     * @param queryExpression the query request
+     * @return the count of matching items
+     */
     <T> int count(Class<T> domainClass, QueryEnhancedRequest queryExpression);
 
+    /**
+     * Counts items matching the scan request.
+     *
+     * @param <T> the entity type
+     * @param domainClass the entity class
+     * @param scanExpression the scan request
+     * @return the count of matching items
+     */
     <T> int count(Class<T> domainClass, ScanEnhancedRequest scanExpression);
 
+    /**
+     * Counts items matching the query request.
+     *
+     * @param <T> the entity type
+     * @param clazz the entity class
+     * @param mutableQueryRequest the query request
+     * @return the count of matching items
+     */
     <T> int count(Class<T> clazz, QueryRequest mutableQueryRequest);
 
+    /**
+     * Queries for items using the provided query request.
+     *
+     * @param <T> the entity type
+     * @param clazz the entity class
+     * @param queryRequest the query request
+     * @return a page iterable of query results
+     */
     <T> PageIterable<T> query(Class<T> clazz, QueryRequest queryRequest);
 
+    /**
+     * Queries for items using the enhanced query request.
+     *
+     * @param <T> the entity type
+     * @param domainClass the entity class
+     * @param queryExpression the enhanced query request
+     * @return a page iterable of query results
+     */
     <T> PageIterable<T> query(Class<T> domainClass, QueryEnhancedRequest queryExpression);
 
+    /**
+     * Scans for items using the enhanced scan request.
+     *
+     * @param <T> the entity type
+     * @param domainClass the entity class
+     * @param scanExpression the enhanced scan request
+     * @return a page iterable of scan results
+     */
     <T> PageIterable<T> scan(Class<T> domainClass, ScanEnhancedRequest scanExpression);
 
+    /**
+     * Loads an item by hash key and range key.
+     *
+     * @param <T> the entity type
+     * @param domainClass the entity class
+     * @param hashKey the hash key value
+     * @param rangeKey the range key value
+     * @return the loaded item, or null if not found
+     */
     <T> T load(Class<T> domainClass, Object hashKey, Object rangeKey);
 
+    /**
+     * Loads an item by hash key only.
+     *
+     * @param <T> the entity type
+     * @param domainClass the entity class
+     * @param hashKey the hash key value
+     * @return the loaded item, or null if not found
+     */
     <T> T load(Class<T> domainClass, Object hashKey);
 
+    /**
+     * Batch loads multiple items.
+     *
+     * @param <T> the entity type
+     * @param itemsToGet map of entity classes to lists of keys to load
+     * @return list of loaded items
+     */
     <T> List<T> batchLoad(Map<Class<?>, List<Key>> itemsToGet);
 
+    /**
+     * Saves an entity to DynamoDB.
+     *
+     * @param <T> the entity type
+     * @param entity the entity to save
+     * @return the saved entity
+     */
     <T> T save(T entity);
 
+    /**
+     * Batch saves multiple entities.
+     *
+     * @param entities the entities to save
+     * @return list of batch write results
+     */
     List<BatchWriteResult> batchSave(Iterable<?> entities);
 
+    /**
+     * Deletes an entity from DynamoDB.
+     *
+     * @param <T> the entity type
+     * @param entity the entity to delete
+     * @return the deleted entity
+     */
     <T> T delete(T entity);
 
+    /**
+     * Batch deletes multiple entities.
+     *
+     * @param entities the entities to delete
+     * @return list of batch write results
+     */
     List<BatchWriteResult> batchDelete(Iterable<?> entities);
 
     /**
@@ -88,6 +186,14 @@ public interface DynamoDBOperations {
             List<BatchWriteResult> results,
             Map<Class<?>, List<Object>> entitiesByClass);
 
+    /**
+     * Gets the overridden table name for the given domain class.
+     *
+     * @param <T> the entity type
+     * @param domainClass the entity class
+     * @param tableName the base table name
+     * @return the overridden table name if configured, otherwise the base table name
+     */
     <T> String getOverriddenTableName(Class<T> domainClass, String tableName);
 
     /**
@@ -103,7 +209,7 @@ public interface DynamoDBOperations {
     /**
      * Provides access to the DynamoDB mapping context which contains configuration
      * such as marshalling mode for type conversions.
-     * <p>
+     *
      * @return The DynamoDB mapping context
      * @since 7.0.0
      */

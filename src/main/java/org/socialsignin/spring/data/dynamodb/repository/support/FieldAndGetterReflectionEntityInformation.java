@@ -28,7 +28,7 @@ import java.lang.reflect.Method;
 /**
  * {@link org.springframework.data.repository.core.EntityInformation} implementation that inspects getters for an
  * annotation and invokes this getter's value to retrieve the id.
- * <p>
+ *
  * @param <T> the entity type
  * @param <ID> the ID type
  * @author Prasanna Kumar Ramachandran
@@ -42,7 +42,7 @@ public class FieldAndGetterReflectionEntityInformation<T, ID> extends AbstractEn
     /**
      * Creates a new {@link FieldAndGetterReflectionEntityInformation} inspecting the given domain class for a getter
      * carrying the given annotation.
-     * <p>
+     *
      * @param domainClass must not be {@literal null}.
      * @param annotation must not be {@literal null}.
      */

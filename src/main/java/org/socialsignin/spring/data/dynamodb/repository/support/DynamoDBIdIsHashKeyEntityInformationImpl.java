@@ -48,6 +48,12 @@ public class DynamoDBIdIsHashKeyEntityInformationImpl<T, ID> extends FieldAndGet
     @Nullable
     private final Integer limit = null;
 
+    /**
+     * Creates a new DynamoDBIdIsHashKeyEntityInformationImpl.
+     *
+     * @param domainClass the entity class
+     * @param metadata the hash key extracting entity metadata
+     */
     public DynamoDBIdIsHashKeyEntityInformationImpl(@NonNull Class<T> domainClass,
                                                     DynamoDBHashKeyExtractingEntityMetadata<T> metadata) {
         super(domainClass, DynamoDbPartitionKey.class);

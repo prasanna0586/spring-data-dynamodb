@@ -25,6 +25,12 @@ package org.socialsignin.spring.data.dynamodb.config;
 public abstract class BeanNames {
 
     /**
+     * Private constructor to prevent instantiation of this utility class.
+     */
+    private BeanNames() {
+    }
+
+    /**
      * Bean name constant for the DynamoDB mapping context.
      * The value is "dynamoDBMappingContext".
      */

@@ -45,6 +45,12 @@ public class DynamoDBIdIsHashAndRangeKeyEntityInformationImpl<T, ID>
     @Nullable
     private final Integer limit = null;
 
+    /**
+     * Creates a new DynamoDBIdIsHashAndRangeKeyEntityInformationImpl.
+     *
+     * @param domainClass the entity class
+     * @param metadata the hash and range key extracting entity metadata
+     */
     public DynamoDBIdIsHashAndRangeKeyEntityInformationImpl(@NonNull Class<T> domainClass,
                                                             @NonNull DynamoDBHashAndRangeKeyExtractingEntityMetadata<T, ID> metadata) {
         super(domainClass, Id.class);

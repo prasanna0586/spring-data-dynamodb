@@ -23,8 +23,18 @@ import org.springframework.data.mapping.PersistentProperty;
  */
 public interface DynamoDBPersistentProperty extends PersistentProperty<DynamoDBPersistentProperty> {
 
+    /**
+     * Checks if this property is the hash key property.
+     *
+     * @return true if this is the hash key property, false otherwise
+     */
     boolean isHashKeyProperty();
 
+    /**
+     * Checks if this property is a composite ID property.
+     *
+     * @return true if this is a composite ID property, false otherwise
+     */
     boolean isCompositeIdProperty();
 
 }

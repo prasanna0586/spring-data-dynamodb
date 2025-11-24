@@ -43,6 +43,13 @@ public class DynamoDBEntityWithHashKeyOnlyCriteria<T, ID> extends AbstractDynamo
     @NonNull
     private final DynamoDBEntityInformation<T, ID> entityInformation;
 
+    /**
+     * Creates a new DynamoDBEntityWithHashKeyOnlyCriteria.
+     *
+     * @param entityInformation the entity information
+     * @param tableModel the table schema
+     * @param mappingContext the DynamoDB mapping context
+     */
     public DynamoDBEntityWithHashKeyOnlyCriteria(@NonNull DynamoDBEntityInformation<T, ID> entityInformation,
                                                  TableSchema<T> tableModel, DynamoDBMappingContext mappingContext) {
         super(entityInformation, mappingContext);
@@ -123,9 +130,9 @@ public class DynamoDBEntityWithHashKeyOnlyCriteria<T, ID> extends AbstractDynamo
      *   <li>Hash key only query on main table (e.g., findByCustomerId where customerId is the table's partition key)</li>
      *   <li>Global Secondary Index query (e.g., findByMerchantId where merchantId is a GSI partition key)</li>
      * </ul>
-     * <p>
-     * If this returns false, the query must fall back to a Scan operation.
-     * <p>
+     *
+     * <p>If this returns false, the query must fall back to a Scan operation.</p>
+     *
      * @return true if Query operation is applicable, false if Scan is required
      */
     public boolean isApplicableForQuery() {
@@ -140,6 +147,11 @@ public class DynamoDBEntityWithHashKeyOnlyCriteria<T, ID> extends AbstractDynamo
         return isMainTableHashOnly || isGSIQuery;
     }
 
+    /**
+     * Builds a DynamoDB scan request from these criteria.
+     *
+     * @return the scan request
+     */
     @NonNull
     public ScanEnhancedRequest buildScanExpression() {
         ensureNoSort(sort);

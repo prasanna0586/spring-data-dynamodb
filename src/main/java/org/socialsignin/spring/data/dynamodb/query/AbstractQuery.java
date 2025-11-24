@@ -23,6 +23,12 @@ package org.socialsignin.spring.data.dynamodb.query;
 public abstract class AbstractQuery<T> implements Query<T> {
 
     /**
+     * Default constructor for AbstractQuery.
+     */
+    protected AbstractQuery() {
+    }
+
+    /**
      * Flag indicating whether scan operations are enabled for this query.
      */
     protected boolean scanEnabled = false;

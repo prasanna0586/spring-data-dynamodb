@@ -28,9 +28,18 @@ import java.io.Serializable;
  */
 public class DynamoDBHashAndRangeKey implements Serializable {
 
+    /**
+     * Default constructor creating an empty hash and range key instance.
+     */
     public DynamoDBHashAndRangeKey() {
     }
 
+    /**
+     * Creates a new DynamoDBHashAndRangeKey with the specified hash and range key values.
+     *
+     * @param hash the partition key (hash key) value
+     * @param range the sort key (range key) value
+     */
     public DynamoDBHashAndRangeKey(Object hash, Object range) {
         this.rangeKey = range;
         this.hashKey = hash;
@@ -45,20 +54,40 @@ public class DynamoDBHashAndRangeKey implements Serializable {
     private Object hashKey;
     private Object rangeKey;
 
+    /**
+     * Gets the partition key (hash key) value.
+     *
+     * @return the partition key value
+     */
     @DynamoDbPartitionKey
     public Object getHashKey() {
         return hashKey;
     }
 
+    /**
+     * Sets the partition key (hash key) value.
+     *
+     * @param hashKey the partition key value
+     */
     public void setHashKey(Object hashKey) {
         this.hashKey = hashKey;
     }
 
+    /**
+     * Gets the sort key (range key) value.
+     *
+     * @return the sort key value
+     */
     @DynamoDbSortKey
     public Object getRangeKey() {
         return rangeKey;
     }
 
+    /**
+     * Sets the sort key (range key) value.
+     *
+     * @param rangeKey the sort key value
+     */
     public void setRangeKey(Object rangeKey) {
         this.rangeKey = rangeKey;
     }

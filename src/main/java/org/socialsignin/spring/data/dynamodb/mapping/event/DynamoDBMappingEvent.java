@@ -30,6 +30,11 @@ public class DynamoDBMappingEvent<T> extends ApplicationEvent {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Creates a new DynamoDBMappingEvent.
+     *
+     * @param source the entity that triggered the event
+     */
     public DynamoDBMappingEvent(@NonNull T source) {
         super(source);
     }

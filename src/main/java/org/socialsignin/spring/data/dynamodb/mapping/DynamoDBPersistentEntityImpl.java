@@ -29,6 +29,12 @@ import java.util.Comparator;
  */
 public class DynamoDBPersistentEntityImpl<T> extends BasicPersistentEntity<T, DynamoDBPersistentProperty>
         implements DynamoDBPersistentEntity<T> {
+    /**
+     * Creates a new DynamoDBPersistentEntityImpl.
+     *
+     * @param information the type information
+     * @param comparator the comparator for sorting properties
+     */
     public DynamoDBPersistentEntityImpl(@NonNull TypeInformation<T> information,
                                         Comparator<DynamoDBPersistentProperty> comparator) {
         super(information, comparator);
@@ -36,7 +42,7 @@ public class DynamoDBPersistentEntityImpl<T> extends BasicPersistentEntity<T, Dy
 
     /**
      * Returns the given property if it is a better candidate for the id property than the current id property.
-     * <p>
+     *
      * @param property
      *            the new id property candidate, will never be {@literal null}.
      * @return the given id property or {@literal null} if the given property is not an id property.
