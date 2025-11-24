@@ -1,0 +1,1 @@
+org.socialsignin.spring.data.dynamodb.repository.cdi.DynamoDBRepositoryExtension
