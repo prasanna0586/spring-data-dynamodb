@@ -43,13 +43,13 @@ import java.util.stream.StreamSupport;
 public class SimpleDynamoDBCrudRepository<T, ID>
         implements DynamoDBCrudRepository<T, ID>, SortHandler, ExceptionHandler {
 
-    protected DynamoDBEntityInformation<T, ID> entityInformation;
+    protected final DynamoDBEntityInformation<T, ID> entityInformation;
 
-    protected Class<T> domainType;
+    protected final Class<T> domainType;
 
-    protected EnableScanPermissions enableScanPermissions;
+    protected final EnableScanPermissions enableScanPermissions;
 
-    protected DynamoDBOperations dynamoDBOperations;
+    protected final DynamoDBOperations dynamoDBOperations;
 
     public SimpleDynamoDBCrudRepository(@NonNull DynamoDBEntityInformation<T, ID> entityInformation,
                                         DynamoDBOperations dynamoDBOperations, EnableScanPermissions enableScanPermissions) {

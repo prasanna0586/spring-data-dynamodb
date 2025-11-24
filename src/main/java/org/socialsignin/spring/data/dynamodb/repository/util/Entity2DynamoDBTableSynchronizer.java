@@ -111,15 +111,14 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
 
             try {
                 synchronize(entityInformation, event);
-            } catch (InterruptedException | UnsupportedOperationException e) {
+            } catch (UnsupportedOperationException e) {
                 throw new RuntimeException("Could not perform Entity2DDL operation " + mode + " on "
                         + entityInformation.getDynamoDBTableName(), e);
             }
         }
     }
 
-    protected void synchronize(@NonNull DynamoDBEntityInformation<T, ID> entityInformation, ApplicationContextEvent event)
-            throws InterruptedException {
+    protected void synchronize(@NonNull DynamoDBEntityInformation<T, ID> entityInformation, ApplicationContextEvent event) {
 
         if (event instanceof ContextRefreshedEvent) {
             switch (mode) {

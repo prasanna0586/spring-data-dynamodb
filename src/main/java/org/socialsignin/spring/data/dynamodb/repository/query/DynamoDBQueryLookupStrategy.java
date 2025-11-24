@@ -46,7 +46,7 @@ public class DynamoDBQueryLookupStrategy {
      */
     private abstract static class AbstractQueryLookupStrategy implements QueryLookupStrategy {
 
-        protected DynamoDBOperations dynamoDBOperations;
+        protected final DynamoDBOperations dynamoDBOperations;
 
         public AbstractQueryLookupStrategy(DynamoDBOperations dynamoDBOperations) {
 

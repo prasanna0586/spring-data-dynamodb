@@ -44,7 +44,7 @@ import java.util.Map.Entry;
  */
 public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQueryCriteria<T, ID>, SortHandler {
 
-    protected Class<T> clazz;
+    protected final Class<T> clazz;
     @NonNull
     private final DynamoDBEntityInformation<T, ID> entityInformation;
     @NonNull
@@ -53,8 +53,8 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
     private final String hashKeyPropertyName;
     protected final DynamoDBMappingContext mappingContext;
 
-    protected MultiValueMap<String, Condition> attributeConditions;
-    protected MultiValueMap<String, Condition> propertyConditions;
+    protected final MultiValueMap<String, Condition> attributeConditions;
+    protected final MultiValueMap<String, Condition> propertyConditions;
 
     protected Object hashKeyAttributeValue;
     protected Object hashKeyPropertyValue;
