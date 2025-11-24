@@ -1,176 +1,184 @@
-[![Build Status](https://travis-ci.org/prasanna0586/spring-data-dynamodb.svg?branch=develop)](https://travis-ci.org/prasanna0586/spring-data-dynamodb) 
+[![Build Status](https://travis-ci.org/prasanna0586/spring-data-dynamodb.svg?branch=develop)](https://travis-ci.org/prasanna0586/spring-data-dynamodb)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.prasanna0586/spring-data-dynamodb/badge.svg)](https://search.maven.org/search?q=g:io.github.prasanna0586)
 
-# Spring  Data DynamoDB #
+# Spring Data DynamoDB #
 
-<img style="float:left; margin: 0px 15px 15px 0px;" src="/assets/images/dynamodb.svg" />
+The primary goal of the [Spring Data](https://projects.spring.io/spring-data/) project is to make it easier to build Spring-powered applications that use data access technologies.
 
-The primary goal of the [Spring® Data](https://projects.spring.io/spring-data/) project is to make it easier to build Spring-powered applications that use data access technologies.
-
-This module deals with enhanced support for a data access layer built on [AWS DynamoDB](https://aws.amazon.com/dynamodb/).
-
-Technical infos can be found on the [project page](https://derjust.github.io/spring-data-dynamodb/).
+This module deals with enhanced support for a data access layer built on [AWS DynamoDB](https://aws.amazon.com/dynamodb/) using **AWS SDK v2**.
 
 ## Supported Features ##
 
-* Implementation of [CRUD methods for](https://docs.spring.io/spring-data/commons/docs/current/reference/html/#repositories.definition) DynamoDB Entities
-* Dynamic query generation from [query method names](https://docs.spring.io/spring-data/commons/docs/current/reference/html/#repositories.query-methods.query-creation) ([Supported keywords and comparison operators](https://github.com/derjust/spring-data-dynamodb/wiki/Supported-Spring-Data-Comparison-Operators))
-* [Projections](https://github.com/derjust/spring-data-dynamodb/wiki/Projections)
-* Possibility to integrate [custom repository code](https://github.com/derjust/spring-data-dynamodb/wiki/Custom-repository-implementations)
+* Implementation of [CRUD methods](https://docs.spring.io/spring-data/commons/docs/current/reference/html/#repositories.definition) for DynamoDB Entities
+* Dynamic query generation from [query method names](https://docs.spring.io/spring-data/commons/docs/current/reference/html/#repositories.query-methods.query-creation)
+* Transparent handling of Hash and Hash/Range key entities
+* Global Secondary Index (GSI) and Local Secondary Index (LSI) support
+* Projections and custom query methods
+* Possibility to integrate [custom repository code](https://prasanna0586.github.io/spring-data-dynamodb/#custom-repository-implementations)
+* Built-in batch operations with automatic retry and exponential backoff
+* Type-safe exception handling for batch operations
 * Easy Spring annotation based integration
-* [REST support](https://github.com/derjust/spring-data-dynamodb-examples/blob/master/README-rest.md) via [spring-data-rest](https://projects.spring.io/spring-data-rest/)
+* REST support via [spring-data-rest](https://projects.spring.io/spring-data-rest/)
 
-## Demo application ##
+## Requirements ##
 
-For a demo of spring-data-dynamodb, using spring-data-rest to showcase DynamoDB repositories exposed with REST,
-please see [spring-data-dynamodb-examples](https://github.com/derjust/spring-data-dynamodb-examples).
+* **Java 21+**
+* Spring Boot 3.x or Spring Framework 6.x
+* AWS SDK v2
 
 ## Quick Start ##
 
-Download the JAR though [Maven Central](https://mvnrepository.com/artifact/io.github.prasanna0586/spring-data-dynamodb)
+Download the JAR through [Maven Central](https://mvnrepository.com/artifact/io.github.prasanna0586/spring-data-dynamodb)
 
 ```xml
 <dependency>
   <groupId>io.github.prasanna0586</groupId>
   <artifactId>spring-data-dynamodb</artifactId>
-  <version>6.0.4</version>
+  <version>7.0.0</version>
 </dependency>
 ```
 
-Setup DynamoDB configuration as well as enabling Spring-Data DynamoDB repository support via Annotation ([XML-based configuration](wiki/Quick-Start---XML-based-configuration))
+You also need AWS SDK v2 DynamoDB Enhanced Client:
 
-Create a DynamoDB entity [User](https://github.com/derjust/spring-data-dynamodb-examples/blob/master/src/main/java/com/github/derjust/spring_data_dynamodb_examples/simple/User.java) for this table:
+```xml
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>bom</artifactId>
+            <version>2.38.1</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+
+<dependencies>
+    <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>dynamodb-enhanced</artifactId>
+    </dependency>
+</dependencies>
+```
+
+Create a DynamoDB entity `User`:
 
 ```java
-@DynamoDBTable(tableName = "User")
+@DynamoDbBean
 public class User {
 
-	private String id;
-	private String firstName;
-	private String lastName;
+    private String id;
+    private String firstName;
+    private String lastName;
 
-	public User() {
-		// Default constructor is required by AWS DynamoDB SDK
-	}
+    public User() {
+        // Default constructor is required by AWS DynamoDB SDK
+    }
 
-	public User(String firstName, String lastName) {
-		this.firstName = firstName;
-		this.lastName = lastName;
-	}
+    public User(String firstName, String lastName) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+    }
 
-	@DynamoDBHashKey
-	@DynamoDBAutoGeneratedKey
-	public String getId() {
-		return id;
-	}
+    @DynamoDbPartitionKey
+    @DynamoDbAttribute("id")
+    public String getId() {
+        return id;
+    }
 
-	@DynamoDBAttribute
-	public String getFirstName() {
-		return firstName;
-	}
+    @DynamoDbAttribute("firstName")
+    public String getFirstName() {
+        return firstName;
+    }
 
-	@DynamoDBAttribute
-	public String getLastName() {
-		return lastName;
-	}
+    @DynamoDbAttribute("lastName")
+    public String getLastName() {
+        return lastName;
+    }
 
-	//setter & hashCode & equals
+    // setters, hashCode & equals
 }
 ```
 
-Create a CRUD repository interface [UserRepository](https://github.com/derjust/spring-data-dynamodb-examples/blob/master/src/main/java/com/github/derjust/spring_data_dynamodb_examples/simple/UserRepository.java):
+Create a CRUD repository interface `UserRepository`:
 
 ```java
 @EnableScan
-public interface UserRepository extends CrudRepository<User, String> {
-  List<User> findByLastName(String lastName);
-  List<User> findByFirstName(String firstName);
+public interface UserRepository extends DynamoDBCrudRepository<User, String> {
+    List<User> findByLastName(String lastName);
+    List<User> findByFirstName(String firstName);
 }
 ```
 
 or for paging and sorting...
 
 ```java
-public interface PagingUserRepository extends PagingAndSortingRepository<User, String> {
-	Page<User> findByLastName(String lastName, Pageable pageable);
-	Page<User> findByFirstName(String firstName, Pageable pageable);
+public interface PagingUserRepository extends DynamoDBPagingAndSortingRepository<User, String> {
+    Page<User> findByLastName(String lastName, Pageable pageable);
+    Page<User> findByFirstName(String firstName, Pageable pageable);
 
-	@EnableScan
-	@EnableScanCount
-	Page<User> findAll(Pageable pageable);
+    @EnableScan
+    @EnableScanCount
+    Page<User> findAll(Pageable pageable);
 }
 ```
 
-Create the configuration class [DynamoDBConfig](https://github.com/derjust/spring-data-dynamodb-examples/blob/master/src/test/java/com/github/derjust/spring_data_dynamodb_examples/simple/UserRepositoryIT.java#L61):
+Create the configuration class `DynamoDBConfig`:
+
 ```java
 @Configuration
 @EnableDynamoDBRepositories(basePackageClasses = UserRepository.class)
-public static class DynamoDBConfig {
+public class DynamoDBConfig {
 
-	@Value("${amazon.aws.accesskey}")
-	private String amazonAWSAccessKey;
+    @Bean
+    public DynamoDbClient amazonDynamoDB() {
+        return DynamoDbClient.builder()
+            .region(Region.US_EAST_1)
+            .build();
+    }
 
-	@Value("${amazon.aws.secretkey}")
-	private String amazonAWSSecretKey;
-
-	public AWSCredentialsProvider amazonAWSCredentialsProvider() {
-		return new AWSStaticCredentialsProvider(amazonAWSCredentials());
-	}
-
-	@Bean
-	public AWSCredentials amazonAWSCredentials() {
-		return new BasicAWSCredentials(amazonAWSAccessKey, amazonAWSSecretKey);
-	}
-
-	@Bean
-	public DynamoDBMapperConfig dynamoDBMapperConfig() {
-		return DynamoDBMapperConfig.DEFAULT;
-	}
-
-	@Bean
-	public DynamoDBMapper dynamoDBMapper(AmazonDynamoDB amazonDynamoDB, DynamoDBMapperConfig config) {
-		return new DynamoDBMapper(amazonDynamoDB, config);
-	}
-
-	@Bean
-	public AmazonDynamoDB amazonDynamoDB() {
-		return AmazonDynamoDBClientBuilder.standard().withCredentials(amazonAWSCredentialsProvider())
-				.withRegion(Regions.US_EAST_1).build();
-	}
+    @Bean
+    public DynamoDbEnhancedClient dynamoDbEnhancedClient(DynamoDbClient amazonDynamoDB) {
+        return DynamoDbEnhancedClient.builder()
+            .dynamoDbClient(amazonDynamoDB)
+            .build();
+    }
 }
 ```
 
-And finally write a test client [UserRepositoryIT](https://github.com/derjust/spring-data-dynamodb-examples/blob/master/src/test/java/com/github/derjust/spring_data_dynamodb_examples/simple/UserRepositoryIT.java) or start calling it from your existing Spring code.
+## Documentation ##
 
+For complete documentation, examples, and advanced topics, visit the [User Guide](https://prasanna0586.github.io/spring-data-dynamodb/).
 
-The full source code is available at [spring-data-dynamodb-examples' simple example](https://github.com/derjust/spring-data-dynamodb-examples/blob/master/README-simple.md)
+Topics covered include:
+* [Configuration options](https://prasanna0586.github.io/spring-data-dynamodb/#configuration)
+* [Entity mapping with Hash and Range keys](https://prasanna0586.github.io/spring-data-dynamodb/#entities)
+* [Query methods and supported operators](https://prasanna0586.github.io/spring-data-dynamodb/#query-methods)
+* [Global and Local Secondary Indexes](https://prasanna0586.github.io/spring-data-dynamodb/#indexes-gsi--lsi)
+* [Batch operations](https://prasanna0586.github.io/spring-data-dynamodb/#batch-operations)
+* [Type converters](https://prasanna0586.github.io/spring-data-dynamodb/#type-converters)
+* [Event listeners](https://prasanna0586.github.io/spring-data-dynamodb/#event-listeners)
+* [Pagination](https://prasanna0586.github.io/spring-data-dynamodb/#pagination)
 
-## More
-More sample code can be found in the [spring-data-dynamodb-examples](https://github.com/derjust/spring-data-dynamodb-examples) project.
+## Migration from SDK v1 ##
 
-Advanced topics can be found in the [wiki](https://github.com/derjust/spring-data-dynamodb/wiki).
+If you are migrating from version 6.x (AWS SDK v1) to version 7.x (AWS SDK v2), please refer to the [Migration Guide](MIGRATION_GUIDE.md).
 
+Key changes include:
+* New AWS SDK v2 annotations (`@DynamoDbBean`, `@DynamoDbPartitionKey`, etc.)
+* Updated configuration using `DynamoDbClient` and `DynamoDbEnhancedClient`
+* Marshalling modes for backward compatibility with existing data
 
 ## Version & Spring Framework compatibility ##
 
 The major and minor number of this library refers to the compatible Spring framework version. The build number is used as specified by SEMVER.
 
-API changes will follow SEMVER and loosely the Spring Framework releases.
+| `spring-data-dynamodb` version | Spring Boot compatibility | Spring Framework compatibility | Spring Data compatibility | AWS SDK   |
+|--------------------------------|---------------------------|--------------------------------|---------------------------|-----------|
+| 6.0.3                          | >= 3.2.5                  | >= 6.1.6                       | 2023.1.5                  | v1        |
+| 6.0.4                          | >= 3.5.6                  | >= 6.2.11                      | 2025.0.4                  | v1        |
+| 7.0.0                          | >= 3.5.6                  | >= 6.2.11                      | 2025.0.4                  | v2        |
 
-| `spring-data-dynamodb` version | Spring Boot compatibility | Spring Framework compatibility | Spring Data compatibility     |
-|--------------------------------|---------------------------|--------------------------------|-------------------------------|
-| 1.0.x                          |                           | \>= 3.1 && \< 4.2              |                               |
-| 4.2.x                          | \>= 1.3.0 && < 1.4.0      | \>= 4.2 && \< 4.3              | Gosling-SR1                   |
-| 4.3.x                          | \>= 1.4.0 && < 2.0        | \>= 4.3 && \< 5.0              | Gosling-SR1                   |
-| 4.4.x                          | \>= 1.4.0 && < 2.0        | \>= 4.3 && \< 5.0              | Hopper-SR2                    |
-| 4.5.x                          | \>= 1.4.0 && < 2.0        | \>= 4.3 && \< 5.0              | Ingalls                       |
-| 5.0.x                          | \>= 2.0 && < 2.1          | \>= 5.0 && \< 5.1              | Kay-SR1                       |
-| 5.1.x                          | == 2.1                    | \>= 5.1                        | Lovelace-SR1                  |
-| 5.2.x                          | \>= 2.2                   | \>= 5.2                        | Moore-RELEASE, Nuemann-RELASE |
-| 6.0.3                          | \>= 3.2.5                 | \>=6.1.6                       | 2023.1.5                      |
-| 6.0.4                          | \>= 3.5.6                 | \>=6.2.11                      | 2025.0.4                      |
+`spring-data-dynamodb` depends directly on `spring-data` as well as `spring-tx`.
 
-`spring-data-dynamodb` depends directly on `spring-data` as also `spring-tx`.
-
-`compile` and `runtime` dependencies are kept to a minimum to allow easy integration, for example into 
-Spring-Boot projects.
+`compile` and `runtime` dependencies are kept to a minimum to allow easy integration, for example into Spring Boot projects.
