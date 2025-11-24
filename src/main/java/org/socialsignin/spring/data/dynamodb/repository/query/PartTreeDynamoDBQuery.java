@@ -41,7 +41,7 @@ public class PartTreeDynamoDBQuery<T, ID> extends AbstractDynamoDBQuery<T, ID> i
     }
 
     @NonNull
-    protected DynamoDBQueryCreator<T, ID> createQueryCreator(ParametersParameterAccessor accessor) {
+    protected DynamoDBQueryCreator<T, ID> createQueryCreator(@NonNull ParametersParameterAccessor accessor) {
         DynamoDBQueryMethod<T, ID> queryMethod = getQueryMethod();
         return new DynamoDBQueryCreator<>(tree, accessor, queryMethod.getEntityInformation(),
                 queryMethod.getProjectionExpression().orElse(null), queryMethod.getLimitResults().orElse(null),
@@ -51,7 +51,7 @@ public class PartTreeDynamoDBQuery<T, ID> extends AbstractDynamoDBQuery<T, ID> i
     }
 
     @NonNull
-    protected DynamoDBCountQueryCreator<T, ID> createCountQueryCreator(ParametersParameterAccessor accessor,
+    protected DynamoDBCountQueryCreator<T, ID> createCountQueryCreator(@NonNull ParametersParameterAccessor accessor,
                                                                        boolean pageQuery) {
         DynamoDBQueryMethod<T, ID> queryMethod = getQueryMethod();
         return new DynamoDBCountQueryCreator<>(tree, accessor, queryMethod.getEntityInformation(),

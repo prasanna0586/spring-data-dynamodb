@@ -38,6 +38,7 @@ public class Instant2EpocheDynamoDBMarshaller {
      * @param object the Instant to convert
      * @return String representation of epoch milliseconds
      */
+    @Nullable
     public String convert(Instant object) {
         return marshall(object);
     }
@@ -63,6 +64,7 @@ public class Instant2EpocheDynamoDBMarshaller {
      * @param object the String to convert
      * @return Instant object
      */
+    @Nullable
     public Instant unconvert(@NonNull String object) {
         return unmarshall(object);
     }

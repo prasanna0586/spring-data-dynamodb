@@ -73,6 +73,7 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
 
     protected abstract boolean isDeleteQuery();
 
+    @Nullable
     protected abstract Integer getResultsRestrictionIfApplicable();
 
     protected abstract boolean isSingleEntityResultsRestriction();

@@ -354,6 +354,7 @@ public class DynamoDBEntityWithHashKeyOnlyCriteria<T, ID> extends AbstractDynamo
 
     }
 
+    @NonNull
     @Override
     public DynamoDBQueryCriteria<T, ID> withPropertyEquals(@NonNull String propertyName, Object value, Class<?> propertyType) {
         if (isHashKeyProperty(propertyName)) {

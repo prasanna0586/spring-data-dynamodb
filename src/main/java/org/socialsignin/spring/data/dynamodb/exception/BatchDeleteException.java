@@ -90,6 +90,7 @@ public class BatchDeleteException extends DataAccessException {
      *
      * @return Unmodifiable list of all unprocessed entities
      */
+    @NonNull
     public List<Object> getUnprocessedEntities() {
         return unprocessedEntities;
     }

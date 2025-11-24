@@ -116,10 +116,12 @@ public class DynamoDBQueryMethod<T, ID> extends QueryMethod {
         return getEntityInformation().getJavaType();
     }
 
+    @NonNull
     public Optional<String> getProjectionExpression() {
         return Optional.ofNullable(this.projectionExpression);
     }
 
+    @NonNull
     public Optional<Integer> getLimitResults() {
         return Optional.ofNullable(this.limitResults);
     }
@@ -128,6 +130,7 @@ public class DynamoDBQueryMethod<T, ID> extends QueryMethod {
         return this.consistentReadMode;
     }
 
+    @NonNull
     public Optional<String> getFilterExpression() {
         return Optional.ofNullable(this.filterExpression);
     }

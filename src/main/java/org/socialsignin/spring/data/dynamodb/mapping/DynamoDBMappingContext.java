@@ -69,6 +69,7 @@ public class DynamoDBMappingContext
      * @return The marshalling mode
      * @since 7.0.0
      */
+    @NonNull
     public MarshallingMode getMarshallingMode() {
         return marshallingMode;
     }

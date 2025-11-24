@@ -29,7 +29,7 @@ public class CompositeIdHashAndRangeKeyExtractor<ID, H> implements HashAndRangeK
     @NonNull
     private final DynamoDBHashAndRangeKeyMethodExtractor<ID> hashAndRangeKeyMethodExtractor;
 
-    public CompositeIdHashAndRangeKeyExtractor(Class<ID> idClass) {
+    public CompositeIdHashAndRangeKeyExtractor(@NonNull Class<ID> idClass) {
         this.hashAndRangeKeyMethodExtractor = new DynamoDBHashAndRangeKeyMethodExtractorImpl<>(idClass);
     }
 

@@ -37,6 +37,7 @@ public interface DynamoDBHashKeyExtractingEntityMetadata<T> extends EntityMetada
 
     boolean isHashKeyProperty(String propertyName);
 
+    @Nullable
     String getHashKeyPropertyName();
 
     String getDynamoDBTableName();

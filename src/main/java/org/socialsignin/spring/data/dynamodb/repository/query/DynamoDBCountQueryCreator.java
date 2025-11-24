@@ -35,17 +35,17 @@ public class DynamoDBCountQueryCreator<T, ID> extends AbstractDynamoDBQueryCreat
      * @deprecated use the new constructor with all required fields, will be removed in 5.3.0
      */
     @Deprecated
-    public DynamoDBCountQueryCreator(PartTree tree, DynamoDBEntityInformation<T, ID> entityMetadata,
-            DynamoDBOperations dynamoDBOperations, boolean pageQuery) {
+    public DynamoDBCountQueryCreator(@NonNull PartTree tree, DynamoDBEntityInformation<T, ID> entityMetadata,
+                                     DynamoDBOperations dynamoDBOperations, boolean pageQuery) {
         super(tree, entityMetadata, null, null, QueryConstants.ConsistentReadMode.DEFAULT,
                 null, null, null, dynamoDBOperations);
         this.pageQuery = pageQuery;
     }
 
-    public DynamoDBCountQueryCreator(PartTree tree, ParameterAccessor parameterAccessor,
-            DynamoDBEntityInformation<T, ID> entityMetadata, @Nullable String filterExpression,
-            ExpressionAttribute[] names, ExpressionAttribute[] values, DynamoDBOperations dynamoDBOperations,
-            boolean pageQuery) {
+    public DynamoDBCountQueryCreator(@NonNull PartTree tree, @NonNull ParameterAccessor parameterAccessor,
+                                     DynamoDBEntityInformation<T, ID> entityMetadata, @Nullable String filterExpression,
+                                     ExpressionAttribute[] names, ExpressionAttribute[] values, DynamoDBOperations dynamoDBOperations,
+                                     boolean pageQuery) {
 
         super(tree, parameterAccessor, entityMetadata, null, null,
                 QueryConstants.ConsistentReadMode.DEFAULT, filterExpression, names, values, dynamoDBOperations);

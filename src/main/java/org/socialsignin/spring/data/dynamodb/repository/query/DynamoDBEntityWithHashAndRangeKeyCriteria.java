@@ -629,6 +629,7 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
         return this;
     }
 
+    @NonNull
     @SuppressWarnings("unchecked")
     @Override
     public DynamoDBQueryCriteria<T, ID> withPropertyEquals(@NonNull String propertyName, Object value, Class<?> propertyType) {

@@ -47,6 +47,7 @@ public class Instant2IsoDynamoDBMarshaller {
      * @param object the Instant to convert
      * @return ISO-8601 String representation
      */
+    @Nullable
     public String convert(Instant object) {
         return marshall(object);
     }
@@ -72,6 +73,7 @@ public class Instant2IsoDynamoDBMarshaller {
      * @param object the String to convert
      * @return Instant object
      */
+    @Nullable
     public Instant unconvert(@NonNull String object) {
         return unmarshall(object);
     }

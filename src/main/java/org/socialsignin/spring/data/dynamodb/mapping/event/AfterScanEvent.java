@@ -15,6 +15,7 @@
  */
 package org.socialsignin.spring.data.dynamodb.mapping.event;
 
+import org.springframework.lang.NonNull;
 import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 
 import java.io.Serial;
@@ -27,7 +28,7 @@ public class AfterScanEvent<T> extends DynamoDBMappingEvent<PageIterable<T>> {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    public AfterScanEvent(PageIterable<T> source) {
+    public AfterScanEvent(@NonNull PageIterable<T> source) {
         super(source);
     }
 

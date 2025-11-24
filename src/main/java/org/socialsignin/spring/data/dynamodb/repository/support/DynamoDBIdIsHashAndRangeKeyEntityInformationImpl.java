@@ -34,6 +34,7 @@ public class DynamoDBIdIsHashAndRangeKeyEntityInformationImpl<T, ID>
         extends FieldAndGetterReflectionEntityInformation<T, ID>
         implements DynamoDBIdIsHashAndRangeKeyEntityInformation<T, ID> {
 
+    @NonNull
     private final DynamoDBHashAndRangeKeyExtractingEntityMetadata<T, ID> metadata;
     private final HashAndRangeKeyExtractor<ID, ?> hashAndRangeKeyExtractor;
     @Nullable
@@ -65,6 +66,7 @@ public class DynamoDBIdIsHashAndRangeKeyEntityInformationImpl<T, ID>
         return true;
     }
 
+    @Nullable
     @Override
     public Object getHashKey(final ID id) {
         return hashAndRangeKeyExtractor.getHashKey(id);

@@ -49,6 +49,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
     private final DynamoDBEntityInformation<T, ID> entityInformation;
     @NonNull
     private final Map<String, String> attributeNamesByPropertyName;
+    @Nullable
     private final String hashKeyPropertyName;
     protected final DynamoDBMappingContext mappingContext;
 
@@ -781,6 +782,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
 
     }
 
+    @NonNull
     @Override
     public DynamoDBQueryCriteria<T, ID> withPropertyBetween(@NonNull String propertyName, Object value1, Object value2,
                                                             Class<?> type) {
@@ -789,6 +791,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return withCondition(propertyName, condition);
     }
 
+    @NonNull
     @Override
     public DynamoDBQueryCriteria<T, ID> withPropertyIn(@NonNull String propertyName, @NonNull Iterable<?> value, Class<?> propertyType) {
 
@@ -836,6 +839,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
 
     protected abstract boolean isOnlyHashKeySpecified();
 
+    @NonNull
     @Override
     public DynamoDBQueryCriteria<T, ID> withNoValuedCriteria(@NonNull String propertyName,
                                                              ComparisonOperator comparisonOperator) {

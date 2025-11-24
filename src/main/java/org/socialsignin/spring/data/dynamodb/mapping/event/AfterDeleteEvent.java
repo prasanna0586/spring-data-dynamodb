@@ -15,6 +15,8 @@
  */
 package org.socialsignin.spring.data.dynamodb.mapping.event;
 
+import org.springframework.lang.NonNull;
+
 import java.io.Serial;
 
 /**
@@ -25,7 +27,7 @@ public class AfterDeleteEvent<T> extends DynamoDBMappingEvent<T> {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    public AfterDeleteEvent(T source) {
+    public AfterDeleteEvent(@NonNull T source) {
         super(source);
     }
 

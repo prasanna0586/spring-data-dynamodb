@@ -60,6 +60,7 @@ public abstract class AbstractDynamoDBEventListener<E> implements ApplicationLis
         this.domainClass = typeArgument == null ? Object.class : typeArgument;
     }
 
+    @NonNull
     protected Class<?> getDomainClass() {
         return this.domainClass;
     }

@@ -41,6 +41,7 @@ public abstract class DateDynamoDBMarshaller {
      * @param object the Date to convert
      * @return String representation of the date
      */
+    @Nullable
     public String convert(Date object) {
         return marshall(object);
     }
@@ -66,6 +67,7 @@ public abstract class DateDynamoDBMarshaller {
      * @param object the String to convert
      * @return Date object
      */
+    @Nullable
     public Date unconvert(String object) {
         return unmarshall(object);
     }

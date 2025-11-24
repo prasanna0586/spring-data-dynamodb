@@ -15,11 +15,14 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
+import org.springframework.lang.Nullable;
+
 /**
  * @author Prasanna Kumar Ramachandran
  */
 public interface HashAndRangeKeyExtractor<ID, H> extends HashKeyExtractor<ID, H> {
 
+    @Nullable
     Object getRangeKey(ID id);
 
 }

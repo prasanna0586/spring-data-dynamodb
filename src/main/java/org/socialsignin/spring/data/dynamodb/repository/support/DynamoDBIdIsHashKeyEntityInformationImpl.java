@@ -62,6 +62,7 @@ public class DynamoDBIdIsHashKeyEntityInformationImpl<T, ID> extends FieldAndGet
         return Optional.ofNullable(limit);
     }
 
+    @Nullable
     @Override
     public Object getHashKey(@NonNull final ID id) {
         Assert.isAssignable(getIdType(), id.getClass(),

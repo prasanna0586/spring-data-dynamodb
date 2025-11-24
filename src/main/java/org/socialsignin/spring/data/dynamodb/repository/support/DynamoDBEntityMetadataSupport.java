@@ -158,7 +158,7 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
         return hashKeyPropertyName.equals(propertyName);
     }
 
-    protected boolean isFieldAnnotatedWith(final String propertyName) {
+    protected boolean isFieldAnnotatedWith(@NonNull final String propertyName) {
 
         Field field = findField(propertyName);
         return field != null && field.getAnnotation((Class<? extends Annotation>) org.springframework.data.annotation.Id.class) != null;
@@ -204,7 +204,7 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
     }
 
     @Nullable
-    private Field findField(String propertyName) {
+    private Field findField(@NonNull String propertyName) {
         return ReflectionUtils.findField(domainType, propertyName);
     }
 
@@ -315,6 +315,7 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
         return field.getName();
     }
 
+    @Nullable
     @Override
     public String getHashKeyPropertyName() {
         return hashKeyPropertyName;
@@ -370,6 +371,7 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
         }
     }
 
+    @NonNull
     @Override
     public Map<String, String[]> getGlobalSecondaryIndexNamesByPropertyName() {
         return globalSecondaryIndexNames;

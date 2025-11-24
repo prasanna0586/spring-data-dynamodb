@@ -349,6 +349,7 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
      * @param <T> entity type
      * @return the potentially modified entity
      */
+    @NonNull
     private <T> T maybeCallBeforeConvert(@NonNull T entity, String tableName) {
         if (entityCallbacks != null) {
             return entityCallbacks.callback(BeforeConvertCallback.class, entity, tableName);
@@ -747,6 +748,7 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
     public DynamoDBMappingContext getMappingContext() {
         return mappingContext;

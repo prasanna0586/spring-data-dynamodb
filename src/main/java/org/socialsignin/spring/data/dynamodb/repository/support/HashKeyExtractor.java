@@ -15,10 +15,13 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
+import org.springframework.lang.Nullable;
+
 /**
  * @author Prasanna Kumar Ramachandran
  */
 public interface HashKeyExtractor<ID, H> {
 
+    @Nullable
     H getHashKey(ID id);
 }

@@ -70,10 +70,11 @@ public class DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl<T, ID> extends 
 
     @NonNull
     @Override
-    public <H> HashAndRangeKeyExtractor<ID, H> getHashAndRangeKeyExtractor(Class<ID> idClass) {
+    public <H> HashAndRangeKeyExtractor<ID, H> getHashAndRangeKeyExtractor(@NonNull Class<ID> idClass) {
         return new CompositeIdHashAndRangeKeyExtractor<>(idClass);
     }
 
+    @NonNull
     @Override
     public String getRangeKeyPropertyName() {
         return getPropertyNameForAccessorMethod(hashAndRangeKeyMethodExtractor.getRangeKeyMethod());
@@ -121,7 +122,7 @@ public class DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl<T, ID> extends 
     }
 
     @Override
-    public boolean isCompositeHashAndRangeKeyProperty(String propertyName) {
+    public boolean isCompositeHashAndRangeKeyProperty(@NonNull String propertyName) {
         return isFieldAnnotatedWith(propertyName);
     }
 

@@ -29,10 +29,10 @@ import org.springframework.lang.Nullable;
 
 public class DynamoDBQueryCreator<T, ID> extends AbstractDynamoDBQueryCreator<T, ID, T> {
 
-    public DynamoDBQueryCreator(PartTree tree, ParameterAccessor parameterAccessor,
-            DynamoDBEntityInformation<T, ID> entityMetadata, @Nullable String projection, @Nullable Integer limit,
-            QueryConstants.ConsistentReadMode consistentReads, @Nullable String filterExpression,
-            ExpressionAttribute[] names, ExpressionAttribute[] values, DynamoDBOperations dynamoDBOperations) {
+    public DynamoDBQueryCreator(@NonNull PartTree tree, @NonNull ParameterAccessor parameterAccessor,
+                                DynamoDBEntityInformation<T, ID> entityMetadata, @Nullable String projection, @Nullable Integer limit,
+                                QueryConstants.ConsistentReadMode consistentReads, @Nullable String filterExpression,
+                                ExpressionAttribute[] names, ExpressionAttribute[] values, DynamoDBOperations dynamoDBOperations) {
         super(tree, parameterAccessor, entityMetadata, projection, limit, consistentReads, filterExpression, names,
                 values, dynamoDBOperations);
     }
