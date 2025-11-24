@@ -92,7 +92,7 @@ public class DynamoDBQueryLookupStrategy {
                         new DynamoDBQueryMethod<T, ID>(method, metadata, factory));
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException(
-                        String.format("Could not create query metamodel for method %s!", method.toString()), e);
+                        String.format("Could not create query metamodel for method %s!", method), e);
             }
         }
 

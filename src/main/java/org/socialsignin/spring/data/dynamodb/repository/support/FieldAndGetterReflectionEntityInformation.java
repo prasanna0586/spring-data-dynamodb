@@ -67,9 +67,9 @@ public class FieldAndGetterReflectionEntityInformation<T, ID> extends AbstractEn
         }
 
         Assert.isTrue(this.method != null || this.field != null,
-                String.format("No field or method annotated with %s found!", annotation.toString()));
+                String.format("No field or method annotated with %s found!", annotation));
         Assert.isTrue(this.method == null || this.field == null,
-                String.format("Both field and method annotated with %s found!", annotation.toString()));
+                String.format("Both field and method annotated with %s found!", annotation));
 
         if (method != null) {
             ReflectionUtils.makeAccessible(method);

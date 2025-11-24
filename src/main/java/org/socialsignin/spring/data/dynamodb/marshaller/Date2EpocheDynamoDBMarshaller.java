@@ -54,7 +54,7 @@ public class Date2EpocheDynamoDBMarshaller extends DateDynamoDBMarshaller {
             return new Date(epoche);
         }
 
-    };
+    }
 
     @NonNull
     @Override

@@ -1066,7 +1066,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
                     // SDK v2 native: Instant stored as ISO-8601 string (matches AWS SDK v2 InstantAsStringAttributeConverter)
                     // Format: ISO-8601 with nanosecond precision, e.g., "1970-01-01T00:00:00.001Z"
                     assert attributeValue != null;
-                    attributeValueBuilder.s(((Instant) attributeValue).toString());
+                    attributeValueBuilder.s(attributeValue.toString());
                 }
             }
         } else {
