@@ -43,10 +43,10 @@ class DynamoDBPersistentPropertyImpl extends AnnotationBasedPersistentProperty<D
 
     static {
 
-        Set<Class<? extends Annotation>> annotations = new HashSet<Class<? extends Annotation>>();
+        Set<Class<? extends Annotation>> annotations;
 
-        annotations.add(Reference.class); // Reference not yet supported
-        ASSOCIATION_ANNOTATIONS = Collections.unmodifiableSet(annotations);
+        // Reference not yet supported
+        ASSOCIATION_ANNOTATIONS = Set.of(Reference.class);
 
         annotations = new HashSet<>();
         annotations.add(Id.class);
@@ -149,6 +149,6 @@ class DynamoDBPersistentPropertyImpl extends AnnotationBasedPersistentProperty<D
      */
     @Override
     protected Association<DynamoDBPersistentProperty> createAssociation() {
-        return new Association<DynamoDBPersistentProperty>(this, null);
+        return new Association<>(this, null);
     }
 }

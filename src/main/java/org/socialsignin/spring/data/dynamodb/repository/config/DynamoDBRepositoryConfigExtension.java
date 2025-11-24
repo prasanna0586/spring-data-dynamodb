@@ -25,6 +25,7 @@ import org.socialsignin.spring.data.dynamodb.repository.DynamoDBPagingAndSorting
 import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBRepositoryFactoryBean;
 import org.socialsignin.spring.data.dynamodb.repository.util.DynamoDBMappingContextProcessor;
 import org.socialsignin.spring.data.dynamodb.repository.util.Entity2DynamoDBTableSynchronizer;
+import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.core.annotation.AnnotationAttributes;
@@ -85,7 +86,7 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
 
         String repositoryBeanName = config.generateBeanName(builder.getBeanDefinition());
 
-        postProcess(builder, repositoryBeanName, attributes.getString("amazonDynamoDBRef"),
+        postProcess(builder, attributes.getString("amazonDynamoDBRef"),
                 attributes.getString("dynamoDBMapperRef"), attributes.getString("dynamoDBMapperConfigRef"),
                 attributes.getString("dynamoDBOperationsRef"), attributes.getString("mappingContextRef"));
     }
@@ -117,11 +118,11 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
         registerAndSetPostProcessingBeans(builder, registry, dynamoDBMappingContextRef);
     }
 
-    private Map<String, String> dynamoDBTemplateCache = new HashMap<>();
+    private final Map<String, String> dynamoDBTemplateCache = new HashMap<>();
 
-    private void postProcess(BeanDefinitionBuilder builder, String repositoryName, String amazonDynamoDBRef,
-            String dynamoDBMapperRef, String dynamoDBMapperConfigRef, String dynamoDBOperationsRef,
-            String dynamoDBMappingContextRef) {
+    private void postProcess(BeanDefinitionBuilder builder, String amazonDynamoDBRef,
+                             String dynamoDBMapperRef, String dynamoDBMapperConfigRef, String dynamoDBOperationsRef,
+                             String dynamoDBMappingContextRef) {
 
         // Ensure mapping context is created first
         if (!StringUtils.hasText(dynamoDBMappingContextRef)) {
@@ -204,6 +205,7 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
         return entity2DynamoDBTableSynchronizerCache.computeIfAbsent(dynamoDBMappingContextRef, ref -> {
             BeanDefinitionBuilder entity2DynamoDBTableSynchronizerBuilder = BeanDefinitionBuilder
                     .genericBeanDefinition(Entity2DynamoDBTableSynchronizer.class);
+            entity2DynamoDBTableSynchronizerBuilder.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_CONSTRUCTOR);
             String tableSynchronizerName = getBeanNameWithModulePrefix(
                     "Entity2DynamoDBTableSynchronizer-" + dynamoDBMappingContextRef);
             registry.registerBeanDefinition(tableSynchronizerName,
@@ -283,7 +285,7 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
         this.dynamoDBMapperConfigName = getBeanNameWithModulePrefix("DynamoDBMapperConfig");
         Optional<String> dynamoDBMapperConfigRef = configurationSource.getAttribute("dynamoDBMapperConfigRef");
 
-        if (!dynamoDBMapperConfigRef.isPresent()) {
+        if (dynamoDBMapperConfigRef.isEmpty()) {
             BeanDefinitionBuilder dynamoDBMapperConfigBuiilder = BeanDefinitionBuilder
                     .genericBeanDefinition(DynamoDBMapperConfigFactory.class);
             registry.registerBeanDefinition(this.dynamoDBMapperConfigName,
@@ -291,7 +293,7 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
         }
 
         Optional<String> dynamoDBMapperRef = configurationSource.getAttribute("dynamoDBMapperRef");
-        if (!dynamoDBMapperRef.isPresent()) {
+        if (dynamoDBMapperRef.isEmpty()) {
             this.dynamoDBMapperName = getBeanNameWithModulePrefix("DynamoDBMapper");
             BeanDefinitionBuilder dynamoDBMapperBuilder = BeanDefinitionBuilder
                     .genericBeanDefinition(DynamoDBMapperFactory.class);

@@ -20,7 +20,6 @@ import org.socialsignin.spring.data.dynamodb.mapping.event.*;
 import org.socialsignin.spring.data.dynamodb.marshaller.Date2IsoDynamoDBMarshaller;
 import org.socialsignin.spring.data.dynamodb.marshaller.Instant2IsoDynamoDBMarshaller;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEventPublisher;
@@ -68,7 +67,6 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
      *            The DynamoDB mapping context (uses default SDK_V2_NATIVE if null)
      * @since 7.0.0
      */
-    @Autowired
     public DynamoDBTemplate(DynamoDbClient amazonDynamoDB,
                            DynamoDbEnhancedClient enhancedClient,
                            @Nullable TableNameResolver tableNameResolver,
@@ -87,13 +85,11 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
         this.eventPublisher = applicationContext;
 
         // Try to obtain EntityCallbacks if available in the application context
-        if (applicationContext != null) {
-            try {
-                this.entityCallbacks = EntityCallbacks.create(applicationContext);
-            } catch (Exception e) {
-                // EntityCallbacks not available, callbacks won't be invoked
-                this.entityCallbacks = null;
-            }
+        try {
+            this.entityCallbacks = EntityCallbacks.create(applicationContext);
+        } catch (Exception e) {
+            // EntityCallbacks not available, callbacks won't be invoked
+            this.entityCallbacks = null;
         }
     }
 
@@ -115,7 +111,7 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
     private <T> DynamoDbTable<T> getTable(Class<T> domainClass) {
         return (DynamoDbTable<T>) tableCache.computeIfAbsent(domainClass, clazz -> {
             MarshallingMode mode = mappingContext.getMarshallingMode();
-            TableSchema<T> schema = TableSchemaFactory.createTableSchema(domainClass, mode);
+            TableSchema<T> schema = TableSchemaFactory.createTableSchema(domainClass);
             String tableName = resolveTableName(domainClass);
             return enhancedClient.table(tableName, schema);
         });
@@ -168,56 +164,63 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
      * @return The SDK v2 AttributeValue
      */
     private AttributeValue toAttributeValue(Object value) {
-        if (value == null) {
-            return AttributeValue.builder().nul(true).build();
+        switch (value) {
+            case null -> {
+                return AttributeValue.builder().nul(true).build();
+            }
+            case AttributeValue attributeValue -> {
+                return attributeValue;
+            }
+            case String s -> {
+                return AttributeValue.builder().s(s).build();
+            }
+            case Number number -> {
+                return AttributeValue.builder().n(value.toString()).build();
+            }
+            case Boolean b -> {
+                if (mappingContext.getMarshallingMode() == MarshallingMode.SDK_V1_COMPATIBLE) {
+                    // SDK v1 compatibility: Boolean stored as "1" or "0" in Number format
+                    boolean boolValue = b;
+                    return AttributeValue.builder().n(boolValue ? "1" : "0").build();
+                } else {
+                    // SDK v2 native: Boolean stored as BOOL type
+                    return AttributeValue.builder().bool(b).build();
+                }
+            }
+            case java.util.Date date -> {
+                if (mappingContext.getMarshallingMode() == MarshallingMode.SDK_V1_COMPATIBLE) {
+                    // SDK v1 compatibility: Date marshalled to ISO format string
+                    String marshalledDate = new Date2IsoDynamoDBMarshaller().marshall(date);
+                    return AttributeValue.builder().s(marshalledDate).build();
+                } else {
+                    // SDK v2 native: Date as epoch milliseconds in Number format
+                    return AttributeValue.builder().n(String.valueOf(date.getTime())).build();
+                }
+            }
+            case java.time.Instant instant -> {
+                // Both SDK v1 and v2 store Instant as String (ISO-8601 format)
+                // AWS SDK v2 uses InstantAsStringAttributeConverter by default
+                if (mappingContext.getMarshallingMode() == MarshallingMode.SDK_V1_COMPATIBLE) {
+                    // SDK v1 compatibility: Instant marshalled to ISO format string with millisecond precision
+                    String marshalledDate = new Instant2IsoDynamoDBMarshaller().marshall(instant);
+                    return AttributeValue.builder().s(marshalledDate).build();
+                } else {
+                    // SDK v2 native: Instant as ISO-8601 string (matches AWS SDK v2 InstantAsStringAttributeConverter)
+                    // Format: ISO-8601 with nanosecond precision, e.g., "1970-01-01T00:00:00.001Z"
+                    return AttributeValue.builder().s(instant.toString()).build();
+                }
+                // Both SDK v1 and v2 store Instant as String (ISO-8601 format)
+                // AWS SDK v2 uses InstantAsStringAttributeConverter by default
+            }
+            case byte[] bytes -> {
+                return AttributeValue.builder().b(software.amazon.awssdk.core.SdkBytes.fromByteArray(bytes)).build();
+            }
+            default -> {
+                // Fallback: convert to string
+                return AttributeValue.builder().s(value.toString()).build();
+            }
         }
 
-        if (value instanceof AttributeValue) {
-            return (AttributeValue) value;
-        }
-
-        if (value instanceof String) {
-            return AttributeValue.builder().s((String) value).build();
-        } else if (value instanceof Number) {
-            return AttributeValue.builder().n(value.toString()).build();
-        } else if (value instanceof Boolean) {
-            if (mappingContext.getMarshallingMode() == MarshallingMode.SDK_V1_COMPATIBLE) {
-                // SDK v1 compatibility: Boolean stored as "1" or "0" in Number format
-                boolean boolValue = ((Boolean) value).booleanValue();
-                return AttributeValue.builder().n(boolValue ? "1" : "0").build();
-            } else {
-                // SDK v2 native: Boolean stored as BOOL type
-                return AttributeValue.builder().bool((Boolean) value).build();
-            }
-        } else if (value instanceof java.util.Date) {
-            if (mappingContext.getMarshallingMode() == MarshallingMode.SDK_V1_COMPATIBLE) {
-                // SDK v1 compatibility: Date marshalled to ISO format string
-                java.util.Date date = (java.util.Date) value;
-                String marshalledDate = new Date2IsoDynamoDBMarshaller().marshall(date);
-                return AttributeValue.builder().s(marshalledDate).build();
-            } else {
-                // SDK v2 native: Date as epoch milliseconds in Number format
-                return AttributeValue.builder().n(String.valueOf(((java.util.Date) value).getTime())).build();
-            }
-        } else if (value instanceof java.time.Instant) {
-            // Both SDK v1 and v2 store Instant as String (ISO-8601 format)
-            // AWS SDK v2 uses InstantAsStringAttributeConverter by default
-            java.time.Instant instant = (java.time.Instant) value;
-            if (mappingContext.getMarshallingMode() == MarshallingMode.SDK_V1_COMPATIBLE) {
-                // SDK v1 compatibility: Instant marshalled to ISO format string with millisecond precision
-                String marshalledDate = new Instant2IsoDynamoDBMarshaller().marshall(instant);
-                return AttributeValue.builder().s(marshalledDate).build();
-            } else {
-                // SDK v2 native: Instant as ISO-8601 string (matches AWS SDK v2 InstantAsStringAttributeConverter)
-                // Format: ISO-8601 with nanosecond precision, e.g., "1970-01-01T00:00:00.001Z"
-                return AttributeValue.builder().s(instant.toString()).build();
-            }
-        } else if (value instanceof byte[]) {
-            return AttributeValue.builder().b(software.amazon.awssdk.core.SdkBytes.fromByteArray((byte[]) value)).build();
-        } else {
-            // Fallback: convert to string
-            return AttributeValue.builder().s(value.toString()).build();
-        }
     }
 
     @Override
@@ -340,7 +343,7 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
      */
     private <T> T maybeCallBeforeConvert(T entity, String tableName) {
         if (entityCallbacks != null) {
-            return (T) entityCallbacks.callback(BeforeConvertCallback.class, entity, tableName);
+            return entityCallbacks.callback(BeforeConvertCallback.class, entity, tableName);
         }
         return entity;
     }
@@ -498,7 +501,6 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
 
     /**
      * Extracts unprocessed put items (saves) from batch write results.
-     *
      * This method is used to extract the actual entity objects that failed to be written
      * after batch save operations, so they can be included in BatchWriteException for
      * consumer handling (retry, DLQ, alerting, etc.).
@@ -533,7 +535,6 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
 
     /**
      * Extracts unprocessed delete items from batch write results.
-     *
      * This method extracts the entity objects that failed to be deleted after batch
      * delete operations. Note that for deletes, SDK v2 returns Key objects, so we
      * reconstruct the entities from the original list.
@@ -584,7 +585,7 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
 
         // Manually paginate through query results to avoid infinite iterator issue
         List<Page<T>> allPages = new ArrayList<>();
-        QueryResponse queryResult = null;
+        QueryResponse queryResult;
         QueryRequest mutableQueryRequest = queryRequest;
 
         do {
@@ -610,7 +611,7 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
         } while (true);
 
         // Convert List<Page<T>> to PageIterable<T>
-        return PageIterable.create(() -> allPages.iterator());
+        return PageIterable.create(allPages::iterator);
     }
 
     @Override
@@ -671,7 +672,7 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
 
         // Paginate through scan results counting items
         int count = 0;
-        software.amazon.awssdk.services.dynamodb.model.ScanResponse scanResult = null;
+        software.amazon.awssdk.services.dynamodb.model.ScanResponse scanResult;
         software.amazon.awssdk.services.dynamodb.model.ScanRequest mutableScanRequest = scanBuilder.build();
 
         do {
@@ -697,7 +698,7 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
 
         // Count queries can also be truncated for large datasets
         int count = 0;
-        QueryResponse queryResult = null;
+        QueryResponse queryResult;
         do {
             queryResult = amazonDynamoDB.query(mutableQueryRequest);
             count += queryResult.count();

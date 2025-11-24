@@ -164,11 +164,9 @@ public class UnpagedPageImpl<T> implements Page<T> {
             return true;
         }
 
-        if (!(obj instanceof UnpagedPageImpl<?>)) {
+        if (!(obj instanceof UnpagedPageImpl<?> that)) {
             return false;
         }
-
-        UnpagedPageImpl<?> that = (UnpagedPageImpl<?>) obj;
 
         return this.total == that.total && this.pageable.equals(that.pageable) && this.content.equals(that.content);
     }
@@ -182,7 +180,7 @@ public class UnpagedPageImpl<T> implements Page<T> {
 
         int result = 17;
 
-        result += 31 * (int) (total ^ total >>> 32);
+        result += 31 * Long.hashCode(total);
         result += 31 * pageable.hashCode();
         result += 31 * content.hashCode();
 

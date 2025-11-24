@@ -86,7 +86,7 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
         return query;
     }
 
-    private interface QueryExecution<T, ID> {
+    protected interface QueryExecution<T, ID> {
         Object execute(AbstractDynamoDBQuery<T, ID> query, Object[] values);
     }
 
@@ -306,7 +306,7 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
                 return dynamoDBQuery.doCreateCountQueryWithPermissions(values, false).getSingleResult();
             } else {
                 List<T> resultList = dynamoDBQuery.doCreateQueryWithPermissions(values).getResultList();
-                return resultList.size() == 0 ? null : resultList.get(0);
+                return resultList.isEmpty() ? null : resultList.getFirst();
 
             }
 

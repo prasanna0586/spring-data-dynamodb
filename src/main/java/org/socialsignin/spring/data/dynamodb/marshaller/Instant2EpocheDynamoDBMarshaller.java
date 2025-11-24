@@ -61,17 +61,16 @@ public class Instant2EpocheDynamoDBMarshaller {
      * @return Instant object
      */
     public Instant unconvert(String object) {
-        return unmarshall(Instant.class, object);
+        return unmarshall(object);
     }
 
     /**
      * Unmarshalls a String to Instant.
      *
-     * @param clazz the Instant class
      * @param obj   the String to unmarshall (epoch milliseconds)
      * @return Instant object
      */
-    public Instant unmarshall(Class<Instant> clazz, String obj) {
+    public Instant unmarshall(String obj) {
         if (!StringUtils.hasLength(obj)) {
             return null;
         } else {

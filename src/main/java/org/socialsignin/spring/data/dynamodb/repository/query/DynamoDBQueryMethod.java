@@ -83,16 +83,6 @@ public class DynamoDBQueryMethod<T, ID> extends QueryMethod {
         }
     }
 
-    /**
-     * Returns the actual return type of the method.
-     *
-     * @return
-     */
-    Class<?> getReturnType() {
-
-        return method.getReturnType();
-    }
-
     public boolean isScanEnabled() {
         return scanEnabledForRepository || method.isAnnotationPresent(EnableScan.class);
     }

@@ -21,11 +21,11 @@ import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 
 public class ScanExpressionCountQuery<T> extends AbstractSingleEntityQuery<Long> implements Query<Long> {
 
-    private ScanEnhancedRequest scanExpression;
+    private final ScanEnhancedRequest scanExpression;
 
-    private Class<T> domainClass;
+    private final Class<T> domainClass;
 
-    private boolean pageQuery;
+    private final boolean pageQuery;
 
     public ScanExpressionCountQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz,
             ScanEnhancedRequest scanExpression, boolean pageQuery) {

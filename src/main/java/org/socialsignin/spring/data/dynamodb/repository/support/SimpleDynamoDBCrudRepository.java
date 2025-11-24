@@ -69,18 +69,15 @@ public class SimpleDynamoDBCrudRepository<T, ID>
      * @return The AttributeValue representation
      */
     private AttributeValue toAttributeValue(Object value) {
-        if (value == null) {
-            return AttributeValue.builder().nul(true).build();
-        }
+        return switch (value) {
+            case null -> AttributeValue.builder().nul(true).build();
+            case String s -> AttributeValue.builder().s(s).build();
+            case Number number -> AttributeValue.builder().n(value.toString()).build();
+            default ->
+                // Fallback: convert to string
+                    AttributeValue.builder().s(value.toString()).build();
+        };
 
-        if (value instanceof String) {
-            return AttributeValue.builder().s((String) value).build();
-        } else if (value instanceof Number) {
-            return AttributeValue.builder().n(value.toString()).build();
-        } else {
-            // Fallback: convert to string
-            return AttributeValue.builder().s(value.toString()).build();
-        }
     }
 
     @Override
@@ -122,7 +119,7 @@ public class SimpleDynamoDBCrudRepository<T, ID>
             }
         }).toList();
 
-        Map<Class<?>, List<Key>> keysMap = Collections.<Class<?>, List<Key>> singletonMap(domainType, keys);
+        Map<Class<?>, List<Key>> keysMap = Collections.singletonMap(domainType, keys);
         return dynamoDBOperations.batchLoad(keysMap);
     }
 

@@ -64,10 +64,7 @@ public class DynamoDBRepositoryFactory extends RepositoryFactorySupport {
                 System.getProperty("os.version"));
 
         if (!DEVELOPMENT.equals(thisImplVersion) && !isCompatible(springDataVersion, thisSpecVersion)) {
-            LOGGER.warn(
-                    "This Spring Data DynamoDB implementation might not be compatible with the available Spring Data classes on the classpath!"
-                            + System.lineSeparator()
-                            + "NoDefClassFoundExceptions or similar might occur!");
+            LOGGER.warn("This Spring Data DynamoDB implementation might not be compatible with the available Spring Data classes on the classpath!{}NoDefClassFoundExceptions or similar might occur!", System.lineSeparator());
         }
     }
 

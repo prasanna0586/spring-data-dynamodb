@@ -47,8 +47,9 @@ public @interface EnableDynamoDBAuditing {
     boolean modifyOnCreate() default true;
 
     /**
-     * @return Configures a {@link org.springframework.data.auditing.DateTimeProvider} bean name that allows customizing
-     *         the {@link java.time.LocalDateTime} to be used for setting creation and modification dates.
+     * @return Configures a {@link org.springframework.data.auditing.DateTimeProvider} bean name to be used to lookup
+     *         the {@link java.time.temporal.TemporalAccessor} used for setting the current date and time.
      */
     String dateTimeProviderRef() default "";
+
 }

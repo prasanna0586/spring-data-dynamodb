@@ -25,7 +25,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
-import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
@@ -42,8 +41,6 @@ public abstract class AbstractDynamoDBConfiguration {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDynamoDBConfiguration.class);
 
     public abstract DynamoDbClient amazonDynamoDB();
-
-    public abstract AwsCredentials amazonAWSCredentials();
 
     /**
      * Return the base packages to scan for mapped {@link DynamoDbBean}s. Will return the package name of the

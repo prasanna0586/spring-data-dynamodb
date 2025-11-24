@@ -15,7 +15,6 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
-import org.springframework.data.annotation.Id;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
@@ -33,14 +32,14 @@ import java.util.Set;
 public class DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl<T, ID> extends DynamoDBEntityMetadataSupport<T, ID>
         implements DynamoDBHashAndRangeKeyExtractingEntityMetadata<T, ID> {
 
-    private DynamoDBHashAndRangeKeyMethodExtractor<T> hashAndRangeKeyMethodExtractor;
+    private final DynamoDBHashAndRangeKeyMethodExtractor<T> hashAndRangeKeyMethodExtractor;
 
     private Method hashKeySetterMethod;
     private Field hashKeyField;
 
     public DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl(final Class<T> domainType) {
         super(domainType);
-        this.hashAndRangeKeyMethodExtractor = new DynamoDBHashAndRangeKeyMethodExtractorImpl<T>(getJavaType());
+        this.hashAndRangeKeyMethodExtractor = new DynamoDBHashAndRangeKeyMethodExtractorImpl<>(getJavaType());
         ReflectionUtils.doWithMethods(domainType, method -> {
             if (method.getAnnotation(DynamoDbPartitionKey.class) != null) {
                 String setterMethodName = toSetterMethodNameFromAccessorMethod(method);
@@ -115,7 +114,7 @@ public class DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl<T, ID> extends 
 
     @Override
     public boolean isCompositeHashAndRangeKeyProperty(String propertyName) {
-        return isFieldAnnotatedWith(propertyName, Id.class);
+        return isFieldAnnotatedWith(propertyName);
     }
 
 }

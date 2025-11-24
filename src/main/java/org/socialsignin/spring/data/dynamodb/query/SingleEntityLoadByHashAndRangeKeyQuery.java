@@ -22,8 +22,8 @@ import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
  */
 public class SingleEntityLoadByHashAndRangeKeyQuery<T> extends AbstractSingleEntityQuery<T> implements Query<T> {
 
-    private Object hashKey;
-    private Object rangeKey;
+    private final Object hashKey;
+    private final Object rangeKey;
 
     public SingleEntityLoadByHashAndRangeKeyQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz, Object hashKey,
             Object rangeKey) {

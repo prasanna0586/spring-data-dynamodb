@@ -32,8 +32,7 @@ public abstract class EntityInformationProxyPostProcessor<T, ID> implements Repo
             TargetSource targetSource = factory.getTargetSource();
 
             @SuppressWarnings("unchecked")
-            SimpleDynamoDBCrudRepository<T, ID> target = SimpleDynamoDBCrudRepository.class
-                    .cast(targetSource.getTarget());
+            SimpleDynamoDBCrudRepository<T, ID> target = (SimpleDynamoDBCrudRepository) targetSource.getTarget();
 
             assert target != null;
             DynamoDBEntityInformation<T, ID> entityInformation = target.getEntityInformation();

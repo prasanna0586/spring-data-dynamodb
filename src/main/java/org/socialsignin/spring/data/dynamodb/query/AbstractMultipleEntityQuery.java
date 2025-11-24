@@ -36,12 +36,12 @@ public abstract class AbstractMultipleEntityQuery<T> extends AbstractDynamicQuer
             throw new IncorrectResultSizeDataAccessException("result returns more than one elements", 1,
                     results.size());
         }
-        if (results.size() == 0) {
+        if (results.isEmpty()) {
             // return null here as Spring will convert that to Optional if nessassary
             // https://jira.spring.io/browse/DATACMNS-483
             return null;
         } else {
-            return results.get(0);
+            return results.getFirst();
         }
     }
 }

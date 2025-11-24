@@ -35,7 +35,7 @@ public class DynamoDBMapperFactory implements FactoryBean<DynamoDbEnhancedClient
     private BeanFactory beanFactory;
 
     @Override
-    public DynamoDbEnhancedClient getObject() throws Exception {
+    public DynamoDbEnhancedClient getObject() {
         DynamoDbClient dynamoDbClient = beanFactory.getBean(DynamoDbClient.class);
         return DynamoDbEnhancedClient.builder()
                 .dynamoDbClient(dynamoDbClient)

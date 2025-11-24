@@ -53,19 +53,16 @@ public class EnableScanAnnotationPermissions implements EnableScanPermissions {
                     continue;
                 }
 
-                if (method.getName().equals("findAll")) {
-                    findAllUnpaginatedScanEnabled = true;
-                    continue;
-                }
-
-                if (method.getName().equals("deleteAll")) {
-                    deleteAllUnpaginatedScanEnabled = true;
-                    continue;
-                }
-
-                if (method.getName().equals("count")) {
-                    countUnpaginatedScanEnabled = true;
-                    continue;
+                switch (method.getName()) {
+                    case "findAll" -> {
+                        findAllUnpaginatedScanEnabled = true;
+                        continue;
+                    }
+                    case "deleteAll" -> {
+                        deleteAllUnpaginatedScanEnabled = true;
+                        continue;
+                    }
+                    case "count" -> countUnpaginatedScanEnabled = true;
                 }
 
             }
@@ -80,7 +77,6 @@ public class EnableScanAnnotationPermissions implements EnableScanPermissions {
                 if (method.getName().equals("findAll")
                         && Pageable.class.isAssignableFrom(method.getParameterTypes()[0])) {
                     findAllUnpaginatedScanCountEnabled = true;
-                    continue;
                 }
 
             }
@@ -95,7 +91,6 @@ public class EnableScanAnnotationPermissions implements EnableScanPermissions {
                 if (method.getName().equals("findAll")
                         && Pageable.class.isAssignableFrom(method.getParameterTypes()[0])) {
                     findAllPaginatedScanEnabled = true;
-                    continue;
                 }
 
             }

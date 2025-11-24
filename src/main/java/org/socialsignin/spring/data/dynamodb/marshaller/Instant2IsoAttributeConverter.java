@@ -44,7 +44,7 @@ public class Instant2IsoAttributeConverter implements AttributeConverter<Instant
         if (input == null || Boolean.TRUE.equals(input.nul())) {
             return null;
         }
-        return marshaller.unmarshall(Instant.class, input.s());
+        return marshaller.unmarshall(input.s());
     }
 
     @Override

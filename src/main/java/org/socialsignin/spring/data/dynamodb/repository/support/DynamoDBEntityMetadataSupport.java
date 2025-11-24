@@ -36,11 +36,11 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
     private final Class<T> domainType;
     private boolean hasRangeKey;
     private String hashKeyPropertyName;
-    private List<String> globalIndexHashKeyPropertyNames;
-    private List<String> globalIndexRangeKeyPropertyNames;
+    private final List<String> globalIndexHashKeyPropertyNames;
+    private final List<String> globalIndexRangeKeyPropertyNames;
 
-    private String dynamoDBTableName;
-    private Map<String, String[]> globalSecondaryIndexNames = new HashMap<>();
+    private final String dynamoDBTableName;
+    private final Map<String, String[]> globalSecondaryIndexNames;
 
     @Override
     public String getDynamoDBTableName() {
@@ -127,7 +127,7 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
     public DynamoDBEntityInformation<T, ID> getEntityInformation() {
 
         if (hasRangeKey) {
-            DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl<T, ID> metadata = new DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl<T, ID>(
+            DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl<T, ID> metadata = new DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl<>(
                     domainType);
             return new DynamoDBIdIsHashAndRangeKeyEntityInformationImpl<>(domainType, metadata);
         } else {
@@ -149,10 +149,10 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
         return hashKeyPropertyName.equals(propertyName);
     }
 
-    protected boolean isFieldAnnotatedWith(final String propertyName, final Class<? extends Annotation> annotation) {
+    protected boolean isFieldAnnotatedWith(final String propertyName) {
 
         Field field = findField(propertyName);
-        return field != null && field.getAnnotation(annotation) != null;
+        return field != null && field.getAnnotation((Class<? extends Annotation>) org.springframework.data.annotation.Id.class) != null;
     }
 
     private String toGetMethodName(String propertyName) {
@@ -192,21 +192,6 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
 
     private Field findField(String propertyName) {
         return ReflectionUtils.findField(domainType, propertyName);
-    }
-
-    public String getOverriddenAttributeName(Method method) {
-
-        if (method != null) {
-            // In SDK v2, @DynamoDbAttribute is used to override attribute names
-            if (method.getAnnotation(DynamoDbAttribute.class) != null
-                    && StringUtils.hasText(method.getAnnotation(DynamoDbAttribute.class).value())) {
-                return method.getAnnotation(DynamoDbAttribute.class).value();
-            }
-            // Note: SDK v2 key annotations don't support attribute name overrides like SDK v1
-            // Attribute names are derived from property names
-        }
-        return null;
-
     }
 
     @Override

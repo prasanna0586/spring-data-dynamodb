@@ -44,7 +44,7 @@ public class Date2EpocheAttributeConverter implements AttributeConverter<Date> {
         if (input == null || Boolean.TRUE.equals(input.nul())) {
             return null;
         }
-        return marshaller.unmarshall(Date.class, input.s());
+        return marshaller.unmarshall(input.s());
     }
 
     @Override

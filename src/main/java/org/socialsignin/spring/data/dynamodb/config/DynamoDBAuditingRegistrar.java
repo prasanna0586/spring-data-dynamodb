@@ -23,7 +23,6 @@ import org.socialsignin.spring.data.dynamodb.mapping.event.AuditingEventListener
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
 import org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport;
@@ -35,7 +34,6 @@ import org.springframework.util.Assert;
 import java.lang.annotation.Annotation;
 
 import static org.socialsignin.spring.data.dynamodb.config.BeanNames.MAPPING_CONTEXT_BEAN_NAME;
-import static org.springframework.beans.factory.config.BeanDefinition.ROLE_INFRASTRUCTURE;
 import static org.springframework.beans.factory.support.BeanDefinitionBuilder.rootBeanDefinition;
 
 /**
@@ -78,7 +76,7 @@ class DynamoDBAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
         Assert.notNull(annotationMetadata, "AnnotationMetadata must not be null!");
         Assert.notNull(registry, "BeanDefinitionRegistry must not be null!");
 
-        defaultDependenciesIfNecessary(registry, annotationMetadata);
+        defaultDependenciesIfNecessary();
         super.registerBeanDefinitions(annotationMetadata, registry);
     }
 
@@ -143,12 +141,8 @@ class DynamoDBAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
      * relies on Spring's dependency injection to fail with a clear error if the required
      * mapping context bean is not available.
      *
-     * @param registry
-     *            the {@link BeanDefinitionRegistry} (unused, kept for method signature compatibility)
-     * @param source
-     *            the source (unused, kept for method signature compatibility)
      */
-    private void defaultDependenciesIfNecessary(BeanDefinitionRegistry registry, Object source) {
+    private void defaultDependenciesIfNecessary() {
         // No longer create a default mapping context bean.
         // The bean reference in getAuditHandlerBeanDefinitionBuilder (line 97) will cause Spring
         // to fail with a clear dependency injection error if no DynamoDBMappingContext bean exists.

@@ -28,7 +28,7 @@ import java.util.stream.StreamSupport;
 
 public class MultipleEntityScanExpressionQuery<T> extends AbstractMultipleEntityQuery<T> {
 
-    private ScanEnhancedRequest scanRequest;
+    private final ScanEnhancedRequest scanRequest;
 
     public MultipleEntityScanExpressionQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz,
             ScanEnhancedRequest scanRequest) {

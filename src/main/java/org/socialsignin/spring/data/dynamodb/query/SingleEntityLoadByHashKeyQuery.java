@@ -22,7 +22,7 @@ import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
  */
 public class SingleEntityLoadByHashKeyQuery<T> extends AbstractSingleEntityQuery<T> implements Query<T> {
 
-    private Object hashKey;
+    private final Object hashKey;
 
     public SingleEntityLoadByHashKeyQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz, Object hashKey) {
         super(dynamoDBOperations, clazz);

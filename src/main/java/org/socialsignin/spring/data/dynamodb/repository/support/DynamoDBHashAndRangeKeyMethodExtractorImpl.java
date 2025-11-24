@@ -47,49 +47,37 @@ public class DynamoDBHashAndRangeKeyMethodExtractorImpl<T> implements DynamoDBHa
 
         Assert.notNull(idType, "Id type must not be null!");
         this.idType = idType;
-        ReflectionUtils.doWithMethods(idType, new MethodCallback() {
-            @Override
-            public void doWith(Method method) {
-                if (method.getAnnotation(DynamoDbPartitionKey.class) != null) {
-                    Assert.isNull(hashKeyMethod,
-                            "Multiple methods annotated by @DynamoDbPartitionKey within type " + idType.getName() + "!");
-                    ReflectionUtils.makeAccessible(method);
-                    hashKeyMethod = method;
-                }
+        ReflectionUtils.doWithMethods(idType, method -> {
+            if (method.getAnnotation(DynamoDbPartitionKey.class) != null) {
+                Assert.isNull(hashKeyMethod,
+                        "Multiple methods annotated by @DynamoDbPartitionKey within type " + idType.getName() + "!");
+                ReflectionUtils.makeAccessible(method);
+                hashKeyMethod = method;
             }
         });
-        ReflectionUtils.doWithFields(idType, new FieldCallback() {
-            @Override
-            public void doWith(Field field) {
-                if (field.getAnnotation(DynamoDbPartitionKey.class) != null) {
-                    Assert.isNull(hashKeyField,
-                            "Multiple fields annotated by @DynamoDbPartitionKey within type " + idType.getName() + "!");
-                    ReflectionUtils.makeAccessible(field);
+        ReflectionUtils.doWithFields(idType, field -> {
+            if (field.getAnnotation(DynamoDbPartitionKey.class) != null) {
+                Assert.isNull(hashKeyField,
+                        "Multiple fields annotated by @DynamoDbPartitionKey within type " + idType.getName() + "!");
+                ReflectionUtils.makeAccessible(field);
 
-                    hashKeyField = field;
-                }
+                hashKeyField = field;
             }
         });
-        ReflectionUtils.doWithMethods(idType, new MethodCallback() {
-            @Override
-            public void doWith(Method method) {
-                if (method.getAnnotation(DynamoDbSortKey.class) != null) {
-                    Assert.isNull(rangeKeyMethod,
-                            "Multiple methods annotated by @DynamoDbSortKey within type " + idType.getName() + "!");
-                    ReflectionUtils.makeAccessible(method);
-                    rangeKeyMethod = method;
-                }
+        ReflectionUtils.doWithMethods(idType, method -> {
+            if (method.getAnnotation(DynamoDbSortKey.class) != null) {
+                Assert.isNull(rangeKeyMethod,
+                        "Multiple methods annotated by @DynamoDbSortKey within type " + idType.getName() + "!");
+                ReflectionUtils.makeAccessible(method);
+                rangeKeyMethod = method;
             }
         });
-        ReflectionUtils.doWithFields(idType, new FieldCallback() {
-            @Override
-            public void doWith(Field field) {
-                if (field.getAnnotation(DynamoDbSortKey.class) != null) {
-                    Assert.isNull(rangeKeyField,
-                            "Multiple fields annotated by @DynamoDbSortKey within type " + idType.getName() + "!");
-                    ReflectionUtils.makeAccessible(field);
-                    rangeKeyField = field;
-                }
+        ReflectionUtils.doWithFields(idType, field -> {
+            if (field.getAnnotation(DynamoDbSortKey.class) != null) {
+                Assert.isNull(rangeKeyField,
+                        "Multiple fields annotated by @DynamoDbSortKey within type " + idType.getName() + "!");
+                ReflectionUtils.makeAccessible(field);
+                rangeKeyField = field;
             }
         });
         if (hashKeyMethod == null && hashKeyField == null) {

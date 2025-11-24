@@ -31,8 +31,6 @@ import org.springframework.util.Assert;
  */
 public class AuditingEventListener extends AbstractDynamoDBEventListener<Object> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AuditingEventListener.class);
-
     /**
      * Creates a new {@link AuditingEventListener} using the given
      * {@link org.springframework.data.mapping.context.MappingContext} and

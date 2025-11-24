@@ -26,7 +26,7 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
  *
  * <p><b>For SDK_V1_COMPATIBLE mode, users MUST annotate their entity fields with
  * {@code @DynamoDbConvertedBy} to specify the appropriate converter.</b> See the
- * {@link #createTableSchema(Class, MarshallingMode)} method documentation for details.
+ * {@link #createTableSchema(Class)} method documentation for details.
  * @author Prasanna Kumar Ramachandran
  * @since 7.0.0
  */
@@ -108,10 +108,9 @@ public class TableSchemaFactory {
      *
      * @param <T>             The domain class type
      * @param domainClass     The domain class
-     * @param marshallingMode The marshalling mode to use (SDK_V2_NATIVE or SDK_V1_COMPATIBLE)
      * @return A TableSchema instance configured for the specified marshalling mode
      */
-    public static <T> TableSchema<T> createTableSchema(Class<T> domainClass, MarshallingMode marshallingMode) {
+    public static <T> TableSchema<T> createTableSchema(Class<T> domainClass) {
         // Both modes use TableSchema.fromBean() which respects @DynamoDbConvertedBy annotations
         // The difference is:
         // - SDK_V2_NATIVE: Uses SDK v2 default converters (no @DynamoDbConvertedBy needed)

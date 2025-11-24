@@ -29,8 +29,6 @@ import org.springframework.util.Assert;
  */
 public class AuditingEntityCallback implements BeforeConvertCallback<Object>, Ordered {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AuditingEntityCallback.class);
-
     private final ObjectFactory<IsNewAwareAuditingHandler> auditingHandlerFactory;
 
     /**
@@ -47,12 +45,9 @@ public class AuditingEntityCallback implements BeforeConvertCallback<Object>, Or
     @Override
     public Object onBeforeConvert(Object entity, String tableName) {
         IsNewAwareAuditingHandler handler = auditingHandlerFactory.getObject();
-        if (handler != null) {
-            Object result = handler.markAudited(entity);
-            // markAudited should never return null, but return original entity as fallback
-            return result != null ? result : entity;
-        }
-        return entity;
+        Object result = handler.markAudited(entity);
+        // markAudited should never return null, but return original entity as fallback
+        return result;
     }
 
     @Override

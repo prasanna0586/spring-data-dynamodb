@@ -32,10 +32,10 @@ public class DynamoDBIdIsHashAndRangeKeyEntityInformationImpl<T, ID>
         extends FieldAndGetterReflectionEntityInformation<T, ID>
         implements DynamoDBIdIsHashAndRangeKeyEntityInformation<T, ID> {
 
-    private DynamoDBHashAndRangeKeyExtractingEntityMetadata<T, ID> metadata;
-    private HashAndRangeKeyExtractor<ID, ?> hashAndRangeKeyExtractor;
-    private Optional<String> projection = Optional.empty();
-    private Optional<Integer> limit = Optional.empty();
+    private final DynamoDBHashAndRangeKeyExtractingEntityMetadata<T, ID> metadata;
+    private final HashAndRangeKeyExtractor<ID, ?> hashAndRangeKeyExtractor;
+    private final Optional<String> projection = Optional.empty();
+    private final Optional<Integer> limit = Optional.empty();
 
     public DynamoDBIdIsHashAndRangeKeyEntityInformationImpl(Class<T> domainClass,
             DynamoDBHashAndRangeKeyExtractingEntityMetadata<T, ID> metadata) {

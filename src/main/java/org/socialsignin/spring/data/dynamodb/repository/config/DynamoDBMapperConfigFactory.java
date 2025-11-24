@@ -44,7 +44,7 @@ public class DynamoDBMapperConfigFactory implements FactoryBean<TableNameResolve
 
     @Override
     @Nullable
-    public TableNameResolver getObject() throws Exception {
+    public TableNameResolver getObject() {
         return DEFAULT;
     }
 
@@ -53,8 +53,4 @@ public class DynamoDBMapperConfigFactory implements FactoryBean<TableNameResolve
         return TableNameResolver.class;
     }
 
-    @Override
-    public boolean isSingleton() {
-        return true;
-    }
 }

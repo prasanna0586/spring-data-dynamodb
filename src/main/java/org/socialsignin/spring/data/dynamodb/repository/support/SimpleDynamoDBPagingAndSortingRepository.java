@@ -73,7 +73,7 @@ public class SimpleDynamoDBPagingAndSortingRepository<T, ID> extends SimpleDynam
         if (pageable.getOffset() > 0) {
             long processedCount = scanThroughResults(iterator, pageable.getOffset());
             if (processedCount < pageable.getOffset())
-                return new PageImpl<>(new ArrayList<T>());
+                return new PageImpl<>(new ArrayList<>());
         }
         // Scan ahead to retrieve the next page count
         List<T> results = readPageOfResults(iterator, pageable.getPageSize());

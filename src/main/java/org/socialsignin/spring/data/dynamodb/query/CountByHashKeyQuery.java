@@ -22,8 +22,8 @@ import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
  */
 public class CountByHashKeyQuery<T> extends AbstractSingleEntityQuery<Long> implements Query<Long> {
 
-    private Object hashKey;
-    private Class<T> entityClass;
+    private final Object hashKey;
+    private final Class<T> entityClass;
 
     public CountByHashKeyQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz, Object hashKey) {
         super(dynamoDBOperations, Long.class);
@@ -33,7 +33,7 @@ public class CountByHashKeyQuery<T> extends AbstractSingleEntityQuery<Long> impl
 
     @Override
     public Long getSingleResult() {
-        return dynamoDBOperations.load(entityClass, hashKey) == null ? 0l : 1l;
+        return dynamoDBOperations.load(entityClass, hashKey) == null ? 0L : 1L;
     }
 
 }

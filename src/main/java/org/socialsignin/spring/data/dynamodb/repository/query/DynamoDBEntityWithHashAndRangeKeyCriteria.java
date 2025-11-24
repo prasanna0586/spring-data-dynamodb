@@ -60,7 +60,7 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
             TableSchema<T> tableModel,
             DynamoDBMappingContext mappingContext) {
 
-        super(entityInformation, tableModel, mappingContext);
+        super(entityInformation, mappingContext);
         this.rangeKeyPropertyName = entityInformation.getRangeKeyPropertyName();
         Set<String> indexRangeProps = entityInformation.getIndexRangeKeyPropertyNames();
         if (indexRangeProps == null) {
@@ -225,7 +225,7 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
 
     @Override
     public boolean isApplicableForLoad() {
-        return attributeConditions.size() == 0 && isHashAndRangeKeySpecified();
+        return attributeConditions.isEmpty() && isHashAndRangeKeySpecified();
     }
 
     protected boolean isHashAndRangeKeySpecified() {
@@ -465,32 +465,32 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
         switch (operator) {
             case EQ:
                 String eqPlaceholder = ":val" + startValueCounter;
-                expressionValues.put(eqPlaceholder, attributeValueList.get(0));
+                expressionValues.put(eqPlaceholder, attributeValueList.getFirst());
                 return namePlaceholder + " = " + eqPlaceholder;
 
             case NE:
                 String nePlaceholder = ":val" + startValueCounter;
-                expressionValues.put(nePlaceholder, attributeValueList.get(0));
+                expressionValues.put(nePlaceholder, attributeValueList.getFirst());
                 return namePlaceholder + " <> " + nePlaceholder;
 
             case LT:
                 String ltPlaceholder = ":val" + startValueCounter;
-                expressionValues.put(ltPlaceholder, attributeValueList.get(0));
+                expressionValues.put(ltPlaceholder, attributeValueList.getFirst());
                 return namePlaceholder + " < " + ltPlaceholder;
 
             case LE:
                 String lePlaceholder = ":val" + startValueCounter;
-                expressionValues.put(lePlaceholder, attributeValueList.get(0));
+                expressionValues.put(lePlaceholder, attributeValueList.getFirst());
                 return namePlaceholder + " <= " + lePlaceholder;
 
             case GT:
                 String gtPlaceholder = ":val" + startValueCounter;
-                expressionValues.put(gtPlaceholder, attributeValueList.get(0));
+                expressionValues.put(gtPlaceholder, attributeValueList.getFirst());
                 return namePlaceholder + " > " + gtPlaceholder;
 
             case GE:
                 String gePlaceholder = ":val" + startValueCounter;
-                expressionValues.put(gePlaceholder, attributeValueList.get(0));
+                expressionValues.put(gePlaceholder, attributeValueList.getFirst());
                 return namePlaceholder + " >= " + gePlaceholder;
 
             case BETWEEN:
@@ -511,17 +511,17 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
 
             case BEGINS_WITH:
                 String beginsPlaceholder = ":val" + startValueCounter;
-                expressionValues.put(beginsPlaceholder, attributeValueList.get(0));
+                expressionValues.put(beginsPlaceholder, attributeValueList.getFirst());
                 return "begins_with(" + namePlaceholder + ", " + beginsPlaceholder + ")";
 
             case CONTAINS:
                 String containsPlaceholder = ":val" + startValueCounter;
-                expressionValues.put(containsPlaceholder, attributeValueList.get(0));
+                expressionValues.put(containsPlaceholder, attributeValueList.getFirst());
                 return "contains(" + namePlaceholder + ", " + containsPlaceholder + ")";
 
             case NOT_CONTAINS:
                 String notContainsPlaceholder = ":val" + startValueCounter;
-                expressionValues.put(notContainsPlaceholder, attributeValueList.get(0));
+                expressionValues.put(notContainsPlaceholder, attributeValueList.getFirst());
                 return "NOT contains(" + namePlaceholder + ", " + notContainsPlaceholder + ")";
 
             case NULL:
@@ -542,57 +542,64 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
      * - SDK_V1_COMPATIBLE: Maintains backward compatibility (Boolean → Number "1"/"0", Date/Instant → ISO String)
      */
     private AttributeValue convertToAttributeValue(Object value) {
-        if (value == null) {
-            return AttributeValue.builder().nul(true).build();
+        switch (value) {
+            case null -> {
+                return AttributeValue.builder().nul(true).build();
+            }
+            case AttributeValue attributeValue -> {
+                // Already an AttributeValue
+                return attributeValue;
+                // Already an AttributeValue
+            }
+            case String s -> {
+                return AttributeValue.builder().s(s).build();
+            }
+            case Number number -> {
+                return AttributeValue.builder().n(value.toString()).build();
+            }
+            case Boolean boolValue -> {
+                if (mappingContext.getMarshallingMode() == MarshallingMode.SDK_V1_COMPATIBLE) {
+                    // SDK v1 compatibility: Boolean stored as "1" or "0" in Number format
+                    return AttributeValue.builder().n(boolValue ? "1" : "0").build();
+                } else {
+                    // SDK v2 native: Boolean stored as BOOL type
+                    return AttributeValue.builder().bool(boolValue).build();
+                }
+            }
+            case Date date -> {
+                if (mappingContext.getMarshallingMode() == MarshallingMode.SDK_V1_COMPATIBLE) {
+                    // SDK v1 compatibility: Date marshalled to ISO format string
+                    String marshalledDate = new org.socialsignin.spring.data.dynamodb.marshaller.Date2IsoDynamoDBMarshaller().marshall(date);
+                    return AttributeValue.builder().s(marshalledDate).build();
+                } else {
+                    // SDK v2 native: Date as epoch milliseconds in Number format
+                    return AttributeValue.builder().n(String.valueOf(date.getTime())).build();
+                }
+            }
+            case java.time.Instant instant -> {
+                // Both SDK v1 and v2 store Instant as String (ISO-8601 format)
+                // AWS SDK v2 uses InstantAsStringAttributeConverter by default
+                if (mappingContext.getMarshallingMode() == MarshallingMode.SDK_V1_COMPATIBLE) {
+                    // SDK v1 compatibility: Instant marshalled to ISO format string with millisecond precision
+                    String marshalledDate = new org.socialsignin.spring.data.dynamodb.marshaller.Instant2IsoDynamoDBMarshaller().marshall(instant);
+                    return AttributeValue.builder().s(marshalledDate).build();
+                } else {
+                    // SDK v2 native: Instant as ISO-8601 string (matches AWS SDK v2 InstantAsStringAttributeConverter)
+                    // Format: ISO-8601 with nanosecond precision, e.g., "1970-01-01T00:00:00.001Z"
+                    return AttributeValue.builder().s(instant.toString()).build();
+                }
+                // Both SDK v1 and v2 store Instant as String (ISO-8601 format)
+                // AWS SDK v2 uses InstantAsStringAttributeConverter by default
+            }
+            case byte[] bytes -> {
+                return AttributeValue.builder().b(software.amazon.awssdk.core.SdkBytes.fromByteArray(bytes)).build();
+            }
+            default -> {
+                // Fallback: convert to string
+                return AttributeValue.builder().s(value.toString()).build();
+            }
         }
 
-        if (value instanceof AttributeValue) {
-            // Already an AttributeValue
-            return (AttributeValue) value;
-        }
-
-        if (value instanceof String) {
-            return AttributeValue.builder().s((String) value).build();
-        } else if (value instanceof Number) {
-            return AttributeValue.builder().n(value.toString()).build();
-        } else if (value instanceof Boolean) {
-            if (mappingContext.getMarshallingMode() == MarshallingMode.SDK_V1_COMPATIBLE) {
-                // SDK v1 compatibility: Boolean stored as "1" or "0" in Number format
-                boolean boolValue = ((Boolean) value).booleanValue();
-                return AttributeValue.builder().n(boolValue ? "1" : "0").build();
-            } else {
-                // SDK v2 native: Boolean stored as BOOL type
-                return AttributeValue.builder().bool((Boolean) value).build();
-            }
-        } else if (value instanceof java.util.Date) {
-            if (mappingContext.getMarshallingMode() == MarshallingMode.SDK_V1_COMPATIBLE) {
-                // SDK v1 compatibility: Date marshalled to ISO format string
-                java.util.Date date = (java.util.Date) value;
-                String marshalledDate = new org.socialsignin.spring.data.dynamodb.marshaller.Date2IsoDynamoDBMarshaller().marshall(date);
-                return AttributeValue.builder().s(marshalledDate).build();
-            } else {
-                // SDK v2 native: Date as epoch milliseconds in Number format
-                return AttributeValue.builder().n(String.valueOf(((java.util.Date) value).getTime())).build();
-            }
-        } else if (value instanceof java.time.Instant) {
-            // Both SDK v1 and v2 store Instant as String (ISO-8601 format)
-            // AWS SDK v2 uses InstantAsStringAttributeConverter by default
-            java.time.Instant instant = (java.time.Instant) value;
-            if (mappingContext.getMarshallingMode() == MarshallingMode.SDK_V1_COMPATIBLE) {
-                // SDK v1 compatibility: Instant marshalled to ISO format string with millisecond precision
-                String marshalledDate = new org.socialsignin.spring.data.dynamodb.marshaller.Instant2IsoDynamoDBMarshaller().marshall(instant);
-                return AttributeValue.builder().s(marshalledDate).build();
-            } else {
-                // SDK v2 native: Instant as ISO-8601 string (matches AWS SDK v2 InstantAsStringAttributeConverter)
-                // Format: ISO-8601 with nanosecond precision, e.g., "1970-01-01T00:00:00.001Z"
-                return AttributeValue.builder().s(instant.toString()).build();
-            }
-        } else if (value instanceof byte[]) {
-            return AttributeValue.builder().b(software.amazon.awssdk.core.SdkBytes.fromByteArray((byte[]) value)).build();
-        } else {
-            // Fallback: convert to string
-            return AttributeValue.builder().s(value.toString()).build();
-        }
     }
 
     public DynamoDBQueryCriteria<T, ID> withRangeKeyEquals(Object value) {
@@ -634,7 +641,7 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
 
     @Override
     protected boolean isOnlyHashKeySpecified() {
-        return isHashKeySpecified() && attributeConditions.size() == 0 && !isRangeKeySpecified();
+        return isHashKeySpecified() && attributeConditions.isEmpty() && !isRangeKeySpecified();
     }
 
 }

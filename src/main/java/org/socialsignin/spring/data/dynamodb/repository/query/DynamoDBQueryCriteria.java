@@ -41,21 +41,21 @@ public interface DynamoDBQueryCriteria<T, ID> {
 
     DynamoDBQueryCriteria<T, ID> withPropertyBetween(String segment, Object value1, Object value2, Class<?> type);
 
-    DynamoDBQueryCriteria<T, ID> withSort(Sort sort);
+    void withSort(Sort sort);
 
-    DynamoDBQueryCriteria<T, ID> withProjection(Optional<String> projection);
+    void withProjection(Optional<String> projection);
 
-    DynamoDBQueryCriteria<T, ID> withLimit(Optional<Integer> limit);
+    void withLimit(Optional<Integer> limit);
 
-    DynamoDBQueryCriteria<T, ID> withConsistentReads(QueryConstants.ConsistentReadMode reads);
+    void withConsistentReads(QueryConstants.ConsistentReadMode reads);
 
-    DynamoDBQueryCriteria<T, ID> withFilterExpression(Optional<String> filterExpression);
+    void withFilterExpression(Optional<String> filterExpression);
 
-    DynamoDBQueryCriteria<T, ID> withExpressionAttributeNames(ExpressionAttribute[] names);
+    void withExpressionAttributeNames(ExpressionAttribute[] names);
 
-    DynamoDBQueryCriteria<T, ID> withExpressionAttributeValues(ExpressionAttribute[] values);
+    void withExpressionAttributeValues(ExpressionAttribute[] values);
 
-    DynamoDBQueryCriteria<T, ID> withMappedExpressionValues(Map<String, String> values);
+    void withMappedExpressionValues(Map<String, String> values);
 
     Query<T> buildQuery(DynamoDBOperations dynamoDBOperations);
 

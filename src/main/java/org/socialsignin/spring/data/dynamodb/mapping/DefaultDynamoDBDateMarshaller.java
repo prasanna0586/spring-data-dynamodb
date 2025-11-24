@@ -15,6 +15,7 @@
  */
 package org.socialsignin.spring.data.dynamodb.mapping;
 
+import java.io.Serial;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
@@ -27,6 +28,7 @@ import java.util.TimeZone;
 public class DefaultDynamoDBDateMarshaller extends AbstractDynamoDBDateMarshaller {
 
     private static final class UTCSimpleDateFormat extends SimpleDateFormat {
+        @Serial
         private static final long serialVersionUID = 1L;
 
         private UTCSimpleDateFormat() {

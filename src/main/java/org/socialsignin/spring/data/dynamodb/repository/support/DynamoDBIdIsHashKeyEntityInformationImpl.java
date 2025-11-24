@@ -33,16 +33,16 @@ import java.util.Optional;
 public class DynamoDBIdIsHashKeyEntityInformationImpl<T, ID> extends FieldAndGetterReflectionEntityInformation<T, ID>
         implements DynamoDBEntityInformation<T, ID> {
 
-    private DynamoDBHashKeyExtractingEntityMetadata<T> metadata;
-    private HashKeyExtractor<ID, ID> hashKeyExtractor;
-    private Optional<String> projection = Optional.empty();
-    private Optional<Integer> limit = Optional.empty();
+    private final DynamoDBHashKeyExtractingEntityMetadata<T> metadata;
+    private final HashKeyExtractor<ID, ID> hashKeyExtractor;
+    private final Optional<String> projection = Optional.empty();
+    private final Optional<Integer> limit = Optional.empty();
 
     public DynamoDBIdIsHashKeyEntityInformationImpl(Class<T> domainClass,
             DynamoDBHashKeyExtractingEntityMetadata<T> metadata) {
         super(domainClass, DynamoDbPartitionKey.class);
         this.metadata = metadata;
-        this.hashKeyExtractor = new HashKeyIsIdHashKeyExtractor<ID>(getIdType());
+        this.hashKeyExtractor = new HashKeyIsIdHashKeyExtractor<>(getIdType());
     }
 
     @Override
@@ -83,11 +83,6 @@ public class DynamoDBIdIsHashKeyEntityInformationImpl<T, ID> extends FieldAndGet
     @Override
     public AttributeConverter<?> getAttributeConverterForProperty(String propertyName) {
         return metadata.getAttributeConverterForProperty(propertyName);
-    }
-
-    @Override
-    public Object getRangeKey(ID id) {
-        return null;
     }
 
     @Override

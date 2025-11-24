@@ -65,17 +65,16 @@ public abstract class DateDynamoDBMarshaller {
      * @return Date object
      */
     public Date unconvert(String object) {
-        return unmarshall(Date.class, object);
+        return unmarshall(object);
     }
 
     /**
      * Unmarshalls a String to Date.
      *
-     * @param clazz the Date class
      * @param obj   the String to unmarshall
      * @return Date object
      */
-    public Date unmarshall(Class<Date> clazz, String obj) {
+    public Date unmarshall(String obj) {
         if (!StringUtils.hasLength(obj)) {
             return null;
         } else {

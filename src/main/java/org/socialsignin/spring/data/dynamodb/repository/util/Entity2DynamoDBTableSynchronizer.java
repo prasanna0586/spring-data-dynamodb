@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext;
 import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBEntityInformation;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBHashKeyExtractingEntityMetadata;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
@@ -76,7 +76,6 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
                 ProjectionType.ALL.name(), ProjectionType.ALL.name(), 10L, 10L);
     }
 
-    @Autowired
     public Entity2DynamoDBTableSynchronizer(DynamoDbClient amazonDynamoDB,
             @Qualifier("dynamoDB-DynamoDBMapper") DynamoDbEnhancedClient enhancedClient,
             @Qualifier("dynamoDBMappingContext") DynamoDBMappingContext mappingContext,
@@ -102,7 +101,7 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
     @Override
     public void onApplicationEvent(ApplicationContextEvent event) {
         LOGGER.info("Checking repository classes with DynamoDB tables {} for {}",
-                registeredEntities.stream().map(e -> e.getDynamoDBTableName()).collect(Collectors.joining(", ")),
+                registeredEntities.stream().map(DynamoDBHashKeyExtractingEntityMetadata::getDynamoDBTableName).collect(Collectors.joining(", ")),
                 event.getClass().getSimpleName());
 
         for (DynamoDBEntityInformation<T, ID> entityInformation : registeredEntities) {
@@ -172,11 +171,8 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
      * </ul>
      *
      * @param entityInformation Entity metadata
-     * @return true if table was created, false if already exists
-     * @throws InterruptedException if waiting for table creation is interrupted
      */
-    private boolean performCreate(DynamoDBEntityInformation<T, ID> entityInformation)
-            throws InterruptedException {
+    private void performCreate(DynamoDBEntityInformation<T, ID> entityInformation) {
         Class<T> domainType = entityInformation.getJavaType();
         String tableName = entityInformation.getDynamoDBTableName();
 
@@ -233,11 +229,8 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
                 LOGGER.debug("Table {} is now active", tableName);
             }
 
-            return true;
-
         } catch (ResourceInUseException e) {
             LOGGER.debug("Table {} already exists", tableName);
-            return false;
         } catch (DynamoDbException e) {
             LOGGER.error("Failed to create table {} for entity {}. Error: {}",
                     tableName, domainType.getSimpleName(), e.getMessage(), e);
@@ -245,7 +238,7 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
         }
     }
 
-    private boolean performDrop(DynamoDBEntityInformation<T, ID> entityInformation) {
+    private void performDrop(DynamoDBEntityInformation<T, ID> entityInformation) {
         Class<T> domainType = entityInformation.getJavaType();
         String tableName = entityInformation.getDynamoDBTableName();
 
@@ -257,21 +250,16 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
                     .build();
             amazonDynamoDB.deleteTable(dtr);
             LOGGER.debug("Deleted table {} for entity {}", tableName, domainType);
-            return true;
         } catch (ResourceNotFoundException e) {
             LOGGER.debug("Table {} does not exist", tableName);
-            return false;
         }
     }
 
     /**
-     * @param entityInformation
-     *            The entity to check for it's table
-     *
-     * @throws IllegalStateException
-     *             is thrown if the existing table doesn't match the entity's annotation
+     * @param entityInformation The entity to check for it's table
+     * @throws IllegalStateException is thrown if the existing table doesn't match the entity's annotation
      */
-    private DescribeTableResponse performValidate(DynamoDBEntityInformation<T, ID> entityInformation)
+    private void performValidate(DynamoDBEntityInformation<T, ID> entityInformation)
             throws IllegalStateException {
         Class<T> domainType = entityInformation.getJavaType();
         String tableName = entityInformation.getDynamoDBTableName();
@@ -298,7 +286,6 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
         LOGGER.debug("Global Secondary Indexes are valid");
 
         LOGGER.info("Validated table {} for entity {}", expected.tableName(), domainType);
-        return result;
     }
 
     private boolean compareGSI(List<GlobalSecondaryIndex> expected, List<GlobalSecondaryIndexDescription> actual) {
@@ -424,16 +411,6 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
 
         return builder.build();
     }
-
-    private String getTableName(Class<T> domainType) {
-        // SDK v2's @DynamoDbBean doesn't have a tableName property
-        // Table name is determined by the class name (simple name)
-        // For custom table names, users should use TableNameResolver
-        return domainType.getSimpleName();
-    }
-
-    // Note: The following introspection methods are kept for performValidate() but are deprecated.
-    // TODO: Consider using Enhanced Client's TableSchema for validation in a future update.
 
     private void findPartitionKey(Class<T> domainType, List<KeySchemaElement> keySchema,
                                    Map<String, ScalarAttributeType> attributeTypes) {

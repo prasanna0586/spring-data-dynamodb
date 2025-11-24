@@ -22,7 +22,7 @@ import org.springframework.util.Assert;
  */
 public class HashKeyIsIdHashKeyExtractor<ID> implements HashKeyExtractor<ID, ID> {
 
-    private Class<ID> idAndHashKeyType;
+    private final Class<ID> idAndHashKeyType;
 
     public HashKeyIsIdHashKeyExtractor(Class<ID> idAndHashKeyType) {
         this.idAndHashKeyType = idAndHashKeyType;

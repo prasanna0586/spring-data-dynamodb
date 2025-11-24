@@ -84,7 +84,7 @@ public class DynamoDBQueryLookupStrategy {
         protected <T, ID> RepositoryQuery createDynamoDBQuery(Method method, RepositoryMetadata metadata,
                 ProjectionFactory factory, Class<T> entityClass, Class<ID> idClass, NamedQueries namedQueries) {
             try {
-                return new PartTreeDynamoDBQuery<T, ID>(dynamoDBOperations,
+                return new PartTreeDynamoDBQuery<>(dynamoDBOperations,
                         new DynamoDBQueryMethod<T, ID>(method, metadata, factory));
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException(
@@ -161,16 +161,11 @@ public class DynamoDBQueryLookupStrategy {
             return new CreateQueryLookupStrategy(dynamoDBOperations);
         }
 
-        switch (key) {
-            case CREATE:
-                return new CreateQueryLookupStrategy(dynamoDBOperations);
-            case USE_DECLARED_QUERY:
-                throw new IllegalArgumentException(String.format("Unsupported query lookup strategy %s!", key));
-            case CREATE_IF_NOT_FOUND:
-                return new CreateIfNotFoundQueryLookupStrategy(dynamoDBOperations);
-            default:
-                throw new IllegalArgumentException(String.format("Unsupported query lookup strategy %s!", key));
-        }
+        return switch (key) {
+            case CREATE -> new CreateQueryLookupStrategy(dynamoDBOperations);
+            case CREATE_IF_NOT_FOUND -> new CreateIfNotFoundQueryLookupStrategy(dynamoDBOperations);
+            default -> throw new IllegalArgumentException(String.format("Unsupported query lookup strategy %s!", key));
+        };
     }
 
 }

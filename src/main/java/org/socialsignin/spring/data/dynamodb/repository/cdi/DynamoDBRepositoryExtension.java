@@ -44,11 +44,11 @@ public class DynamoDBRepositoryExtension extends CdiRepositoryExtensionSupport {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DynamoDBRepositoryExtension.class);
 
-    private final Map<Set<Annotation>, Bean<DynamoDbClient>> amazonDynamoDBs = new HashMap<Set<Annotation>, Bean<DynamoDbClient>>();
+    private final Map<Set<Annotation>, Bean<DynamoDbClient>> amazonDynamoDBs = new HashMap<>();
 
-    private final Map<Set<Annotation>, Bean<DynamoDBOperations>> dynamoDBOperationss = new HashMap<Set<Annotation>, Bean<DynamoDBOperations>>();
+    private final Map<Set<Annotation>, Bean<DynamoDBOperations>> dynamoDBOperations = new HashMap<>();
 
-    private final Map<Set<Annotation>, Bean<DynamoDbEnhancedClient>> enhancedClients = new HashMap<Set<Annotation>, Bean<DynamoDbEnhancedClient>>();
+    private final Map<Set<Annotation>, Bean<DynamoDbEnhancedClient>> enhancedClients = new HashMap<>();
 
     public DynamoDBRepositoryExtension() {
         LOGGER.info("Activating CDI extension for Spring Data DynamoDB repositories.");
@@ -69,7 +69,7 @@ public class DynamoDBRepositoryExtension extends CdiRepositoryExtensionSupport {
         for (Type type : bean.getTypes()) {
             // Check if the bean is a AmazonDynamoDB
             if (type instanceof Class<?> && DynamoDbClient.class.isAssignableFrom((Class<?>) type)) {
-                Set<Annotation> qualifiers = new HashSet<Annotation>(bean.getQualifiers());
+                Set<Annotation> qualifiers = new HashSet<>(bean.getQualifiers());
                 if (bean.isAlternative() || !amazonDynamoDBs.containsKey(qualifiers)) {
                     logDiscoveredBean(DynamoDbClient.class, qualifiers);
                     amazonDynamoDBs.put(qualifiers, (Bean<DynamoDbClient>) bean);
@@ -77,7 +77,7 @@ public class DynamoDBRepositoryExtension extends CdiRepositoryExtensionSupport {
             }
             // Check if the bean is a DynamoDbEnhancedClient
             if (type instanceof Class<?> && DynamoDbEnhancedClient.class.isAssignableFrom((Class<?>) type)) {
-                Set<Annotation> qualifiers = new HashSet<Annotation>(bean.getQualifiers());
+                Set<Annotation> qualifiers = new HashSet<>(bean.getQualifiers());
                 if (bean.isAlternative() || !enhancedClients.containsKey(qualifiers)) {
                     logDiscoveredBean(DynamoDbEnhancedClient.class, qualifiers);
                     enhancedClients.put(qualifiers, (Bean<DynamoDbEnhancedClient>) bean);
@@ -134,7 +134,7 @@ public class DynamoDBRepositoryExtension extends CdiRepositoryExtensionSupport {
 
         Bean<DynamoDbEnhancedClient> enhancedClientBean = enhancedClients.get(qualifiers);
 
-        Bean<DynamoDBOperations> dynamoDBOperationsBean = dynamoDBOperationss.get(qualifiers);
+        Bean<DynamoDBOperations> dynamoDBOperationsBean = dynamoDBOperations.get(qualifiers);
         if (amazonDynamoDBBean == null) {
             throw new UnsatisfiedResolutionException(
                     String.format("Unable to resolve a bean for '%s' with qualifiers %s.",
@@ -142,7 +142,7 @@ public class DynamoDBRepositoryExtension extends CdiRepositoryExtensionSupport {
         }
 
         // Construct and return the repository bean.
-        return new DynamoDBRepositoryBean<T>(beanManager, amazonDynamoDBBean, enhancedClientBean,
+        return new DynamoDBRepositoryBean<>(beanManager, amazonDynamoDBBean, enhancedClientBean,
                 dynamoDBOperationsBean, qualifiers, repositoryType);
     }
 }

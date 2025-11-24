@@ -52,7 +52,6 @@ public class FieldAndGetterReflectionEntityInformation<T, ID> extends AbstractEn
         ReflectionUtils.doWithMethods(domainClass, (method) -> {
             if (method.getAnnotation(annotation) != null) {
                 this.method = method;
-                return;
             }
         });
 
@@ -61,7 +60,6 @@ public class FieldAndGetterReflectionEntityInformation<T, ID> extends AbstractEn
             ReflectionUtils.doWithFields(domainClass, (field) -> {
                 if (field.getAnnotation(annotation) != null) {
                     this.field = field;
-                    return;
                 }
             });
         }
@@ -88,9 +86,9 @@ public class FieldAndGetterReflectionEntityInformation<T, ID> extends AbstractEn
     public ID getId(T entity) {
 
         if (method != null) {
-            return entity == null ? null : (ID) ReflectionUtils.invokeMethod(method, entity);
+            return (ID) ReflectionUtils.invokeMethod(method, entity);
         } else {
-            return entity == null ? null : (ID) ReflectionUtils.getField(field, entity);
+            return (ID) ReflectionUtils.getField(field, entity);
         }
     }
 

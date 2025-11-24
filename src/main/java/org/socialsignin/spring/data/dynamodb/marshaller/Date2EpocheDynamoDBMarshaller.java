@@ -15,6 +15,7 @@
  */
 package org.socialsignin.spring.data.dynamodb.marshaller;
 
+import java.io.Serial;
 import java.text.DateFormat;
 import java.text.FieldPosition;
 import java.text.ParsePosition;
@@ -32,6 +33,7 @@ import java.util.Date;
 public class Date2EpocheDynamoDBMarshaller extends DateDynamoDBMarshaller {
 
     private static final class EpcoheDateFormat extends DateFormat {
+        @Serial
         private static final long serialVersionUID = 2969564523817434535L;
 
         @Override

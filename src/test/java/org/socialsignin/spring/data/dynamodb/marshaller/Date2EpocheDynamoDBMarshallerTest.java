@@ -46,14 +46,14 @@ public class Date2EpocheDynamoDBMarshallerTest {
 
     @Test
     public void testUnmarshallNull() {
-        Date actual = underTest.unmarshall(Date.class, null);
+        Date actual = underTest.unmarshall(null);
 
         assertNull(actual);
     }
 
     @Test
     public void testUnmarshall() {
-        assertEquals(new Date(0), underTest.unmarshall(Date.class, "0"));
+        assertEquals(new Date(0), underTest.unmarshall("0"));
         assertEquals(new Date(0), underTest.unconvert("0"));
         ;
 
@@ -62,7 +62,7 @@ public class Date2EpocheDynamoDBMarshallerTest {
     @Test
     public void testUnmarshallGarbage() {
         assertThrows(NumberFormatException.class, () -> {
-            underTest.unmarshall(Date.class, "something");
+            underTest.unmarshall("something");
         });
     }
 }

@@ -25,8 +25,8 @@ import java.util.List;
 
 public class MultipleEntityQueryRequestQuery<T> extends AbstractMultipleEntityQuery<T> {
 
-    private DynamoDBOperations dynamoDBOperations;
-    private QueryRequest queryRequest;
+    private final DynamoDBOperations dynamoDBOperations;
+    private final QueryRequest queryRequest;
 
     public MultipleEntityQueryRequestQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz,
             QueryRequest queryRequest) {

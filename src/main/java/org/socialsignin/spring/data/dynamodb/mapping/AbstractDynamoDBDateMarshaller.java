@@ -31,7 +31,7 @@ import java.util.Date;
 @Deprecated
 public class AbstractDynamoDBDateMarshaller {
 
-    private DateFormat dateFormat;
+    private final DateFormat dateFormat;
 
     public AbstractDynamoDBDateMarshaller(DateFormat dateFormat) {
         this.dateFormat = dateFormat;
@@ -54,12 +54,11 @@ public class AbstractDynamoDBDateMarshaller {
     /**
      * Unmarshalls a String to Date.
      *
-     * @param clazz the Date class
      * @param obj   the String to unmarshall
      * @return Date object
      * @throws IllegalArgumentException if parsing fails
      */
-    public Date unmarshall(Class<Date> clazz, String obj) throws IllegalArgumentException {
+    public Date unmarshall(String obj) throws IllegalArgumentException {
         if (obj == null) {
             return null;
         } else {

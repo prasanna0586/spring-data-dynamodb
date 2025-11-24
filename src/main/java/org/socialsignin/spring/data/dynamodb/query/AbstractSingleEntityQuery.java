@@ -30,6 +30,6 @@ public abstract class AbstractSingleEntityQuery<T> extends AbstractDynamicQuery<
     @Override
     public List<T> getResultList() {
         T result = getSingleResult();
-        return result != null ? Arrays.asList(result) : new ArrayList<>();
+        return result != null ? List.of(result) : new ArrayList<>();
     }
 }

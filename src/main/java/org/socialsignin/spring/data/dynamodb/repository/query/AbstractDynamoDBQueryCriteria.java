@@ -24,6 +24,7 @@ import org.socialsignin.spring.data.dynamodb.query.Query;
 import org.socialsignin.spring.data.dynamodb.repository.ExpressionAttribute;
 import org.socialsignin.spring.data.dynamodb.repository.QueryConstants;
 import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBEntityInformation;
+import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBHashAndRangeKeyExtractingEntityMetadata;
 import org.socialsignin.spring.data.dynamodb.utils.SortHandler;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
@@ -31,7 +32,6 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.lang.Nullable;
 import org.springframework.util.*;
 import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
-import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.time.Instant;
@@ -174,9 +174,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
             // LSI queries: ONLY allow sorting by the specific LSI range key being queried
             // Detect which LSI property has a condition
             String lsiPropertyWithCondition = null;
-            if (entityInformation instanceof org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBHashAndRangeKeyExtractingEntityMetadata) {
-                org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBHashAndRangeKeyExtractingEntityMetadata<?, ?> compositeKeyEntityInfo =
-                    (org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBHashAndRangeKeyExtractingEntityMetadata<?, ?>) entityInformation;
+            if (entityInformation instanceof DynamoDBHashAndRangeKeyExtractingEntityMetadata<?, ?> compositeKeyEntityInfo) {
                 Set<String> indexRangeKeyPropertyNames = compositeKeyEntityInfo.getIndexRangeKeyPropertyNames();
 
                 if (indexRangeKeyPropertyNames != null) {
@@ -220,10 +218,10 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
             String commonGsiIndexName = null;
             if (!gsiPropertiesWithConditions.isEmpty()) {
                 // Start with the GSI indexes of the first property
-                String firstProperty = gsiPropertiesWithConditions.get(0);
+                String firstProperty = gsiPropertiesWithConditions.getFirst();
                 String[] firstPropertyIndexes = gsiNamesByProperty.get(firstProperty);
 
-                if (firstPropertyIndexes != null && firstPropertyIndexes.length > 0) {
+                if (firstPropertyIndexes != null) {
                     // For each GSI index of the first property, check if ALL other properties also belong to it
                     for (String candidateIndexName : firstPropertyIndexes) {
                         boolean allPropertiesInThisIndex = true;
@@ -291,9 +289,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
 
             // Also allow sorting by any LSI range key for hash-only + OrderBy pattern
             // (e.g., findByCustomerIdOrderByOrderDateAsc)
-            if (entityInformation instanceof org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBHashAndRangeKeyExtractingEntityMetadata) {
-                org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBHashAndRangeKeyExtractingEntityMetadata<?, ?> compositeKeyEntityInfo =
-                    (org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBHashAndRangeKeyExtractingEntityMetadata<?, ?>) entityInformation;
+            if (entityInformation instanceof DynamoDBHashAndRangeKeyExtractingEntityMetadata<?, ?> compositeKeyEntityInfo) {
                 Set<String> indexRangeKeyPropertyNames = compositeKeyEntityInfo.getIndexRangeKeyPropertyNames();
 
                 if (indexRangeKeyPropertyNames != null && sort != null && sort.iterator().hasNext()) {
@@ -361,14 +357,11 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
     }
 
     protected QueryRequest applyConsistentReads(QueryRequest queryRequest) {
-        switch (consistentReads) {
-            case CONSISTENT:
-                return queryRequest.toBuilder().consistentRead(true).build();
-            case EVENTUAL:
-                return queryRequest.toBuilder().consistentRead(false).build();
-            default:
-                return queryRequest;
-        }
+        return switch (consistentReads) {
+            case CONSISTENT -> queryRequest.toBuilder().consistentRead(true).build();
+            case EVENTUAL -> queryRequest.toBuilder().consistentRead(false).build();
+            default -> queryRequest;
+        };
     }
 
     protected QueryRequest applySortIfSpecified(QueryRequest queryRequest, List<String> permittedPropertyNames) {
@@ -423,27 +416,27 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         switch (operator) {
             case EQ:
                 String eqPlaceholder = ":kval" + startValueCounter;
-                expressionValues.put(eqPlaceholder, attributeValueList.get(0));
+                expressionValues.put(eqPlaceholder, attributeValueList.getFirst());
                 return namePlaceholder + " = " + eqPlaceholder;
 
             case LT:
                 String ltPlaceholder = ":kval" + startValueCounter;
-                expressionValues.put(ltPlaceholder, attributeValueList.get(0));
+                expressionValues.put(ltPlaceholder, attributeValueList.getFirst());
                 return namePlaceholder + " < " + ltPlaceholder;
 
             case LE:
                 String lePlaceholder = ":kval" + startValueCounter;
-                expressionValues.put(lePlaceholder, attributeValueList.get(0));
+                expressionValues.put(lePlaceholder, attributeValueList.getFirst());
                 return namePlaceholder + " <= " + lePlaceholder;
 
             case GT:
                 String gtPlaceholder = ":kval" + startValueCounter;
-                expressionValues.put(gtPlaceholder, attributeValueList.get(0));
+                expressionValues.put(gtPlaceholder, attributeValueList.getFirst());
                 return namePlaceholder + " > " + gtPlaceholder;
 
             case GE:
                 String gePlaceholder = ":kval" + startValueCounter;
-                expressionValues.put(gePlaceholder, attributeValueList.get(0));
+                expressionValues.put(gePlaceholder, attributeValueList.getFirst());
                 return namePlaceholder + " >= " + gePlaceholder;
 
             case BETWEEN:
@@ -455,7 +448,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
 
             case BEGINS_WITH:
                 String beginsPlaceholder = ":kval" + startValueCounter;
-                expressionValues.put(beginsPlaceholder, attributeValueList.get(0));
+                expressionValues.put(beginsPlaceholder, attributeValueList.getFirst());
                 return "begins_with(" + namePlaceholder + ", " + beginsPlaceholder + ")";
 
             default:
@@ -480,46 +473,6 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
             }
         }
         return true;
-    }
-
-    /**
-     * Helper method to process projection expressions and escape reserved keywords.
-     * This method takes a comma-separated list of attribute names and returns a map
-     * of expression attribute names that can be used in projection expressions.
-     *
-     * <p>For user-provided projection expressions in @Query annotations, this helper
-     * can be used to automatically handle reserved keywords. However, users can also
-     * manually specify expression attribute names using the @ExpressionAttribute annotation.</p>
-     *
-     * <p>Example usage:</p>
-     * <pre>
-     * // Instead of: @Query(fields = "name, status, data")
-     * // Use: @Query(fields = "#n0, #n1, #n2",
-     * //             expressionMappingNames = {
-     * //                 @ExpressionAttribute(key = "#n0", value = "name"),
-     * //                 @ExpressionAttribute(key = "#n1", value = "status"),
-     * //                 @ExpressionAttribute(key = "#n2", value = "data")
-     * //             })
-     * </pre>
-     *
-     * @param attributeNames Comma-separated list of attribute names
-     * @return Map of expression attribute name placeholders to actual attribute names
-     */
-    protected Map<String, String> buildProjectionAttributeNames(String attributeNames) {
-        Map<String, String> expressionNames = new HashMap<>();
-        if (attributeNames == null || attributeNames.trim().isEmpty()) {
-            return expressionNames;
-        }
-
-        String[] attributes = attributeNames.split(",");
-        for (int i = 0; i < attributes.length; i++) {
-            String attribute = attributes[i].trim();
-            if (!attribute.isEmpty()) {
-                String placeholder = "#proj" + i;
-                expressionNames.put(placeholder, attribute);
-            }
-        }
-        return expressionNames;
     }
 
     protected List<Condition> getHashKeyConditions() {
@@ -550,7 +503,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
     }
 
     public AbstractDynamoDBQueryCriteria(DynamoDBEntityInformation<T, ID> dynamoDBEntityInformation,
-            final TableSchema<T> tableModel, DynamoDBMappingContext mappingContext) {
+                                         DynamoDBMappingContext mappingContext) {
         this.clazz = dynamoDBEntityInformation.getJavaType();
         this.attributeConditions = new LinkedMultiValueMap<>();
         this.propertyConditions = new LinkedMultiValueMap<>();
@@ -583,14 +536,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         boolean hasSortRequirement = sort != null && sort.iterator().hasNext();
 
         // Check if hash key is a GSI partition key
-        boolean hashKeyIsGSIPartitionKey = entityInformation.getGlobalSecondaryIndexNamesByPropertyName()
-                .containsKey(getHashKeyPropertyName());
-
-        // Run index selection if:
-        // 1. We have attribute conditions (traditional GSI query), OR
-        // 2. Hash key is a GSI partition key AND we have a sort requirement (hash-only GSI query with OrderBy)
-        boolean shouldSelectIndex = (attributeConditions != null && !attributeConditions.isEmpty()) ||
-                                    (hashKeyIsGSIPartitionKey && hasSortRequirement);
+        boolean shouldSelectIndex = isShouldSelectIndex(hasSortRequirement);
 
         if (globalSecondaryIndexName == null && shouldSelectIndex) {
             // Declare map of index names by attribute name which we will populate below -
@@ -625,8 +571,10 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
             for (Entry<String, List<String>> attributeListForIndexNameEntry : attributeListsByIndexName.entrySet()) {
                 String indexNameForAttributeList = attributeListForIndexNameEntry.getKey();
                 List<String> attributeList = attributeListForIndexNameEntry.getValue();
-                if (attributeList.containsAll(attributeConditions.keySet())) {
-                    if (attributeConditions.keySet().containsAll(attributeList)) {
+                // Convert list to set for O(1) containment checks instead of O(n)
+                Set<String> attributeSet = new HashSet<>(attributeList);
+                if (attributeSet.containsAll(attributeConditions.keySet())) {
+                    if (attributeConditions.keySet().containsAll(attributeSet)) {
                         exactMatchIndexNames.add(indexNameForAttributeList);
                     } else {
                         partialMatchIndexNames.add(indexNameForAttributeList);
@@ -677,9 +625,6 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
                     exactMatchIndexNames.clear(); // Clear non-sort-compatible exact matches
                     exactMatchIndexNames = sortCompatiblePartialMatches; // Promote sort-compatible partial matches
                     partialMatchIndexNames.clear();
-                } else {
-                    // No sort-compatible indexes at all - keep the original lists unchanged
-                    // This means we'll use whatever exact/partial matches we found, even if they don't support sorting
                 }
             }
 
@@ -687,20 +632,32 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
                 throw new RuntimeException(
                         "Multiple indexes defined on same attribute set:" + attributeConditions.keySet());
             } else if (exactMatchIndexNames.size() == 1) {
-                globalSecondaryIndexName = exactMatchIndexNames.get(0);
+                globalSecondaryIndexName = exactMatchIndexNames.getFirst();
             } else if (partialMatchIndexNames.size() > 1) {
                 if (attributeConditions.size() == 1) {
                     globalSecondaryIndexName = getFirstDeclaredIndexNameForAttribute(indexNamesByAttributeName,
                             partialMatchIndexNames, attributeConditions.keySet().iterator().next());
                 }
                 if (globalSecondaryIndexName == null) {
-                    globalSecondaryIndexName = partialMatchIndexNames.get(0);
+                    globalSecondaryIndexName = partialMatchIndexNames.getFirst();
                 }
             } else if (partialMatchIndexNames.size() == 1) {
-                globalSecondaryIndexName = partialMatchIndexNames.get(0);
+                globalSecondaryIndexName = partialMatchIndexNames.getFirst();
             }
         }
         return globalSecondaryIndexName;
+    }
+
+    private boolean isShouldSelectIndex(boolean hasSortRequirement) {
+        boolean hashKeyIsGSIPartitionKey = entityInformation.getGlobalSecondaryIndexNamesByPropertyName()
+                .containsKey(getHashKeyPropertyName());
+
+        // Run index selection if:
+        // 1. We have attribute conditions (traditional GSI query), OR
+        // 2. Hash key is a GSI partition key AND we have a sort requirement (hash-only GSI query with OrderBy)
+        boolean shouldSelectIndex = (attributeConditions != null && !attributeConditions.isEmpty()) ||
+                                    (hashKeyIsGSIPartitionKey && hasSortRequirement);
+        return shouldSelectIndex;
     }
 
     protected boolean isHashKeyProperty(String propertyName) {
@@ -765,8 +722,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
             // 2. GSI: hash key is a GSI partition key (in globalSecondaryIndexNames map)
             String queryHashKeyPropertyName = getHashKeyPropertyName();
             boolean isTablePartitionKey = queryHashKeyPropertyName.equals(entityInformation.getHashKeyPropertyName());
-            boolean isGSIPartitionKey = entityInformation.getGlobalSecondaryIndexNamesByPropertyName()
-                    .keySet().contains(queryHashKeyPropertyName);
+            boolean isGSIPartitionKey = entityInformation.getGlobalSecondaryIndexNamesByPropertyName().containsKey(queryHashKeyPropertyName);
 
             // If the hash key is neither the table's partition key (LSI case) nor a GSI partition key, reject
             if (!isTablePartitionKey && !isGSIPartitionKey) {
@@ -774,7 +730,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
             }
         }
 
-        int attributeConditionCount = attributeConditions.keySet().size();
+        int attributeConditionCount = attributeConditions.size();
         boolean attributeConditionsAppropriate = hasIndexHashKeyEqualCondition()
                 && (attributeConditionCount == 1 || (attributeConditionCount == 2 && hasIndexRangeKeyCondition()));
         return global && (attributeConditionCount == 0 || attributeConditionsAppropriate)
@@ -811,18 +767,6 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         }
         return attributeName;
 
-    }
-
-    protected String getPropertyNameForAttribute(String attributeName) {
-        // First check if we have this in our cached mapping (reverse lookup)
-        for (Entry<String, String> entry : attributeNamesByPropertyName.entrySet()) {
-            if (entry.getValue().equals(attributeName)) {
-                return entry.getKey();
-            }
-        }
-        // If not found in cache, the property name is likely the same as attribute name
-        // (no override), so return the attribute name as the property name
-        return attributeName;
     }
 
     @Override
@@ -883,7 +827,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
     @Override
     public DynamoDBQueryCriteria<T, ID> withNoValuedCriteria(String propertyName,
             ComparisonOperator comparisonOperator) {
-        Condition condition = createNoValueCondition(propertyName, comparisonOperator);
+        Condition condition = createNoValueCondition(comparisonOperator);
         return withCondition(propertyName, condition);
 
     }
@@ -896,7 +840,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
     }
 
     @SuppressWarnings("unchecked")
-    protected <V extends Object> Object getPropertyAttributeValue(final String propertyName, final V value) {
+    protected <V> Object getPropertyAttributeValue(final String propertyName, final V value) {
         // SDK v2: Check for custom attribute converters configured via @DynamoDbConvertedBy
         AttributeConverter<?> attributeConverter = entityInformation.getAttributeConverterForProperty(propertyName);
 
@@ -913,12 +857,10 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return value;
     }
 
-    protected <V> Condition createNoValueCondition(String propertyName, ComparisonOperator comparisonOperator) {
+    protected <V> Condition createNoValueCondition(ComparisonOperator comparisonOperator) {
 
-        Condition condition = Condition.builder().comparisonOperator(comparisonOperator)
+        return Condition.builder().comparisonOperator(comparisonOperator)
                 .build();
-
-        return condition;
     }
 
     private List<String> getNumberListAsStringList(List<Number> numberList) {
@@ -935,7 +877,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
 
     @SuppressWarnings("deprecation")
     private List<String> getDateListAsStringList(List<Date> dateList, MarshallingMode mode) {
-        List<String> list = new ArrayList<String>();
+        List<String> list = new ArrayList<>();
         if (mode == MarshallingMode.SDK_V1_COMPATIBLE) {
             // SDK v1 compatibility: Date marshalled to ISO format string
             Date2IsoDynamoDBMarshaller marshaller = new Date2IsoDynamoDBMarshaller();
@@ -988,13 +930,13 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return list;
     }
 
-    private List<String> getBooleanListAsStringList(List<Boolean> booleanList, MarshallingMode mode) {
+    private List<String> getBooleanListAsStringList(List<Boolean> booleanList) {
         // Note: DynamoDB doesn't support a BOOL set type (only SS/NS/BS)
         // Boolean lists must always be stored as Number set "1"/"0" regardless of marshalling mode
         List<String> list = new ArrayList<>();
         for (Boolean booleanValue : booleanList) {
             if (booleanValue != null) {
-                list.add(booleanValue.booleanValue() ? "1" : "0");
+                list.add(booleanValue ? "1" : "0");
             } else {
                 list.add(null);
             }
@@ -1020,8 +962,8 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return null;
     }
 
-    protected <P> List<AttributeValue> addAttributeValue(List<AttributeValue> attributeValueList,
-            @Nullable Object attributeValue, Class<P> propertyType, boolean expandCollectionValues) {
+    protected <P> void addAttributeValue(List<AttributeValue> attributeValueList,
+                                         @Nullable Object attributeValue, Class<P> propertyType, boolean expandCollectionValues) {
         AttributeValue.Builder attributeValueBuilder = AttributeValue.builder();
 
         if (ClassUtils.isAssignable(String.class, propertyType)) {
@@ -1038,6 +980,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
                 List<String> attributeValueAsStringList = getNumberListAsStringList(attributeValueAsList);
                 attributeValueBuilder.ns(attributeValueAsStringList);
             } else {
+                assert attributeValue != null;
                 attributeValueBuilder.n(attributeValue.toString());
             }
         } else if (ClassUtils.isAssignable(Boolean.class, propertyType)) {
@@ -1045,18 +988,19 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
             if (expandCollectionValues && attributeValueAsList != null) {
                 if (mappingContext.getMarshallingMode() == MarshallingMode.SDK_V1_COMPATIBLE) {
                     // SDK v1 compatibility: Boolean list stored as Number set "1"/"0"
-                    List<String> attributeValueAsStringList = getBooleanListAsStringList(attributeValueAsList, MarshallingMode.SDK_V1_COMPATIBLE);
+                    List<String> attributeValueAsStringList = getBooleanListAsStringList(attributeValueAsList);
                     attributeValueBuilder.ns(attributeValueAsStringList);
                 } else {
                     // SDK v2 native: Boolean list not directly supported in DynamoDB, use Number set
                     // (DynamoDB doesn't have a BOOL set type, only SS/NS/BS)
-                    List<String> attributeValueAsStringList = getBooleanListAsStringList(attributeValueAsList, MarshallingMode.SDK_V1_COMPATIBLE);
+                    List<String> attributeValueAsStringList = getBooleanListAsStringList(attributeValueAsList);
                     attributeValueBuilder.ns(attributeValueAsStringList);
                 }
             } else {
                 if (mappingContext.getMarshallingMode() == MarshallingMode.SDK_V1_COMPATIBLE) {
                     // SDK v1 compatibility: Boolean stored as Number "1"/"0"
-                    boolean boolValue = ((Boolean) attributeValue).booleanValue();
+                    assert attributeValue != null;
+                    boolean boolValue = (Boolean) attributeValue;
                     attributeValueBuilder.n(boolValue ? "1" : "0");
                 } else {
                     // SDK v2 native: Boolean stored as BOOL type
@@ -1083,6 +1027,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
                     attributeValueBuilder.s(marshalledDate);
                 } else {
                     // SDK v2 native: Date stored as epoch milliseconds in Number format
+                    assert attributeValue != null;
                     attributeValueBuilder.n(String.valueOf(((Date) attributeValue).getTime()));
                 }
             }
@@ -1103,16 +1048,17 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
                 } else {
                     // SDK v2 native: Instant stored as ISO-8601 string (matches AWS SDK v2 InstantAsStringAttributeConverter)
                     // Format: ISO-8601 with nanosecond precision, e.g., "1970-01-01T00:00:00.001Z"
+                    assert attributeValue != null;
                     attributeValueBuilder.s(((Instant) attributeValue).toString());
                 }
             }
         } else {
+            assert attributeValue != null;
             throw new RuntimeException("Cannot create condition for type:" + attributeValue.getClass()
                     + " property conditions must be String,Number or Boolean, or have an AttributeConverter configured");
         }
         attributeValueList.add(attributeValueBuilder.build());
 
-        return attributeValueList;
     }
 
     protected Condition createSingleValueCondition(String propertyName, ComparisonOperator comparisonOperator, Object o,
@@ -1164,52 +1110,44 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
     }
 
     @Override
-    public DynamoDBQueryCriteria<T, ID> withSort(Sort sort) {
+    public void withSort(Sort sort) {
         this.sort = sort;
-        return this;
     }
 
     @Override
-    public DynamoDBQueryCriteria<T, ID> withProjection(Optional<String> projection) {
+    public void withProjection(Optional<String> projection) {
         this.projection = projection;
-        return this;
     }
 
     @Override
-    public DynamoDBQueryCriteria<T, ID> withLimit(Optional<Integer> limit) {
+    public void withLimit(Optional<Integer> limit) {
         this.limit = limit;
-        return this;
     }
 
     @Override
-    public DynamoDBQueryCriteria<T, ID> withFilterExpression(Optional<String> filter) {
+    public void withFilterExpression(Optional<String> filter) {
         this.filterExpression = filter;
-        return this;
     }
 
     @Override
-    public DynamoDBQueryCriteria<T, ID> withExpressionAttributeNames(ExpressionAttribute[] names) {
+    public void withExpressionAttributeNames(ExpressionAttribute[] names) {
         if (names != null)
             this.expressionAttributeNames = names.clone();
-        return this;
     }
 
     @Override
-    public DynamoDBQueryCriteria<T, ID> withExpressionAttributeValues(ExpressionAttribute[] values) {
+    public void withExpressionAttributeValues(ExpressionAttribute[] values) {
         if (values != null)
             this.expressionAttributeValues = values.clone();
-        return this;
     }
 
     @Override
-    public DynamoDBQueryCriteria<T, ID> withConsistentReads(QueryConstants.ConsistentReadMode consistentReads) {
+    public void withConsistentReads(QueryConstants.ConsistentReadMode consistentReads) {
         this.consistentReads = consistentReads;
-        return this;
     }
 
     @Override
-    public DynamoDBQueryCriteria<T, ID> withMappedExpressionValues(Map<String, String> map) {
+    public void withMappedExpressionValues(Map<String, String> map) {
         this.mappedExpressionValues = map;
-        return this;
     }
 }

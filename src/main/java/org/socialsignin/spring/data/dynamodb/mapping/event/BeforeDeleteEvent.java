@@ -15,11 +15,14 @@
  */
 package org.socialsignin.spring.data.dynamodb.mapping.event;
 
+import java.io.Serial;
+
 /**
  * @author Prasanna Kumar Ramachandran
  */
 public class BeforeDeleteEvent<T> extends DynamoDBMappingEvent<T> {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     public BeforeDeleteEvent(T source) {
