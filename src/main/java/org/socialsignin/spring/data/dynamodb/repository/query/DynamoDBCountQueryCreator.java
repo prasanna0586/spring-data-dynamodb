@@ -55,7 +55,7 @@ public class DynamoDBCountQueryCreator<T, ID> extends AbstractDynamoDBQueryCreat
 
     @NonNull
     @Override
-    protected Query<Long> complete(@Nullable DynamoDBQueryCriteria<T, ID> criteria, Sort sort) {
+    protected Query<Long> complete(@Nullable DynamoDBQueryCriteria<T, ID> criteria, @NonNull Sort sort) {
         if (criteria == null) {
             return new StaticQuery<>(1L);
         } else {

@@ -68,8 +68,8 @@ class DynamoDBRepositoryBean<T> extends CdiRepositoryBean<T> {
      * @param repositoryType
      *            must not be {@literal null}.
      */
-    DynamoDBRepositoryBean(@NonNull BeanManager beanManager, Bean<DynamoDbClient> dynamoDbClientBean,
-                           Bean<DynamoDbEnhancedClient> enhancedClientBean, @Nullable Bean<DynamoDBOperations> dynamoDBOperationsBean,
+    DynamoDBRepositoryBean(@NonNull BeanManager beanManager, @Nullable Bean<DynamoDbClient> dynamoDbClientBean,
+                           @Nullable Bean<DynamoDbEnhancedClient> enhancedClientBean, @Nullable Bean<DynamoDBOperations> dynamoDBOperationsBean,
                            @NonNull Set<Annotation> qualifiers, @NonNull Class<T> repositoryType) {
 
         super(qualifiers, repositoryType, beanManager);
@@ -94,7 +94,7 @@ class DynamoDBRepositoryBean<T> extends CdiRepositoryBean<T> {
      */
     @NonNull
     @Override
-    protected T create(CreationalContext<T> creationalContext, Class<T> repositoryType) {
+    protected T create(@NonNull CreationalContext<T> creationalContext, @NonNull Class<T> repositoryType) {
         // Get DynamoDBOperations if provided directly
         DynamoDBOperations dynamoDBOperations = dynamoDBOperationsBean == null ? null
                 : getDependencyInstance(dynamoDBOperationsBean, DynamoDBOperations.class);

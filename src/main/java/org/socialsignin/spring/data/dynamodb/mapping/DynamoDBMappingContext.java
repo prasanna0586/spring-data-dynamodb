@@ -81,7 +81,7 @@ public class DynamoDBMappingContext
      */
     @NonNull
     @Override
-    protected <T> DynamoDBPersistentEntityImpl<?> createPersistentEntity(TypeInformation<T> typeInformation) {
+    protected <T> DynamoDBPersistentEntityImpl<?> createPersistentEntity(@NonNull TypeInformation<T> typeInformation) {
         return new DynamoDBPersistentEntityImpl<>(typeInformation, null);
 
     }
@@ -94,8 +94,8 @@ public class DynamoDBMappingContext
      */
     @NonNull
     @Override
-    protected DynamoDBPersistentProperty createPersistentProperty(Property property,
-            DynamoDBPersistentEntityImpl<?> owner, SimpleTypeHolder simpleTypeHolder) {
+    protected DynamoDBPersistentProperty createPersistentProperty(@NonNull Property property,
+                                                                  @NonNull DynamoDBPersistentEntityImpl<?> owner, @NonNull SimpleTypeHolder simpleTypeHolder) {
         return new DynamoDBPersistentPropertyImpl(property, owner, simpleTypeHolder);
     }
 

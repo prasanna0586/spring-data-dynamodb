@@ -54,13 +54,13 @@ public class SimpleDynamoDBPagingAndSortingRepository<T, ID> extends SimpleDynam
 
     @NonNull
     @Override
-    public Iterable<T> findAll(Sort sort) {
+    public Iterable<T> findAll(@NonNull Sort sort) {
         return throwUnsupportedSortOperationException();
     }
 
     @NonNull
     @Override
-    public Page<T> findAll(Pageable pageable) {
+    public Page<T> findAll(@NonNull Pageable pageable) {
 
         ensureNoSort(pageable);
 

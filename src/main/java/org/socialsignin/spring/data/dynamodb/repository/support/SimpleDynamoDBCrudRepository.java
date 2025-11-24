@@ -82,7 +82,7 @@ public class SimpleDynamoDBCrudRepository<T, ID>
 
     @NonNull
     @Override
-    public Optional<T> findById(ID id) {
+    public Optional<T> findById(@NonNull ID id) {
 
         Assert.notNull(id, "The given id must not be null!");
 
@@ -99,7 +99,7 @@ public class SimpleDynamoDBCrudRepository<T, ID>
 
     @NonNull
     @Override
-    public List<T> findAllById(Iterable<ID> ids) {
+    public List<T> findAllById(@NonNull Iterable<ID> ids) {
 
         Assert.notNull(ids, "The given ids must not be null!");
 
@@ -127,7 +127,7 @@ public class SimpleDynamoDBCrudRepository<T, ID>
 
     @NonNull
     @Override
-    public <S extends T> S save(S entity) {
+    public <S extends T> S save(@NonNull S entity) {
         // Return the saved entity from DynamoDBOperations.save() to properly handle
         // @DynamoDbVersionAttribute and other attributes that may be updated during save.
         return dynamoDBOperations.save(entity);
@@ -141,7 +141,7 @@ public class SimpleDynamoDBCrudRepository<T, ID>
      */
     @NonNull
     @Override
-    public <S extends T> Iterable<S> saveAll(Iterable<S> entities)
+    public <S extends T> Iterable<S> saveAll(@NonNull Iterable<S> entities)
             throws BatchWriteException, IllegalArgumentException {
 
         Assert.notNull(entities, "The given Iterable of entities not be null!");
@@ -172,7 +172,7 @@ public class SimpleDynamoDBCrudRepository<T, ID>
     }
 
     @Override
-    public boolean existsById(ID id) {
+    public boolean existsById(@NonNull ID id) {
 
         Assert.notNull(id, "The given id must not be null!");
         return findById(id).isPresent();
@@ -202,7 +202,7 @@ public class SimpleDynamoDBCrudRepository<T, ID>
     }
 
     @Override
-    public void deleteById(ID id) {
+    public void deleteById(@NonNull ID id) {
 
         Assert.notNull(id, "The given id must not be null!");
 
@@ -218,7 +218,7 @@ public class SimpleDynamoDBCrudRepository<T, ID>
     }
 
     @Override
-    public void delete(T entity) {
+    public void delete(@NonNull T entity) {
         Assert.notNull(entity, "The entity must not be null!");
         dynamoDBOperations.delete(entity);
     }
@@ -230,7 +230,7 @@ public class SimpleDynamoDBCrudRepository<T, ID>
     }
 
     @Override
-    public void deleteAll(Iterable<? extends T> entities) {
+    public void deleteAll(@NonNull Iterable<? extends T> entities) {
 
         Assert.notNull(entities, "The given Iterable of entities not be null!");
         dynamoDBOperations.batchDelete(entities);

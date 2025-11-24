@@ -676,6 +676,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         return hashKeyPropertyName.equals(propertyName);
     }
 
+    @Nullable
     protected String getHashKeyPropertyName() {
         return hashKeyPropertyName;
     }

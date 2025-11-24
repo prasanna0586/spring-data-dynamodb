@@ -120,7 +120,7 @@ public abstract class AbstractDynamoDBQueryCreator<T, ID, R>
 
     @NonNull
     @Override
-    protected DynamoDBQueryCriteria<T, ID> create(Part part, Iterator<Object> iterator) {
+    protected DynamoDBQueryCriteria<T, ID> create(@NonNull Part part, @NonNull Iterator<Object> iterator) {
         final TableSchema<T> tableModel = dynamoDBOperations.getTableModel(entityMetadata.getJavaType());
         DynamoDBQueryCriteria<T, ID> criteria = entityMetadata.isRangeKeyAware()
                 ? new DynamoDBEntityWithHashAndRangeKeyCriteria<>(
@@ -250,16 +250,16 @@ public abstract class AbstractDynamoDBQueryCreator<T, ID, R>
 
     @NonNull
     @Override
-    protected DynamoDBQueryCriteria<T, ID> and(Part part, DynamoDBQueryCriteria<T, ID> base,
-            Iterator<Object> iterator) {
+    protected DynamoDBQueryCriteria<T, ID> and(@NonNull Part part, @NonNull DynamoDBQueryCriteria<T, ID> base,
+                                               @NonNull Iterator<Object> iterator) {
         return addCriteria(base, part, iterator);
 
     }
 
     @NonNull
     @Override
-    protected DynamoDBQueryCriteria<T, ID> or(DynamoDBQueryCriteria<T, ID> base,
-            DynamoDBQueryCriteria<T, ID> criteria) {
+    protected DynamoDBQueryCriteria<T, ID> or(@NonNull DynamoDBQueryCriteria<T, ID> base,
+                                              @NonNull DynamoDBQueryCriteria<T, ID> criteria) {
         throw new UnsupportedOperationException("Or queries not supported");
     }
 

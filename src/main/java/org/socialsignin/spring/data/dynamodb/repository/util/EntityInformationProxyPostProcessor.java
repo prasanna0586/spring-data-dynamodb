@@ -21,13 +21,14 @@ import org.springframework.aop.TargetSource;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.support.RepositoryProxyPostProcessor;
+import org.springframework.lang.NonNull;
 
 public abstract class EntityInformationProxyPostProcessor<T, ID> implements RepositoryProxyPostProcessor {
 
     protected abstract void registeredEntity(DynamoDBEntityInformation<T, ID> entityInformation);
 
     @Override
-    public final void postProcess(ProxyFactory factory, RepositoryInformation repositoryInformation) {
+    public final void postProcess(@NonNull ProxyFactory factory, @NonNull RepositoryInformation repositoryInformation) {
         try {
             TargetSource targetSource = factory.getTargetSource();
 

@@ -333,7 +333,7 @@ public abstract class AbstractDynamoDBQuery<T, ID> implements RepositoryQuery, E
      * (non-Javadoc)
      * @see org.springframework.data.repository.query.RepositoryQuery#execute(java .lang.Object[])
      */
-    public Object execute(Object[] parameters) {
+    public Object execute(@NonNull Object[] parameters) {
 
         return getExecution().execute(this, parameters);
     }

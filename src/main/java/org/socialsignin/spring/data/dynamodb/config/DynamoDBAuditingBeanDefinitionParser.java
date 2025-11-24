@@ -42,7 +42,7 @@ public class DynamoDBAuditingBeanDefinitionParser extends AbstractSingleBeanDefi
      * @see org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser# getBeanClass(org.w3c.dom.Element)
      */
     @Override
-    protected Class<?> getBeanClass(Element element) {
+    protected Class<?> getBeanClass(@NonNull Element element) {
         return AuditingEventListener.class;
     }
 
@@ -62,7 +62,7 @@ public class DynamoDBAuditingBeanDefinitionParser extends AbstractSingleBeanDefi
      * org.springframework.beans.factory.support.BeanDefinitionBuilder)
      */
     @Override
-    protected void doParse(@NonNull Element element, ParserContext parserContext, BeanDefinitionBuilder builder) {
+    protected void doParse(@NonNull Element element, @NonNull ParserContext parserContext, @NonNull BeanDefinitionBuilder builder) {
 
         String mappingContextRef = element.getAttribute("mapping-context-ref");
 

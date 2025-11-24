@@ -31,6 +31,7 @@ public class StaticQuery<T> extends AbstractQuery<T> {
         this.resultList = Collections.singletonList(result);
     }
 
+    @NonNull
     @Override
     public List<T> getResultList() {
         return resultList;

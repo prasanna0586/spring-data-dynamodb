@@ -74,7 +74,7 @@ class DynamoDBAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
      * org.springframework.beans.factory.support.BeanDefinitionRegistry)
      */
     @Override
-    public void registerBeanDefinitions(AnnotationMetadata annotationMetadata, BeanDefinitionRegistry registry) {
+    public void registerBeanDefinitions(@NonNull AnnotationMetadata annotationMetadata, @NonNull BeanDefinitionRegistry registry) {
         LOGGER.trace("registerBeanDefinitions");
         Assert.notNull(annotationMetadata, "AnnotationMetadata must not be null!");
         Assert.notNull(registry, "BeanDefinitionRegistry must not be null!");
@@ -91,7 +91,7 @@ class DynamoDBAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
      */
     @NonNull
     @Override
-    protected BeanDefinitionBuilder getAuditHandlerBeanDefinitionBuilder(AuditingConfiguration configuration) {
+    protected BeanDefinitionBuilder getAuditHandlerBeanDefinitionBuilder(@NonNull AuditingConfiguration configuration) {
         LOGGER.trace("getAuditHandlerBeanDefinitionBuilder");
         Assert.notNull(configuration, "AuditingConfiguration must not be null!");
 
@@ -110,8 +110,8 @@ class DynamoDBAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
      * org.springframework.beans.factory.support.BeanDefinitionRegistry)
      */
     @Override
-    protected void registerAuditListenerBeanDefinition(BeanDefinition auditingHandlerDefinition,
-            BeanDefinitionRegistry registry) {
+    protected void registerAuditListenerBeanDefinition(@NonNull BeanDefinition auditingHandlerDefinition,
+                                                       @NonNull BeanDefinitionRegistry registry) {
         LOGGER.trace("registerAuditListenerBeanDefinition");
         Assert.notNull(auditingHandlerDefinition, "BeanDefinition must not be null!");
         Assert.notNull(registry, "BeanDefinitionRegistry must not be null!");

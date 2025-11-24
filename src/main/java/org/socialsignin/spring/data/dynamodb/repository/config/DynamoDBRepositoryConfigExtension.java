@@ -103,7 +103,7 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
      * org.springframework.data.repository .config.XmlRepositoryConfigurationSource)
      */
     @Override
-    public void postProcess(BeanDefinitionBuilder builder, @NonNull XmlRepositoryConfigurationSource config) {
+    public void postProcess(@NonNull BeanDefinitionBuilder builder, @NonNull XmlRepositoryConfigurationSource config) {
         Element element = config.getElement();
 
         ParsingUtils.setPropertyReference(builder, element, AMAZON_DYNAMODB_REF, "amazonDynamoDB");
@@ -274,8 +274,8 @@ public class DynamoDBRepositoryConfigExtension extends RepositoryConfigurationEx
     }
 
     @Override
-    public void registerBeansForRoot(BeanDefinitionRegistry registry,
-            RepositoryConfigurationSource configurationSource) {
+    public void registerBeansForRoot(@NonNull BeanDefinitionRegistry registry,
+                                     @NonNull RepositoryConfigurationSource configurationSource) {
         super.registerBeansForRoot(registry, configurationSource);
 
         // Store for later to be used by #postProcess, too

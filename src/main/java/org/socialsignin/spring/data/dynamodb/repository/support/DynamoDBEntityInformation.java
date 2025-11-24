@@ -36,6 +36,7 @@ public interface DynamoDBEntityInformation<T, ID>
 
     boolean isCompositeHashAndRangeKeyProperty(String propertyName);
 
+    @Nullable
     Object getHashKey(ID id);
 
     @Nullable

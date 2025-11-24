@@ -85,7 +85,7 @@ public class FieldAndGetterReflectionEntityInformation<T, ID> extends AbstractEn
      */
     @Override
     @SuppressWarnings("unchecked")
-    public ID getId(T entity) {
+    public ID getId(@NonNull T entity) {
 
         if (method != null) {
             return (ID) ReflectionUtils.invokeMethod(method, entity);

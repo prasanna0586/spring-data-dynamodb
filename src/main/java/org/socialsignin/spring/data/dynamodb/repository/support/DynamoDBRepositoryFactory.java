@@ -98,7 +98,7 @@ public class DynamoDBRepositoryFactory extends RepositoryFactorySupport {
 
     @NonNull
     @Override
-    public <T, ID> DynamoDBEntityInformation<T, ID> getEntityInformation(final Class<T> domainClass) {
+    public <T, ID> DynamoDBEntityInformation<T, ID> getEntityInformation(@NonNull final Class<T> domainClass) {
 
         final DynamoDBEntityMetadataSupport<T, ID> metadata = new DynamoDBEntityMetadataSupport<>(domainClass,
                 this.dynamoDBOperations);
@@ -108,7 +108,7 @@ public class DynamoDBRepositoryFactory extends RepositoryFactorySupport {
     @NonNull
     @Override
     protected Optional<QueryLookupStrategy> getQueryLookupStrategy(Key key,
-            ValueExpressionDelegate valueExpressionDelegate) {
+                                                                   @NonNull ValueExpressionDelegate valueExpressionDelegate) {
         return Optional.of(DynamoDBQueryLookupStrategy.create(dynamoDBOperations, key));
     }
 
@@ -153,7 +153,7 @@ public class DynamoDBRepositoryFactory extends RepositoryFactorySupport {
 
     @NonNull
     @Override
-    protected Object getTargetRepository(RepositoryInformation metadata) {
+    protected Object getTargetRepository(@NonNull RepositoryInformation metadata) {
         return getDynamoDBRepository(metadata);
     }
 

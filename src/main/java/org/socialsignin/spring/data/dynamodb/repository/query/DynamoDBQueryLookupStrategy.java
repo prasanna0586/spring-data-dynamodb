@@ -61,8 +61,8 @@ public class DynamoDBQueryLookupStrategy {
          */
         @NonNull
         @Override
-        public final RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, ProjectionFactory factory,
-                NamedQueries namedQueries) {
+        public final RepositoryQuery resolveQuery(@NonNull Method method, @NonNull RepositoryMetadata metadata, @NonNull ProjectionFactory factory,
+                                                  @NonNull NamedQueries namedQueries) {
 
             return createDynamoDBQuery(method, metadata, factory, metadata.getDomainType(), metadata.getIdType(),
                     namedQueries);

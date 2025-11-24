@@ -39,7 +39,7 @@ public class DynamoDBQueryCreator<T, ID> extends AbstractDynamoDBQueryCreator<T,
 
     @NonNull
     @Override
-    protected Query<T> complete(@Nullable DynamoDBQueryCriteria<T, ID> criteria, Sort sort) {
+    protected Query<T> complete(@Nullable DynamoDBQueryCriteria<T, ID> criteria, @NonNull Sort sort) {
         if (criteria == null) {
             return new StaticQuery<>(null);
         } else {

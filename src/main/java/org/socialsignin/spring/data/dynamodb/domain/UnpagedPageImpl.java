@@ -19,7 +19,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import java.util.Iterator;
@@ -96,16 +95,16 @@ public class UnpagedPageImpl<T> implements Page<T> {
         return false;
     }
 
+    @NonNull
     @Override
-    @Nullable
     public Pageable nextPageable() {
-        return null;
+        return Pageable.unpaged();
     }
 
+    @NonNull
     @Override
-    @Nullable
     public Pageable previousPageable() {
-        return null;
+        return Pageable.unpaged();
     }
 
     @NonNull
@@ -126,7 +125,7 @@ public class UnpagedPageImpl<T> implements Page<T> {
 
     @NonNull
     @Override
-    public <U> UnpagedPageImpl<U> map(Function<? super T, ? extends U> converter) {
+    public <U> UnpagedPageImpl<U> map(@NonNull Function<? super T, ? extends U> converter) {
         List<U> convertedContent = this.content.stream().map(converter).collect(Collectors.toList());
 
         return new UnpagedPageImpl<>(convertedContent, this.total);

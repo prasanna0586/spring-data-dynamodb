@@ -87,7 +87,7 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
     }
 
     @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+    public void setApplicationContext(@NonNull ApplicationContext applicationContext) throws BeansException {
         this.eventPublisher = applicationContext;
 
         // Try to obtain EntityCallbacks if available in the application context
