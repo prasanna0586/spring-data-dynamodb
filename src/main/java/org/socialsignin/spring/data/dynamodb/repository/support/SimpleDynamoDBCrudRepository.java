@@ -70,7 +70,6 @@ public class SimpleDynamoDBCrudRepository<T, ID>
      */
     private AttributeValue toAttributeValue(@NonNull Object value) {
         return switch (value) {
-            case null -> AttributeValue.builder().nul(true).build();
             case String s -> AttributeValue.builder().s(s).build();
             case Number number -> AttributeValue.builder().n(value.toString()).build();
             default ->
@@ -111,8 +110,8 @@ public class SimpleDynamoDBCrudRepository<T, ID>
 
             if (entityInformation.isRangeKeyAware()) {
                 return Key.builder()
-                        .partitionValue(toAttributeValue(entityInformation.getHashKey(id)))
-                        .sortValue(toAttributeValue(entityInformation.getRangeKey(id)))
+                        .partitionValue(toAttributeValue(Objects.requireNonNull(entityInformation.getHashKey(id))))
+                        .sortValue(toAttributeValue(Objects.requireNonNull(entityInformation.getRangeKey(id))))
                         .build();
             } else {
                 return Key.builder()

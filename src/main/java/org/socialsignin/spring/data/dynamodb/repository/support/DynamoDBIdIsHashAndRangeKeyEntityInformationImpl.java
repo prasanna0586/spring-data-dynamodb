@@ -52,13 +52,13 @@ public class DynamoDBIdIsHashAndRangeKeyEntityInformationImpl<T, ID>
     @NonNull
     @Override
     public Optional<String> getProjection() {
-        return Optional.ofNullable(projection);
+        return Optional.empty();
     }
 
     @NonNull
     @Override
     public Optional<Integer> getLimit() {
-        return Optional.ofNullable(limit);
+        return Optional.empty();
     }
 
     @Override

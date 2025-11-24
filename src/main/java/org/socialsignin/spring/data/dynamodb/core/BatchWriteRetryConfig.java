@@ -130,7 +130,7 @@ public class BatchWriteRetryConfig {
         delay = Math.min(delay, maxDelayMs);
 
         // Add jitter if enabled (randomize between 50% and 100% of calculated delay)
-        if (useJitter) {
+        if (useJitter && random != null) {
             double jitterFactor = 0.5 + (random.nextDouble() * 0.5);
             delay = (long) (delay * jitterFactor);
         }

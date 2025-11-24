@@ -110,7 +110,7 @@ public class DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl<T, ID> extends 
             T entity = getJavaType().getDeclaredConstructor().newInstance();
             if (hashKeySetterMethod != null) {
                 ReflectionUtils.invokeMethod(hashKeySetterMethod, entity, hashKey);
-            } else {
+            } else if (hashKeyField != null) {
                 ReflectionUtils.setField(hashKeyField, entity, hashKey);
             }
 

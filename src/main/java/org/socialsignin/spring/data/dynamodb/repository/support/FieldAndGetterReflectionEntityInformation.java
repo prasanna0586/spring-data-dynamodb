@@ -89,9 +89,10 @@ public class FieldAndGetterReflectionEntityInformation<T, ID> extends AbstractEn
 
         if (method != null) {
             return (ID) ReflectionUtils.invokeMethod(method, entity);
-        } else {
+        } else if (field != null) {
             return (ID) ReflectionUtils.getField(field, entity);
         }
+        return null;
     }
 
     /*
@@ -102,6 +103,11 @@ public class FieldAndGetterReflectionEntityInformation<T, ID> extends AbstractEn
     @Override
     @SuppressWarnings("unchecked")
     public Class<ID> getIdType() {
-        return (Class<ID>) (method != null ? method.getReturnType() : field.getType());
+        if (method != null) {
+            return (Class<ID>) method.getReturnType();
+        } else if (field != null) {
+            return (Class<ID>) field.getType();
+        }
+        throw new IllegalStateException("Neither method nor field is set for ID extraction");
     }
 }

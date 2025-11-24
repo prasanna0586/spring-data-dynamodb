@@ -93,7 +93,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         int valueCounter = 0;
 
         // Build hash key condition (always present for Query operations)
-        if (hashKeyConditions != null && hashKeyConditions.size() > 0) {
+        if (hashKeyConditions != null && !hashKeyConditions.isEmpty()) {
             for (Condition hashKeyCondition : hashKeyConditions) {
                 String namePlaceholder = "#pk" + nameCounter++;
                 String conditionExpr = buildKeyConditionPart(namePlaceholder, hashKeyCondition, valueCounter, keyExpressionValues);
@@ -104,7 +104,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         }
 
         // Build range key condition (if present)
-        if (rangeKeyConditions != null && rangeKeyConditions.size() > 0) {
+        if (rangeKeyConditions != null && !rangeKeyConditions.isEmpty()) {
             for (Condition rangeKeyCondition : rangeKeyConditions) {
                 String namePlaceholder = "#sk" + nameCounter++;
                 String conditionExpr = buildKeyConditionPart(namePlaceholder, rangeKeyCondition, valueCounter, keyExpressionValues);
@@ -170,7 +170,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         boolean isLSIQuery = false;
         if (isApplicableForGlobalSecondaryIndex() && getHashKeyAttributeValue() != null) {
             String queryHashKeyPropertyName = getHashKeyPropertyName();
-            boolean isTablePartitionKey = queryHashKeyPropertyName.equals(entityInformation.getHashKeyPropertyName());
+            boolean isTablePartitionKey = queryHashKeyPropertyName != null && queryHashKeyPropertyName.equals(entityInformation.getHashKeyPropertyName());
             boolean isGSIPartitionKey = entityInformation.isGlobalIndexHashKeyProperty(queryHashKeyPropertyName);
             // LSI: hash key is table partition, not a GSI partition key
             isLSIQuery = isTablePartitionKey && !isGSIPartitionKey;
@@ -300,11 +300,14 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
             if (entityInformation instanceof DynamoDBHashAndRangeKeyExtractingEntityMetadata<?, ?> compositeKeyEntityInfo) {
                 Set<String> indexRangeKeyPropertyNames = compositeKeyEntityInfo.getIndexRangeKeyPropertyNames();
 
-                if (indexRangeKeyPropertyNames != null && sort != null && sort.iterator().hasNext()) {
-                    String sortProperty = sort.iterator().next().getProperty();
-                    // Only add LSI range key if it's the sort property (hash-only + OrderBy pattern)
-                    if (indexRangeKeyPropertyNames.contains(sortProperty)) {
-                        allowedSortProperties.add(sortProperty);
+                if (indexRangeKeyPropertyNames != null && sort != null) {
+                    Iterator<Order> sortIterator = sort.iterator();
+                    if (sortIterator.hasNext()) {
+                        String sortProperty = sortIterator.next().getProperty();
+                        // Only add LSI range key if it's the sort property (hash-only + OrderBy pattern)
+                        if (indexRangeKeyPropertyNames.contains(sortProperty)) {
+                            allowedSortProperties.add(sortProperty);
+                        }
                     }
                 }
             }
@@ -422,6 +425,13 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         ComparisonOperator operator = condition.comparisonOperator();
         List<AttributeValue> attributeValueList = condition.attributeValueList();
 
+        // Validate attributeValueList based on operator requirements
+        if (attributeValueList == null || attributeValueList.isEmpty()) {
+            if (operator != ComparisonOperator.NULL && operator != ComparisonOperator.NOT_NULL) {
+                throw new IllegalArgumentException("Attribute value list cannot be null or empty for operator: " + operator);
+            }
+        }
+
         switch (operator) {
             case EQ:
                 String eqPlaceholder = ":kval" + startValueCounter;
@@ -449,6 +459,9 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
                 return namePlaceholder + " >= " + gePlaceholder;
 
             case BETWEEN:
+                if (attributeValueList.size() != 2) {
+                    throw new IllegalArgumentException("BETWEEN operator requires exactly 2 values, got: " + attributeValueList.size());
+                }
                 String betweenPlaceholder1 = ":kval" + startValueCounter;
                 String betweenPlaceholder2 = ":kval" + (startValueCounter + 1);
                 expressionValues.put(betweenPlaceholder1, attributeValueList.get(0));
@@ -491,6 +504,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         // For GSI: hash key is a GSI partition key (in globalSecondaryIndexNames map)
         boolean isLSIHashKey = isApplicableForGlobalSecondaryIndex()
                 && getGlobalSecondaryIndexName() != null
+                && getHashKeyPropertyName() != null
                 && getHashKeyPropertyName().equals(entityInformation.getHashKeyPropertyName());
         boolean isGSIHashKey = isApplicableForGlobalSecondaryIndex()
                 && entityInformation.getGlobalSecondaryIndexNamesByPropertyName().containsKey(getHashKeyPropertyName());
@@ -545,7 +559,11 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         // Lazy evaluate the globalSecondaryIndexName if not already set
 
         // Check if we have a sort requirement
-        boolean hasSortRequirement = sort != null && sort.iterator().hasNext();
+        boolean hasSortRequirement = false;
+        if (sort != null) {
+            Iterator<Order> sortIterator = sort.iterator();
+            hasSortRequirement = sortIterator.hasNext();
+        }
 
         // Check if hash key is a GSI partition key
         boolean shouldSelectIndex = isShouldSelectIndex(hasSortRequirement);
@@ -596,8 +614,11 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
 
             // Check if we have a sort requirement
             String sortPropertyName = null;
-            if (sort != null && sort.iterator().hasNext()) {
-                sortPropertyName = sort.iterator().next().getProperty();
+            if (sort != null) {
+                Iterator<Order> sortIterator = sort.iterator();
+                if (sortIterator.hasNext()) {
+                    sortPropertyName = sortIterator.next().getProperty();
+                }
             }
 
             // If we have a sort requirement, filter candidates to prefer indexes that support it
@@ -667,13 +688,12 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         // Run index selection if:
         // 1. We have attribute conditions (traditional GSI query), OR
         // 2. Hash key is a GSI partition key AND we have a sort requirement (hash-only GSI query with OrderBy)
-        boolean shouldSelectIndex = (attributeConditions != null && !attributeConditions.isEmpty()) ||
-                                    (hashKeyIsGSIPartitionKey && hasSortRequirement);
-        return shouldSelectIndex;
+        return (attributeConditions != null && !attributeConditions.isEmpty()) ||
+               (hashKeyIsGSIPartitionKey && hasSortRequirement);
     }
 
     protected boolean isHashKeyProperty(String propertyName) {
-        return hashKeyPropertyName.equals(propertyName);
+        return hashKeyPropertyName != null && hashKeyPropertyName.equals(propertyName);
     }
 
     @Nullable
@@ -704,6 +724,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
             // For LSI: hash key is the table's partition key (only when an index is being used)
             // For GSI: hash key is a GSI partition key
             boolean isTablePartitionKey = getGlobalSecondaryIndexName() != null
+                    && hashKeyPropertyName != null
                     && hashKeyPropertyName.equals(entityInformation.getHashKeyPropertyName());
             boolean isGSIPartitionKey = entityInformation.isGlobalIndexHashKeyProperty(hashKeyPropertyName);
             if (isTablePartitionKey || isGSIPartitionKey) {
@@ -734,7 +755,7 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
             // 1. LSI: hash key is the table's partition key (not in globalSecondaryIndexNames map)
             // 2. GSI: hash key is a GSI partition key (in globalSecondaryIndexNames map)
             String queryHashKeyPropertyName = getHashKeyPropertyName();
-            boolean isTablePartitionKey = queryHashKeyPropertyName.equals(entityInformation.getHashKeyPropertyName());
+            boolean isTablePartitionKey = queryHashKeyPropertyName != null && queryHashKeyPropertyName.equals(entityInformation.getHashKeyPropertyName());
             boolean isGSIPartitionKey = entityInformation.getGlobalSecondaryIndexNamesByPropertyName().containsKey(queryHashKeyPropertyName);
 
             // If the hash key is neither the table's partition key (LSI case) nor a GSI partition key, reject

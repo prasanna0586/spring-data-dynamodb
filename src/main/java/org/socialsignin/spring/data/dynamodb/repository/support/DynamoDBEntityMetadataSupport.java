@@ -155,7 +155,7 @@ public class DynamoDBEntityMetadataSupport<T, ID> implements DynamoDBHashKeyExtr
 
     @Override
     public boolean isHashKeyProperty(String propertyName) {
-        return hashKeyPropertyName.equals(propertyName);
+        return hashKeyPropertyName != null && hashKeyPropertyName.equals(propertyName);
     }
 
     protected boolean isFieldAnnotatedWith(@NonNull final String propertyName) {

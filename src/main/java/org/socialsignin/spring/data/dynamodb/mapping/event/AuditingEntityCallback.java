@@ -46,9 +46,8 @@ public class AuditingEntityCallback implements BeforeConvertCallback<Object>, Or
     @Override
     public Object onBeforeConvert(@NonNull Object entity, String tableName) {
         IsNewAwareAuditingHandler handler = auditingHandlerFactory.getObject();
-        Object result = handler.markAudited(entity);
         // markAudited should never return null, but return original entity as fallback
-        return result;
+        return handler.markAudited(entity);
     }
 
     @Override

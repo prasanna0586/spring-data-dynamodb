@@ -172,9 +172,6 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
      */
     private AttributeValue toAttributeValue(@NonNull Object value) {
         switch (value) {
-            case null -> {
-                return AttributeValue.builder().nul(true).build();
-            }
             case AttributeValue attributeValue -> {
                 return attributeValue;
             }

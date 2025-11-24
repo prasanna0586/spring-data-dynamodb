@@ -210,6 +210,13 @@ public class DynamoDBEntityWithHashKeyOnlyCriteria<T, ID> extends AbstractDynamo
         ComparisonOperator operator = condition.comparisonOperator();
         List<AttributeValue> attributeValueList = condition.attributeValueList();
 
+        // Validate attributeValueList based on operator requirements
+        if (attributeValueList == null || attributeValueList.isEmpty()) {
+            if (operator != ComparisonOperator.NULL && operator != ComparisonOperator.NOT_NULL) {
+                throw new IllegalArgumentException("Attribute value list cannot be null or empty for operator: " + operator);
+            }
+        }
+
         // Always use expression attribute name (defensive approach for reserved keywords)
         String namePlaceholder = "#n" + startNameCounter;
         expressionNames.put(namePlaceholder, attributeName);
@@ -246,6 +253,9 @@ public class DynamoDBEntityWithHashKeyOnlyCriteria<T, ID> extends AbstractDynamo
                 return namePlaceholder + " >= " + gePlaceholder;
 
             case BETWEEN:
+                if (attributeValueList.size() != 2) {
+                    throw new IllegalArgumentException("BETWEEN operator requires exactly 2 values, got: " + attributeValueList.size());
+                }
                 String betweenPlaceholder1 = ":val" + startValueCounter;
                 String betweenPlaceholder2 = ":val" + (startValueCounter + 1);
                 expressionValues.put(betweenPlaceholder1, attributeValueList.get(0));
@@ -295,9 +305,6 @@ public class DynamoDBEntityWithHashKeyOnlyCriteria<T, ID> extends AbstractDynamo
      */
     private AttributeValue convertToAttributeValue(@NonNull Object value) {
         switch (value) {
-            case null -> {
-                return AttributeValue.builder().nul(true).build();
-            }
             case AttributeValue attributeValue -> {
                 // Already an AttributeValue
                 return attributeValue;

@@ -34,11 +34,11 @@ public abstract class AbstractMultipleEntityQuery<T> extends AbstractDynamicQuer
     @Override
     public T getSingleResult() {
         List<T> results = getResultList();
-        if (results.size() > 1) {
+        if (results != null && results.size() > 1) {
             throw new IncorrectResultSizeDataAccessException("result returns more than one elements", 1,
                     results.size());
         }
-        if (results.isEmpty()) {
+        if (results == null || results.isEmpty()) {
             // return null here as Spring will convert that to Optional if nessassary
             // https://jira.spring.io/browse/DATACMNS-483
             return null;
