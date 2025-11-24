@@ -39,12 +39,12 @@ public class DynamoDBQueryMethod<T, ID> extends QueryMethod {
     private final Method method;
     private final boolean scanEnabledForRepository;
     private final boolean scanCountEnabledForRepository;
-    @NonNull
-    private final Optional<String> projectionExpression;
-    @NonNull
-    private final Optional<Integer> limitResults;
-    @NonNull
-    private final Optional<String> filterExpression;
+    @Nullable
+    private final String projectionExpression;
+    @Nullable
+    private final Integer limitResults;
+    @Nullable
+    private final String filterExpression;
     @Nullable
     private final ExpressionAttribute[] expressionAttributeNames;
     @Nullable
@@ -62,30 +62,30 @@ public class DynamoDBQueryMethod<T, ID> extends QueryMethod {
         if (query != null) {
             String projections = query.fields();
             if (StringUtils.hasLength(projections)) {
-                this.projectionExpression = Optional.of(query.fields());
+                this.projectionExpression = query.fields();
             } else {
-                this.projectionExpression = Optional.empty();
+                this.projectionExpression = null;
             }
             String filterExp = query.filterExpression();
             if (StringUtils.hasLength(filterExp)) {
-                this.filterExpression = Optional.of(filterExp);
+                this.filterExpression = filterExp;
             } else {
-                this.filterExpression = Optional.empty();
+                this.filterExpression = null;
             }
             this.expressionAttributeValues = query.expressionMappingValues();
             this.expressionAttributeNames = query.expressionMappingNames();
             int limit = query.limit();
             if (limit != QUERY_LIMIT_UNLIMITED) {
-                this.limitResults = Optional.of(query.limit());
+                this.limitResults = query.limit();
             } else {
-                this.limitResults = Optional.empty();
+                this.limitResults = null;
             }
             this.consistentReadMode = query.consistentReads();
         } else {
-            this.projectionExpression = Optional.empty();
-            this.limitResults = Optional.empty();
+            this.projectionExpression = null;
+            this.limitResults = null;
             this.consistentReadMode = QueryConstants.ConsistentReadMode.DEFAULT;
-            this.filterExpression = Optional.empty();
+            this.filterExpression = null;
             this.expressionAttributeNames = null;
             this.expressionAttributeValues = null;
         }
@@ -117,11 +117,11 @@ public class DynamoDBQueryMethod<T, ID> extends QueryMethod {
     }
 
     public Optional<String> getProjectionExpression() {
-        return this.projectionExpression;
+        return Optional.ofNullable(this.projectionExpression);
     }
 
     public Optional<Integer> getLimitResults() {
-        return this.limitResults;
+        return Optional.ofNullable(this.limitResults);
     }
 
     public QueryConstants.ConsistentReadMode getConsistentReadMode() {
@@ -129,7 +129,7 @@ public class DynamoDBQueryMethod<T, ID> extends QueryMethod {
     }
 
     public Optional<String> getFilterExpression() {
-        return this.filterExpression;
+        return Optional.ofNullable(this.filterExpression);
     }
 
     @Nullable

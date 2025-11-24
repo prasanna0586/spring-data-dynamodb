@@ -48,9 +48,12 @@ public abstract class AbstractDynamoDBQueryCreator<T, ID, R>
 
     protected final DynamoDBEntityInformation<T, ID> entityMetadata;
     protected final DynamoDBOperations dynamoDBOperations;
-    protected final Optional<String> projection;
-    protected final Optional<Integer> limit;
-    protected final Optional<String> filterExpression;
+    @Nullable
+    protected final String projection;
+    @Nullable
+    protected final Integer limit;
+    @Nullable
+    protected final String filterExpression;
     @Nullable
     protected final ExpressionAttribute[] expressionAttributeNames;
     @Nullable
@@ -59,8 +62,8 @@ public abstract class AbstractDynamoDBQueryCreator<T, ID, R>
     protected final QueryConstants.ConsistentReadMode consistentReads;
 
     public AbstractDynamoDBQueryCreator(@NonNull PartTree tree, DynamoDBEntityInformation<T, ID> entityMetadata,
-                                        Optional<String> projection, Optional<Integer> limitResults,
-                                        QueryConstants.ConsistentReadMode consistentReads, Optional<String> filterExpression,
+                                        @Nullable String projection, @Nullable Integer limitResults,
+                                        QueryConstants.ConsistentReadMode consistentReads, @Nullable String filterExpression,
                                         @Nullable ExpressionAttribute[] names, @Nullable ExpressionAttribute[] values, DynamoDBOperations dynamoDBOperations) {
         super(tree);
         this.entityMetadata = entityMetadata;
@@ -82,9 +85,9 @@ public abstract class AbstractDynamoDBQueryCreator<T, ID, R>
     }
 
     public AbstractDynamoDBQueryCreator(@NonNull PartTree tree, @NonNull ParameterAccessor parameterAccessor,
-                                        DynamoDBEntityInformation<T, ID> entityMetadata, Optional<String> projection,
-                                        Optional<Integer> limitResults, QueryConstants.ConsistentReadMode consistentReads,
-                                        Optional<String> filterExpression, @Nullable ExpressionAttribute[] names, @Nullable ExpressionAttribute[] values,
+                                        DynamoDBEntityInformation<T, ID> entityMetadata, @Nullable String projection,
+                                        @Nullable Integer limitResults, QueryConstants.ConsistentReadMode consistentReads,
+                                        @Nullable String filterExpression, @Nullable ExpressionAttribute[] names, @Nullable ExpressionAttribute[] values,
                                         DynamoDBOperations dynamoDBOperations) {
         super(tree, parameterAccessor);
         this.entityMetadata = entityMetadata;

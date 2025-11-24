@@ -456,7 +456,9 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
         }
 
         // Apply limit if present
-        limit.ifPresent(requestBuilder::limit);
+        if (limit != null) {
+            requestBuilder.limit(limit);
+        }
 
         return requestBuilder.build();
     }

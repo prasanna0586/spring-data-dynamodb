@@ -191,7 +191,9 @@ public class DynamoDBEntityWithHashKeyOnlyCriteria<T, ID> extends AbstractDynamo
         }
 
         // Apply limit if present
-        limit.ifPresent(requestBuilder::limit);
+        if (limit != null) {
+            requestBuilder.limit(limit);
+        }
 
         return requestBuilder.build();
     }

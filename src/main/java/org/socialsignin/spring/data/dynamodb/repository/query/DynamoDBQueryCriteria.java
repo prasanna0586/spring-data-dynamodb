@@ -20,6 +20,7 @@ import org.socialsignin.spring.data.dynamodb.query.Query;
 import org.socialsignin.spring.data.dynamodb.repository.ExpressionAttribute;
 import org.socialsignin.spring.data.dynamodb.repository.QueryConstants;
 import org.springframework.data.domain.Sort;
+import org.springframework.lang.Nullable;
 import software.amazon.awssdk.services.dynamodb.model.ComparisonOperator;
 
 import java.util.Map;
@@ -43,13 +44,13 @@ public interface DynamoDBQueryCriteria<T, ID> {
 
     void withSort(Sort sort);
 
-    void withProjection(Optional<String> projection);
+    void withProjection(@Nullable String projection);
 
-    void withLimit(Optional<Integer> limit);
+    void withLimit(@Nullable Integer limit);
 
     void withConsistentReads(QueryConstants.ConsistentReadMode reads);
 
-    void withFilterExpression(Optional<String> filterExpression);
+    void withFilterExpression(@Nullable String filterExpression);
 
     void withExpressionAttributeNames(ExpressionAttribute[] names);
 

@@ -60,9 +60,12 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
     @Nullable
     protected String globalSecondaryIndexName;
     protected Sort sort = Sort.unsorted();
-    protected Optional<String> projection = Optional.empty();
-    protected Optional<Integer> limit = Optional.empty();
-    protected Optional<String> filterExpression = Optional.empty();
+    @Nullable
+    protected String projection = null;
+    @Nullable
+    protected Integer limit = null;
+    @Nullable
+    protected String filterExpression = null;
     protected ExpressionAttribute[] expressionAttributeNames;
     protected ExpressionAttribute[] expressionAttributeValues;
     protected Map<String, String> mappedExpressionValues;
@@ -152,9 +155,9 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         }
 
         // Handle projection (select specific attributes)
-        if (projection.isPresent()) {
+        if (projection != null) {
             queryRequest = queryRequest.toBuilder().select(Select.SPECIFIC_ATTRIBUTES).build();
-            queryRequest = queryRequest.toBuilder().projectionExpression(projection.get()).build();
+            queryRequest = queryRequest.toBuilder().projectionExpression(projection).build();
         } else if (isApplicableForGlobalSecondaryIndex()) {
             // For GSI queries without explicit projection, use ALL_PROJECTED_ATTRIBUTES
             queryRequest = queryRequest.toBuilder().select(Select.ALL_PROJECTED_ATTRIBUTES).build();
@@ -312,12 +315,12 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
         queryRequest = applyConsistentReads(queryRequest);
 
         // SDK v2: Use builder pattern for setting limit
-        if (limit.isPresent()) {
-            queryRequest = queryRequest.toBuilder().limit(limit.get()).build();
+        if (limit != null) {
+            queryRequest = queryRequest.toBuilder().limit(limit).build();
         }
 
-        if (filterExpression.isPresent()) {
-            String filter = filterExpression.get();
+        if (filterExpression != null) {
+            String filter = filterExpression;
             if (StringUtils.hasLength(filter)) {
                 queryRequest = queryRequest.toBuilder().filterExpression(filter).build();
 
@@ -1129,17 +1132,17 @@ public abstract class AbstractDynamoDBQueryCriteria<T, ID> implements DynamoDBQu
     }
 
     @Override
-    public void withProjection(Optional<String> projection) {
+    public void withProjection(@Nullable String projection) {
         this.projection = projection;
     }
 
     @Override
-    public void withLimit(Optional<Integer> limit) {
+    public void withLimit(@Nullable Integer limit) {
         this.limit = limit;
     }
 
     @Override
-    public void withFilterExpression(Optional<String> filter) {
+    public void withFilterExpression(@Nullable String filter) {
         this.filterExpression = filter;
     }
 

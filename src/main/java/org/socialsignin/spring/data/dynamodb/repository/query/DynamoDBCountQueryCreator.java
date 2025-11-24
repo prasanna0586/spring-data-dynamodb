@@ -39,17 +39,17 @@ public class DynamoDBCountQueryCreator<T, ID> extends AbstractDynamoDBQueryCreat
     @Deprecated
     public DynamoDBCountQueryCreator(PartTree tree, DynamoDBEntityInformation<T, ID> entityMetadata,
             DynamoDBOperations dynamoDBOperations, boolean pageQuery) {
-        super(tree, entityMetadata, Optional.empty(), Optional.empty(), QueryConstants.ConsistentReadMode.DEFAULT,
-                Optional.empty(), null, null, dynamoDBOperations);
+        super(tree, entityMetadata, null, null, QueryConstants.ConsistentReadMode.DEFAULT,
+                null, null, null, dynamoDBOperations);
         this.pageQuery = pageQuery;
     }
 
     public DynamoDBCountQueryCreator(PartTree tree, ParameterAccessor parameterAccessor,
-            DynamoDBEntityInformation<T, ID> entityMetadata, Optional<String> filterExpression,
+            DynamoDBEntityInformation<T, ID> entityMetadata, @Nullable String filterExpression,
             ExpressionAttribute[] names, ExpressionAttribute[] values, DynamoDBOperations dynamoDBOperations,
             boolean pageQuery) {
 
-        super(tree, parameterAccessor, entityMetadata, Optional.empty(), Optional.empty(),
+        super(tree, parameterAccessor, entityMetadata, null, null,
                 QueryConstants.ConsistentReadMode.DEFAULT, filterExpression, names, values, dynamoDBOperations);
         this.pageQuery = pageQuery;
 
