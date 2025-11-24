@@ -24,7 +24,6 @@ import org.springframework.lang.Nullable;
 import software.amazon.awssdk.services.dynamodb.model.ComparisonOperator;
 
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * @author Prasanna Kumar Ramachandran

@@ -27,8 +27,6 @@ import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
-import java.util.Optional;
-
 public class DynamoDBQueryCreator<T, ID> extends AbstractDynamoDBQueryCreator<T, ID, T> {
 
     public DynamoDBQueryCreator(PartTree tree, ParameterAccessor parameterAccessor,

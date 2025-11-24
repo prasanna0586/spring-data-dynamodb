@@ -27,8 +27,6 @@ import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
-import java.util.Optional;
-
 public class DynamoDBCountQueryCreator<T, ID> extends AbstractDynamoDBQueryCreator<T, ID, Long> {
 
     private final boolean pageQuery;

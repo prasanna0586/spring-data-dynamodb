@@ -15,7 +15,10 @@
  */
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import org.socialsignin.spring.data.dynamodb.repository.*;
+import org.socialsignin.spring.data.dynamodb.repository.EnableScan;
+import org.socialsignin.spring.data.dynamodb.repository.ExpressionAttribute;
+import org.socialsignin.spring.data.dynamodb.repository.Query;
+import org.socialsignin.spring.data.dynamodb.repository.QueryConstants;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 
