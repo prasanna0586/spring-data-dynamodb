@@ -1,12 +1,12 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- * <p>
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,6 +35,19 @@ import org.springframework.lang.Nullable;
  */
 public class DynamoDBQueryCreator<T, ID> extends AbstractDynamoDBQueryCreator<T, ID, T> {
 
+    /**
+     * Creates a new DynamoDBQueryCreator.
+     * @param tree the part tree representing the parsed method name
+     * @param parameterAccessor the parameter accessor for method parameters
+     * @param entityMetadata the entity metadata
+     * @param projection the projection expression
+     * @param limit the limit for results
+     * @param consistentReads the consistent read mode
+     * @param filterExpression the filter expression
+     * @param names the expression attribute names
+     * @param values the expression attribute values
+     * @param dynamoDBOperations the DynamoDB operations
+     */
     public DynamoDBQueryCreator(@NonNull PartTree tree, @NonNull ParameterAccessor parameterAccessor,
                                 DynamoDBEntityInformation<T, ID> entityMetadata, @Nullable String projection, @Nullable Integer limit,
                                 QueryConstants.ConsistentReadMode consistentReads, @Nullable String filterExpression,

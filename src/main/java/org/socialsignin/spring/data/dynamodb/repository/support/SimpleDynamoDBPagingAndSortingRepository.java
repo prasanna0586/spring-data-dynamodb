@@ -1,12 +1,12 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- * <p>
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -45,6 +45,12 @@ import java.util.List;
 public class SimpleDynamoDBPagingAndSortingRepository<T, ID> extends SimpleDynamoDBCrudRepository<T, ID>
         implements DynamoDBPagingAndSortingRepository<T, ID> {
 
+    /**
+     * Creates a new SimpleDynamoDBPagingAndSortingRepository.
+     * @param entityInformation the entity information
+     * @param dynamoDBOperations the DynamoDB operations
+     * @param enableScanPermissions the scan permissions configuration
+     */
     public SimpleDynamoDBPagingAndSortingRepository(@NonNull DynamoDBEntityInformation<T, ID> entityInformation,
                                                     DynamoDBOperations dynamoDBOperations, EnableScanPermissions enableScanPermissions) {
         super(entityInformation, dynamoDBOperations, enableScanPermissions);
@@ -110,6 +116,11 @@ public class SimpleDynamoDBPagingAndSortingRepository<T, ID> extends SimpleDynam
         return resultsPage;
     }
 
+    /**
+     * Asserts that scan count is enabled for the given method.
+     * @param countScanEnabled whether scan count is enabled
+     * @param methodName the method name
+     */
     public void assertScanCountEnabled(boolean countScanEnabled, String methodName) {
         Assert.isTrue(countScanEnabled, "Scanning for the total counts for unpaginated " + methodName
                 + " queries is not enabled.  " + "To enable, re-implement the " + methodName

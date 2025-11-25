@@ -1,12 +1,12 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- * <p>
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -74,6 +74,13 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
 
     private final Collection<DynamoDBEntityInformation<T, ID>> registeredEntities = new ArrayList<>();
 
+    /**
+     * Creates a new Entity2DynamoDBTableSynchronizer with default projection types and capacity settings.
+     * @param amazonDynamoDB the DynamoDB client
+     * @param enhancedClient the DynamoDB enhanced client
+     * @param mappingContext the DynamoDB mapping context
+     * @param mode the DDL mode
+     */
     public Entity2DynamoDBTableSynchronizer(DynamoDbClient amazonDynamoDB,
                                             DynamoDbEnhancedClient enhancedClient,
                                             DynamoDBMappingContext mappingContext,
@@ -82,6 +89,17 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
                 ProjectionType.ALL.name(), ProjectionType.ALL.name(), 10L, 10L);
     }
 
+    /**
+     * Creates a new Entity2DynamoDBTableSynchronizer with custom configuration.
+     * @param amazonDynamoDB the DynamoDB client
+     * @param enhancedClient the DynamoDB enhanced client
+     * @param mappingContext the DynamoDB mapping context
+     * @param mode the DDL mode configuration value
+     * @param gsiProjectionType the GSI projection type
+     * @param lsiProjectionType the LSI projection type
+     * @param readCapacity the read capacity units
+     * @param writeCapacity the write capacity units
+     */
     public Entity2DynamoDBTableSynchronizer(DynamoDbClient amazonDynamoDB,
             @Qualifier("dynamoDB-DynamoDBMapper") DynamoDbEnhancedClient enhancedClient,
             @Qualifier("dynamoDBMappingContext") DynamoDBMappingContext mappingContext,
@@ -121,6 +139,11 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
         }
     }
 
+    /**
+     * Synchronizes the entity with its DynamoDB table based on the configured mode.
+     * @param entityInformation the entity information
+     * @param event the application context event
+     */
     protected void synchronize(@NonNull DynamoDBEntityInformation<T, ID> entityInformation, ApplicationContextEvent event) {
 
         if (event instanceof ContextRefreshedEvent) {

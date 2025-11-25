@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@ import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 
 /**
  * Abstract base class for dynamic query implementations.
- * <p>
+ *
  * This class provides a common foundation for query operations that dynamically
  * construct and execute queries against DynamoDB. Subclasses should implement
  * specific query execution logic.

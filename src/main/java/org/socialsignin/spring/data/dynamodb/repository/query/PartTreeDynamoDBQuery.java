@@ -1,12 +1,12 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- * <p>
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,12 +38,22 @@ public class PartTreeDynamoDBQuery<T, ID> extends AbstractDynamoDBQuery<T, ID> i
     @NonNull
     private final PartTree tree;
 
+    /**
+     * Creates a new PartTreeDynamoDBQuery.
+     * @param dynamoDBOperations the DynamoDB operations
+     * @param method the query method
+     */
     public PartTreeDynamoDBQuery(DynamoDBOperations dynamoDBOperations, @NonNull DynamoDBQueryMethod<T, ID> method) {
         super(dynamoDBOperations, method);
         this.parameters = method.getParameters();
         this.tree = new PartTree(method.getName(), method.getEntityType());
     }
 
+    /**
+     * Creates a query creator for executing queries.
+     * @param accessor the parameter accessor
+     * @return the query creator
+     */
     @NonNull
     protected DynamoDBQueryCreator<T, ID> createQueryCreator(@NonNull ParametersParameterAccessor accessor) {
         DynamoDBQueryMethod<T, ID> queryMethod = getQueryMethod();
@@ -54,6 +64,12 @@ public class PartTreeDynamoDBQuery<T, ID> extends AbstractDynamoDBQuery<T, ID> i
                 dynamoDBOperations);
     }
 
+    /**
+     * Creates a count query creator for count queries.
+     * @param accessor the parameter accessor
+     * @param pageQuery whether this is a page query
+     * @return the count query creator
+     */
     @NonNull
     protected DynamoDBCountQueryCreator<T, ID> createCountQueryCreator(@NonNull ParametersParameterAccessor accessor,
                                                                        boolean pageQuery) {

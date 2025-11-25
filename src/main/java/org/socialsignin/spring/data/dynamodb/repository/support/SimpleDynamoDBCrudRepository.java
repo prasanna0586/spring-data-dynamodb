@@ -1,12 +1,12 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- * <p>
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,14 +42,24 @@ import java.util.stream.StreamSupport;
 public class SimpleDynamoDBCrudRepository<T, ID>
         implements DynamoDBCrudRepository<T, ID>, SortHandler, ExceptionHandler {
 
+    /** The entity information for this repository */
     protected final DynamoDBEntityInformation<T, ID> entityInformation;
 
+    /** The domain class type */
     protected final Class<T> domainType;
 
+    /** The scan permissions configuration */
     protected final EnableScanPermissions enableScanPermissions;
 
+    /** The DynamoDB operations instance */
     protected final DynamoDBOperations dynamoDBOperations;
 
+    /**
+     * Creates a new SimpleDynamoDBCrudRepository.
+     * @param entityInformation the entity information
+     * @param dynamoDBOperations the DynamoDB operations
+     * @param enableScanPermissions the scan permissions configuration
+     */
     public SimpleDynamoDBCrudRepository(@NonNull DynamoDBEntityInformation<T, ID> entityInformation,
                                         DynamoDBOperations dynamoDBOperations, EnableScanPermissions enableScanPermissions) {
         Assert.notNull(entityInformation, "entityInformation must not be null");
@@ -239,6 +249,10 @@ public class SimpleDynamoDBCrudRepository<T, ID>
         dynamoDBOperations.batchDelete(findAll());
     }
 
+    /**
+     * Gets the entity information for this repository.
+     * @return the entity information
+     */
     @NonNull
     public DynamoDBEntityInformation<T, ID> getEntityInformation() {
         return this.entityInformation;

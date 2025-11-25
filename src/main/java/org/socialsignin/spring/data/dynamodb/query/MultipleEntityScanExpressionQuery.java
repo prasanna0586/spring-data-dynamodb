@@ -1,12 +1,12 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- * <p>
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -35,6 +35,12 @@ public class MultipleEntityScanExpressionQuery<T> extends AbstractMultipleEntity
 
     private final ScanEnhancedRequest scanRequest;
 
+    /**
+     * Creates a new query for executing a DynamoDB scan request.
+     * @param dynamoDBOperations the DynamoDB operations instance
+     * @param clazz the entity class
+     * @param scanRequest the scan request to execute
+     */
     public MultipleEntityScanExpressionQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz,
             ScanEnhancedRequest scanRequest) {
         super(dynamoDBOperations, clazz);
@@ -82,6 +88,11 @@ public class MultipleEntityScanExpressionQuery<T> extends AbstractMultipleEntity
         return results;
     }
 
+    /**
+     * Validates that scan operations are enabled for this query.
+     * @param scanEnabled whether scan is enabled
+     * @throws IllegalArgumentException if scan is not enabled
+     */
     public void assertScanEnabled(boolean scanEnabled) {
         Assert.isTrue(scanEnabled, "Scanning for this query is not enabled.  "
                 + "To enable annotate your repository method with @EnableScan, or "

@@ -1,12 +1,12 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- * <p>
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -51,6 +51,10 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
     @NonNull
     private final DynamoDBIdIsHashAndRangeKeyEntityInformation<T, ID> entityInformation;
 
+    /**
+     * Gets the range key attribute name.
+     * @return the range key attribute name
+     */
     protected String getRangeKeyAttributeName() {
         return getAttributeName(getRangeKeyPropertyName());
     }
@@ -452,12 +456,11 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
 
     }
 
-    @NonNull
     /**
      * Builds a DynamoDB scan request from these criteria.
-     *
      * @return the scan request
      */
+    @NonNull
     public ScanEnhancedRequest buildScanExpression() {
         ensureNoSort(sort);
 
@@ -687,13 +690,12 @@ public class DynamoDBEntityWithHashAndRangeKeyCriteria<T, ID> extends AbstractDy
 
     }
 
-    @NonNull
     /**
      * Adds a range key equals condition to these criteria.
-     *
      * @param value the range key value
      * @return these criteria with the range key condition added
      */
+    @NonNull
     public DynamoDBQueryCriteria<T, ID> withRangeKeyEquals(Object value) {
         Assert.notNull(value, "Creating conditions on null range keys not supported: please specify a value for '"
                 + getRangeKeyPropertyName() + "'");

@@ -1,12 +1,12 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- * <p>
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -46,6 +46,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Primary implementation of {@link DynamoDBOperations} using AWS SDK v2.
+ * @author Prasanna Kumar Ramachandran
+ */
 public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextAware {
     @NonNull
     private final DynamoDbEnhancedClient enhancedClient;
@@ -748,6 +752,12 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
         return mappingContext;
     }
 
+    /**
+     * Emits a DynamoDB mapping event if an event publisher is configured.
+     * @param source the source object for the event
+     * @param factory the factory function to create the event
+     * @param <T> the type of the source object
+     */
     protected <T> void maybeEmitEvent(@Nullable T source, @NonNull Function<T, DynamoDBMappingEvent<T>> factory) {
         if (eventPublisher != null) {
             if (source != null) {

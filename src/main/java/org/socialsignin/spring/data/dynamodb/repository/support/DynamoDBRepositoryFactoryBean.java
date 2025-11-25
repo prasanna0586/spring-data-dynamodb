@@ -1,12 +1,12 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- * <p>
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,6 +42,10 @@ public class DynamoDBRepositoryFactoryBean<T extends Repository<S, ID>, S, ID ex
     private Entity2DynamoDBTableSynchronizer<S, ID> tableSynchronizer;
     private DynamoDBMappingContextProcessor<S, ID> dynamoDBMappingContextProcessor;
 
+    /**
+     * Creates a new DynamoDBRepositoryFactoryBean for the given repository interface.
+     * @param repositoryInterface the repository interface
+     */
     public DynamoDBRepositoryFactoryBean(@NonNull Class<? extends T> repositoryInterface) {
         super(repositoryInterface);
     }
@@ -58,22 +62,38 @@ public class DynamoDBRepositoryFactoryBean<T extends Repository<S, ID>, S, ID ex
         return dynamoDBRepositoryFactory;
     }
 
+    /**
+     * Sets the DynamoDB mapping context processor.
+     * @param dynamoDBMappingContextProcessor the mapping context processor
+     */
     @Autowired
     public void setDynamoDBMappingContextProcessor(
             DynamoDBMappingContextProcessor<S, ID> dynamoDBMappingContextProcessor) {
         this.dynamoDBMappingContextProcessor = dynamoDBMappingContextProcessor;
     }
 
+    /**
+     * Sets the entity to DynamoDB table synchronizer.
+     * @param tableSynchronizer the table synchronizer
+     */
     @Autowired
     public void setEntity2DynamoDBTableSynchronizer(Entity2DynamoDBTableSynchronizer<S, ID> tableSynchronizer) {
         this.tableSynchronizer = tableSynchronizer;
     }
 
+    /**
+     * Sets the DynamoDB operations.
+     * @param dynamoDBOperations the DynamoDB operations
+     */
     @Autowired
     public void setDynamoDBOperations(DynamoDBOperations dynamoDBOperations) {
         this.dynamoDBOperations = dynamoDBOperations;
     }
 
+    /**
+     * Sets the DynamoDB mapping context.
+     * @param dynamoDBMappingContext the mapping context
+     */
     @Autowired
     public void setDynamoDBMappingContext(@NonNull DynamoDBMappingContext dynamoDBMappingContext) {
         setMappingContext(dynamoDBMappingContext);

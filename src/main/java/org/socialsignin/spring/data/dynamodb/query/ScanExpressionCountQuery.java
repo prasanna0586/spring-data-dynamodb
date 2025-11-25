@@ -1,12 +1,12 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- * <p>
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,11 @@ import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 
+/**
+ * Query implementation for counting results of a DynamoDB scan expression.
+ * @param <T> the entity type
+ * @author Prasanna Kumar Ramachandran
+ */
 public class ScanExpressionCountQuery<T> extends AbstractSingleEntityQuery<Long> implements Query<Long> {
 
     private final ScanEnhancedRequest scanExpression;
@@ -28,6 +33,13 @@ public class ScanExpressionCountQuery<T> extends AbstractSingleEntityQuery<Long>
 
     private final boolean pageQuery;
 
+    /**
+     * Creates a new count query for the given scan expression.
+     * @param dynamoDBOperations the DynamoDB operations instance
+     * @param clazz the entity class
+     * @param scanExpression the scan expression to count results for
+     * @param pageQuery whether this is for a page query
+     */
     public ScanExpressionCountQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz,
             ScanEnhancedRequest scanExpression, boolean pageQuery) {
         super(dynamoDBOperations, Long.class);
@@ -43,6 +55,11 @@ public class ScanExpressionCountQuery<T> extends AbstractSingleEntityQuery<Long>
         return (long) dynamoDBOperations.count(domainClass, scanExpression);
     }
 
+    /**
+     * Validates that scan count operations are enabled for this query.
+     * @param scanCountEnabled whether scan count is enabled
+     * @throws IllegalArgumentException if scan count is not enabled
+     */
     public void assertScanCountEnabled(boolean scanCountEnabled) {
         if (pageQuery) {
             Assert.isTrue(scanCountEnabled, "Scanning for the total counts for this query is not enabled.  "

@@ -1,12 +1,12 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
- * <p>
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,25 +30,27 @@ import java.lang.annotation.*;
 @Import(DynamoDBAuditingRegistrar.class)
 public @interface EnableDynamoDBAuditing {
 
-    /*
-     * @return Configures the {@link org.springframework.data.domain.AuditorAware} bean to be used to look up the current
-     *         principal.
+    /**
+     * Configures the {@link org.springframework.data.domain.AuditorAware} bean to be used to look up the current principal.
+     * @return the bean name of the AuditorAware instance to be used
      */
     String auditorAwareRef() default "";
 
-    /*
-     * @return Configures whether the creation and modification dates are set. Defaults to {@literal true}.
+    /**
+     * Configures whether the creation and modification dates are set. Defaults to {@literal true}.
+     * @return true if dates should be set, false otherwise
      */
     boolean setDates() default true;
 
-    /*
-     * @return Configures whether the entity shall be marked as modified on creation. Defaults to {@literal true}.
+    /**
+     * Configures whether the entity shall be marked as modified on creation. Defaults to {@literal true}.
+     * @return true if entity should be marked as modified on creation, false otherwise
      */
     boolean modifyOnCreate() default true;
 
-    /*
-     * @return Configures a {@link org.springframework.data.auditing.DateTimeProvider} bean name to be used to look up
-     *         the {@link java.time.temporal.TemporalAccessor} used for setting the current date and time.
+    /**
+     * Configures a {@link org.springframework.data.auditing.DateTimeProvider} bean name to be used to look up the {@link java.time.temporal.TemporalAccessor} used for setting the current date and time.
+     * @return the bean name of the DateTimeProvider instance to be used
      */
     String dateTimeProviderRef() default "";
 
