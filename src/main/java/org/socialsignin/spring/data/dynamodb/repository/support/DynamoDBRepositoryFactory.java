@@ -30,7 +30,7 @@ import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.util.Version;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
-import software.amazon.awssdk.core.SdkClient;
+import software.amazon.awssdk.core.util.VersionInfo;
 
 import java.util.Optional;
 import java.util.StringTokenizer;
@@ -48,8 +48,8 @@ public class DynamoDBRepositoryFactory extends RepositoryFactorySupport {
     static {
         final String DEVELOPMENT = "DEVELOPMENT";
 
-        // SDK v2: Get version from core SDK package
-        String awsSdkVersion = SdkClient.class.getPackage().getImplementationVersion();
+        // SDK v2: Get version from VersionInfo utility class
+        String awsSdkVersion = VersionInfo.SDK_VERSION;
         String springDataVersion = Version.class.getPackage().getImplementationVersion();
 
         String thisSpecVersion = DynamoDBRepositoryFactory.class.getPackage().getSpecificationVersion();

@@ -143,17 +143,6 @@ public class DynamoDBMappingContextTest {
     }
 
     @Test
-    @Disabled
-    public void detectdMethodsAnnotation() {
-        DynamoDBPersistentEntityImpl<?> entity = underTest
-                .getPersistentEntity(DynamoDBMappingContextTestMethodEntity.class);
-
-        assertNotNull(entity);
-        assertThat(entity.getIdProperty(), is(notNullValue()));
-
-    }
-
-    @Test
     public void detectdMethodsId() {
         DynamoDBPersistentEntityImpl<?> entity = underTest
                 .getPersistentEntity(DynamoDBMappingContextTestIdEntity.class);
