@@ -132,17 +132,12 @@ public class DynamoDBConfig {
 
 **After (SDK v2):**
 ```java
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
-import org.socialsignin.spring.data.dynamodb.core.MarshallingMode;
 
 @Configuration
-@EnableDynamoDBRepositories(
-    basePackages = "com.example.repository",
-    marshallingMode = MarshallingMode.SDK_V1_COMPATIBLE  // For existing data
-)
+@EnableDynamoDBRepositories(basePackages = "com.example.repository")
 public class DynamoDBConfig {
 
     @Bean
@@ -151,20 +146,13 @@ public class DynamoDBConfig {
             .region(Region.of(region))
             .build();
     }
-
-    @Bean
-    public DynamoDbEnhancedClient dynamoDbEnhancedClient(DynamoDbClient amazonDynamoDB) {
-        return DynamoDbEnhancedClient.builder()
-            .dynamoDbClient(amazonDynamoDB)
-            .build();
-    }
 }
 ```
 
 **Key Points:**
-- Marshalling mode is configured in `@EnableDynamoDBRepositories` annotation
-- `DynamoDbEnhancedClient` bean is now **required**
-- Use `SDK_V1_COMPATIBLE` for existing data, `SDK_V2_NATIVE` for new projects
+- Only `DynamoDbClient` bean is required - the library creates `DynamoDbEnhancedClient` internally
+- For existing SDK v1 data, configure marshalling mode in `@EnableDynamoDBRepositories` annotation
+- Use `SDK_V1_COMPATIBLE` for existing data, `SDK_V2_NATIVE` for new projects (default)
 
 ---
 
@@ -179,7 +167,7 @@ public class DynamoDBConfig {
 | `@DynamoDBIndexHashKey(globalSecondaryIndexNames={...})` | `@DynamoDbSecondaryPartitionKey(indexNames={...})` |
 | `@DynamoDBIndexRangeKey(globalSecondaryIndexName="X")` | `@DynamoDbSecondarySortKey(indexNames={"X"})` |
 | `@DynamoDBTypeConverted(converter=X.class)` | `@DynamoDbConvertedBy(X.class)` |
-| `@DynamoDBVersionAttribute` | `@DynamoDbVersionAttribute` |
+| `@DynamoDBVersionAttribute` | `@DynamoDbVersionAttribute` (from `extensions.annotations`) |
 | `@DynamoDBIgnore` | `@DynamoDbIgnore` |
 
 **Before (SDK v1):**
@@ -208,26 +196,58 @@ public class Product {
 **After (SDK v2):**
 ```java
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
-import org.socialsignin.spring.data.dynamodb.marshaller.Instant2IsoAttributeConverter;
 
 @DynamoDbBean
 public class Product {
 
-    @DynamoDbPartitionKey
     private String id;
-
-    @DynamoDbAttribute
     private String name;
-
-    @DynamoDbAttribute
     private Double price;
-
-    @DynamoDbConvertedBy(Instant2IsoAttributeConverter.class)
     private Instant createdAt;
 
-    // Getters and setters
+    // Default constructor required
+    public Product() {}
+
+    @DynamoDbPartitionKey
+    @DynamoDbAttribute("id")
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    @DynamoDbAttribute("name")
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @DynamoDbAttribute("price")
+    public Double getPrice() {
+        return price;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
+    }
+
+    @DynamoDbAttribute("createdAt")
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
 }
 ```
+
+**Important:** In SDK v2, annotations must be placed on **getter methods**, not on fields.
 
 ---
 
@@ -360,14 +380,30 @@ public class DynamoDBConfig {
 ```java
 @DynamoDbBean
 public class User {
-    @DynamoDbPartitionKey
     private String userId;
+    private Boolean active;
+    private Date createdDate;
+    private Instant lastLogin;
 
-    private Boolean active;  // Stored as Number 0/1
-    private Date createdDate;  // Stored as ISO String
-    private Instant lastLogin;  // Stored as ISO String
+    @DynamoDbPartitionKey
+    @DynamoDbAttribute("userId")
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
 
-    // Getters and setters
+    // active stored as Number 0/1
+    @DynamoDbAttribute("active")
+    public Boolean getActive() { return active; }
+    public void setActive(Boolean active) { this.active = active; }
+
+    // createdDate stored as ISO String
+    @DynamoDbAttribute("createdDate")
+    public Date getCreatedDate() { return createdDate; }
+    public void setCreatedDate(Date createdDate) { this.createdDate = createdDate; }
+
+    // lastLogin stored as ISO String
+    @DynamoDbAttribute("lastLogin")
+    public Instant getLastLogin() { return lastLogin; }
+    public void setLastLogin(Instant lastLogin) { this.lastLogin = lastLogin; }
 }
 ```
 
@@ -400,14 +436,30 @@ public class DynamoDBConfig {
 ```java
 @DynamoDbBean
 public class User {
-    @DynamoDbPartitionKey
     private String userId;
+    private Boolean active;
+    private Date createdDate;
+    private Instant lastLogin;
 
-    private Boolean active;  // Stored as BOOL
-    private Date createdDate;  // Stored as Number (epoch)
-    private Instant lastLogin;  // Stored as ISO String (nanosecond precision)
+    @DynamoDbPartitionKey
+    @DynamoDbAttribute("userId")
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
 
-    // Getters and setters
+    // active stored as BOOL
+    @DynamoDbAttribute("active")
+    public Boolean getActive() { return active; }
+    public void setActive(Boolean active) { this.active = active; }
+
+    // createdDate stored as Number (epoch)
+    @DynamoDbAttribute("createdDate")
+    public Date getCreatedDate() { return createdDate; }
+    public void setCreatedDate(Date createdDate) { this.createdDate = createdDate; }
+
+    // lastLogin stored as ISO String (nanosecond precision)
+    @DynamoDbAttribute("lastLogin")
+    public Instant getLastLogin() { return lastLogin; }
+    public void setLastLogin(Instant lastLogin) { this.lastLogin = lastLogin; }
 }
 ```
 
@@ -427,7 +479,6 @@ public class User {
 
 **Configuration:**
 ```java
-import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -446,43 +497,47 @@ public class DynamoDBConfig {
             .region(Region.US_EAST_1)
             .build();
     }
-
-    @Bean
-    public DynamoDbEnhancedClient dynamoDbEnhancedClient(DynamoDbClient amazonDynamoDB) {
-        return DynamoDbEnhancedClient.builder()
-            .dynamoDbClient(amazonDynamoDB)
-            .build();
-    }
 }
 ```
 
 **Entity:**
 ```java
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
-import org.socialsignin.spring.data.dynamodb.marshaller.Instant2IsoAttributeConverter;
 
 @DynamoDbBean
 public class Order {
 
+    private String customerId;
+    private String orderDate;
+    private Double amount;
+    private Boolean isActive;
+    private Instant createdAt;
+
+    public Order() {}
+
     @DynamoDbPartitionKey
     @DynamoDbAttribute("customerId")
-    private String customerId;
+    public String getCustomerId() { return customerId; }
+    public void setCustomerId(String customerId) { this.customerId = customerId; }
 
     @DynamoDbSortKey
     @DynamoDbAttribute("orderDate")
-    private String orderDate;
+    public String getOrderDate() { return orderDate; }
+    public void setOrderDate(String orderDate) { this.orderDate = orderDate; }
 
     @DynamoDbAttribute("amount")
-    private Double amount;
+    public Double getAmount() { return amount; }
+    public void setAmount(Double amount) { this.amount = amount; }
 
+    // Will be stored as Number 0/1 in SDK_V1_COMPATIBLE mode
     @DynamoDbAttribute("isActive")
-    private Boolean isActive;  // Will be stored as Number 0/1
+    public Boolean getIsActive() { return isActive; }
+    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
 
+    // Will be stored as ISO String
     @DynamoDbAttribute("createdAt")
-    @DynamoDbConvertedBy(Instant2IsoAttributeConverter.class)
-    private Instant createdAt;  // Will be stored as ISO String
-
-    // Getters and setters
+    public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }
 ```
 
@@ -500,23 +555,13 @@ public interface OrderRepository extends
 **Configuration:**
 ```java
 @Configuration
-@EnableDynamoDBRepositories(
-    basePackages = "com.example.repository",
-    marshallingMode = MarshallingMode.SDK_V2_NATIVE  // or omit (default)
-)
+@EnableDynamoDBRepositories(basePackages = "com.example.repository")  // SDK_V2_NATIVE is default
 public class DynamoDBConfig {
 
     @Bean
     public DynamoDbClient amazonDynamoDB() {
         return DynamoDbClient.builder()
             .region(Region.US_EAST_1)
-            .build();
-    }
-
-    @Bean
-    public DynamoDbEnhancedClient dynamoDbEnhancedClient(DynamoDbClient amazonDynamoDB) {
-        return DynamoDbEnhancedClient.builder()
-            .dynamoDbClient(amazonDynamoDB)
             .build();
     }
 }
@@ -529,24 +574,37 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 @DynamoDbBean
 public class Order {
 
+    private String customerId;
+    private String orderDate;
+    private Double amount;
+    private Boolean isActive;
+    private Instant createdAt;
+
+    public Order() {}
+
     @DynamoDbPartitionKey
     @DynamoDbAttribute("customerId")
-    private String customerId;
+    public String getCustomerId() { return customerId; }
+    public void setCustomerId(String customerId) { this.customerId = customerId; }
 
     @DynamoDbSortKey
     @DynamoDbAttribute("orderDate")
-    private String orderDate;
+    public String getOrderDate() { return orderDate; }
+    public void setOrderDate(String orderDate) { this.orderDate = orderDate; }
 
     @DynamoDbAttribute("amount")
-    private Double amount;
+    public Double getAmount() { return amount; }
+    public void setAmount(Double amount) { this.amount = amount; }
 
+    // Will be stored as BOOL (native) in SDK_V2_NATIVE mode
     @DynamoDbAttribute("isActive")
-    private Boolean isActive;  // Will be stored as BOOL (native)
+    public Boolean getIsActive() { return isActive; }
+    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
 
+    // Will be stored as String (ISO-8601 nanosecond)
     @DynamoDbAttribute("createdAt")
-    private Instant createdAt;  // Will be stored as String (ISO-8601 nanosecond)
-
-    // Getters and setters
+    public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }
 ```
 
@@ -593,23 +651,25 @@ Your data has Boolean stored as Number (0/1). Use SDK_V1_COMPATIBLE mode:
 )
 ```
 
-### Issue: Missing DynamoDbEnhancedClient Bean
+### Issue: Missing DynamoDbClient Bean
 
 **Error:**
 ```
-NoSuchBeanDefinitionException: No qualifying bean of type 'DynamoDbEnhancedClient'
+NoSuchBeanDefinitionException: No qualifying bean of type 'DynamoDbClient'
 ```
 
 **Solution:**
 Add the required bean:
 ```java
 @Bean
-public DynamoDbEnhancedClient dynamoDbEnhancedClient(DynamoDbClient amazonDynamoDB) {
-    return DynamoDbEnhancedClient.builder()
-        .dynamoDbClient(amazonDynamoDB)
+public DynamoDbClient amazonDynamoDB() {
+    return DynamoDbClient.builder()
+        .region(Region.US_EAST_1)
         .build();
 }
 ```
+
+**Note:** You do NOT need to define a `DynamoDbEnhancedClient` bean - the library creates it internally from the `DynamoDbClient`.
 
 ---
 
@@ -669,6 +729,104 @@ public DynamoDbEnhancedClient dynamoDbEnhancedClient(DynamoDbClient amazonDynamo
 4. Test batch operations
 5. Test custom query methods
 6. Deploy to staging before production
+
+---
+
+## Example Project
+
+A complete working example demonstrating the SDK v1 to v2 migration is available:
+
+**Repository:** [validate-spring-data-dynamodb](https://github.com/prasanna0586/validate-spring-data-dynamodb/tree/spring-data-dynamodb-7.0.0-sdk-v2-migration)
+
+**Migration Commit:** [b804494](https://github.com/prasanna0586/validate-spring-data-dynamodb/commit/b804494bfe0cb8a325d43bf5aa4ad6b7ecbef8ef) - Shows the exact changes made to migrate from 6.0.4 to 7.0.0
+
+### What the Migration Commit Changed
+
+#### Dependencies
+```diff
+- com.amazonaws:aws-java-sdk-dynamodb:1.12.772
++ software.amazon.awssdk:dynamodb-enhanced:2.38.1
++ spring-data-dynamodb:7.0.0
+```
+
+#### Entity Annotations
+```diff
+- @DynamoDBTable(tableName = "DocumentMetadata")
++ @DynamoDbBean
+
+- @DynamoDBHashKey
++ @DynamoDbPartitionKey
+
+- @DynamoDBIndexHashKey(globalSecondaryIndexNames = {...})
++ @DynamoDbSecondaryPartitionKey(indexNames = {...})
+
+- @DynamoDBIndexRangeKey(globalSecondaryIndexName = "...")
++ @DynamoDbSecondarySortKey(indexNames = {"..."})
+
+- @DynamoDBVersionAttribute
++ @DynamoDbVersionAttribute  // from extensions.annotations
+```
+
+#### Type Converter
+```diff
+- public class InstantConverter implements DynamoDBTypeConverter<String, Instant> {
+-     public String convert(Instant instant) { ... }
+-     public Instant unconvert(String value) { ... }
+- }
++ public class InstantConverter implements AttributeConverter<Instant> {
++     public AttributeValue transformFrom(Instant instant) { ... }
++     public Instant transformTo(AttributeValue attributeValue) { ... }
++     public EnhancedType<Instant> type() { ... }
++     public AttributeValueType attributeValueType() { ... }
++ }
+```
+
+#### Configuration
+```diff
+- @Bean
+- public AmazonDynamoDB amazonDynamoDB() {
+-     return AmazonDynamoDBClientBuilder.standard()
+-         .withEndpointConfiguration(...)
+-         .build();
+- }
++ @Bean
++ public DynamoDbClient amazonDynamoDB() {
++     return DynamoDbClient.builder()
++         .endpointOverride(URI.create(endpoint))
++         .region(Region.of(region))
++         .build();
++ }
+```
+
+#### Custom Repository Queries
+```diff
+- DynamoDBQueryExpression<T> query = new DynamoDBQueryExpression<>()
+-     .withIndexName("index-name")
+-     .withHashKeyValues(gsiKey);
++ QueryRequest queryRequest = QueryRequest.builder()
++     .tableName(tableName)
++     .indexName("index-name")
++     .keyConditionExpression("memberId = :memberId")
++     .expressionAttributeValues(expressionValues)
++     .build();
+```
+
+#### AttributeValue Construction
+```diff
+- new AttributeValue().withS(value)
+- new AttributeValue().withN(value)
++ AttributeValue.builder().s(value).build()
++ AttributeValue.builder().n(value).build()
+```
+
+### Project Features Demonstrated
+- Complete SDK v2 entity with multiple GSI annotations
+- Optimistic locking with `@DynamoDbVersionAttribute`
+- Custom `AttributeConverter` for `Instant` types
+- Custom repository implementation using `DynamoDBOperations`
+- `@Query` annotation with filter expressions
+- `TableNameResolver` for environment-based table naming
+- Integration tests with Testcontainers (75 tests)
 
 ---
 

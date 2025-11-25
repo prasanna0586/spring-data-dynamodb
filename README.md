@@ -138,15 +138,10 @@ public class DynamoDBConfig {
             .region(Region.US_EAST_1)
             .build();
     }
-
-    @Bean
-    public DynamoDbEnhancedClient dynamoDbEnhancedClient(DynamoDbClient amazonDynamoDB) {
-        return DynamoDbEnhancedClient.builder()
-            .dynamoDbClient(amazonDynamoDB)
-            .build();
-    }
 }
 ```
+
+**Note:** You only need to define a `DynamoDbClient` bean. The library creates `DynamoDbEnhancedClient` internally.
 
 ## Documentation ##
 
@@ -168,8 +163,14 @@ If you are migrating from version 6.x (AWS SDK v1) to version 7.x (AWS SDK v2), 
 
 Key changes include:
 * New AWS SDK v2 annotations (`@DynamoDbBean`, `@DynamoDbPartitionKey`, etc.)
-* Updated configuration using `DynamoDbClient` and `DynamoDbEnhancedClient`
+* Simplified configuration - only `DynamoDbClient` bean required
 * Marshalling modes for backward compatibility with existing data
+
+## Example Project ##
+
+A complete working example is available at [validate-spring-data-dynamodb](https://github.com/prasanna0586/validate-spring-data-dynamodb/tree/spring-data-dynamodb-7.0.0-sdk-v2-migration).
+
+This example demonstrates GSI annotations, optimistic locking, custom converters, `@Query` annotations with filter expressions, and integration tests with Testcontainers.
 
 ## Version & Spring Framework compatibility ##
 
