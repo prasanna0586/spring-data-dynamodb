@@ -3,10 +3,14 @@ name: "Run Tests"
 on:
   push:
   pull_request:
-    # The branches below must be a subset of the branches above
-    branches: [develop]
+    branches: [master, develop]
   schedule:
     - cron: '0 18 * * 0'
+
+# Prevent concurrent runs on the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   run-tests:
@@ -16,19 +20,27 @@ jobs:
     permissions:
       checks: write
       pull-requests: write
-      contents: read
+      contents: write
 
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-java@v5
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0  # Full clone for git operations
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
         with:
           java-version: '21'
           distribution: 'liberica'
+          cache: 'maven'  # Cache Maven dependencies
+
       - name: Run the Maven clean verify phase
         run: mvn --batch-mode clean verify
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
+        if: always()
         with:
           files: ./target/site/jacoco/jacoco.xml
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -48,3 +60,43 @@ jobs:
         if: always()
         with:
           files: '**/target/surefire-reports/TEST-*.xml'
+
+  deploy-coverage:
+    name: Deploy Coverage Report
+    needs: run-tests
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Download coverage report
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: docs/coverage
+
+      - name: Deploy to GitHub Pages
+        run: |
+          # Check if there are changes to commit
+          git add docs/coverage
+          if git diff --staged --quiet; then
+            echo "No changes to coverage report"
+            exit 0
+          fi
+
+          # Configure git
+          git config --local user.email "prasanna0586@gmail.com"
+          git config --local user.name "Prasanna Kumar Ramachandran"
+
+          # Commit and push
+          git commit -m "Update coverage report
+
+          Generated from commit ${{ github.sha }}"
+          git push
