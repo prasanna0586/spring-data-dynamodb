@@ -65,38 +65,73 @@ jobs:
     name: Deploy Coverage Report
     needs: run-tests
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     permissions:
       contents: write
 
     steps:
-      - name: Checkout code
+      - name: Checkout gh-pages branch
         uses: actions/checkout@v5
         with:
-          ref: master
+          ref: gh-pages
           fetch-depth: 0
 
       - name: Download coverage report
         uses: actions/download-artifact@v4
         with:
           name: coverage-report
-          path: docs/coverage
+          path: coverage/${{ github.ref_name }}
 
       - name: Deploy to GitHub Pages
         run: |
-          # Check if there are changes to commit
-          git add docs/coverage
+          git add coverage/
           if git diff --staged --quiet; then
             echo "No changes to coverage report"
             exit 0
           fi
 
-          # Configure git
           git config --local user.email "prasanna0586@gmail.com"
           git config --local user.name "Prasanna Kumar Ramachandran"
+          git commit -m "Update coverage for ${{ github.ref_name }}
 
-          # Commit and push
-          git commit -m "Update coverage report
+          Generated from commit ${{ github.sha }}"
+          git push
+
+  deploy-docs:
+    name: Deploy Documentation
+    needs: run-tests
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v5
+        with:
+          ref: master
+
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v5
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Copy docs to gh-pages
+        run: |
+          cp -r docs/*.md docs/*.yml gh-pages/docs/ 2>/dev/null || mkdir -p gh-pages/docs && cp -r docs/*.md docs/*.yml gh-pages/docs/
+
+      - name: Deploy to GitHub Pages
+        run: |
+          cd gh-pages
+          git add docs/
+          if git diff --staged --quiet; then
+            echo "No changes to documentation"
+            exit 0
+          fi
+
+          git config --local user.email "prasanna0586@gmail.com"
+          git config --local user.name "Prasanna Kumar Ramachandran"
+          git commit -m "Update documentation
 
           Generated from commit ${{ github.sha }}"
           git push

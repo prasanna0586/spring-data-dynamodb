@@ -1,7 +1,8 @@
 [![Build Status](https://github.com/prasanna0586/spring-data-dynamodb/actions/workflows/runTests.yml/badge.svg)](https://github.com/prasanna0586/spring-data-dynamodb/actions/workflows/runTests.yml)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.github.prasanna0586/spring-data-dynamodb/badge.svg)](https://search.maven.org/search?q=g:io.github.prasanna0586)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.prasanna0586/spring-data-dynamodb)](https://central.sonatype.com/artifact/io.github.prasanna0586/spring-data-dynamodb)
 [![codecov](https://codecov.io/gh/prasanna0586/spring-data-dynamodb/branch/master/graph/badge.svg)](https://codecov.io/gh/prasanna0586/spring-data-dynamodb)
-[![Coverage Report](https://img.shields.io/badge/coverage-report-blue)](https://prasanna0586.github.io/spring-data-dynamodb/coverage/)
+[![Coverage Report](https://img.shields.io/badge/coverage-report-blue)](https://prasanna0586.github.io/spring-data-dynamodb/coverage/master/)
+[![Last Commit](https://img.shields.io/github/last-commit/prasanna0586/spring-data-dynamodb)](https://github.com/prasanna0586/spring-data-dynamodb/commits/master)
 
 # Spring Data DynamoDB #
 
