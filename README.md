@@ -1,26 +1,28 @@
 [![Build Status](https://github.com/prasanna0586/spring-data-dynamodb/actions/workflows/runTests.yml/badge.svg)](https://github.com/prasanna0586/spring-data-dynamodb/actions/workflows/runTests.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.prasanna0586/spring-data-dynamodb)](https://central.sonatype.com/artifact/io.github.prasanna0586/spring-data-dynamodb)
 [![codecov](https://codecov.io/gh/prasanna0586/spring-data-dynamodb/branch/master/graph/badge.svg)](https://codecov.io/gh/prasanna0586/spring-data-dynamodb)
-[![Coverage Report](https://img.shields.io/badge/coverage-report-blue)](https://prasanna0586.github.io/spring-data-dynamodb/coverage/master/)
+[![Coverage Report](https://img.shields.io/badge/coverage-report-blue)](https://prasanna0586.github.io/spring-data-dynamodb/coverage/)
 [![Last Commit](https://img.shields.io/github/last-commit/prasanna0586/spring-data-dynamodb)](https://github.com/prasanna0586/spring-data-dynamodb/commits/master)
 
 # Spring Data DynamoDB #
 
-The primary goal of the [Spring Data](https://projects.spring.io/spring-data/) project is to make it easier to build Spring-powered applications that use data access technologies.
+Spring Data DynamoDB makes it easy to build Spring-powered applications that use [AWS DynamoDB](https://aws.amazon.com/dynamodb/) for persistence, following the familiar patterns of the [Spring Data](https://projects.spring.io/spring-data/) family.
 
-This module deals with enhanced support for a data access layer built on [AWS DynamoDB](https://aws.amazon.com/dynamodb/) using **AWS SDK v2**.
+This module is built on **AWS SDK v2**.
 
 ## Supported Features ##
 
-* Implementation of [CRUD methods](https://docs.spring.io/spring-data/commons/docs/current/reference/html/#repositories.definition) for DynamoDB Entities
+* Implementation of [CRUD methods](https://docs.spring.io/spring-data/commons/docs/current/reference/html/#repositories.definition) for DynamoDB entities
 * Dynamic query generation from [query method names](https://docs.spring.io/spring-data/commons/docs/current/reference/html/#repositories.query-methods.query-creation)
+* `@Query` annotation with filter expressions
 * Transparent handling of Hash and Hash/Range key entities
 * Global Secondary Index (GSI) and Local Secondary Index (LSI) support
-* Projections and custom query methods
-* Possibility to integrate [custom repository code](https://prasanna0586.github.io/spring-data-dynamodb/#custom-repository-implementations)
+* Pagination and sorting support
+* Projections and [custom repository implementations](https://prasanna0586.github.io/spring-data-dynamodb/docs/#custom-repository-implementations)
 * Built-in batch operations with automatic retry and exponential backoff
-* Type-safe exception handling for batch operations
-* Easy Spring annotation based integration
+* Event listeners (BeforeSave, AfterSave, BeforeDelete, AfterDelete, etc.)
+* Auditing support via `@EnableDynamoDBAuditing`
+* GraalVM native image compatibility
 * REST support via [spring-data-rest](https://projects.spring.io/spring-data-rest/)
 
 ## Requirements ##
@@ -74,32 +76,30 @@ public class User {
     private String firstName;
     private String lastName;
 
-    public User() {
-        // Default constructor is required by AWS DynamoDB SDK
-    }
-
-    public User(String firstName, String lastName) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-    }
-
     @DynamoDbPartitionKey
-    @DynamoDbAttribute("id")
     public String getId() {
         return id;
     }
 
-    @DynamoDbAttribute("firstName")
+    public void setId(String id) {
+        this.id = id;
+    }
+
     public String getFirstName() {
         return firstName;
     }
 
-    @DynamoDbAttribute("lastName")
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
     public String getLastName() {
         return lastName;
     }
 
-    // setters, hashCode & equals
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
 }
 ```
 
@@ -107,18 +107,21 @@ Create a CRUD repository interface `UserRepository`:
 
 ```java
 @EnableScan
-public interface UserRepository extends DynamoDBCrudRepository<User, String> {
+public interface UserRepository extends CrudRepository<User, String> {
+
     List<User> findByLastName(String lastName);
-    List<User> findByFirstName(String firstName);
+
+    Optional<User> findByFirstName(String firstName);
 }
 ```
 
 or for paging and sorting...
 
 ```java
-public interface PagingUserRepository extends DynamoDBPagingAndSortingRepository<User, String> {
+public interface PagingUserRepository extends PagingAndSortingRepository<User, String> {
+
+    @EnableScan
     Page<User> findByLastName(String lastName, Pageable pageable);
-    Page<User> findByFirstName(String firstName, Pageable pageable);
 
     @EnableScan
     @EnableScanCount
@@ -130,7 +133,7 @@ Create the configuration class `DynamoDBConfig`:
 
 ```java
 @Configuration
-@EnableDynamoDBRepositories(basePackageClasses = UserRepository.class)
+@EnableDynamoDBRepositories(basePackages = "com.example.repository")
 public class DynamoDBConfig {
 
     @Bean
@@ -146,17 +149,17 @@ public class DynamoDBConfig {
 
 ## Documentation ##
 
-For complete documentation, examples, and advanced topics, visit the [User Guide](https://prasanna0586.github.io/spring-data-dynamodb/).
+For complete documentation, examples, and advanced topics, visit the [User Guide](https://prasanna0586.github.io/spring-data-dynamodb/docs/).
 
 Topics covered include:
-* [Configuration options](https://prasanna0586.github.io/spring-data-dynamodb/#configuration)
-* [Entity mapping with Hash and Range keys](https://prasanna0586.github.io/spring-data-dynamodb/#entities)
-* [Query methods and supported operators](https://prasanna0586.github.io/spring-data-dynamodb/#query-methods)
-* [Global and Local Secondary Indexes](https://prasanna0586.github.io/spring-data-dynamodb/#indexes-gsi--lsi)
-* [Batch operations](https://prasanna0586.github.io/spring-data-dynamodb/#batch-operations)
-* [Type converters](https://prasanna0586.github.io/spring-data-dynamodb/#type-converters)
-* [Event listeners](https://prasanna0586.github.io/spring-data-dynamodb/#event-listeners)
-* [Pagination](https://prasanna0586.github.io/spring-data-dynamodb/#pagination)
+* [Configuration options](https://prasanna0586.github.io/spring-data-dynamodb/docs/#configuration)
+* [Entity mapping with Hash and Range keys](https://prasanna0586.github.io/spring-data-dynamodb/docs/#entities)
+* [Query methods and supported operators](https://prasanna0586.github.io/spring-data-dynamodb/docs/#query-methods)
+* [Global and Local Secondary Indexes](https://prasanna0586.github.io/spring-data-dynamodb/docs/#indexes-gsi--lsi)
+* [Batch operations](https://prasanna0586.github.io/spring-data-dynamodb/docs/#batch-operations)
+* [Type converters](https://prasanna0586.github.io/spring-data-dynamodb/docs/#type-converters)
+* [Event listeners](https://prasanna0586.github.io/spring-data-dynamodb/docs/#event-listeners)
+* [Pagination](https://prasanna0586.github.io/spring-data-dynamodb/docs/#pagination)
 
 ## Migration from SDK v1 ##
 
@@ -186,3 +189,18 @@ The major and minor number of this library refers to the compatible Spring frame
 `spring-data-dynamodb` depends directly on `spring-data` as well as `spring-tx`.
 
 `compile` and `runtime` dependencies are kept to a minimum to allow easy integration, for example into Spring Boot projects.
+
+## Development ##
+
+### Running Tests
+
+Tests use [Testcontainers](https://testcontainers.com/) which automatically manages DynamoDB Local. Just ensure Docker is running:
+
+```bash
+mvn clean verify
+```
+
+### Additional Documentation
+
+* [Releasing to Maven Central](RELEASING.md)
+* [Code Coverage](COVERAGE.md)

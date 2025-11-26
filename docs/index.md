@@ -6,7 +6,7 @@ A Spring Data module for DynamoDB, built on AWS SDK v2.
 
 [![Build Status](https://github.com/prasanna0586/spring-data-dynamodb/actions/workflows/runTests.yml/badge.svg)](https://github.com/prasanna0586/spring-data-dynamodb/actions/workflows/runTests.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.prasanna0586/spring-data-dynamodb)](https://central.sonatype.com/artifact/io.github.prasanna0586/spring-data-dynamodb)
-[![Coverage Report](https://img.shields.io/badge/coverage-report-blue)](https://prasanna0586.github.io/spring-data-dynamodb/coverage/master/)
+[![Coverage Report](https://img.shields.io/badge/coverage-report-blue)](https://prasanna0586.github.io/spring-data-dynamodb/coverage/)
 [![Last Commit](https://img.shields.io/github/last-commit/prasanna0586/spring-data-dynamodb)](https://github.com/prasanna0586/spring-data-dynamodb/commits/master)
 
 ---
@@ -188,9 +188,11 @@ public class User {
 **3. Repository**
 
 ```java
-import org.socialsignin.spring.data.dynamodb.repository.DynamoDBCrudRepository;
+import org.socialsignin.spring.data.dynamodb.repository.EnableScan;
+import org.springframework.data.repository.CrudRepository;
 
-public interface UserRepository extends DynamoDBCrudRepository<User, String> {
+@EnableScan
+public interface UserRepository extends CrudRepository<User, String> {
     List<User> findByName(String name);
 }
 ```
@@ -421,7 +423,9 @@ public class Customer {
 
 **Repository:**
 ```java
-public interface CustomerRepository extends DynamoDBCrudRepository<Customer, String> {
+import org.springframework.data.repository.CrudRepository;
+
+public interface CustomerRepository extends CrudRepository<Customer, String> {
 }
 ```
 
@@ -535,7 +539,9 @@ public class Playlist {
 
 **Repository:**
 ```java
-public interface PlaylistRepository extends DynamoDBCrudRepository<Playlist, PlaylistId> {
+import org.springframework.data.repository.CrudRepository;
+
+public interface PlaylistRepository extends CrudRepository<Playlist, PlaylistId> {
     List<Playlist> findByUserName(String userName);
 }
 ```
@@ -598,19 +604,25 @@ public class Event {
 
 ### Repository Interfaces
 
-**DynamoDBCrudRepository**
+**CrudRepository** (Recommended)
 ```java
-public interface UserRepository extends DynamoDBCrudRepository<User, String> {
+import org.springframework.data.repository.CrudRepository;
+
+public interface UserRepository extends CrudRepository<User, String> {
     // Inherits: save, findById, findAll, delete, count, etc.
 }
 ```
 
-**DynamoDBPagingAndSortingRepository**
+**PagingAndSortingRepository**
 ```java
-public interface UserRepository extends DynamoDBPagingAndSortingRepository<User, String> {
+import org.springframework.data.repository.PagingAndSortingRepository;
+
+public interface UserRepository extends PagingAndSortingRepository<User, String> {
     // Inherits: All CRUD + findAll(Pageable), findAll(Sort)
 }
 ```
+
+The library also provides `DynamoDBCrudRepository` and `DynamoDBPagingAndSortingRepository` as marker interfaces that extend the Spring Data interfaces above.
 
 ### CRUD Operations
 
