@@ -52,6 +52,7 @@ A Spring Data module for DynamoDB, built on AWS SDK v2.
     - [Kotlin Example](#composite-primary-keys-kotlin-example)
 18. [Best Practices](#best-practices)
 19. [Troubleshooting](#troubleshooting)
+20. [GraalVM Native Image Support](#graalvm-native-image-support)
 
 ---
 
@@ -2526,6 +2527,66 @@ logging:
     org.socialsignin.spring.data.dynamodb: DEBUG
     software.amazon.awssdk: DEBUG
     software.amazon.awssdk.request: DEBUG
+```
+
+---
+
+## GraalVM Native Image Support
+
+Spring Data DynamoDB 7.x supports GraalVM native image compilation out of the box. The library automatically registers reflection hints for DynamoDB entities and repositories during AOT processing.
+
+### How It Works
+
+The library includes:
+- `DynamoDbRepositoryRegistrationAotProcessor` - Discovers entities and repositories at build time
+- `DynamoDbRuntimeHints` - Registers reflection hints for AWS SDK and Spring Data classes
+
+These are automatically activated via `META-INF/spring/aot.factories`.
+
+### Building a Native Image
+
+**Maven:**
+```bash
+mvn -Pnative native:compile
+```
+
+**Gradle:**
+```bash
+gradle nativeCompile
+```
+
+### Running Native Tests
+
+```bash
+# Start DynamoDB Local
+docker run -d -p 8000:8000 amazon/dynamodb-local -jar DynamoDBLocal.jar -inMemory
+
+# Run native tests
+mvn -PnativeTest test
+```
+
+### Example Native Test
+
+```java
+@SpringBootTest
+@EnabledInNativeImage
+class DocumentRepositoryNativeTest {
+
+    @Autowired
+    private DocumentRepository repository;
+
+    @Test
+    void testSaveAndFind() {
+        Document doc = new Document();
+        doc.setId("native-test-1");
+        doc.setContent("Hello from native!");
+
+        repository.save(doc);
+
+        Optional<Document> found = repository.findById("native-test-1");
+        assertThat(found).isPresent();
+    }
+}
 ```
 
 ---

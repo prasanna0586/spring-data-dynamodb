@@ -119,7 +119,8 @@ public class Entity2DynamoDBTableSynchronizerTest<T, ID> {
     }
 
     public void setUp(Entity2DDL mode) {
-        underTest = new Entity2DynamoDBTableSynchronizer<>(amazonDynamoDB, enhancedClient, mappingContext, mode);
+        underTest = new Entity2DynamoDBTableSynchronizer<>(amazonDynamoDB, enhancedClient, mappingContext);
+        underTest.setMode(mode.getConfigurationValue());
         underTest.postProcess(factory, repositoryInformation);
     }
 

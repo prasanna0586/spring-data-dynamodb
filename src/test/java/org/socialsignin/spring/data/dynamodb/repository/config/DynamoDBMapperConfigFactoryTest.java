@@ -72,4 +72,38 @@ public class DynamoDBMapperConfigFactoryTest {
         assertEquals("MyTable", tableName);
     }
 
+    @Test
+    public void testUserDefinedResolver_IsUsedWhenSet() throws Exception {
+        // Create a custom TableNameResolver
+        TableNameResolver customResolver = new TableNameResolver() {
+            @Override
+            public <T> String resolveTableName(Class<T> domainClass, String baseTableName) {
+                return "prefix_" + baseTableName;
+            }
+        };
+
+        // Set the custom resolver
+        underTest.setTableNameResolver(customResolver);
+
+        // Get the resolver from the factory
+        TableNameResolver resolver = underTest.getObject();
+
+        // Verify the custom resolver is used
+        assertSame(customResolver, resolver);
+        assertEquals("prefix_MyTable", resolver.resolveTableName(Object.class, "MyTable"));
+    }
+
+    @Test
+    public void testNullResolver_UsesDefault() throws Exception {
+        // Explicitly set null resolver
+        underTest.setTableNameResolver(null);
+
+        // Get the resolver from the factory
+        TableNameResolver resolver = underTest.getObject();
+
+        // Verify default behavior (unchanged table name)
+        assertNotNull(resolver);
+        assertEquals("MyTable", resolver.resolveTableName(Object.class, "MyTable"));
+    }
+
 }

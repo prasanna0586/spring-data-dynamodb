@@ -24,11 +24,19 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
  * <p>This factory provides a simple abstraction over TableSchema creation to support
  * both SDK_V2_NATIVE and SDK_V1_COMPATIBLE marshalling modes.
  *
+ * <p><b>GraalVM Native Image Support:</b></p>
+ * <p>This factory uses {@link DynamoDbTableSchemaRegistry} which provides GraalVM-compatible
+ * schema generation using {@link StaticTableSchemaGenerator}. The generator uses MethodHandles
+ * instead of LambdaMetafactory, making it compatible with native image compilation.
+ *
  * <p><b>For SDK_V1_COMPATIBLE mode, users MUST annotate their entity fields with
  * {@code @DynamoDbConvertedBy} to specify the appropriate converter.</b> See the
  * {@link #createTableSchema(Class)} method documentation for details.
+ *
  * @author Prasanna Kumar Ramachandran
  * @since 7.0.0
+ * @see DynamoDbTableSchemaRegistry
+ * @see StaticTableSchemaGenerator
  */
 public class TableSchemaFactory {
 
@@ -116,11 +124,12 @@ public class TableSchemaFactory {
      * @return A TableSchema instance configured for the specified marshalling mode
      */
     public static <T> TableSchema<T> createTableSchema(Class<T> domainClass) {
-        // Both modes use TableSchema.fromBean() which respects @DynamoDbConvertedBy annotations
-        // The difference is:
-        // - SDK_V2_NATIVE: Uses SDK v2 default converters (no @DynamoDbConvertedBy needed)
-        // - SDK_V1_COMPATIBLE: Users must add @DynamoDbConvertedBy annotations to get SDK v1 behavior
-        return TableSchema.fromBean(domainClass);
+        // Use the registry which provides GraalVM-compatible schema generation
+        // The registry will:
+        // 1. Return a pre-registered schema if available
+        // 2. Generate a StaticTableSchema using MethodHandles (GraalVM compatible)
+        // 3. Fall back to TableSchema.fromBean() as a last resort (JVM only)
+        return DynamoDbTableSchemaRegistry.getInstance().getTableSchema(domainClass);
     }
 
 }

@@ -192,9 +192,9 @@ class ComprehensiveIndexValidationIntegrationTest {
             Entity2DynamoDBTableSynchronizer<T, ?> synchronizer = new Entity2DynamoDBTableSynchronizer<>(
                 amazonDynamoDB,
                 enhancedClient,
-                mappingContext,
-                Entity2DDL.NONE
+                mappingContext
             );
+            synchronizer.setMode(Entity2DDL.NONE.getConfigurationValue());
 
             // Call the private generateCreateTableRequest method via reflection
             // to trigger validation without actually creating the table

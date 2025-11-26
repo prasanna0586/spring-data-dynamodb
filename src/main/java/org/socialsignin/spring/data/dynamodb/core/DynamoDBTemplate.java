@@ -740,7 +740,7 @@ public class DynamoDBTemplate implements DynamoDBOperations, ApplicationContextA
      */
     @Override
     public <T> TableSchema<T> getTableModel(Class<T> domainClass) {
-        return TableSchema.fromBean(domainClass);
+        return TableSchemaFactory.createTableSchema(domainClass);
     }
 
     /**

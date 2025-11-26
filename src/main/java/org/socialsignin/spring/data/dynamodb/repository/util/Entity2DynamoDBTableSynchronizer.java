@@ -57,63 +57,73 @@ public class Entity2DynamoDBTableSynchronizer<T, ID> extends EntityInformationPr
         implements RepositoryProxyPostProcessor, ApplicationListener<ApplicationContextEvent> {
     private static final Logger LOGGER = LoggerFactory.getLogger(Entity2DynamoDBTableSynchronizer.class);
 
-    private static final String CONFIGURATION_KEY_entity2ddl_auto = "${spring.data.dynamodb.entity2ddl.auto:none}";
-    private static final String CONFIGURATION_KEY_entity2ddl_gsiProjectionType = "${spring.data.dynamodb.entity2ddl.gsiProjectionType:ALL}";
-    private static final String CONFIGURATION_KEY_entity2ddl_lsiProjectionType = "${spring.data.dynamodb.entity2ddl.lsiProjectionType:ALL}";
-    private static final String CONFIGURATION_KEY_entity2ddl_readCapacity = "${spring.data.dynamodb.entity2ddl.readCapacity:10}";
-    private static final String CONFIGURATION_KEY_entity2ddl_writeCapacity = "${spring.data.dynamodb.entity2ddl.writeCapacity:1}";
-
     private final DynamoDbClient amazonDynamoDB;
 
     @NonNull
-    private final Entity2DDL mode;
-    private final ProjectionType gsiProjectionType;
-    private final ProjectionType lsiProjectionType;
-    private final long readCapacity;
-    private final long writeCapacity;
+    private Entity2DDL mode = Entity2DDL.NONE;
+    private ProjectionType gsiProjectionType = ProjectionType.ALL;
+    private ProjectionType lsiProjectionType = ProjectionType.ALL;
+    private long readCapacity = 10L;
+    private long writeCapacity = 1L;
 
     private final Collection<DynamoDBEntityInformation<T, ID>> registeredEntities = new ArrayList<>();
 
     /**
-     * Creates a new Entity2DynamoDBTableSynchronizer with default projection types and capacity settings.
+     * Creates a new Entity2DynamoDBTableSynchronizer.
+     * Configuration values are injected via setter methods for GraalVM native image compatibility.
+     *
      * @param amazonDynamoDB the DynamoDB client
-     * @param enhancedClient the DynamoDB enhanced client
-     * @param mappingContext the DynamoDB mapping context
-     * @param mode the DDL mode
-     */
-    public Entity2DynamoDBTableSynchronizer(DynamoDbClient amazonDynamoDB,
-                                            DynamoDbEnhancedClient enhancedClient,
-                                            DynamoDBMappingContext mappingContext,
-                                            @NonNull Entity2DDL mode) {
-        this(amazonDynamoDB, enhancedClient, mappingContext, mode.getConfigurationValue(),
-                ProjectionType.ALL.name(), ProjectionType.ALL.name(), 10L, 10L);
-    }
-
-    /**
-     * Creates a new Entity2DynamoDBTableSynchronizer with custom configuration.
-     * @param amazonDynamoDB the DynamoDB client
-     * @param enhancedClient the DynamoDB enhanced client
-     * @param mappingContext the DynamoDB mapping context
-     * @param mode the DDL mode configuration value
-     * @param gsiProjectionType the GSI projection type
-     * @param lsiProjectionType the LSI projection type
-     * @param readCapacity the read capacity units
-     * @param writeCapacity the write capacity units
+     * @param enhancedClient the DynamoDB enhanced client (unused but required for autowiring)
+     * @param mappingContext the DynamoDB mapping context (unused but required for autowiring)
      */
     public Entity2DynamoDBTableSynchronizer(DynamoDbClient amazonDynamoDB,
             @Qualifier("dynamoDB-DynamoDBMapper") DynamoDbEnhancedClient enhancedClient,
-            @Qualifier("dynamoDBMappingContext") DynamoDBMappingContext mappingContext,
-            @Value(CONFIGURATION_KEY_entity2ddl_auto) String mode,
-            @Value(CONFIGURATION_KEY_entity2ddl_gsiProjectionType) String gsiProjectionType,
-            @Value(CONFIGURATION_KEY_entity2ddl_lsiProjectionType) String lsiProjectionType,
-            @Value(CONFIGURATION_KEY_entity2ddl_readCapacity) long readCapacity,
-            @Value(CONFIGURATION_KEY_entity2ddl_writeCapacity) long writeCapacity) {
+            @Qualifier("dynamoDBMappingContext") DynamoDBMappingContext mappingContext) {
         this.amazonDynamoDB = amazonDynamoDB;
+    }
 
+    /**
+     * Sets the DDL mode from configuration.
+     * @param mode the DDL mode configuration value
+     */
+    @Value("${spring.data.dynamodb.entity2ddl.auto:none}")
+    public void setMode(String mode) {
         this.mode = Entity2DDL.fromValue(mode);
+    }
+
+    /**
+     * Sets the GSI projection type from configuration.
+     * @param gsiProjectionType the GSI projection type
+     */
+    @Value("${spring.data.dynamodb.entity2ddl.gsiProjectionType:ALL}")
+    public void setGsiProjectionType(String gsiProjectionType) {
         this.gsiProjectionType = ProjectionType.fromValue(gsiProjectionType);
+    }
+
+    /**
+     * Sets the LSI projection type from configuration.
+     * @param lsiProjectionType the LSI projection type
+     */
+    @Value("${spring.data.dynamodb.entity2ddl.lsiProjectionType:ALL}")
+    public void setLsiProjectionType(String lsiProjectionType) {
         this.lsiProjectionType = ProjectionType.fromValue(lsiProjectionType);
+    }
+
+    /**
+     * Sets the read capacity units from configuration.
+     * @param readCapacity the read capacity units
+     */
+    @Value("${spring.data.dynamodb.entity2ddl.readCapacity:10}")
+    public void setReadCapacity(long readCapacity) {
         this.readCapacity = readCapacity;
+    }
+
+    /**
+     * Sets the write capacity units from configuration.
+     * @param writeCapacity the write capacity units
+     */
+    @Value("${spring.data.dynamodb.entity2ddl.writeCapacity:1}")
+    public void setWriteCapacity(long writeCapacity) {
         this.writeCapacity = writeCapacity;
     }
 
