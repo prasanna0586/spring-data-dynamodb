@@ -65,8 +65,6 @@ jobs:
     name: Deploy Coverage Report
     needs: run-tests
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
       - name: Checkout gh-pages branch
@@ -74,6 +72,7 @@ jobs:
         with:
           ref: gh-pages
           fetch-depth: 0
+          token: ${{ secrets.MAVEN_RELEASE_TOKEN }}
 
       - name: Download coverage report
         uses: actions/download-artifact@v4
@@ -101,8 +100,6 @@ jobs:
     needs: run-tests
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-    permissions:
-      contents: write
 
     steps:
       - name: Checkout master
@@ -115,6 +112,7 @@ jobs:
         with:
           ref: gh-pages
           path: gh-pages
+          token: ${{ secrets.MAVEN_RELEASE_TOKEN }}
 
       - name: Copy docs to gh-pages
         run: |
