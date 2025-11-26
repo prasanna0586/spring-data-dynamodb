@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,12 +16,131 @@
 package org.socialsignin.spring.data.dynamodb.exception;
 
 import org.springframework.dao.DataAccessException;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * Exception thrown when batch write operations fail after exhausting retries.
+ *
+ * This exception provides access to:
+ * <ul>
+ * <li>Unprocessed entities that could not be written to DynamoDB</li>
+ * <li>Number of retry attempts that were made</li>
+ * <li>Original exception if one was thrown (vs. items just being unprocessed)</li>
+ * </ul>
+ *
+ * Following AWS SDK v2 best practices, unprocessed items are exposed to allow
+ * consumers to implement custom recovery strategies (e.g., dead letter queues,
+ * manual retry with different configuration, alerting, etc.)
+ */
 @SuppressWarnings("serial")
 public class BatchWriteException extends DataAccessException {
 
-    public BatchWriteException(String msg, Throwable cause) {
+    /** List of entities that could not be written */
+    @NonNull
+    private final List<Object> unprocessedEntities;
+    /** Number of retry attempts made */
+    private final int retriesAttempted;
+
+    /**
+     * Creates a BatchWriteException with full context about the failure.
+     * @param msg Error message describing the failure
+     * @param unprocessedEntities List of entity objects that could not be written
+     * @param retriesAttempted Number of retry attempts that were made
+     * @param cause Original exception if one was thrown, or null if items were just unprocessed
+     */
+    public BatchWriteException(String msg, @Nullable List<Object> unprocessedEntities, int retriesAttempted, Throwable cause) {
         super(msg, cause);
+        this.unprocessedEntities = unprocessedEntities != null
+            ? Collections.unmodifiableList(unprocessedEntities)
+            : Collections.emptyList();
+        this.retriesAttempted = retriesAttempted;
     }
 
+    /**
+     * Returns unprocessed entities filtered by the specified type.
+     * <p>
+     * This is a type-safe way to retrieve entities of a specific class.
+     * <p>
+     * Example usage:
+     * <pre>
+     * try {
+     *     repository.saveAll(products);
+     * } catch (BatchWriteException e) {
+     *     List&lt;Product&gt; failed = e.getUnprocessedEntities(Product.class);
+     *     // Handle failed products (e.g., log, send to DLQ, alert)
+     * }
+     * </pre>
+     * @param entityClass The class of entities to retrieve
+     * @param <T> The entity type
+     * @return List of unprocessed entities of the specified type
+     */
+    @NonNull
+    public <T> List<T> getUnprocessedEntities(@NonNull Class<T> entityClass) {
+        return unprocessedEntities.stream()
+                .filter(entityClass::isInstance)
+                .map(entityClass::cast)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Returns all unprocessed entities regardless of type.
+     * <p>
+     * Useful when batch operations involve multiple entity types.
+     * @return Unmodifiable list of all unprocessed entities
+     */
+    @NonNull
+    public List<Object> getUnprocessedEntities() {
+        return unprocessedEntities;
+    }
+
+    /**
+     * Returns the number of retry attempts that were made before giving up.
+     * @return Number of retries attempted
+     */
+    public int getRetriesAttempted() {
+        return retriesAttempted;
+    }
+
+    /**
+     * Checks if there was an actual exception thrown (vs. just unprocessed items).
+     * <p>
+     * When true, getCause() will return a specific exception like:
+     * <ul>
+     * <li>ProvisionedThroughputExceededException (throttling)</li>
+     * <li>ValidationException (invalid data)</li>
+     * <li>ResourceNotFoundException (table doesn't exist)</li>
+     * </ul>
+     * <p>
+     * When false, the failure was due to items remaining unprocessed after retries,
+     * typically caused by persistent throttling or capacity issues.
+     * @return true if a specific exception was thrown, false if failure was due to unprocessed items
+     */
+    public boolean hasOriginalException() {
+        return getCause() != null;
+    }
+
+    /**
+     * Returns the number of entities that could not be processed.
+     * @return Count of unprocessed entities
+     */
+    public int getUnprocessedCount() {
+        return unprocessedEntities.size();
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder(super.toString());
+        sb.append("; unprocessedCount=").append(unprocessedEntities.size());
+        sb.append("; retriesAttempted=").append(retriesAttempted);
+        if (hasOriginalException()) {
+            sb.append("; originalException=").append(getCause().getClass().getSimpleName());
+        }
+        return sb.toString();
+    }
 }

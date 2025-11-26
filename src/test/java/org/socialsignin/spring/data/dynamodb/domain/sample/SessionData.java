@@ -1,6 +1,9 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.*;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbConvertedBy;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -9,10 +12,10 @@ import java.util.Objects;
  * Domain model for testing Time To Live (TTL) functionality.
  * TTL allows automatic deletion of items after a specified timestamp.
  *
- * Note: In SDK v1, TTL is configured programmatically using UpdateTimeToLiveRequest,
- * not via annotations like @DynamoDBTimeToLive (which is SDK v2 only).
+ * Note: TTL is configured programmatically using UpdateTimeToLiveRequest,
+ * not via annotations. This applies to both SDK v1 and SDK v2.
  */
-@DynamoDBTable(tableName = "SessionData")
+@DynamoDbBean
 public class SessionData {
 
     private String sessionId;
@@ -33,7 +36,8 @@ public class SessionData {
         this.data = data;
     }
 
-    @DynamoDBHashKey(attributeName = "sessionId")
+    @DynamoDbPartitionKey
+    @DynamoDbAttribute("sessionId")
     public String getSessionId() {
         return sessionId;
     }
@@ -42,7 +46,7 @@ public class SessionData {
         this.sessionId = sessionId;
     }
 
-    @DynamoDBAttribute(attributeName = "userId")
+    @DynamoDbAttribute("userId")
     public String getUserId() {
         return userId;
     }
@@ -56,7 +60,7 @@ public class SessionData {
      * Items will be automatically deleted after this time.
      * TTL must be enabled on this attribute using UpdateTimeToLiveRequest.
      */
-    @DynamoDBAttribute(attributeName = "expirationTime")
+    @DynamoDbAttribute("expirationTime")
     public Long getExpirationTime() {
         return expirationTime;
     }
@@ -65,8 +69,8 @@ public class SessionData {
         this.expirationTime = expirationTime;
     }
 
-    @DynamoDBAttribute(attributeName = "createdAt")
-    @DynamoDBTypeConverted(converter = InstantConverter.class)
+    @DynamoDbAttribute("createdAt")
+    @DynamoDbConvertedBy(InstantConverter.class)
     public Instant getCreatedAt() {
         return createdAt;
     }
@@ -75,7 +79,7 @@ public class SessionData {
         this.createdAt = createdAt;
     }
 
-    @DynamoDBAttribute(attributeName = "data")
+    @DynamoDbAttribute("data")
     public String getData() {
         return data;
     }

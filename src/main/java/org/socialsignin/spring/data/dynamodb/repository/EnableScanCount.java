@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,8 +18,8 @@ package org.socialsignin.spring.data.dynamodb.repository;
 import java.lang.annotation.*;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * Enables scan count operation for DynamoDB repository methods.
+ * @author Prasanna Kumar Ramachandran
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE, ElementType.METHOD, ElementType.ANNOTATION_TYPE })

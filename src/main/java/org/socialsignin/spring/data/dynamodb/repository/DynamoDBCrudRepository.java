@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,9 +20,9 @@ import org.springframework.data.repository.NoRepositoryBean;
 
 /**
  * DynamoDB specific extension of {@link org.springframework.data.repository.Repository}.
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @param <T> the entity type
+ * @param <ID> the ID type
+ * @author Prasanna Kumar Ramachandran
  */
 @NoRepositoryBean
 public interface DynamoDBCrudRepository<T, ID> extends CrudRepository<T, ID> {

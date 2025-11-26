@@ -15,20 +15,28 @@
  */
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBIndexHashKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 import org.springframework.data.annotation.Id;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
-@DynamoDBTable(tableName = "customerhistory")
+/**
+ * Entity demonstrating composite primary key (hash + range) with a Global Secondary Index.
+ *
+ * Primary Key: customerId (partition key) + createDt (sort key)
+ * GSI: idx_global_tag with tag as partition key
+ */
+@DynamoDbBean
 public class CustomerHistory {
     @Id
     private CustomerHistoryId id;
 
     private String tag;
 
-    @DynamoDBIndexHashKey(globalSecondaryIndexName = "idx_global_tag")
+    /**
+     * GSI partition key for idx_global_tag index.
+     * SDK v2 uses @DynamoDbSecondaryPartitionKey to define GSI partition keys.
+     */
+    @DynamoDbSecondaryPartitionKey(indexNames = "idx_global_tag")
+    @DynamoDbAttribute("tag")
     public String getTag() {
         return tag;
     }
@@ -37,7 +45,12 @@ public class CustomerHistory {
         this.tag = tag;
     }
 
-    @DynamoDBHashKey(attributeName = "customerId")
+    /**
+     * Partition key (hash key) for the primary key.
+     * Returns the customerId from the composite key object.
+     */
+    @DynamoDbPartitionKey
+    @DynamoDbAttribute("customerId")
     public String getId() {
         return id != null ? id.getCustomerId() : null;
     }
@@ -49,7 +62,12 @@ public class CustomerHistory {
         this.id.setCustomerId(customerId);
     }
 
-    @DynamoDBRangeKey(attributeName = "createDt")
+    /**
+     * Sort key (range key) for the primary key.
+     * Returns the createDt from the composite key object.
+     */
+    @DynamoDbSortKey
+    @DynamoDbAttribute("createDt")
     public String getCreateDt() {
         return id != null ? id.getCreateDt() : null;
     }

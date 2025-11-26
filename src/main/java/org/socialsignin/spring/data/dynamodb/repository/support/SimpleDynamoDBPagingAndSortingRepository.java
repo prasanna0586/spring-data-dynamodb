@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,15 +15,16 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
-import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedScanList;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.socialsignin.spring.data.dynamodb.repository.DynamoDBPagingAndSortingRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
+import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
+import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -35,10 +36,7 @@ import java.util.List;
  * find-all queries is not possible using an integer page number For paged requests, attempt to approximate paging
  * behavior by limiting the number of items which will be scanned, and by returning a sublist of the result-set. NB:
  * Number of results scanned for a given page request is proportional to the page number requested!
- *
- * @author Michael Lavelle
- * @author Sebastian Just
- *
+ * @author Prasanna Kumar Ramachandran
  * @param <T>
  *            the type of the entity to handle
  * @param <ID>
@@ -47,32 +45,43 @@ import java.util.List;
 public class SimpleDynamoDBPagingAndSortingRepository<T, ID> extends SimpleDynamoDBCrudRepository<T, ID>
         implements DynamoDBPagingAndSortingRepository<T, ID> {
 
-    public SimpleDynamoDBPagingAndSortingRepository(DynamoDBEntityInformation<T, ID> entityInformation,
-            DynamoDBOperations dynamoDBOperations, EnableScanPermissions enableScanPermissions) {
+    /**
+     * Creates a new SimpleDynamoDBPagingAndSortingRepository.
+     * @param entityInformation the entity information
+     * @param dynamoDBOperations the DynamoDB operations
+     * @param enableScanPermissions the scan permissions configuration
+     */
+    public SimpleDynamoDBPagingAndSortingRepository(@NonNull DynamoDBEntityInformation<T, ID> entityInformation,
+                                                    DynamoDBOperations dynamoDBOperations, EnableScanPermissions enableScanPermissions) {
         super(entityInformation, dynamoDBOperations, enableScanPermissions);
 
     }
 
+    @NonNull
     @Override
-    public Iterable<T> findAll(Sort sort) {
+    public Iterable<T> findAll(@NonNull Sort sort) {
         return throwUnsupportedSortOperationException();
     }
 
+    @NonNull
     @Override
-    public Page<T> findAll(Pageable pageable) {
+    public Page<T> findAll(@NonNull Pageable pageable) {
 
         ensureNoSort(pageable);
 
-        DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
         // Scan to the end of the page after the requested page
         long scanTo = pageable.getOffset() + (2L * pageable.getPageSize());
-        scanExpression.setLimit((int) Math.min(scanTo, Integer.MAX_VALUE));
-        PaginatedScanList<T> paginatedScanList = dynamoDBOperations.scan(domainType, scanExpression);
-        Iterator<T> iterator = paginatedScanList.iterator();
+        ScanEnhancedRequest scanRequest = ScanEnhancedRequest.builder()
+                .limit((int) Math.min(scanTo, Integer.MAX_VALUE))
+                .build();
+
+        PageIterable<T> pageIterable = dynamoDBOperations.scan(domainType, scanRequest);
+        Iterator<T> iterator = pageIterable.items().iterator();
+
         if (pageable.getOffset() > 0) {
             long processedCount = scanThroughResults(iterator, pageable.getOffset());
             if (processedCount < pageable.getOffset())
-                return new PageImpl<>(new ArrayList<T>());
+                return new PageImpl<>(new ArrayList<>());
         }
         // Scan ahead to retrieve the next page count
         List<T> results = readPageOfResults(iterator, pageable.getPageSize());
@@ -81,13 +90,13 @@ public class SimpleDynamoDBPagingAndSortingRepository<T, ID> extends SimpleDynam
         assertScanCountEnabled(enableScanPermissions.isFindAllUnpaginatedScanCountEnabled(),
                 "findAll(Pageable pageable)");
 
-        int totalCount = dynamoDBOperations.count(domainType, scanExpression);
+        long totalCount = dynamoDBOperations.count(domainType, scanRequest);
 
         return new PageImpl<>(results, pageable, totalCount);
 
     }
 
-    private long scanThroughResults(Iterator<T> paginatedScanListIterator, long resultsToScan) {
+    private long scanThroughResults(@NonNull Iterator<T> paginatedScanListIterator, long resultsToScan) {
         long processed = 0;
         while (paginatedScanListIterator.hasNext() && processed < resultsToScan) {
             paginatedScanListIterator.next();
@@ -96,7 +105,8 @@ public class SimpleDynamoDBPagingAndSortingRepository<T, ID> extends SimpleDynam
         return processed;
     }
 
-    private List<T> readPageOfResults(Iterator<T> paginatedScanListIterator, int pageSize) {
+    @NonNull
+    private List<T> readPageOfResults(@NonNull Iterator<T> paginatedScanListIterator, int pageSize) {
         int processed = 0;
         List<T> resultsPage = new ArrayList<>();
         while (paginatedScanListIterator.hasNext() && processed < pageSize) {
@@ -106,6 +116,11 @@ public class SimpleDynamoDBPagingAndSortingRepository<T, ID> extends SimpleDynam
         return resultsPage;
     }
 
+    /**
+     * Asserts that scan count is enabled for the given method.
+     * @param countScanEnabled whether scan count is enabled
+     * @param methodName the method name
+     */
     public void assertScanCountEnabled(boolean countScanEnabled, String methodName) {
         Assert.isTrue(countScanEnabled, "Scanning for the total counts for unpaginated " + methodName
                 + " queries is not enabled.  " + "To enable, re-implement the " + methodName

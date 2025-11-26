@@ -15,28 +15,42 @@
  */
 package org.socialsignin.spring.data.dynamodb.mapping.event;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedQueryList;
-import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedScanList;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.socialsignin.spring.data.dynamodb.domain.sample.User;
+import software.amazon.awssdk.core.pagination.sync.SdkIterable;
+import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+/**
+ * Tests for LoggingEventListener.
+ *
+ * SDK v2 Migration Notes:
+ * - SDK v1: PaginatedQueryList<T> → SDK v2: PageIterable<T>
+ * - SDK v1: PaginatedScanList<T> → SDK v2: PageIterable<T>
+ * - SDK v2: PageIterable.items() returns SdkIterable<T>
+ * - SdkIterable.stream() provides iteration over all items across pages
+ */
 @ExtendWith(MockitoExtension.class)
 public class LoggingEventListenerTest {
 
     private final User sampleEntity = new User();
     @Mock
-    private PaginatedQueryList<User> sampleQueryList;
+    private PageIterable<User> sampleQueryList;
     @Mock
-    private PaginatedScanList<User> sampleScanList;
+    private PageIterable<User> sampleScanList;
+    @Mock
+    private SdkIterable<User> sampleQueryItems;
+    @Mock
+    private SdkIterable<User> sampleScanItems;
 
     @Spy
     private LoggingEventListener underTest;
@@ -57,9 +71,12 @@ public class LoggingEventListenerTest {
 
     @Test
     public void testAfterQuery() {
+        // SDK v2: PageIterable.items() returns SdkIterable which has spliterator() method
         List<User> queryList = new ArrayList<>();
         queryList.add(sampleEntity);
-        when(sampleQueryList.stream()).thenReturn(queryList.stream());
+
+        when(sampleQueryList.items()).thenReturn(sampleQueryItems);
+        when(sampleQueryItems.spliterator()).thenReturn(queryList.spliterator());
 
         underTest.onApplicationEvent(new AfterQueryEvent<>(sampleQueryList));
 
@@ -75,9 +92,12 @@ public class LoggingEventListenerTest {
 
     @Test
     public void testAfterScan() {
+        // SDK v2: PageIterable.items() returns SdkIterable which has spliterator() method
         List<User> scanList = new ArrayList<>();
         scanList.add(sampleEntity);
-        when(sampleScanList.stream()).thenReturn(scanList.stream());
+
+        when(sampleScanList.items()).thenReturn(sampleScanItems);
+        when(sampleScanItems.spliterator()).thenReturn(scanList.spliterator());
 
         underTest.onApplicationEvent(new AfterScanEvent<>(sampleScanList));
 

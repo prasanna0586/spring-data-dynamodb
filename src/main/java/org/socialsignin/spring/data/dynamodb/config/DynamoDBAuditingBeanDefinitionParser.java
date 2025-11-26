@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,7 @@ import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.data.auditing.config.IsNewAwareAuditingHandlerBeanDefinitionParser;
+import org.springframework.lang.NonNull;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
 
@@ -33,22 +34,31 @@ import static org.springframework.data.config.ParsingUtils.getObjectFactoryBeanD
  * {@link org.springframework.beans.factory.xml.BeanDefinitionParser} to register a {@link AuditingEventListener} to
  * transparently set auditing information on an entity.
  *
- * @author Vito Limandibhrata
+ * This parser is used when parsing DynamoDB auditing XML configuration elements.
+ * It handles the registration of the auditing event listener and configures the mapping context
+ * reference for auditing to work properly with DynamoDB entities.
+ * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBAuditingBeanDefinitionParser extends AbstractSingleBeanDefinitionParser {
 
+    /**
+     * Default constructor for DynamoDBAuditingBeanDefinitionParser.
+     */
+    public DynamoDBAuditingBeanDefinitionParser() {
+    }
+
     /*
      * (non-Javadoc)
-     * @see org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser# getBeanClass(org.w3c.dom.Element)
+     * @see org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser#getBeanClass(org.w3c.dom.Element)
      */
     @Override
-    protected Class<?> getBeanClass(Element element) {
+    protected Class<?> getBeanClass(@NonNull Element element) {
         return AuditingEventListener.class;
     }
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.beans.factory.xml.AbstractBeanDefinitionParser# shouldGenerateId()
+     * @see org.springframework.beans.factory.xml.AbstractBeanDefinitionParser#shouldGenerateId()
      */
     @Override
     protected boolean shouldGenerateId() {
@@ -57,12 +67,10 @@ public class DynamoDBAuditingBeanDefinitionParser extends AbstractSingleBeanDefi
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser# doParse(org.w3c.dom.Element,
-     * org.springframework.beans.factory.xml.ParserContext,
-     * org.springframework.beans.factory.support.BeanDefinitionBuilder)
+     * @see org.springframework.beans.factory.xml.AbstractSingleBeanDefinitionParser#doParse(org.w3c.dom.Element, org.springframework.beans.factory.xml.ParserContext, org.springframework.beans.factory.support.BeanDefinitionBuilder)
      */
     @Override
-    protected void doParse(Element element, ParserContext parserContext, BeanDefinitionBuilder builder) {
+    protected void doParse(@NonNull Element element, @NonNull ParserContext parserContext, @NonNull BeanDefinitionBuilder builder) {
 
         String mappingContextRef = element.getAttribute("mapping-context-ref");
 

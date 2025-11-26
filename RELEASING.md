@@ -63,7 +63,7 @@ Before doing an actual release, it's recommended to test the publishing pipeline
 
 ### Test Snapshot Deployment (Safe)
 
-1. Ensure your version ends with `-SNAPSHOT` (e.g., `6.0.5-SNAPSHOT`)
+1. Ensure your version ends with `-SNAPSHOT` (e.g., `7.0.1-SNAPSHOT`)
 2. Go to Actions tab → "Run Snapshot Deploy" workflow
 3. Click "Run workflow"
 4. This will:
@@ -119,10 +119,10 @@ Use this for major version bumps, breaking changes, or when testing a new releas
 3. Enter RC number (e.g., `1` for RC1, `2` for RC2)
 4. This will:
    - Validate the RC doesn't already exist
-   - Create release `6.0.5-RC1` from `6.0.5-SNAPSHOT`
+   - Create release `7.0.1-RC1` from `7.0.1-SNAPSHOT`
    - Publish to Maven Central
-   - Create git tag `v6.0.5-RC1`
-   - Reset back to `6.0.5-SNAPSHOT`
+   - Create git tag `v7.0.1-RC1`
+   - Reset back to `7.0.1-SNAPSHOT`
 
 5. Manually create a GitHub Release:
    - Go to the provided URL in the workflow output
@@ -135,17 +135,17 @@ Use this for major version bumps, breaking changes, or when testing a new releas
 
 **Example workflow:**
 ```
-6.0.5-SNAPSHOT
+7.0.1-SNAPSHOT
     ↓
 RC1 (test) → Found bugs
     ↓
-Fix bugs in 6.0.5-SNAPSHOT
+Fix bugs in 7.0.1-SNAPSHOT
     ↓
 RC2 (test) → All good!
     ↓
-Final release 6.0.5
+Final release 7.0.1
     ↓
-6.0.6-SNAPSHOT
+7.0.2-SNAPSHOT
 ```
 
 ### Option 2: Direct Release (For Regular Updates)
@@ -159,13 +159,13 @@ Use this for bug fixes, minor improvements, or well-tested changes.
 3. Click "Run workflow"
 4. (Optional) Override versions:
    - Leave empty to use automatic versioning (recommended)
-   - Or specify custom release version (e.g., `7.0.0` for major version bump)
-   - Or specify custom next development version (e.g., `7.0.1-SNAPSHOT`)
+   - Or specify custom release version (e.g., `7.1.0` for minor version bump)
+   - Or specify custom next development version (e.g., `7.1.1-SNAPSHOT`)
 5. Click "Run workflow"
 
 **Automatic versioning** (when inputs are empty):
-- Current: `6.0.5-SNAPSHOT` → Release: `6.0.5` → Next: `6.0.6-SNAPSHOT`
-- Current: `6.0.5-SNAPSHOT` → Release: `6.0.5` → Next: `6.1.0-SNAPSHOT` (minor bump)
+- Current: `7.0.1-SNAPSHOT` → Release: `7.0.1` → Next: `7.0.2-SNAPSHOT`
+- Current: `7.0.1-SNAPSHOT` → Release: `7.0.1` → Next: `7.1.0-SNAPSHOT` (minor bump)
 
 The workflow will:
 - Automatically determine versions from pom.xml (if not specified)
@@ -225,8 +225,8 @@ Check your deployment status at:
 ## Version Naming
 
 Follow Semantic Versioning:
-- **MAJOR.MINOR.PATCH** (e.g., 6.0.5)
-- Development versions end with `-SNAPSHOT` (e.g., 6.0.6-SNAPSHOT)
+- **MAJOR.MINOR.PATCH** (e.g., 7.0.1)
+- Development versions end with `-SNAPSHOT` (e.g., 7.0.2-SNAPSHOT)
 
 ## Post-Release
 

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,9 +15,10 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.util;
 
+import org.springframework.lang.NonNull;
+
 /**
  * Configuration key is {@code spring.data.dynamodb.entity2ddl.auto} Inspired by Hibernate's hbm2ddl
- *
  * @see <a href=
  *      "https://docs.jboss.org/hibernate/orm/5.2/userguide/html_single/Hibernate_User_Guide.html#configurations-hbmddl">Hibernate
  *      User Guide</a>
@@ -52,21 +53,23 @@ public enum Entity2DDL {
         this.configurationValue = configurationValue;
     }
 
+    /**
+     * Gets the configuration value for this DDL mode.
+     * @return the configuration value
+     */
     public String getConfigurationValue() {
         return this.configurationValue;
     }
 
     /**
      * Use this in place of valueOf.
-     *
      * @param value
      *            real value
-     *
      * @return Entity2DDL corresponding to the value
-     *
      * @throws IllegalArgumentException
      *             If the specified value does not map to one of the known values in this enum.
      */
+    @NonNull
     public static Entity2DDL fromValue(String value) {
         for (Entity2DDL resolvedConfig : Entity2DDL.values()) {
             if (resolvedConfig.configurationValue.equals(value)) {

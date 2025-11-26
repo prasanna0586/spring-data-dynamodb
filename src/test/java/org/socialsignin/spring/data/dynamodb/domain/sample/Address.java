@@ -1,14 +1,14 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBDocument;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 
 import java.util.Objects;
 
 /**
  * Nested document representing an address.
  */
-@DynamoDBDocument
+@DynamoDbBean
 public class Address {
 
     private String street;
@@ -28,7 +28,7 @@ public class Address {
         this.country = country;
     }
 
-    @DynamoDBAttribute
+    @DynamoDbAttribute("street")
     public String getStreet() {
         return street;
     }
@@ -37,7 +37,7 @@ public class Address {
         this.street = street;
     }
 
-    @DynamoDBAttribute
+    @DynamoDbAttribute("city")
     public String getCity() {
         return city;
     }
@@ -46,7 +46,7 @@ public class Address {
         this.city = city;
     }
 
-    @DynamoDBAttribute
+    @DynamoDbAttribute("state")
     public String getState() {
         return state;
     }
@@ -55,7 +55,7 @@ public class Address {
         this.state = state;
     }
 
-    @DynamoDBAttribute
+    @DynamoDbAttribute("zipCode")
     public String getZipCode() {
         return zipCode;
     }
@@ -64,7 +64,7 @@ public class Address {
         this.zipCode = zipCode;
     }
 
-    @DynamoDBAttribute
+    @DynamoDbAttribute("country")
     public String getCountry() {
         return country;
     }

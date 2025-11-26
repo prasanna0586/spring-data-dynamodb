@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,32 +17,40 @@ package org.socialsignin.spring.data.dynamodb.query;
 
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.lang.Nullable;
 
 import java.util.List;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * Base abstract class for queries that return multiple entities.
+ * @param <T> the entity type
+ * @author Prasanna Kumar Ramachandran
  */
 public abstract class AbstractMultipleEntityQuery<T> extends AbstractDynamicQuery<T> implements Query<T> {
 
+    /**
+     * Constructs a new AbstractMultipleEntityQuery.
+     * @param dynamoDBOperations the DynamoDB operations instance
+     * @param clazz the entity class type
+     */
     public AbstractMultipleEntityQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz) {
         super(dynamoDBOperations, clazz);
     }
 
+    @Nullable
     @Override
     public T getSingleResult() {
         List<T> results = getResultList();
-        if (results.size() > 1) {
+        if (results != null && results.size() > 1) {
             throw new IncorrectResultSizeDataAccessException("result returns more than one elements", 1,
                     results.size());
         }
-        if (results.size() == 0) {
+        if (results == null || results.isEmpty()) {
             // return null here as Spring will convert that to Optional if nessassary
             // https://jira.spring.io/browse/DATACMNS-483
             return null;
         } else {
-            return results.get(0);
+            return results.getFirst();
         }
     }
 }

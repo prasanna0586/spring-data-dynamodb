@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,22 +15,29 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
+import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * Hash key extractor for cases where the ID is also the hash key, requiring direct delegation to the ID.
+ * @param <ID> the ID type which also serves as the hash key type
+ * @author Prasanna Kumar Ramachandran
  */
 public class HashKeyIsIdHashKeyExtractor<ID> implements HashKeyExtractor<ID, ID> {
 
-    private Class<ID> idAndHashKeyType;
+    private final Class<ID> idAndHashKeyType;
 
+    /**
+     * Creates a new HashKeyIsIdHashKeyExtractor.
+     * @param idAndHashKeyType the ID and hash key type
+     */
     public HashKeyIsIdHashKeyExtractor(Class<ID> idAndHashKeyType) {
         this.idAndHashKeyType = idAndHashKeyType;
     }
 
+    @NonNull
     @Override
-    public ID getHashKey(ID id) {
+    public ID getHashKey(@NonNull ID id) {
         Assert.isAssignable(idAndHashKeyType, id.getClass(),
                 "Expected ID type to be the same as the return type of the hash key method ( " + idAndHashKeyType
                         + " ) : ");

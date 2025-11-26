@@ -1,17 +1,18 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
-import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedQueryList;
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
-import com.amazonaws.services.dynamodbv2.model.Condition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
+import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * Custom repository implementation for DocumentMetadata.
@@ -41,19 +42,25 @@ public class DocumentMetadataRepositoryImpl implements DocumentMetadataRepositor
 
                 CompletableFuture.<List<DocumentMetadata>>supplyAsync(() -> {
 
-                DocumentMetadata gsiKey = new DocumentMetadata();
-                gsiKey.setMemberId(memberId);
+                // SDK v2: Build low-level QueryRequest for GSI query
+                // Query on GSI: memberId-documentCategory-index with memberId (partition) and documentCategory (sort) keys
+                Map<String, AttributeValue> expressionValues = new HashMap<>();
+                expressionValues.put(":memberId", AttributeValue.builder().n(memberId.toString()).build());
+                expressionValues.put(":category", AttributeValue.builder().n(category.toString()).build());
 
-                DynamoDBQueryExpression<DocumentMetadata> query = new DynamoDBQueryExpression<DocumentMetadata>()
-                    .withIndexName("memberId-documentCategory-index")
-                    .withConsistentRead(false)
-                    .withHashKeyValues(gsiKey) // Pass the object with memberId as hash key
-                    .withRangeKeyCondition("documentCategory", new Condition()
-                        .withComparisonOperator(ComparisonOperator.EQ)
-                        .withAttributeValueList(new AttributeValue().withN(category.toString())));
+                QueryRequest queryRequest = QueryRequest.builder()
+                    .tableName(dynamoDBOperations.getOverriddenTableName(DocumentMetadata.class, "DocumentMetadata"))
+                    .indexName("memberId-documentCategory-index")
+                    .keyConditionExpression("memberId = :memberId AND documentCategory = :category")
+                    .expressionAttributeValues(expressionValues)
+                    .consistentRead(false)
+                    .build();
 
-                PaginatedQueryList<DocumentMetadata> results = dynamoDBOperations.query(DocumentMetadata.class, query);
-                return new ArrayList<>(results);
+                PageIterable<DocumentMetadata> results = dynamoDBOperations.query(DocumentMetadata.class, queryRequest);
+
+                // Convert PageIterable to List
+                return StreamSupport.stream(results.items().spliterator(), false)
+                    .collect(Collectors.toList());
 
             })).toList();
 
@@ -78,19 +85,25 @@ public class DocumentMetadataRepositoryImpl implements DocumentMetadataRepositor
 
                 CompletableFuture.<List<DocumentMetadata>>supplyAsync(() -> {
 
-                DocumentMetadata gsiKey = new DocumentMetadata();
-                gsiKey.setMemberId(memberId);
+                // SDK v2: Build low-level QueryRequest for GSI query
+                // Query on GSI: memberId-documentSubCategory-index with memberId (partition) and documentSubCategory (sort) keys
+                Map<String, AttributeValue> expressionValues = new HashMap<>();
+                expressionValues.put(":memberId", AttributeValue.builder().n(memberId.toString()).build());
+                expressionValues.put(":subCategory", AttributeValue.builder().n(subCategory.toString()).build());
 
-                DynamoDBQueryExpression<DocumentMetadata> query = new DynamoDBQueryExpression<DocumentMetadata>()
-                    .withIndexName("memberId-documentSubCategory-index")
-                    .withConsistentRead(false)
-                    .withHashKeyValues(gsiKey) // Pass the object with memberId as hash key
-                    .withRangeKeyCondition("documentSubCategory", new Condition()
-                        .withComparisonOperator(ComparisonOperator.EQ)
-                        .withAttributeValueList(new AttributeValue().withN(subCategory.toString())));
+                QueryRequest queryRequest = QueryRequest.builder()
+                    .tableName(dynamoDBOperations.getOverriddenTableName(DocumentMetadata.class, "DocumentMetadata"))
+                    .indexName("memberId-documentSubCategory-index")
+                    .keyConditionExpression("memberId = :memberId AND documentSubCategory = :subCategory")
+                    .expressionAttributeValues(expressionValues)
+                    .consistentRead(false)
+                    .build();
 
-                PaginatedQueryList<DocumentMetadata> results = dynamoDBOperations.query(DocumentMetadata.class, query);
-                return new ArrayList<>(results);
+                PageIterable<DocumentMetadata> results = dynamoDBOperations.query(DocumentMetadata.class, queryRequest);
+
+                // Convert PageIterable to List
+                return StreamSupport.stream(results.items().spliterator(), false)
+                    .collect(Collectors.toList());
 
             })).toList();
 

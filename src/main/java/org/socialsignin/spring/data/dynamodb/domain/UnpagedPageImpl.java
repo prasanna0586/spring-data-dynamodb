@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import java.util.Iterator;
@@ -30,16 +29,22 @@ import java.util.stream.Collectors;
 /**
  * {@link Page} implementation that uses only the methods from the {@link Iterable} interface thus the lazy list from
  * the AWS SDK used as result set can be properly used
- *
  * @param <T>
  *            The type of the list's elements
  */
 public class UnpagedPageImpl<T> implements Page<T> {
 
+    @NonNull
     private final List<T> content;
+    @NonNull
     private final Pageable pageable;
     private final long total;
 
+    /**
+     * Creates a new unpaged page instance.
+     * @param content the content of this page, must not be null
+     * @param total the total number of elements available
+     */
     public UnpagedPageImpl(@NonNull List<T> content, long total) {
 
         Assert.notNull(content, "content must not be null!");
@@ -68,6 +73,7 @@ public class UnpagedPageImpl<T> implements Page<T> {
         }
     }
 
+    @NonNull
     @Override
     public Sort getSort() {
         return pageable.getSort();
@@ -93,18 +99,19 @@ public class UnpagedPageImpl<T> implements Page<T> {
         return false;
     }
 
+    @NonNull
     @Override
-    @Nullable
     public Pageable nextPageable() {
-        return null;
+        return Pageable.unpaged();
     }
 
+    @NonNull
     @Override
-    @Nullable
     public Pageable previousPageable() {
-        return null;
+        return Pageable.unpaged();
     }
 
+    @NonNull
     @Override
     public Iterator<T> iterator() {
         return this.content.iterator();
@@ -120,13 +127,15 @@ public class UnpagedPageImpl<T> implements Page<T> {
         return this.total;
     }
 
+    @NonNull
     @Override
-    public <U> UnpagedPageImpl<U> map(Function<? super T, ? extends U> converter) {
+    public <U> UnpagedPageImpl<U> map(@NonNull Function<? super T, ? extends U> converter) {
         List<U> convertedContent = this.content.stream().map(converter).collect(Collectors.toList());
 
         return new UnpagedPageImpl<>(convertedContent, this.total);
     }
 
+    @NonNull
     @Override
     public List<T> getContent() {
         return content;
@@ -141,6 +150,7 @@ public class UnpagedPageImpl<T> implements Page<T> {
      * (non-Javadoc)
      * @see java.lang.Object#toString()
      */
+    @NonNull
     @Override
     public String toString() {
 
@@ -164,11 +174,9 @@ public class UnpagedPageImpl<T> implements Page<T> {
             return true;
         }
 
-        if (!(obj instanceof UnpagedPageImpl<?>)) {
+        if (!(obj instanceof UnpagedPageImpl<?> that)) {
             return false;
         }
-
-        UnpagedPageImpl<?> that = (UnpagedPageImpl<?>) obj;
 
         return this.total == that.total && this.pageable.equals(that.pageable) && this.content.equals(that.content);
     }
@@ -182,7 +190,7 @@ public class UnpagedPageImpl<T> implements Page<T> {
 
         int result = 17;
 
-        result += 31 * (int) (total ^ total >>> 32);
+        result += 31 * Long.hashCode(total);
         result += 31 * pageable.hashCode();
         result += 31 * content.hashCode();
 

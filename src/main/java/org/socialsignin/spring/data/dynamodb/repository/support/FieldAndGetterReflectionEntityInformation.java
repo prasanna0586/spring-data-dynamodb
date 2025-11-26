@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,7 @@ package org.socialsignin.spring.data.dynamodb.repository.support;
 
 import org.springframework.data.repository.core.support.AbstractEntityInformation;
 import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
 
@@ -28,22 +29,24 @@ import java.lang.reflect.Method;
  * {@link org.springframework.data.repository.core.EntityInformation} implementation that inspects getters for an
  * annotation and invokes this getter's value to retrieve the id.
  *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @param <T> the entity type
+ * @param <ID> the ID type
+ * @author Prasanna Kumar Ramachandran
  */
 public class FieldAndGetterReflectionEntityInformation<T, ID> extends AbstractEntityInformation<T, ID> {
 
+    /** The getter method annotated with the ID annotation */
     protected Method method;
+    /** The field annotated with the ID annotation */
+    @Nullable
     private Field field;
 
     /**
      * Creates a new {@link FieldAndGetterReflectionEntityInformation} inspecting the given domain class for a getter
      * carrying the given annotation.
      *
-     * @param domainClass
-     *            must not be {@literal null}.
-     * @param annotation
-     *            must not be {@literal null}.
+     * @param domainClass must not be {@literal null}.
+     * @param annotation must not be {@literal null}.
      */
     public FieldAndGetterReflectionEntityInformation(@NonNull Class<T> domainClass,
             @NonNull final Class<? extends Annotation> annotation) {
@@ -54,7 +57,6 @@ public class FieldAndGetterReflectionEntityInformation<T, ID> extends AbstractEn
         ReflectionUtils.doWithMethods(domainClass, (method) -> {
             if (method.getAnnotation(annotation) != null) {
                 this.method = method;
-                return;
             }
         });
 
@@ -63,15 +65,14 @@ public class FieldAndGetterReflectionEntityInformation<T, ID> extends AbstractEn
             ReflectionUtils.doWithFields(domainClass, (field) -> {
                 if (field.getAnnotation(annotation) != null) {
                     this.field = field;
-                    return;
                 }
             });
         }
 
         Assert.isTrue(this.method != null || this.field != null,
-                String.format("No field or method annotated with %s found!", annotation.toString()));
+                String.format("No field or method annotated with %s found!", annotation));
         Assert.isTrue(this.method == null || this.field == null,
-                String.format("Both field and method annotated with %s found!", annotation.toString()));
+                String.format("Both field and method annotated with %s found!", annotation));
 
         if (method != null) {
             ReflectionUtils.makeAccessible(method);
@@ -83,26 +84,33 @@ public class FieldAndGetterReflectionEntityInformation<T, ID> extends AbstractEn
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.data.repository.core.EntityInformation#getId(java .lang.Object)
+     * @see org.springframework.data.repository.core.EntityInformation#getId(java.lang.Object)
      */
     @Override
     @SuppressWarnings("unchecked")
-    public ID getId(T entity) {
+    public ID getId(@NonNull T entity) {
 
         if (method != null) {
-            return entity == null ? null : (ID) ReflectionUtils.invokeMethod(method, entity);
-        } else {
-            return entity == null ? null : (ID) ReflectionUtils.getField(field, entity);
+            return (ID) ReflectionUtils.invokeMethod(method, entity);
+        } else if (field != null) {
+            return (ID) ReflectionUtils.getField(field, entity);
         }
+        return null;
     }
 
     /*
      * (non-Javadoc)
      * @see org.springframework.data.repository.core.EntityInformation#getIdType()
      */
+    @NonNull
     @Override
     @SuppressWarnings("unchecked")
     public Class<ID> getIdType() {
-        return (Class<ID>) (method != null ? method.getReturnType() : field.getType());
+        if (method != null) {
+            return (Class<ID>) method.getReturnType();
+        } else if (field != null) {
+            return (Class<ID>) field.getType();
+        }
+        throw new IllegalStateException("Neither method nor field is set for ID extraction");
     }
 }

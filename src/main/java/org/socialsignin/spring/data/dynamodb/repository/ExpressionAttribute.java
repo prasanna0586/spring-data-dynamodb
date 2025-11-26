@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,10 +15,25 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository;
 
+/**
+ * Annotation for defining expression attribute mappings in DynamoDB queries.
+ */
 public @interface ExpressionAttribute {
+    /**
+     * The expression attribute name or value key.
+     * @return the key
+     */
     String key() default "";
 
+    /**
+     * The expression attribute value.
+     * @return the value
+     */
     String value() default "";
 
+    /**
+     * The parameter name for method parameter binding.
+     * @return the parameter name
+     */
     String parameterName() default "";
 }

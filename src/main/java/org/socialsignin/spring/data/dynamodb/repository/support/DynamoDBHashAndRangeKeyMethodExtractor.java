@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,17 +21,38 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * Defines contract for extracting hash and range key methods and fields from DynamoDB entities.
+ * @param <ID> the ID type
+ * @author Prasanna Kumar Ramachandran
  */
 public interface DynamoDBHashAndRangeKeyMethodExtractor<ID> extends EntityMetadata<ID> {
 
+    /**
+     * Gets the getter method for the hash key property.
+     *
+     * @return the hash key getter method
+     */
     Method getHashKeyMethod();
 
+    /**
+     * Gets the getter method for the range key property.
+     *
+     * @return the range key getter method
+     */
     Method getRangeKeyMethod();
 
+    /**
+     * Gets the field for the hash key property.
+     *
+     * @return the hash key field
+     */
     Field getHashKeyField();
 
+    /**
+     * Gets the field for the range key property.
+     *
+     * @return the range key field
+     */
     Field getRangeKeyField();
 
 }

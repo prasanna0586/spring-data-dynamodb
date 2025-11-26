@@ -15,16 +15,18 @@
  */
 package org.socialsignin.spring.data.dynamodb.utils;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.TestExecutionListener;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+
+import java.net.URI;
 
 @Configuration
 public class DynamoDBLocalResource implements TestExecutionListener {
@@ -39,17 +41,30 @@ public class DynamoDBLocalResource implements TestExecutionListener {
     }
 
     @Bean
-    public AmazonDynamoDB amazonDynamoDB() {
+    public DynamoDbClient amazonDynamoDB() {
         String endpoint = String.format("http://%s:%d",
                 dynamoDBContainer.getHost(),
                 dynamoDBContainer.getMappedPort(8000));
 
-        return AmazonDynamoDBClientBuilder.standard()
-                .withEndpointConfiguration(
-                        new AwsClientBuilder.EndpointConfiguration(endpoint, "us-east-1"))
-                .withCredentials(new AWSStaticCredentialsProvider(
-                        new BasicAWSCredentials("dummy", "dummy")))
+        return DynamoDbClient.builder()
+                .endpointOverride(URI.create(endpoint))
+                .region(Region.US_EAST_1)
+                .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("dummy", "dummy")))
                 .build();
     }
+
+    @Bean
+    public AwsCredentials amazonAWSCredentials() {
+        return AwsBasicCredentials.create("dummy", "dummy");
+    }
+
+    // NOTE: Do NOT create DynamoDBMappingContext or DynamoDbEnhancedClient beans here.
+    //
+    // All tests should use @EnableDynamoDBRepositories which will create:
+    // - DynamoDBMappingContext with the correct marshalling mode (defaults to SDK_V2_NATIVE)
+    // - DynamoDbEnhancedClient via DynamoDBMapperFactory
+    //
+    // Only tests testing V1_COMPATIBLE mode should explicitly set:
+    // @EnableDynamoDBRepositories(marshallingMode = MarshallingMode.SDK_V1_COMPATIBLE)
 
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,22 +24,41 @@ import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBEntityIn
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.parser.PartTree;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 
-import java.util.Optional;
-
+/**
+ * Query creator for DynamoDB entity queries returning entity results.
+ *
+ * @param <T> the entity type
+ * @param <ID> the entity ID type
+ */
 public class DynamoDBQueryCreator<T, ID> extends AbstractDynamoDBQueryCreator<T, ID, T> {
 
-    public DynamoDBQueryCreator(PartTree tree, ParameterAccessor parameterAccessor,
-            DynamoDBEntityInformation<T, ID> entityMetadata, Optional<String> projection, Optional<Integer> limit,
-            QueryConstants.ConsistentReadMode consistentReads, Optional<String> filterExpression,
-            ExpressionAttribute[] names, ExpressionAttribute[] values, DynamoDBOperations dynamoDBOperations) {
+    /**
+     * Creates a new DynamoDBQueryCreator.
+     * @param tree the part tree representing the parsed method name
+     * @param parameterAccessor the parameter accessor for method parameters
+     * @param entityMetadata the entity metadata
+     * @param projection the projection expression
+     * @param limit the limit for results
+     * @param consistentReads the consistent read mode
+     * @param filterExpression the filter expression
+     * @param names the expression attribute names
+     * @param values the expression attribute values
+     * @param dynamoDBOperations the DynamoDB operations
+     */
+    public DynamoDBQueryCreator(@NonNull PartTree tree, @NonNull ParameterAccessor parameterAccessor,
+                                DynamoDBEntityInformation<T, ID> entityMetadata, @Nullable String projection, @Nullable Integer limit,
+                                QueryConstants.ConsistentReadMode consistentReads, @Nullable String filterExpression,
+                                ExpressionAttribute[] names, ExpressionAttribute[] values, DynamoDBOperations dynamoDBOperations) {
         super(tree, parameterAccessor, entityMetadata, projection, limit, consistentReads, filterExpression, names,
                 values, dynamoDBOperations);
     }
 
+    @NonNull
     @Override
-    protected Query<T> complete(@Nullable DynamoDBQueryCriteria<T, ID> criteria, Sort sort) {
+    protected Query<T> complete(@Nullable DynamoDBQueryCriteria<T, ID> criteria, @NonNull Sort sort) {
         if (criteria == null) {
             return new StaticQuery<>(null);
         } else {

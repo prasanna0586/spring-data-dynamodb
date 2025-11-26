@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,15 +15,25 @@
  */
 package org.socialsignin.spring.data.dynamodb.mapping.event;
 
+import org.springframework.lang.NonNull;
+
+import java.io.Serial;
+
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * Event published after an entity is deleted from DynamoDB.
+ * @param <T> the entity type
+ * @author Prasanna Kumar Ramachandran
  */
 public class AfterDeleteEvent<T> extends DynamoDBMappingEvent<T> {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
-    public AfterDeleteEvent(T source) {
+    /**
+     * Constructs an AfterDeleteEvent.
+     * @param source the entity that was deleted
+     */
+    public AfterDeleteEvent(@NonNull T source) {
         super(source);
     }
 

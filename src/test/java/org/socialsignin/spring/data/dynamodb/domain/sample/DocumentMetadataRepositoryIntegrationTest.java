@@ -1,8 +1,5 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.model.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -14,6 +11,8 @@ import org.springframework.data.domain.Slice;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -48,7 +47,7 @@ public class DocumentMetadataRepositoryIntegrationTest {
     private DocumentMetadataRepository repository;
 
     @Autowired
-    private AmazonDynamoDB amazonDynamoDB;
+    private DynamoDbClient amazonDynamoDB;
 
     private static boolean tableCreated = false;
     private final List<String> testDocumentIds = new ArrayList<>();
@@ -76,19 +75,62 @@ public class DocumentMetadataRepositoryIntegrationTest {
 
     private void createTableIfNotExists() {
         try {
-            amazonDynamoDB.describeTable("DocumentMetadata");
+            amazonDynamoDB.describeTable(DescribeTableRequest.builder()
+                    .tableName("DocumentMetadata")
+                    .build());
         } catch (ResourceNotFoundException e) {
-            CreateTableRequest createTableRequest = new DynamoDBMapper(amazonDynamoDB)
-                    .generateCreateTableRequest(DocumentMetadata.class);
-
-            createTableRequest.setProvisionedThroughput(new ProvisionedThroughput(5L, 5L));
-
-            if (createTableRequest.getGlobalSecondaryIndexes() != null) {
-                for (GlobalSecondaryIndex gsi : createTableRequest.getGlobalSecondaryIndexes()) {
-                    gsi.setProvisionedThroughput(new ProvisionedThroughput(5L, 5L));
-                    gsi.setProjection(new Projection().withProjectionType(ProjectionType.ALL));
-                }
-            }
+            // SDK v2: Build CreateTableRequest manually
+            // Primary key: uniqueDocumentId (String)
+            // GSI: idx_memberId_createdAt with memberId (hash) and createdAt (range)
+            CreateTableRequest createTableRequest = CreateTableRequest.builder()
+                    .tableName("DocumentMetadata")
+                    .keySchema(
+                            KeySchemaElement.builder()
+                                    .attributeName("uniqueDocumentId")
+                                    .keyType(KeyType.HASH)
+                                    .build()
+                    )
+                    .attributeDefinitions(
+                            AttributeDefinition.builder()
+                                    .attributeName("uniqueDocumentId")
+                                    .attributeType(ScalarAttributeType.S)
+                                    .build(),
+                            AttributeDefinition.builder()
+                                    .attributeName("memberId")
+                                    .attributeType(ScalarAttributeType.N)
+                                    .build(),
+                            AttributeDefinition.builder()
+                                    .attributeName("createdAt")
+                                    .attributeType(ScalarAttributeType.S)
+                                    .build()
+                    )
+                    .provisionedThroughput(ProvisionedThroughput.builder()
+                            .readCapacityUnits(5L)
+                            .writeCapacityUnits(5L)
+                            .build())
+                    .globalSecondaryIndexes(
+                            GlobalSecondaryIndex.builder()
+                                    .indexName("idx_memberId_createdAt")
+                                    .keySchema(
+                                            KeySchemaElement.builder()
+                                                    .attributeName("memberId")
+                                                    .keyType(KeyType.HASH)
+                                                    .build(),
+                                            KeySchemaElement.builder()
+                                                    .attributeName("createdAt")
+                                                    .keyType(KeyType.RANGE)
+                                                    .build()
+                                    )
+                                    .projection(Projection.builder()
+                                            .projectionType(ProjectionType.ALL)
+                                            .build())
+                                    .provisionedThroughput(ProvisionedThroughput.builder()
+                                            .readCapacityUnits(5L)
+                                            .writeCapacityUnits(5L)
+                                            .build())
+                                    .build()
+                    )
+                    .build();
 
             amazonDynamoDB.createTable(createTableRequest);
 
@@ -427,14 +469,14 @@ public class DocumentMetadataRepositoryIntegrationTest {
     void testUpdateDocument_MultipleFields() {
         // Given
         DocumentMetadata doc = createTestDocument("test16-doc1", 16, 101, 201, "user1");
-        repository.save(doc);
+        DocumentMetadata savedDoc = repository.save(doc);
 
-        // When
-        doc.setNotes("Updated notes for test");
-        doc.setUpdatedAt(Instant.now().plus(1, ChronoUnit.HOURS));
-        doc.setUpdatedBy("user2");
-        doc.setDocumentSubCategory(202);
-        repository.save(doc);
+        // When - Update using the saved document (which has version populated)
+        savedDoc.setNotes("Updated notes for test");
+        savedDoc.setUpdatedAt(Instant.now().plus(1, ChronoUnit.HOURS));
+        savedDoc.setUpdatedBy("user2");
+        savedDoc.setDocumentSubCategory(202);
+        repository.save(savedDoc);
 
         Optional<DocumentMetadata> updated = repository.findByUniqueDocumentId("test16-doc1");
 

@@ -15,28 +15,26 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.config;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig.TableNameOverride;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.socialsignin.spring.data.dynamodb.core.TableNameResolver;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * SDK v2 Migration Notes:
+ * - SDK v1: DynamoDBMapperConfigFactory was a BeanPostProcessor for DynamoDBMapperConfig
+ * - SDK v2: DynamoDBMapperConfigFactory is a FactoryBean<TableNameResolver>
+ * - SDK v1: Complex configuration with TableNameOverride, ConversionSchema, TypeConverterFactory
+ * - SDK v2: Simplified to just TableNameResolver - other concerns handled by DynamoDbEnhancedClient
+ * - The factory now returns a default TableNameResolver that passes through the base table name unchanged
+ */
 @ExtendWith(MockitoExtension.class)
 public class DynamoDBMapperConfigFactoryTest {
 
-    @Mock
-    private DynamoDBMapper dynamoDBMapper;
-    @Mock
-    private DynamoDBMapperConfig dynamoDBMapperConfig;
-    @Mock
-    private AmazonDynamoDB dynamoDB;
-
+    @SuppressWarnings("deprecation")
     DynamoDBMapperConfigFactory underTest;
 
     @BeforeEach
@@ -45,52 +43,67 @@ public class DynamoDBMapperConfigFactoryTest {
     }
 
     @Test
-    public void testGetOverriddenTableName_WithTableNameResolver_defaultConfig() {
+    public void testGetObject_ReturnsTableNameResolver() throws Exception {
+        TableNameResolver resolver = underTest.getObject();
 
-        DynamoDBMapperConfig actual = (DynamoDBMapperConfig) underTest
-                .postProcessAfterInitialization(DynamoDBMapperConfig.DEFAULT, null);
-
-        assertSame(DynamoDBMapperConfig.DEFAULT, actual);
+        assertNotNull(resolver);
     }
 
     @Test
-    public void testGetOverriddenTableName_WithTableNameResolver_defaultBuilder() {
-        final String overridenTableName = "someOtherTableName";
+    public void testGetObjectType_ReturnsTableNameResolverClass() {
+        Class<?> objectType = underTest.getObjectType();
 
-        DynamoDBMapperConfig.Builder builder = new DynamoDBMapperConfig.Builder();
-        // Inject the table name overrider bean
-        builder.setTableNameOverride(new TableNameOverride(overridenTableName));
-
-        DynamoDBMapperConfig actual = (DynamoDBMapperConfig) underTest.postProcessAfterInitialization(builder.build(),
-                null);
-
-        String overriddenTableName = actual.getTableNameOverride().getTableName();
-        assertEquals(overridenTableName, overriddenTableName);
-
-        assertDynamoDBMapperConfigCompletness(actual);
+        assertEquals(TableNameResolver.class, objectType);
     }
 
     @Test
-    public void testGetOverriddenTableName_WithTableNameResolver_emptyBuilder() {
-        final String overridenTableName = "someOtherTableName";
+    public void testIsSingleton_ReturnsTrue() {
+        boolean isSingleton = underTest.isSingleton();
 
-        DynamoDBMapperConfig.Builder builder = DynamoDBMapperConfig.builder();
-        // Inject the table name overrider bean
-        builder.setTableNameOverride(new TableNameOverride(overridenTableName));
-
-        DynamoDBMapperConfig actual = (DynamoDBMapperConfig) underTest.postProcessAfterInitialization(builder.build(),
-                null);
-
-        String overriddenTableName = actual.getTableNameOverride().getTableName();
-        assertEquals(overridenTableName, overriddenTableName);
-
-        assertDynamoDBMapperConfigCompletness(actual);
+        assertTrue(isSingleton);
     }
 
-    private void assertDynamoDBMapperConfigCompletness(DynamoDBMapperConfig effectiveConfig) {
-        assertNotNull(effectiveConfig);
-        assertNotNull(effectiveConfig.getConversionSchema());
-        assertNotNull(effectiveConfig.getTypeConverterFactory());
+    @Test
+    public void testDefaultResolver_ReturnsBaseTableNameUnchanged() throws Exception {
+        TableNameResolver resolver = underTest.getObject();
+
+        String tableName = resolver.resolveTableName(Object.class, "MyTable");
+
+        assertEquals("MyTable", tableName);
+    }
+
+    @Test
+    public void testUserDefinedResolver_IsUsedWhenSet() throws Exception {
+        // Create a custom TableNameResolver
+        TableNameResolver customResolver = new TableNameResolver() {
+            @Override
+            public <T> String resolveTableName(Class<T> domainClass, String baseTableName) {
+                return "prefix_" + baseTableName;
+            }
+        };
+
+        // Set the custom resolver
+        underTest.setTableNameResolver(customResolver);
+
+        // Get the resolver from the factory
+        TableNameResolver resolver = underTest.getObject();
+
+        // Verify the custom resolver is used
+        assertSame(customResolver, resolver);
+        assertEquals("prefix_MyTable", resolver.resolveTableName(Object.class, "MyTable"));
+    }
+
+    @Test
+    public void testNullResolver_UsesDefault() throws Exception {
+        // Explicitly set null resolver
+        underTest.setTableNameResolver(null);
+
+        // Get the resolver from the factory
+        TableNameResolver resolver = underTest.getObject();
+
+        // Verify default behavior (unchanged table name)
+        assertNotNull(resolver);
+        assertEquals("MyTable", resolver.resolveTableName(Object.class, "MyTable"));
     }
 
 }

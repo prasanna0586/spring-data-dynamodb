@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,32 +15,53 @@
  */
 package org.socialsignin.spring.data.dynamodb.marshaller;
 
+import org.springframework.lang.NonNull;
+
+import java.io.Serial;
 import java.text.DateFormat;
 import java.text.FieldPosition;
 import java.text.ParsePosition;
 import java.util.Date;
 
+/**
+ * Marshaller for converting Date to epoch milliseconds stored as String.
+ * Format: String representation of milliseconds since Unix epoch (1970-01-01T00:00:00Z)
+ * @deprecated This class was created for SDK v1 compatibility. For new code using SDK v2,
+ *             consider using AttributeConverter instead.
+ * @since 1.0.0
+ */
+@Deprecated
 public class Date2EpocheDynamoDBMarshaller extends DateDynamoDBMarshaller {
 
+    /**
+     * Constructs a new Date2EpocheDynamoDBMarshaller.
+     */
+    public Date2EpocheDynamoDBMarshaller() {
+    }
+
     private static final class EpcoheDateFormat extends DateFormat {
+        @Serial
         private static final long serialVersionUID = 2969564523817434535L;
 
+        @NonNull
         @Override
-        public StringBuffer format(Date date, StringBuffer toAppendTo, FieldPosition fieldPosition) {
+        public StringBuffer format(@NonNull Date date, @NonNull StringBuffer toAppendTo, FieldPosition fieldPosition) {
             long epoche = date.getTime();
             toAppendTo.append(epoche);
             return toAppendTo;
         }
 
+        @NonNull
         @Override
-        public Date parse(String source, ParsePosition pos) {
+        public Date parse(@NonNull String source, @NonNull ParsePosition pos) {
             long epoche = Long.parseLong(source);
             pos.setIndex(source.length());
             return new Date(epoche);
         }
 
-    };
+    }
 
+    @NonNull
     @Override
     public DateFormat getDateFormat() {
         return new EpcoheDateFormat();

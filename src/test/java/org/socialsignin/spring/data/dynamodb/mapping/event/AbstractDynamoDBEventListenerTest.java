@@ -15,8 +15,6 @@
  */
 package org.socialsignin.spring.data.dynamodb.mapping.event;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedQueryList;
-import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedScanList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.socialsignin.spring.data.dynamodb.domain.sample.User;
+import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,9 +36,9 @@ public class AbstractDynamoDBEventListenerTest {
 
     private User sampleEntity = new User();
     @Mock
-    private PaginatedQueryList<User> sampleQueryList;
+    private PageIterable<User> sampleQueryList;
     @Mock
-    private PaginatedScanList<User> sampleScanList;
+    private PageIterable<User> sampleScanList;
 
     @Mock
     private DynamoDBMappingEvent<User> brokenEvent;
@@ -110,7 +109,10 @@ public class AbstractDynamoDBEventListenerTest {
     public void testAfterQuery() {
         List<User> queryList = new ArrayList<>();
         queryList.add(sampleEntity);
-        when(sampleQueryList.stream()).thenReturn(queryList.stream());
+        // PageIterable.items() should return SdkIterable, not List
+        software.amazon.awssdk.core.pagination.sync.SdkIterable<User> sdkIterable =
+            () -> queryList.iterator();
+        when(sampleQueryList.items()).thenReturn(sdkIterable);
 
         underTest.onApplicationEvent(new AfterQueryEvent<>(sampleQueryList));
 
@@ -140,7 +142,10 @@ public class AbstractDynamoDBEventListenerTest {
     public void testAfterScan() {
         List<User> scanList = new ArrayList<>();
         scanList.add(sampleEntity);
-        when(sampleScanList.stream()).thenReturn(scanList.stream());
+        // PageIterable.items() should return SdkIterable, not List
+        software.amazon.awssdk.core.pagination.sync.SdkIterable<User> sdkIterable =
+            () -> scanList.iterator();
+        when(sampleScanList.items()).thenReturn(sdkIterable);
 
         underTest.onApplicationEvent(new AfterScanEvent<>(sampleScanList));
 

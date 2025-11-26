@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,15 +15,25 @@
  */
 package org.socialsignin.spring.data.dynamodb.mapping.event;
 
+import org.springframework.lang.NonNull;
+
+import java.io.Serial;
+
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * Event published before an entity is saved to DynamoDB.
+ * @param <T> the entity type
+ * @author Prasanna Kumar Ramachandran
  */
 public class BeforeSaveEvent<T> extends DynamoDBMappingEvent<T> {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
-    public BeforeSaveEvent(T source) {
+    /**
+     * Constructs a BeforeSaveEvent.
+     * @param source the entity to be saved
+     */
+    public BeforeSaveEvent(@NonNull T source) {
         super(source);
     }
 

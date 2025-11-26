@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,23 +15,45 @@
  */
 package org.socialsignin.spring.data.dynamodb.marshaller;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMarshaller;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverter;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 
-@SuppressWarnings("deprecation")
-public class Instant2EpocheDynamoDBMarshaller
-        implements DynamoDBTypeConverter<String, Instant>, DynamoDBMarshaller<Instant> {
+/**
+ * Marshaller for converting Instant to epoch milliseconds stored as String.
+ * Format: String representation of milliseconds since Unix epoch (1970-01-01T00:00:00Z)
+ * @deprecated This class was created for SDK v1 compatibility. For new code using SDK v2,
+ *             consider using AttributeConverter instead.
+ * @since 1.0.0
+ */
+@Deprecated
+public class Instant2EpocheDynamoDBMarshaller {
 
-    @Override
+    /**
+     * Default constructor.
+     */
+    public Instant2EpocheDynamoDBMarshaller() {
+    }
+
+    /**
+     * Converts an Instant to String representation.
+     * @param object the Instant to convert
+     * @return String representation of epoch milliseconds
+     */
+    @Nullable
     public String convert(Instant object) {
         return marshall(object);
     }
 
-    @Override
-    public String marshall(Instant getterReturnResult) {
+    /**
+     * Marshalls an Instant to epoch milliseconds String format.
+     * @param getterReturnResult the Instant to marshall
+     * @return String representation of epoch milliseconds
+     */
+    @Nullable
+    public String marshall(@Nullable Instant getterReturnResult) {
         if (getterReturnResult == null) {
             return null;
         } else {
@@ -39,14 +61,24 @@ public class Instant2EpocheDynamoDBMarshaller
         }
     }
 
-    @Override
-    public Instant unconvert(String object) {
-        return unmarshall(Instant.class, object);
+    /**
+     * Converts a String back to Instant.
+     * @param object the String to convert
+     * @return Instant object
+     */
+    @Nullable
+    public Instant unconvert(@NonNull String object) {
+        return unmarshall(object);
     }
 
-    @Override
-    public Instant unmarshall(Class<Instant> clazz, String obj) {
-        if (StringUtils.isEmpty(obj)) {
+    /**
+     * Unmarshalls a String to Instant.
+     * @param obj   the String to unmarshall (epoch milliseconds)
+     * @return Instant object
+     */
+    @Nullable
+    public Instant unmarshall(@NonNull String obj) {
+        if (!StringUtils.hasLength(obj)) {
             return null;
         } else {
             return Instant.ofEpochMilli(Long.parseLong(obj));

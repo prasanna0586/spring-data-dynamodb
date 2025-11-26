@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,32 +15,51 @@
  */
 package org.socialsignin.spring.data.dynamodb.query;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
+import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
+import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 
+/**
+ * Query implementation for counting results of a DynamoDB scan expression.
+ * @param <T> the entity type
+ * @author Prasanna Kumar Ramachandran
+ */
 public class ScanExpressionCountQuery<T> extends AbstractSingleEntityQuery<Long> implements Query<Long> {
 
-    private DynamoDBScanExpression scanExpression;
+    private final ScanEnhancedRequest scanExpression;
 
-    private Class<T> domainClass;
+    private final Class<T> domainClass;
 
-    private boolean pageQuery;
+    private final boolean pageQuery;
 
+    /**
+     * Creates a new count query for the given scan expression.
+     * @param dynamoDBOperations the DynamoDB operations instance
+     * @param clazz the entity class
+     * @param scanExpression the scan expression to count results for
+     * @param pageQuery whether this is for a page query
+     */
     public ScanExpressionCountQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz,
-            DynamoDBScanExpression scanExpression, boolean pageQuery) {
+            ScanEnhancedRequest scanExpression, boolean pageQuery) {
         super(dynamoDBOperations, Long.class);
         this.scanExpression = scanExpression;
         this.domainClass = clazz;
         this.pageQuery = pageQuery;
     }
 
+    @NonNull
     @Override
     public Long getSingleResult() {
         assertScanCountEnabled(isScanCountEnabled());
-        return Long.valueOf(dynamoDBOperations.count(domainClass, scanExpression));
+        return (long) dynamoDBOperations.count(domainClass, scanExpression);
     }
 
+    /**
+     * Validates that scan count operations are enabled for this query.
+     * @param scanCountEnabled whether scan count is enabled
+     * @throws IllegalArgumentException if scan count is not enabled
+     */
     public void assertScanCountEnabled(boolean scanCountEnabled) {
         if (pageQuery) {
             Assert.isTrue(scanCountEnabled, "Scanning for the total counts for this query is not enabled.  "

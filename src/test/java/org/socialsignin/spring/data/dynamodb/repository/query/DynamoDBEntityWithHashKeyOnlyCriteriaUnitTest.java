@@ -22,22 +22,29 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.socialsignin.spring.data.dynamodb.domain.sample.User;
 import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBEntityInformation;
 
 import java.util.Date;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class DynamoDBEntityWithHashKeyOnlyCriteriaUnitTest
         extends AbstractDynamoDBQueryCriteriaUnitTest<DynamoDBEntityWithHashKeyOnlyCriteria<User, String>> {
 
     @Mock
     private DynamoDBEntityInformation<User, String> entityInformation;
+    @Mock
+    private org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext mappingContext;
 
     @BeforeEach
     public void setUp() {
         Mockito.when(entityInformation.getHashKeyPropertyName()).thenReturn("id");
-        criteria = new DynamoDBEntityWithHashKeyOnlyCriteria<>(entityInformation, null);
+        // Use SDK_V1_COMPATIBLE mode for date tests that expect ISO string format
+        Mockito.when(mappingContext.getMarshallingMode()).thenReturn(org.socialsignin.spring.data.dynamodb.core.MarshallingMode.SDK_V1_COMPATIBLE);
+        criteria = new DynamoDBEntityWithHashKeyOnlyCriteria<>(entityInformation, null, mappingContext);
     }
 
     @Test

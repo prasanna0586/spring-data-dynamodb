@@ -15,7 +15,6 @@
  */
 package org.socialsignin.spring.data.dynamodb.core;
 
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.socialsignin.spring.data.dynamodb.domain.sample.User;
@@ -37,8 +36,6 @@ import java.util.UUID;
 @TestPropertySource(properties = { "spring.data.dynamodb.entity2ddl.auto=create" })
 public class DynamoDBTemplateIntegrationTest {
 
-    @Autowired
-    private AmazonDynamoDB amazonDynamoDB;
     @Autowired
     private DynamoDBTemplate dynamoDBTemplate;
 

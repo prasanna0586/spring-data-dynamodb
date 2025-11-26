@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,28 +15,40 @@
  */
 package org.socialsignin.spring.data.dynamodb.query;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
+import org.springframework.lang.NonNull;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * Query implementation for executing count operations on a query expression.
+ *
+ * This class extends AbstractSingleEntityQuery to provide a specialized
+ * implementation for counting entities based on a query expression.
+ * @param <T> the domain class type being queried
+ * @author Prasanna Kumar Ramachandran
  */
 public class QueryExpressionCountQuery<T> extends AbstractSingleEntityQuery<Long> {
 
-    private final DynamoDBQueryExpression<T> queryExpression;
+    private final QueryEnhancedRequest queryRequest;
     private final Class<T> domainClass;
 
+    /**
+     * Creates a new count query for the given query expression.
+     * @param dynamoDBOperations the DynamoDB operations instance
+     * @param clazz the entity class
+     * @param queryRequest the query request to count results for
+     */
     public QueryExpressionCountQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz,
-            DynamoDBQueryExpression<T> queryExpression) {
+            QueryEnhancedRequest queryRequest) {
         super(dynamoDBOperations, Long.class);
-        this.queryExpression = queryExpression;
+        this.queryRequest = queryRequest;
         this.domainClass = clazz;
     }
 
+    @NonNull
     @Override
     public Long getSingleResult() {
-        return Long.valueOf(dynamoDBOperations.count(domainClass, queryExpression));
+        return (long) dynamoDBOperations.count(domainClass, queryRequest);
     }
 
 }

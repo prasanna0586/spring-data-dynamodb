@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,22 +15,31 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
- * Default implementation of a DynamoDB composite key, comprising of both a hash and a range key.
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * Default implementation of a DynamoDB composite key, comprising both a partition key (hash key)
+ * and a sort key (range key).
+ * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBHashAndRangeKey implements Serializable {
 
+    /**
+     * Default constructor creating an empty hash and range key instance.
+     */
     public DynamoDBHashAndRangeKey() {
     }
 
+    /**
+     * Creates a new DynamoDBHashAndRangeKey with the specified hash and range key values.
+     *
+     * @param hash the partition key (hash key) value
+     * @param range the sort key (range key) value
+     */
     public DynamoDBHashAndRangeKey(Object hash, Object range) {
         this.rangeKey = range;
         this.hashKey = hash;
@@ -39,25 +48,48 @@ public class DynamoDBHashAndRangeKey implements Serializable {
     /**
      *
      */
+    @Serial
     private static final long serialVersionUID = 1L;
 
+    /** The partition key (hash key) value */
     private Object hashKey;
+    /** The sort key (range key) value */
     private Object rangeKey;
 
-    @DynamoDBHashKey
+    /**
+     * Gets the partition key (hash key) value.
+     *
+     * @return the partition key value
+     */
+    @DynamoDbPartitionKey
     public Object getHashKey() {
         return hashKey;
     }
 
+    /**
+     * Sets the partition key (hash key) value.
+     *
+     * @param hashKey the partition key value
+     */
     public void setHashKey(Object hashKey) {
         this.hashKey = hashKey;
     }
 
-    @DynamoDBRangeKey
+    /**
+     * Gets the sort key (range key) value.
+     *
+     * @return the sort key value
+     */
+    @DynamoDbSortKey
     public Object getRangeKey() {
         return rangeKey;
     }
 
+    /**
+     * Sets the sort key (range key) value.
+     *
+     * @param rangeKey the sort key value
+     */
     public void setRangeKey(Object rangeKey) {
         this.rangeKey = rangeKey;
     }

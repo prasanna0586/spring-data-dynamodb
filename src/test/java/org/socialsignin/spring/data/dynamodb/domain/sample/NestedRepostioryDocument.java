@@ -15,22 +15,20 @@
  */
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
 import org.springframework.data.repository.CrudRepository;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 
-@DynamoDBTable(tableName = "nested_repo_test")
+@DynamoDbBean
 public class NestedRepostioryDocument {
-    @DynamoDBHashKey
     public String hashKey;
 
-    @DynamoDBAttribute
     public String someData;
 
     public NestedRepostioryDocument() {
     }
 
+    @DynamoDbPartitionKey
     public String getHashKey() {
         return hashKey;
     }

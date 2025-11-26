@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,49 +21,76 @@ import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.parser.PartTree;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * A query implementation that creates DynamoDB queries from method names using the PartTree parsing strategy.
+ * This class parses the method name and constructs appropriate DynamoDB query criteria.
+ * @param <T> the entity type
+ * @param <ID> the ID type of the entity
+ * @author Prasanna Kumar Ramachandran
  */
 public class PartTreeDynamoDBQuery<T, ID> extends AbstractDynamoDBQuery<T, ID> implements RepositoryQuery {
 
+    @NonNull
     private final Parameters<?, ?> parameters;
+    @NonNull
     private final PartTree tree;
 
-    public PartTreeDynamoDBQuery(DynamoDBOperations dynamoDBOperations, DynamoDBQueryMethod<T, ID> method) {
+    /**
+     * Creates a new PartTreeDynamoDBQuery.
+     * @param dynamoDBOperations the DynamoDB operations
+     * @param method the query method
+     */
+    public PartTreeDynamoDBQuery(DynamoDBOperations dynamoDBOperations, @NonNull DynamoDBQueryMethod<T, ID> method) {
         super(dynamoDBOperations, method);
         this.parameters = method.getParameters();
         this.tree = new PartTree(method.getName(), method.getEntityType());
     }
 
-    protected DynamoDBQueryCreator<T, ID> createQueryCreator(ParametersParameterAccessor accessor) {
+    /**
+     * Creates a query creator for executing queries.
+     * @param accessor the parameter accessor
+     * @return the query creator
+     */
+    @NonNull
+    protected DynamoDBQueryCreator<T, ID> createQueryCreator(@NonNull ParametersParameterAccessor accessor) {
         DynamoDBQueryMethod<T, ID> queryMethod = getQueryMethod();
         return new DynamoDBQueryCreator<>(tree, accessor, queryMethod.getEntityInformation(),
-                queryMethod.getProjectionExpression(), queryMethod.getLimitResults(),
-                queryMethod.getConsistentReadMode(), queryMethod.getFilterExpression(),
+                queryMethod.getProjectionExpression().orElse(null), queryMethod.getLimitResults().orElse(null),
+                queryMethod.getConsistentReadMode(), queryMethod.getFilterExpression().orElse(null),
                 queryMethod.getExpressionAttributeNames(), queryMethod.getExpressionAttributeValues(),
                 dynamoDBOperations);
     }
 
-    protected DynamoDBCountQueryCreator<T, ID> createCountQueryCreator(ParametersParameterAccessor accessor,
-            boolean pageQuery) {
+    /**
+     * Creates a count query creator for count queries.
+     * @param accessor the parameter accessor
+     * @param pageQuery whether this is a page query
+     * @return the count query creator
+     */
+    @NonNull
+    protected DynamoDBCountQueryCreator<T, ID> createCountQueryCreator(@NonNull ParametersParameterAccessor accessor,
+                                                                       boolean pageQuery) {
         DynamoDBQueryMethod<T, ID> queryMethod = getQueryMethod();
         return new DynamoDBCountQueryCreator<>(tree, accessor, queryMethod.getEntityInformation(),
-                queryMethod.getFilterExpression(), queryMethod.getExpressionAttributeNames(),
+                queryMethod.getFilterExpression().orElse(null), queryMethod.getExpressionAttributeNames(),
                 queryMethod.getExpressionAttributeValues(), dynamoDBOperations, pageQuery);
     }
 
+    @NonNull
     @Override
-    public Query<T> doCreateQuery(Object[] values) {
+    public Query<T> doCreateQuery(@NonNull Object[] values) {
         ParametersParameterAccessor accessor = new ParametersParameterAccessor(parameters, values);
         DynamoDBQueryCreator<T, ID> queryCreator = createQueryCreator(accessor);
         return queryCreator.createQuery();
 
     }
 
+    @NonNull
     @Override
-    public Query<Long> doCreateCountQuery(Object[] values, boolean pageQuery) {
+    public Query<Long> doCreateCountQuery(@NonNull Object[] values, boolean pageQuery) {
         ParametersParameterAccessor accessor = new ParametersParameterAccessor(parameters, values);
         DynamoDBCountQueryCreator<T, ID> queryCreator = createCountQueryCreator(accessor, pageQuery);
         return queryCreator.createQuery();
@@ -85,6 +112,7 @@ public class PartTreeDynamoDBQuery<T, ID> extends AbstractDynamoDBQuery<T, ID> i
         return tree.isDelete();
     }
 
+    @Nullable
     @Override
     protected Integer getResultsRestrictionIfApplicable() {
 
@@ -97,7 +125,7 @@ public class PartTreeDynamoDBQuery<T, ID> extends AbstractDynamoDBQuery<T, ID> i
     @Override
     protected boolean isSingleEntityResultsRestriction() {
         Integer resultsRestiction = getResultsRestrictionIfApplicable();
-        return resultsRestiction != null && resultsRestiction.intValue() == 1;
+        return resultsRestiction != null && resultsRestiction.equals(1);
     }
 
 }

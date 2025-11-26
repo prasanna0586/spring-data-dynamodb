@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,20 +16,30 @@
 package org.socialsignin.spring.data.dynamodb.query;
 
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
+import org.springframework.lang.NonNull;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Base abstract class for queries that return a single entity.
+ * @param <T> the entity type
+ */
 public abstract class AbstractSingleEntityQuery<T> extends AbstractDynamicQuery<T> implements Query<T> {
 
+    /**
+     * Constructs a new AbstractSingleEntityQuery.
+     * @param dynamoDBOperations the DynamoDB operations instance
+     * @param clazz the entity class type
+     */
     public AbstractSingleEntityQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz) {
         super(dynamoDBOperations, clazz);
     }
 
+    @NonNull
     @Override
     public List<T> getResultList() {
         T result = getSingleResult();
-        return result != null ? Arrays.asList(result) : new ArrayList<>();
+        return result != null ? List.of(result) : new ArrayList<>();
     }
 }

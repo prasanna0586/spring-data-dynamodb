@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,21 +21,35 @@ import org.springframework.aop.TargetSource;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.support.RepositoryProxyPostProcessor;
+import org.springframework.lang.NonNull;
 
+/**
+ * Base class for repository proxy post processors that need access to entity information.
+ * @param <T> the entity type
+ * @param <ID> the entity ID type
+ */
 public abstract class EntityInformationProxyPostProcessor<T, ID> implements RepositoryProxyPostProcessor {
 
+    /**
+     * Default constructor for subclasses.
+     */
+    protected EntityInformationProxyPostProcessor() {
+    }
+
+    /**
+     * Callback method invoked when an entity is registered.
+     *
+     * @param entityInformation the entity information for the registered entity
+     */
     protected abstract void registeredEntity(DynamoDBEntityInformation<T, ID> entityInformation);
 
     @Override
-    public final void postProcess(ProxyFactory factory, RepositoryInformation repositoryInformation) {
+    public final void postProcess(@NonNull ProxyFactory factory, @NonNull RepositoryInformation repositoryInformation) {
         try {
             TargetSource targetSource = factory.getTargetSource();
-            // assert
-            // targetSource.getTargetClass().equals(SimpleDynamoDBCrudRepository.class);
 
             @SuppressWarnings("unchecked")
-            SimpleDynamoDBCrudRepository<T, ID> target = SimpleDynamoDBCrudRepository.class
-                    .cast(targetSource.getTarget());
+            SimpleDynamoDBCrudRepository<T, ID> target = (SimpleDynamoDBCrudRepository<T, ID>) targetSource.getTarget();
 
             assert target != null;
             DynamoDBEntityInformation<T, ID> entityInformation = target.getEntityInformation();

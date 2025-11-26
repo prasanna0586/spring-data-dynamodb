@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,9 +15,10 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMarshaller;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverter;
 import org.springframework.data.annotation.Id;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
+import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
 
 import java.util.Map;
 import java.util.Optional;
@@ -25,36 +26,48 @@ import java.util.Set;
 
 /**
  * Encapsulates minimal information needed to load DynamoDB entities that have both hash and range key, and have a
- * composite id attribute annotated with {@link Id}. Delegates to metadata and hashKeyExtractor components for all
- * operations.
+ * composite id attribute annotated with {@link Id}.
  *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * Delegates to metadata and hashKeyExtractor components for all operations.
+ * @param <T> the entity type
+ * @param <ID> the ID type
+ * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBIdIsHashAndRangeKeyEntityInformationImpl<T, ID>
         extends FieldAndGetterReflectionEntityInformation<T, ID>
         implements DynamoDBIdIsHashAndRangeKeyEntityInformation<T, ID> {
 
-    private DynamoDBHashAndRangeKeyExtractingEntityMetadata<T, ID> metadata;
-    private HashAndRangeKeyExtractor<ID, ?> hashAndRangeKeyExtractor;
-    private Optional<String> projection = Optional.empty();
-    private Optional<Integer> limit = Optional.empty();
+    @NonNull
+    private final DynamoDBHashAndRangeKeyExtractingEntityMetadata<T, ID> metadata;
+    private final HashAndRangeKeyExtractor<ID, ?> hashAndRangeKeyExtractor;
+    @Nullable
+    private final String projection = null;
+    @Nullable
+    private final Integer limit = null;
 
-    public DynamoDBIdIsHashAndRangeKeyEntityInformationImpl(Class<T> domainClass,
-            DynamoDBHashAndRangeKeyExtractingEntityMetadata<T, ID> metadata) {
+    /**
+     * Creates a new DynamoDBIdIsHashAndRangeKeyEntityInformationImpl.
+     *
+     * @param domainClass the entity class
+     * @param metadata the hash and range key extracting entity metadata
+     */
+    public DynamoDBIdIsHashAndRangeKeyEntityInformationImpl(@NonNull Class<T> domainClass,
+                                                            @NonNull DynamoDBHashAndRangeKeyExtractingEntityMetadata<T, ID> metadata) {
         super(domainClass, Id.class);
         this.metadata = metadata;
         this.hashAndRangeKeyExtractor = metadata.getHashAndRangeKeyExtractor(getIdType());
     }
 
+    @NonNull
     @Override
     public Optional<String> getProjection() {
-        return projection;
+        return Optional.empty();
     }
 
+    @NonNull
     @Override
     public Optional<Integer> getLimit() {
-        return limit;
+        return Optional.empty();
     }
 
     @Override
@@ -62,6 +75,7 @@ public class DynamoDBIdIsHashAndRangeKeyEntityInformationImpl<T, ID>
         return true;
     }
 
+    @Nullable
     @Override
     public Object getHashKey(final ID id) {
         return hashAndRangeKeyExtractor.getHashKey(id);
@@ -92,15 +106,9 @@ public class DynamoDBIdIsHashAndRangeKeyEntityInformationImpl<T, ID>
         return metadata.getRangeKeyPropertyName();
     }
 
-    @SuppressWarnings("deprecation")
     @Override
-    public <V extends DynamoDBMarshaller<?>> V getMarshallerForProperty(String propertyName) {
-        return metadata.getMarshallerForProperty(propertyName);
-    }
-
-    @Override
-    public DynamoDBTypeConverter<?, ?> getTypeConverterForProperty(String propertyName) {
-        return metadata.getTypeConverterForProperty(propertyName);
+    public AttributeConverter<?> getAttributeConverterForProperty(String propertyName) {
+        return metadata.getAttributeConverterForProperty(propertyName);
     }
 
     @Override

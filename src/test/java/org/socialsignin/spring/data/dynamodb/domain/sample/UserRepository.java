@@ -23,6 +23,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -101,7 +102,6 @@ public interface UserRepository extends CrudRepository<User, String> {
     @EnableScan
     Future<User> findByNameAndPostCode(String name, String postCode);
 
-    @EnableScan
     User findFirstByPostCode(String postCode);
 
     <T extends User> T save(T entity);
@@ -128,9 +128,43 @@ public interface UserRepository extends CrudRepository<User, String> {
     void deleteByPostCodeAndNumberOfPlaylists(String postCode, Integer numberOfPlaylists);
 
     @EnableScan
+    @Override
     void deleteAll();
 
     @EnableScan
     @Override
     long count();
+
+    // Custom marshaller queries - joinYear uses Year2StringAttributeConverter
+    @EnableScan
+    List<User> findByJoinYear(Date joinYear);
+
+    // NOT operator queries
+    @EnableScan
+    List<User> findByNameNot(String name);
+
+    @EnableScan
+    List<User> findByPostCodeNot(String postCode);
+
+    // Advanced query pattern methods for AdvancedQueryPatternsIntegrationTest
+    @EnableScan
+    List<User> findByNumberOfPlaylistsBetween(Integer min, Integer max);
+
+    @EnableScan
+    List<User> findByPostCodeIn(List<String> postCodes);
+
+    @EnableScan
+    List<User> findByNameStartingWith(String prefix);
+
+    @EnableScan
+    List<User> findByNameContaining(String substring);
+
+    List<User> findByPostCodeAndNumberOfPlaylistsGreaterThan(String postCode, Integer minPlaylists);
+
+    // DAX pattern methods for DAXIntegrationPatternsTest
+    @EnableScan
+    List<User> findByNumberOfPlaylistsLessThan(Integer maxPlaylists);
+
+    @EnableScan
+    List<User> findByIdStartingWith(String prefix);
 }

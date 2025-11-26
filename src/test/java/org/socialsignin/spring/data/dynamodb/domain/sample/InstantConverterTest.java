@@ -3,6 +3,7 @@ package org.socialsignin.spring.data.dynamodb.domain.sample;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 import java.time.Instant;
 
@@ -27,21 +28,22 @@ class InstantConverterTest {
         Instant instant = Instant.parse("2024-01-15T10:30:00Z");
 
         // When
-        String result = instantConverter.convert(instant);
+        AttributeValue result = instantConverter.transformFrom(instant);
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result).isEqualTo("2024-01-15T10:30:00Z");
+        assertThat(result.s()).isEqualTo("2024-01-15T10:30:00Z");
     }
 
     @Test
-    @DisplayName("Should convert null Instant to null String")
+    @DisplayName("Should convert null Instant to null AttributeValue")
     void testConvert_Null() {
         // When
-        String result = instantConverter.convert(null);
+        AttributeValue result = instantConverter.transformFrom(null);
 
         // Then
-        assertThat(result).isNull();
+        assertThat(result).isNotNull();
+        assertThat(result.nul()).isTrue();
     }
 
     @Test
@@ -51,11 +53,11 @@ class InstantConverterTest {
         Instant instant = Instant.parse("2024-01-15T10:30:00.123Z");
 
         // When
-        String result = instantConverter.convert(instant);
+        AttributeValue result = instantConverter.transformFrom(instant);
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result).isEqualTo("2024-01-15T10:30:00.123Z");
+        assertThat(result.s()).isEqualTo("2024-01-15T10:30:00.123Z");
     }
 
     @Test
@@ -65,11 +67,11 @@ class InstantConverterTest {
         Instant instant = Instant.parse("2024-01-15T10:30:00.123456789Z");
 
         // When
-        String result = instantConverter.convert(instant);
+        AttributeValue result = instantConverter.transformFrom(instant);
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result).isEqualTo("2024-01-15T10:30:00.123456789Z");
+        assertThat(result.s()).isEqualTo("2024-01-15T10:30:00.123456789Z");
     }
 
     @Test
@@ -79,23 +81,23 @@ class InstantConverterTest {
         Instant epoch = Instant.EPOCH; // 1970-01-01T00:00:00Z
 
         // When
-        String result = instantConverter.convert(epoch);
+        AttributeValue result = instantConverter.transformFrom(epoch);
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result).isEqualTo("1970-01-01T00:00:00Z");
+        assertThat(result.s()).isEqualTo("1970-01-01T00:00:00Z");
     }
 
-    // ==================== Unconvert Tests (String -> Instant) ====================
+    // ==================== Unconvert Tests (AttributeValue -> Instant) ====================
 
     @Test
-    @DisplayName("Should unconvert ISO-8601 String to Instant")
+    @DisplayName("Should unconvert AttributeValue to Instant")
     void testUnconvert_Success() {
         // Given
-        String isoString = "2024-01-15T10:30:00Z";
+        AttributeValue attributeValue = AttributeValue.builder().s("2024-01-15T10:30:00Z").build();
 
         // When
-        Instant result = instantConverter.unconvert(isoString);
+        Instant result = instantConverter.transformTo(attributeValue);
 
         // Then
         assertThat(result).isNotNull();
@@ -103,23 +105,23 @@ class InstantConverterTest {
     }
 
     @Test
-    @DisplayName("Should unconvert null String to null Instant")
+    @DisplayName("Should unconvert null AttributeValue to null Instant")
     void testUnconvert_Null() {
         // When
-        Instant result = instantConverter.unconvert(null);
+        Instant result = instantConverter.transformTo(null);
 
         // Then
         assertThat(result).isNull();
     }
 
     @Test
-    @DisplayName("Should unconvert String with milliseconds correctly")
+    @DisplayName("Should unconvert AttributeValue with milliseconds correctly")
     void testUnconvert_WithMilliseconds() {
         // Given
-        String isoString = "2024-01-15T10:30:00.123Z";
+        AttributeValue attributeValue = AttributeValue.builder().s("2024-01-15T10:30:00.123Z").build();
 
         // When
-        Instant result = instantConverter.unconvert(isoString);
+        Instant result = instantConverter.transformTo(attributeValue);
 
         // Then
         assertThat(result).isNotNull();
@@ -127,13 +129,13 @@ class InstantConverterTest {
     }
 
     @Test
-    @DisplayName("Should unconvert String with nanoseconds correctly")
+    @DisplayName("Should unconvert AttributeValue with nanoseconds correctly")
     void testUnconvert_WithNanoseconds() {
         // Given
-        String isoString = "2024-01-15T10:30:00.123456789Z";
+        AttributeValue attributeValue = AttributeValue.builder().s("2024-01-15T10:30:00.123456789Z").build();
 
         // When
-        Instant result = instantConverter.unconvert(isoString);
+        Instant result = instantConverter.transformTo(attributeValue);
 
         // Then
         assertThat(result).isNotNull();
@@ -144,10 +146,10 @@ class InstantConverterTest {
     @DisplayName("Should unconvert epoch time correctly")
     void testUnconvert_Epoch() {
         // Given
-        String epochString = "1970-01-01T00:00:00Z";
+        AttributeValue attributeValue = AttributeValue.builder().s("1970-01-01T00:00:00Z").build();
 
         // When
-        Instant result = instantConverter.unconvert(epochString);
+        Instant result = instantConverter.transformTo(attributeValue);
 
         // Then
         assertThat(result).isNotNull();
@@ -157,14 +159,14 @@ class InstantConverterTest {
     // ==================== Round-trip Tests ====================
 
     @Test
-    @DisplayName("Should maintain precision through convert and unconvert round-trip")
+    @DisplayName("Should maintain precision through transformFrom and transformTo round-trip")
     void testRoundTrip_MaintainsPrecision() {
         // Given
         Instant original = Instant.parse("2024-01-15T10:30:00.123456789Z");
 
-        // When - Convert to String and back to Instant
-        String converted = instantConverter.convert(original);
-        Instant unconverted = instantConverter.unconvert(converted);
+        // When - Convert to AttributeValue and back to Instant
+        AttributeValue converted = instantConverter.transformFrom(original);
+        Instant unconverted = instantConverter.transformTo(converted);
 
         // Then
         assertThat(unconverted).isEqualTo(original);
@@ -176,12 +178,13 @@ class InstantConverterTest {
         // Given
         Instant original = null;
 
-        // When - Convert to String and back to Instant
-        String converted = instantConverter.convert(original);
-        Instant unconverted = instantConverter.unconvert(converted);
+        // When - Convert to AttributeValue and back to Instant
+        AttributeValue converted = instantConverter.transformFrom(original);
+        Instant unconverted = instantConverter.transformTo(converted);
 
         // Then
-        assertThat(converted).isNull();
+        assertThat(converted).isNotNull();
+        assertThat(converted.nul()).isTrue();
         assertThat(unconverted).isNull();
     }
 
@@ -191,9 +194,9 @@ class InstantConverterTest {
         // Given
         Instant now = Instant.now();
 
-        // When - Convert to String and back to Instant
-        String converted = instantConverter.convert(now);
-        Instant unconverted = instantConverter.unconvert(converted);
+        // When - Convert to AttributeValue and back to Instant
+        AttributeValue converted = instantConverter.transformFrom(now);
+        Instant unconverted = instantConverter.transformTo(converted);
 
         // Then
         assertThat(unconverted).isEqualTo(now);

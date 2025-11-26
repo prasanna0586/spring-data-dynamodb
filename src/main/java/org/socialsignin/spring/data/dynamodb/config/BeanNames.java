@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,10 +18,22 @@ package org.socialsignin.spring.data.dynamodb.config;
 /**
  * Constants to declare bean names used by the namespace configuration.
  *
- * @author Vito Limandibhrata
+ * This utility class provides centralized bean name constants used throughout
+ * the DynamoDB configuration and namespace parsing.
+ * @author Prasanna Kumar Ramachandran
  */
 public abstract class BeanNames {
 
+    /**
+     * Private constructor to prevent instantiation of this utility class.
+     */
+    private BeanNames() {
+    }
+
+    /**
+     * Bean name constant for the DynamoDB mapping context.
+     * The value is "dynamoDBMappingContext".
+     */
     public static final String MAPPING_CONTEXT_BEAN_NAME = "dynamoDBMappingContext";
 
 }

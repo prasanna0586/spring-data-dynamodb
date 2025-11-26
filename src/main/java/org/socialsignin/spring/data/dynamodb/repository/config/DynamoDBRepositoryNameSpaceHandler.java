@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,11 +22,15 @@ import org.springframework.data.repository.config.RepositoryConfigurationExtensi
 
 /**
  * Simple namespace handler for {@literal repositories} namespace.
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBRepositoryNameSpaceHandler extends NamespaceHandlerSupport {
+
+    /**
+     * Default constructor.
+     */
+    public DynamoDBRepositoryNameSpaceHandler() {
+    }
 
     /*
      * (non-Javadoc)

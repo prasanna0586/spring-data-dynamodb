@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,18 +15,23 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository;
 
+/**
+ * Constants for DynamoDB query configuration.
+ */
 public class QueryConstants {
 
     private QueryConstants() {
     }
 
+    /** Constant indicating unlimited query results */
     public static final int QUERY_LIMIT_UNLIMITED = Integer.MIN_VALUE;
 
+    /**
+     * Enum for specifying consistent read mode in DynamoDB queries.
+     */
     public enum ConsistentReadMode {
         /**
-         * Use the default configured in the DynamoDBMapper
-         *
-         * @see com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig
+         * Use the default configured in the DynamoDB mapper
          * @see <a href=
          *      "https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBMapper.OptionalConfig.html">DynamoDBMapper
          *      Configuration</a>
@@ -34,20 +39,16 @@ public class QueryConstants {
         DEFAULT,
         /**
          * Set consistent read mode to true
-         *
          * @see <a href=
          *      "https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/dynamodbv2/datamodeling/DynamoDBQueryExpression.html#setConsistentRead-boolean-">Consistent
          *      Reads</a>
-         * @see com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression#setConsistentRead(boolean)
          */
         CONSISTENT,
         /**
          * Set consistent read mode to false
-         *
          * @see <a href=
          *      "https://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/dynamodbv2/datamodeling/DynamoDBQueryExpression.html#setConsistentRead-boolean-">Consistent
          *      Reads</a>
-         * @see com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression#setConsistentRead(boolean)
          */
         EVENTUAL
     }

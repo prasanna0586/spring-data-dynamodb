@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,51 +15,67 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMarshaller;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverter;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 
 import java.util.Map;
 import java.util.Optional;
 
 /**
  * Encapsulates minimal information needed to load DynamoDB entities. This default implementation is NOT range-key aware
- * - getRangeKey(ID id) will always return null Delegates to wrapped DynamoDBHashKeyExtractingEntityMetadata component
- * for many operations - it is the responsibility of calling clients to ensure they pass in a valid
- * DynamoDBHashKeyExtractingEntityMetadata implementation for this entity. Entities of type T must have a public getter
- * method of return type ID annotated with @DynamoDBHashKey to ensure correct behavior
+ * - getRangeKey(ID id) will always return null.
  *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * Delegates to wrapped DynamoDBHashKeyExtractingEntityMetadata component for many operations - it is the responsibility
+ * of calling clients to ensure they pass in a valid DynamoDBHashKeyExtractingEntityMetadata implementation for this entity.
+ *
+ * Entities of type T must have a public getter method of return type ID annotated with @DynamoDbPartitionKey to ensure
+ * correct behavior.
+ * @param <T> the entity type
+ * @param <ID> the ID type
+ * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBIdIsHashKeyEntityInformationImpl<T, ID> extends FieldAndGetterReflectionEntityInformation<T, ID>
         implements DynamoDBEntityInformation<T, ID> {
 
-    private DynamoDBHashKeyExtractingEntityMetadata<T> metadata;
-    private HashKeyExtractor<ID, ID> hashKeyExtractor;
-    private Optional<String> projection = Optional.empty();
-    private Optional<Integer> limit = Optional.empty();
+    private final DynamoDBHashKeyExtractingEntityMetadata<T> metadata;
+    @NonNull
+    private final HashKeyExtractor<ID, ID> hashKeyExtractor;
+    @Nullable
+    private final String projection = null;
+    @Nullable
+    private final Integer limit = null;
 
-    public DynamoDBIdIsHashKeyEntityInformationImpl(Class<T> domainClass,
-            DynamoDBHashKeyExtractingEntityMetadata<T> metadata) {
-        super(domainClass, DynamoDBHashKey.class);
+    /**
+     * Creates a new DynamoDBIdIsHashKeyEntityInformationImpl.
+     *
+     * @param domainClass the entity class
+     * @param metadata the hash key extracting entity metadata
+     */
+    public DynamoDBIdIsHashKeyEntityInformationImpl(@NonNull Class<T> domainClass,
+                                                    DynamoDBHashKeyExtractingEntityMetadata<T> metadata) {
+        super(domainClass, DynamoDbPartitionKey.class);
         this.metadata = metadata;
-        this.hashKeyExtractor = new HashKeyIsIdHashKeyExtractor<ID>(getIdType());
+        this.hashKeyExtractor = new HashKeyIsIdHashKeyExtractor<>(getIdType());
     }
 
+    @NonNull
     @Override
     public Optional<String> getProjection() {
-        return projection;
+        return Optional.empty();
     }
 
+    @NonNull
     @Override
     public Optional<Integer> getLimit() {
-        return limit;
+        return Optional.empty();
     }
 
+    @Nullable
     @Override
-    public Object getHashKey(final ID id) {
+    public Object getHashKey(@NonNull final ID id) {
         Assert.isAssignable(getIdType(), id.getClass(),
                 "Expected ID type to be the same as the return type of the hash key method ( " + getIdType() + " ) : ");
         return hashKeyExtractor.getHashKey(id);
@@ -83,20 +99,9 @@ public class DynamoDBIdIsHashKeyEntityInformationImpl<T, ID> extends FieldAndGet
         return false;
     }
 
-    @SuppressWarnings("deprecation")
     @Override
-    public <V extends DynamoDBMarshaller<?>> V getMarshallerForProperty(String propertyName) {
-        return metadata.getMarshallerForProperty(propertyName);
-    }
-
-    @Override
-    public DynamoDBTypeConverter<?, ?> getTypeConverterForProperty(String propertyName) {
-        return metadata.getTypeConverterForProperty(propertyName);
-    }
-
-    @Override
-    public Object getRangeKey(ID id) {
-        return null;
+    public AttributeConverter<?> getAttributeConverterForProperty(String propertyName) {
+        return metadata.getAttributeConverterForProperty(propertyName);
     }
 
     @Override

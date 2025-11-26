@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,11 +15,12 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBIndexRangeKey;
-import org.springframework.data.annotation.Id;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondarySortKey;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -28,22 +29,34 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * Entity metadata implementation for DynamoDB entities with both hash and range keys.
+ *
+ * Handles extraction and management of composite hash/range key properties and their accessors.
+ * @param <T> the entity type
+ * @param <ID> the ID type (typically a composite key type)
+ * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl<T, ID> extends DynamoDBEntityMetadataSupport<T, ID>
         implements DynamoDBHashAndRangeKeyExtractingEntityMetadata<T, ID> {
 
-    private DynamoDBHashAndRangeKeyMethodExtractor<T> hashAndRangeKeyMethodExtractor;
+    @NonNull
+    private final DynamoDBHashAndRangeKeyMethodExtractor<T> hashAndRangeKeyMethodExtractor;
 
+    @Nullable
     private Method hashKeySetterMethod;
+    @Nullable
     private Field hashKeyField;
 
-    public DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl(final Class<T> domainType) {
+    /**
+     * Creates a new DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl for the given domain type.
+     *
+     * @param domainType the entity class
+     */
+    public DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl(@NonNull final Class<T> domainType) {
         super(domainType);
-        this.hashAndRangeKeyMethodExtractor = new DynamoDBHashAndRangeKeyMethodExtractorImpl<T>(getJavaType());
+        this.hashAndRangeKeyMethodExtractor = new DynamoDBHashAndRangeKeyMethodExtractorImpl<>(getJavaType());
         ReflectionUtils.doWithMethods(domainType, method -> {
-            if (method.getAnnotation(DynamoDBHashKey.class) != null) {
+            if (method.getAnnotation(DynamoDbPartitionKey.class) != null) {
                 String setterMethodName = toSetterMethodNameFromAccessorMethod(method);
                 if (setterMethodName != null) {
                     hashKeySetterMethod = ReflectionUtils.findMethod(domainType, setterMethodName,
@@ -52,7 +65,7 @@ public class DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl<T, ID> extends 
             }
         });
         ReflectionUtils.doWithFields(domainType, field -> {
-            if (field.getAnnotation(DynamoDBHashKey.class) != null) {
+            if (field.getAnnotation(DynamoDbPartitionKey.class) != null) {
 
                 hashKeyField = ReflectionUtils.findField(domainType, field.getName());
 
@@ -65,36 +78,34 @@ public class DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl<T, ID> extends 
 
     }
 
+    @NonNull
     @Override
-    public <H> HashAndRangeKeyExtractor<ID, H> getHashAndRangeKeyExtractor(Class<ID> idClass) {
+    public <H> HashAndRangeKeyExtractor<ID, H> getHashAndRangeKeyExtractor(@NonNull Class<ID> idClass) {
         return new CompositeIdHashAndRangeKeyExtractor<>(idClass);
     }
 
+    @NonNull
     @Override
     public String getRangeKeyPropertyName() {
         return getPropertyNameForAccessorMethod(hashAndRangeKeyMethodExtractor.getRangeKeyMethod());
     }
 
+    @NonNull
     @Override
     public Set<String> getIndexRangeKeyPropertyNames() {
         final Set<String> propertyNames = new HashSet<>();
         ReflectionUtils.doWithMethods(getJavaType(), method -> {
-            if (method.getAnnotation(DynamoDBIndexRangeKey.class) != null) {
-                if ((method.getAnnotation(DynamoDBIndexRangeKey.class).localSecondaryIndexName() != null && method
-                        .getAnnotation(DynamoDBIndexRangeKey.class).localSecondaryIndexName().trim().length() > 0)
-                        || (method.getAnnotation(DynamoDBIndexRangeKey.class).localSecondaryIndexNames() != null
-                                && method.getAnnotation(DynamoDBIndexRangeKey.class)
-                                        .localSecondaryIndexNames().length > 0)) {
+            if (method.getAnnotation(DynamoDbSecondarySortKey.class) != null) {
+                if (method.getAnnotation(DynamoDbSecondarySortKey.class).indexNames() != null
+                        && method.getAnnotation(DynamoDbSecondarySortKey.class).indexNames().length > 0) {
                     propertyNames.add(getPropertyNameForAccessorMethod(method));
                 }
             }
         });
         ReflectionUtils.doWithFields(getJavaType(), field -> {
-            if (field.getAnnotation(DynamoDBIndexRangeKey.class) != null) {
-                if ((field.getAnnotation(DynamoDBIndexRangeKey.class).localSecondaryIndexName() != null && field
-                        .getAnnotation(DynamoDBIndexRangeKey.class).localSecondaryIndexName().trim().length() > 0)
-                        || (field.getAnnotation(DynamoDBIndexRangeKey.class).localSecondaryIndexNames() != null && field
-                                .getAnnotation(DynamoDBIndexRangeKey.class).localSecondaryIndexNames().length > 0)) {
+            if (field.getAnnotation(DynamoDbSecondarySortKey.class) != null) {
+                if (field.getAnnotation(DynamoDbSecondarySortKey.class).indexNames() != null
+                        && field.getAnnotation(DynamoDbSecondarySortKey.class).indexNames().length > 0) {
                     propertyNames.add(getPropertyNameForField(field));
                 }
             }
@@ -102,13 +113,14 @@ public class DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl<T, ID> extends 
         return propertyNames;
     }
 
+    @NonNull
     public T getHashKeyPropotypeEntityForHashKey(Object hashKey) {
 
         try {
             T entity = getJavaType().getDeclaredConstructor().newInstance();
             if (hashKeySetterMethod != null) {
                 ReflectionUtils.invokeMethod(hashKeySetterMethod, entity, hashKey);
-            } else {
+            } else if (hashKeyField != null) {
                 ReflectionUtils.setField(hashKeyField, entity, hashKey);
             }
 
@@ -120,8 +132,8 @@ public class DynamoDBHashAndRangeKeyExtractingEntityMetadataImpl<T, ID> extends 
     }
 
     @Override
-    public boolean isCompositeHashAndRangeKeyProperty(String propertyName) {
-        return isFieldAnnotatedWith(propertyName, Id.class);
+    public boolean isCompositeHashAndRangeKeyProperty(@NonNull String propertyName) {
+        return isFieldAnnotatedWith(propertyName);
     }
 
 }

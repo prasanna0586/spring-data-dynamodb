@@ -26,8 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Unit tests for {@link DynamoDBAuditingRegistrar}.
- *
- * @author Vito Limandibhrata
+ * @author Prasanna Kumar Ramachandran
  */
 @ExtendWith(MockitoExtension.class)
 public class DynamoDBAuditingRegistrarUnitTests {

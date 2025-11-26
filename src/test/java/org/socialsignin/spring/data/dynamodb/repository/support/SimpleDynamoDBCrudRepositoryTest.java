@@ -15,9 +15,6 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper.FailedBatch;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
-import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedScanList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,11 +28,11 @@ import org.socialsignin.spring.data.dynamodb.domain.sample.PlaylistId;
 import org.socialsignin.spring.data.dynamodb.domain.sample.User;
 import org.socialsignin.spring.data.dynamodb.exception.BatchWriteException;
 import org.springframework.dao.EmptyResultDataAccessException;
+import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteResult;
+import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
+import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -45,15 +42,13 @@ import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for {@link SimpleDynamoDBCrudRepository}.
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 @ExtendWith(MockitoExtension.class)
 public class SimpleDynamoDBCrudRepositoryTest {
 
     @Mock
-    private PaginatedScanList<User> findAllResultMock;
+    private PageIterable<User> findAllResultMock;
     @Mock
     private DynamoDBOperations dynamoDBOperations;
     @Mock
@@ -117,29 +112,53 @@ public class SimpleDynamoDBCrudRepositoryTest {
 
     @Test
     public void deleteIterable() {
-        repoForEntityWithOnlyHashKey.deleteAll(findAllResultMock);
+        List<User> entitiesToDelete = new ArrayList<>();
+        entitiesToDelete.add(testUser);
 
-        verify(dynamoDBOperations).batchDelete(findAllResultMock);
+        repoForEntityWithOnlyHashKey.deleteAll(entitiesToDelete);
+
+        verify(dynamoDBOperations).batchDelete(entitiesToDelete);
     }
 
     @Test
     public void deleteAll() {
+        // SDK v2: deleteAll() calls findAll() which calls .items().stream().toList()
+        List<User> usersToDelete = new ArrayList<>();
+        usersToDelete.add(testUser);
+
+        software.amazon.awssdk.core.pagination.sync.SdkIterable<User> sdkIterable =
+            () -> usersToDelete.iterator();
+
         when(mockEnableScanPermissions.isDeleteAllUnpaginatedScanEnabled()).thenReturn(true);
         when(mockEnableScanPermissions.isFindAllUnpaginatedScanEnabled()).thenReturn(true);
-        when(dynamoDBOperations.scan(eq(User.class), any(DynamoDBScanExpression.class))).thenReturn(findAllResultMock);
+        when(dynamoDBOperations.scan(eq(User.class), any(ScanEnhancedRequest.class))).thenReturn(findAllResultMock);
+        when(findAllResultMock.items()).thenReturn(sdkIterable);
 
         repoForEntityWithOnlyHashKey.deleteAll();
-        verify(dynamoDBOperations).batchDelete(findAllResultMock);
+
+        // Verify batchDelete was called with the list of users (not PageIterable)
+        ArgumentCaptor<List<User>> captor = ArgumentCaptor.forClass(List.class);
+        verify(dynamoDBOperations).batchDelete(captor.capture());
+        assertEquals(usersToDelete.size(), captor.getValue().size());
     }
 
     @Test
     public void testFindAll() {
+        // SDK v2: findAll() calls .items().stream().toList() on the PageIterable
+        List<User> expectedUsers = new ArrayList<>();
+        expectedUsers.add(testUser);
+
+        software.amazon.awssdk.core.pagination.sync.SdkIterable<User> sdkIterable =
+            () -> expectedUsers.iterator();
+
         when(mockEnableScanPermissions.isFindAllUnpaginatedScanEnabled()).thenReturn(true);
-        when(dynamoDBOperations.scan(eq(User.class), any(DynamoDBScanExpression.class))).thenReturn(findAllResultMock);
+        when(dynamoDBOperations.scan(eq(User.class), any(ScanEnhancedRequest.class))).thenReturn(findAllResultMock);
+        when(findAllResultMock.items()).thenReturn(sdkIterable);
 
         List<User> actual = repoForEntityWithOnlyHashKey.findAll();
 
-        assertSame(actual, findAllResultMock);
+        assertEquals(expectedUsers.size(), actual.size());
+        assertEquals(testUser, actual.get(0));
     }
 
     /**
@@ -183,7 +202,7 @@ public class SimpleDynamoDBCrudRepositoryTest {
 
         repoForEntityWithOnlyHashKey.count();
 
-        verify(dynamoDBOperations).count(eq(User.class), any(DynamoDBScanExpression.class));
+        verify(dynamoDBOperations).count(eq(User.class), any(ScanEnhancedRequest.class));
     }
 
     @Test
@@ -249,24 +268,33 @@ public class SimpleDynamoDBCrudRepositoryTest {
 
     @Test
     public void testBatchSaveFailure() {
-        List<FailedBatch> failures = new ArrayList<>();
-        FailedBatch e1 = new FailedBatch();
-        e1.setException(new Exception("First exception"));
-        failures.add(e1);
-        FailedBatch e2 = new FailedBatch();
-        e2.setException(new Exception("Followup exception"));
-        failures.add(e2);
+        // SDK v2: BatchWriteResult represents unprocessed items
+        // Create mock BatchWriteResult objects to simulate failures
+        List<BatchWriteResult> failures = new ArrayList<>();
+        BatchWriteResult result1 = Mockito.mock(BatchWriteResult.class);
+        failures.add(result1);
+        BatchWriteResult result2 = Mockito.mock(BatchWriteResult.class);
+        failures.add(result2);
 
         List<User> entities = new ArrayList<>();
-        entities.add(new User());
-        entities.add(new User());
+        User user1 = new User();
+        User user2 = new User();
+        entities.add(user1);
+        entities.add(user2);
+
+        // Mock batchSave to return failures
         when(dynamoDBOperations.batchSave(anyIterable())).thenReturn(failures);
+
+        // SDK v2: Must also mock extractUnprocessedPutItems to return the unprocessed entities
+        // In SDK v1, batchSave() directly returned FailedBatch objects with exceptions
+        // In SDK v2, we must extract unprocessed entities from BatchWriteResult
+        when(dynamoDBOperations.extractUnprocessedPutItems(anyList(), anyMap()))
+                .thenReturn(Arrays.asList(user1, user2));
 
         BatchWriteException exception = assertThrows(BatchWriteException.class, () -> {
             repoForEntityWithOnlyHashKey.saveAll(entities);
         });
 
-        assertTrue(exception.getMessage().contains("Processing of entities failed!"));
-        assertEquals("First exception", exception.getCause().getMessage());
+        assertTrue(exception.getMessage().contains("Batch write operation failed"));
     }
 }

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,39 +18,39 @@ package org.socialsignin.spring.data.dynamodb.config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext;
+import org.socialsignin.spring.data.dynamodb.mapping.event.AuditingEntityCallback;
 import org.socialsignin.spring.data.dynamodb.mapping.event.AuditingEventListener;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
 import org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport;
 import org.springframework.data.auditing.config.AuditingConfiguration;
 import org.springframework.data.config.ParsingUtils;
 import org.springframework.data.repository.config.PersistentEntitiesFactoryBean;
+import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 
 import java.lang.annotation.Annotation;
 
 import static org.socialsignin.spring.data.dynamodb.config.BeanNames.MAPPING_CONTEXT_BEAN_NAME;
-import static org.springframework.beans.factory.config.BeanDefinition.ROLE_INFRASTRUCTURE;
 import static org.springframework.beans.factory.support.BeanDefinitionBuilder.rootBeanDefinition;
 
 /**
  * {@link org.springframework.context.annotation.ImportBeanDefinitionRegistrar} to enable {@link EnableDynamoDBAuditing}
  * annotation.
- *
- * @author Vito Limandibhrata
+ * @author Prasanna Kumar Ramachandran
  */
 class DynamoDBAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 
-    private static Logger LOGGER = LoggerFactory.getLogger(DynamoDBAuditingRegistrar.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DynamoDBAuditingRegistrar.class);
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.data.auditing.config. AuditingBeanDefinitionRegistrarSupport#getAnnotation()
+     * @see org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport#getAnnotation()
      */
+    @NonNull
     @Override
     protected Class<? extends Annotation> getAnnotation() {
         return EnableDynamoDBAuditing.class;
@@ -58,9 +58,9 @@ class DynamoDBAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.data.auditing.config.
-     * AuditingBeanDefinitionRegistrarSupport#getAuditingHandlerBeanName()
+     * @see org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport#getAuditingHandlerBeanName()
      */
+    @NonNull
     @Override
     protected String getAuditingHandlerBeanName() {
         return "dynamoDBAuditingHandler";
@@ -68,28 +68,25 @@ class DynamoDBAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.data.auditing.config.
-     * AuditingBeanDefinitionRegistrarSupport#registerBeanDefinitions(org. springframework.core.type.AnnotationMetadata,
-     * org.springframework.beans.factory.support.BeanDefinitionRegistry)
+     * @see org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport#registerBeanDefinitions(org.springframework.core.type.AnnotationMetadata, org.springframework.beans.factory.support.BeanDefinitionRegistry)
      */
     @Override
-    public void registerBeanDefinitions(AnnotationMetadata annotationMetadata, BeanDefinitionRegistry registry) {
+    public void registerBeanDefinitions(@NonNull AnnotationMetadata annotationMetadata, @NonNull BeanDefinitionRegistry registry) {
         LOGGER.trace("registerBeanDefinitions");
         Assert.notNull(annotationMetadata, "AnnotationMetadata must not be null!");
         Assert.notNull(registry, "BeanDefinitionRegistry must not be null!");
 
-        defaultDependenciesIfNecessary(registry, annotationMetadata);
+        defaultDependenciesIfNecessary();
         super.registerBeanDefinitions(annotationMetadata, registry);
     }
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.data.auditing.config.
-     * AuditingBeanDefinitionRegistrarSupport#getAuditHandlerBeanDefinitionBuilder(
-     * org.springframework.data.auditing.config.AuditingConfiguration)
+     * @see org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport#getAuditHandlerBeanDefinitionBuilder(org.springframework.data.auditing.config.AuditingConfiguration)
      */
+    @NonNull
     @Override
-    protected BeanDefinitionBuilder getAuditHandlerBeanDefinitionBuilder(AuditingConfiguration configuration) {
+    protected BeanDefinitionBuilder getAuditHandlerBeanDefinitionBuilder(@NonNull AuditingConfiguration configuration) {
         LOGGER.trace("getAuditHandlerBeanDefinitionBuilder");
         Assert.notNull(configuration, "AuditingConfiguration must not be null!");
 
@@ -103,17 +100,25 @@ class DynamoDBAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.data.auditing.config. AuditingBeanDefinitionRegistrarSupport#registerAuditListener(org.
-     * springframework.beans.factory.config.BeanDefinition,
-     * org.springframework.beans.factory.support.BeanDefinitionRegistry)
+     * @see org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport#registerAuditListenerBeanDefinition(org.springframework.beans.factory.config.BeanDefinition, org.springframework.beans.factory.support.BeanDefinitionRegistry)
      */
     @Override
-    protected void registerAuditListenerBeanDefinition(BeanDefinition auditingHandlerDefinition,
-            BeanDefinitionRegistry registry) {
+    protected void registerAuditListenerBeanDefinition(@NonNull BeanDefinition auditingHandlerDefinition,
+                                                       @NonNull BeanDefinitionRegistry registry) {
         LOGGER.trace("registerAuditListenerBeanDefinition");
         Assert.notNull(auditingHandlerDefinition, "BeanDefinition must not be null!");
         Assert.notNull(registry, "BeanDefinitionRegistry must not be null!");
 
+        // Register the modern callback-based auditing (for entity modification)
+        BeanDefinitionBuilder callbackBeanDefinitionBuilder = BeanDefinitionBuilder
+                .rootBeanDefinition(AuditingEntityCallback.class);
+        callbackBeanDefinitionBuilder.addConstructorArgValue(
+                ParsingUtils.getObjectFactoryBeanDefinition(getAuditingHandlerBeanName(), registry));
+
+        registerInfrastructureBeanWithId(callbackBeanDefinitionBuilder.getBeanDefinition(),
+                AuditingEntityCallback.class.getName(), registry);
+
+        // Also register the legacy event listener for backward compatibility
         BeanDefinitionBuilder listenerBeanDefinitionBuilder = BeanDefinitionBuilder
                 .rootBeanDefinition(AuditingEventListener.class);
         listenerBeanDefinitionBuilder.addConstructorArgValue(
@@ -124,26 +129,21 @@ class DynamoDBAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
     }
 
     /**
-     * Register default bean definitions for a {@link DynamoDBMappingContext} and an
-     * {@link org.springframework.data.support.IsNewStrategyFactory} in case we don't find beans with the assumed names
-     * in the registry.
-     *
-     * @param registry
-     *            the {@link BeanDefinitionRegistry} to use to register the components into.
-     * @param source
-     *            the source which the registered components shall be registered with
+     * This method no longer creates a default {@link DynamoDBMappingContext} bean.
+     * The mapping context should be provided by:
+     * <p>
+     * 1. @EnableDynamoDBRepositories (which creates it with the appropriate marshalling mode), or
+     * 2. A user-defined @Bean
+     * <p>
+     * This matches the pattern used by Spring Data MongoDB's MongoAuditingRegistrar, which
+     * relies on Spring's dependency injection to fail with a clear error if the required
+     * mapping context bean is not available.
      */
-    private void defaultDependenciesIfNecessary(BeanDefinitionRegistry registry, Object source) {
-        LOGGER.trace("defaultDependenciesIfNecessary. source:{}", source);
-        LOGGER.trace("is registry.containsBeanDefinition {} {}", MAPPING_CONTEXT_BEAN_NAME,
-                registry.containsBeanDefinition(MAPPING_CONTEXT_BEAN_NAME));
-        if (!registry.containsBeanDefinition(MAPPING_CONTEXT_BEAN_NAME)) {
-
-            RootBeanDefinition definition = new RootBeanDefinition(DynamoDBMappingContext.class);
-            definition.setRole(ROLE_INFRASTRUCTURE);
-            definition.setSource(source);
-
-            registry.registerBeanDefinition(MAPPING_CONTEXT_BEAN_NAME, definition);
-        }
+    private void defaultDependenciesIfNecessary() {
+        // No longer create a default mapping context bean.
+        // The bean reference in getAuditHandlerBeanDefinitionBuilder (line 97) will cause Spring
+        // to fail with a clear dependency injection error if no DynamoDBMappingContext bean exists.
+        LOGGER.trace("DynamoDBAuditingRegistrar expects DynamoDBMappingContext bean '{}' to be provided by @EnableDynamoDBRepositories or user configuration",
+                MAPPING_CONTEXT_BEAN_NAME);
     }
 }

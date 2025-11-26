@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,8 +21,7 @@ import java.lang.annotation.*;
 
 /**
  * Annotation to enable auditing in DynamoDB via annotation configuration.
- *
- * @author Vito Limandibhrata
+ * @author Prasanna Kumar Ramachandran
  */
 @Inherited
 @Documented
@@ -32,24 +31,27 @@ import java.lang.annotation.*;
 public @interface EnableDynamoDBAuditing {
 
     /**
-     * @return Configures the {@link org.springframework.data.domain.AuditorAware} bean to be used to lookup the current
-     *         principal.
+     * Configures the {@link org.springframework.data.domain.AuditorAware} bean to be used to look up the current principal.
+     * @return the bean name of the AuditorAware instance to be used
      */
     String auditorAwareRef() default "";
 
     /**
-     * @return Configures whether the creation and modification dates are set. Defaults to {@literal true}.
+     * Configures whether the creation and modification dates are set. Defaults to {@literal true}.
+     * @return true if dates should be set, false otherwise
      */
     boolean setDates() default true;
 
     /**
-     * @return Configures whether the entity shall be marked as modified on creation. Defaults to {@literal true}.
+     * Configures whether the entity shall be marked as modified on creation. Defaults to {@literal true}.
+     * @return true if entity should be marked as modified on creation, false otherwise
      */
     boolean modifyOnCreate() default true;
 
     /**
-     * @return Configures a {@link org.springframework.data.auditing.DateTimeProvider} bean name that allows customizing
-     *         the {@link java.time.LocalDateTime} to be used for setting creation and modification dates.
+     * Configures a {@link org.springframework.data.auditing.DateTimeProvider} bean name to be used to look up the {@link java.time.temporal.TemporalAccessor} used for setting the current date and time.
+     * @return the bean name of the DateTimeProvider instance to be used
      */
     String dateTimeProviderRef() default "";
+
 }

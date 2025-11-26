@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,24 +15,34 @@
  */
 package org.socialsignin.spring.data.dynamodb.query;
 
-import com.amazonaws.services.dynamodbv2.model.QueryRequest;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
+import org.springframework.lang.NonNull;
+import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
 
+/**
+ * Query implementation for counting results of a DynamoDB query request.
+ * @author Prasanna Kumar Ramachandran
+ */
 public class QueryRequestCountQuery extends AbstractSingleEntityQuery<Long> {
 
     private final DynamoDBOperations dynamoDBOperations;
     private final QueryRequest queryRequest;
 
+    /**
+     * Creates a new count query for the given query request.
+     * @param dynamoDBOperations the DynamoDB operations instance
+     * @param queryRequest the query request to count results for
+     */
     public QueryRequestCountQuery(DynamoDBOperations dynamoDBOperations, QueryRequest queryRequest) {
         super(null, Long.class);
         this.queryRequest = queryRequest;
         this.dynamoDBOperations = dynamoDBOperations;
     }
 
+    @NonNull
     @Override
     public Long getSingleResult() {
-
-        return Long.valueOf(dynamoDBOperations.count(clazz, queryRequest));
+        return (long) dynamoDBOperations.count(clazz, queryRequest);
     }
 
 }

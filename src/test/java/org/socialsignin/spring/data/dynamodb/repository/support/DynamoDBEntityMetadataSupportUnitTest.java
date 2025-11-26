@@ -15,27 +15,32 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMarshaller;
 import org.junit.jupiter.api.Test;
 import org.socialsignin.spring.data.dynamodb.domain.sample.User;
+import software.amazon.awssdk.enhanced.dynamodb.AttributeConverter;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+/**
+ * SDK v2 Migration Notes:
+ * - SDK v1: DynamoDBMarshaller → SDK v2: AttributeConverter
+ * - SDK v1: getMarshallerForProperty() → SDK v2: getAttributeConverterForProperty()
+ * - The DynamoDBEntityMetadataSupport class internally handles SDK v2 conversion
+ * - getAttributeConverterForProperty now returns AttributeConverter instead of DynamoDBMarshaller
+ */
 public class DynamoDBEntityMetadataSupportUnitTest {
 
     @Test
-    public void testGetMarshallerForProperty_WhenAnnotationIsOnField_AndReturnsDynamoDBMarshaller() {
+    public void testGetAttributeConverterForProperty_WhenAnnotationIsOnField_AndReturnsAttributeConverter() {
         DynamoDBEntityMetadataSupport<User, ?> support = new DynamoDBEntityMetadataSupport<>(User.class);
-        @SuppressWarnings("deprecation")
-        DynamoDBMarshaller<?> fieldAnnotation = support.getMarshallerForProperty("joinYear");
+        AttributeConverter<?> fieldAnnotation = support.getAttributeConverterForProperty("joinYear");
         assertNotNull(fieldAnnotation);
     }
 
     @Test
-    public void testGetMarshallerForProperty_WhenAnnotationIsOnMethod_AndReturnsDynamoDBMarshaller() {
+    public void testGetAttributeConverterForProperty_WhenAnnotationIsOnMethod_AndReturnsAttributeConverter() {
         DynamoDBEntityMetadataSupport<User, ?> support = new DynamoDBEntityMetadataSupport<>(User.class);
-        @SuppressWarnings("deprecation")
-        DynamoDBMarshaller<?> methodAnnotation = support.getMarshallerForProperty("leaveDate");
+        AttributeConverter<?> methodAnnotation = support.getAttributeConverterForProperty("leaveDate");
         assertNotNull(methodAnnotation);
     }
 }

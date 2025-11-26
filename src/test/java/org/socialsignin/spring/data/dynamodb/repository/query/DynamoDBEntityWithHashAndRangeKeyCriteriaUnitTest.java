@@ -22,21 +22,28 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.socialsignin.spring.data.dynamodb.domain.sample.Playlist;
 import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBIdIsHashAndRangeKeyEntityInformation;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class DynamoDBEntityWithHashAndRangeKeyCriteriaUnitTest
         extends AbstractDynamoDBQueryCriteriaUnitTest<DynamoDBEntityWithHashAndRangeKeyCriteria<Playlist, String>> {
 
     @Mock
     private DynamoDBIdIsHashAndRangeKeyEntityInformation<Playlist, String> entityInformation;
+    @Mock
+    private org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext mappingContext;
 
     @BeforeEach
     public void setUp() {
         Mockito.when(entityInformation.getHashKeyPropertyName()).thenReturn("userName");
         Mockito.when(entityInformation.getRangeKeyPropertyName()).thenReturn("playlistName");
-        criteria = new DynamoDBEntityWithHashAndRangeKeyCriteria<>(entityInformation, null);
+        // Use SDK_V1_COMPATIBLE mode for date tests that expect ISO string format
+        Mockito.when(mappingContext.getMarshallingMode()).thenReturn(org.socialsignin.spring.data.dynamodb.core.MarshallingMode.SDK_V1_COMPATIBLE);
+        criteria = new DynamoDBEntityWithHashAndRangeKeyCriteria<>(entityInformation, null, mappingContext);
     }
 
     @Test

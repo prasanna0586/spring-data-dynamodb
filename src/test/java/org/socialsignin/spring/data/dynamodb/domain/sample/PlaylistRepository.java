@@ -20,12 +20,43 @@ import org.socialsignin.spring.data.dynamodb.repository.Query;
 import org.socialsignin.spring.data.dynamodb.repository.QueryConstants;
 import org.springframework.data.repository.CrudRepository;
 
+import java.util.List;
 import java.util.Optional;
 
-@EnableScan
+
 public interface PlaylistRepository extends CrudRepository<Playlist, PlaylistId> {
 
     @Override
     @Query(consistentReads = QueryConstants.ConsistentReadMode.EVENTUAL)
     Optional<Playlist> findById(PlaylistId playlistId);
+
+    // Range-key-only scan query
+    @EnableScan
+    List<Playlist> findByPlaylistName(String playlistName);
+
+    // Scan-based exists queries
+    @EnableScan
+    boolean existsByDisplayName(String displayName);
+
+    // Attribute override queries
+    @EnableScan
+    List<Playlist> findByDisplayName(String displayName);
+
+    @EnableScan
+    List<Playlist> findByUserNameAndDisplayName(String userName, String displayName);
+
+    @EnableScan
+    List<Playlist> findByPlaylistNameAndDisplayName(String playlistName, String displayName);
+
+    @EnableScan
+    @Override
+    long count();
+
+    @EnableScan
+    @Override
+    Iterable<Playlist> findAll();
+
+    @EnableScan
+    @Override
+    void deleteAll();
 }

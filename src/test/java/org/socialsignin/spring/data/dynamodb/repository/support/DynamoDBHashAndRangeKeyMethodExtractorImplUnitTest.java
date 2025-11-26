@@ -15,17 +15,24 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.socialsignin.spring.data.dynamodb.domain.sample.PlaylistId;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 
 import java.lang.reflect.Method;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * SDK v2 Migration Notes:
+ * - SDK v1: @DynamoDBHashKey → SDK v2: @DynamoDbPartitionKey
+ * - SDK v1: @DynamoDBRangeKey → SDK v2: @DynamoDbSortKey
+ * - The DynamoDBHashAndRangeKeyMethodExtractor interface remains unchanged
+ * - Test inner classes updated to use SDK v2 annotations
+ */
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings("unused")
 public class DynamoDBHashAndRangeKeyMethodExtractorImplUnitTest {
@@ -105,7 +112,7 @@ public class DynamoDBHashAndRangeKeyMethodExtractorImplUnitTest {
 
     private class IdClassWithOnlyAnnotatedHashKeyMethod {
 
-        @DynamoDBHashKey
+        @DynamoDbPartitionKey
         public String getHashKey() {
             return null;
         }
@@ -122,7 +129,7 @@ public class DynamoDBHashAndRangeKeyMethodExtractorImplUnitTest {
             return null;
         }
 
-        @DynamoDBRangeKey
+        @DynamoDbSortKey
         public String getRangeKey() {
             return null;
         }
@@ -131,17 +138,17 @@ public class DynamoDBHashAndRangeKeyMethodExtractorImplUnitTest {
 
     private class IdClassWithMulitpleAnnotatedHashKeyMethods {
 
-        @DynamoDBHashKey
+        @DynamoDbPartitionKey
         public String getHashKey() {
             return null;
         }
 
-        @DynamoDBHashKey
+        @DynamoDbPartitionKey
         public String getOtherHashKey() {
             return null;
         }
 
-        @DynamoDBRangeKey
+        @DynamoDbSortKey
         public String getRangeKey() {
             return null;
         }
@@ -150,17 +157,17 @@ public class DynamoDBHashAndRangeKeyMethodExtractorImplUnitTest {
 
     private class IdClassWithMulitpleAnnotatedRangeKeyMethods {
 
-        @DynamoDBHashKey
+        @DynamoDbPartitionKey
         public String getHashKey() {
             return null;
         }
 
-        @DynamoDBRangeKey
+        @DynamoDbSortKey
         public String getOtherRangeKey() {
             return null;
         }
 
-        @DynamoDBRangeKey
+        @DynamoDbSortKey
         public String getRangeKey() {
             return null;
         }

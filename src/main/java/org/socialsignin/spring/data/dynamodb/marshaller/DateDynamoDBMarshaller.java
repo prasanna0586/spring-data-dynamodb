@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,26 +15,52 @@
  */
 package org.socialsignin.spring.data.dynamodb.marshaller;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMarshaller;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverter;
+import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Date;
 
-@SuppressWarnings("deprecation")
-public abstract class DateDynamoDBMarshaller implements DynamoDBTypeConverter<String, Date>, DynamoDBMarshaller<Date> {
+/**
+ * Abstract base class for Date marshalling.
+ * Provides conversion between Date objects and String representations.
+ * @deprecated This class was created for SDK v1 compatibility. For new code using SDK v2,
+ *             consider using AttributeConverter instead.
+ * @since 1.0.0
+ */
+@Deprecated
+public abstract class DateDynamoDBMarshaller {
 
+    /**
+     * Constructs a new DateDynamoDBMarshaller.
+     */
+    public DateDynamoDBMarshaller() {
+    }
+
+    /**
+     * Returns the DateFormat to use for marshalling and unmarshalling operations.
+     * @return a DateFormat instance
+     */
     public abstract DateFormat getDateFormat();
 
-    @Override
+    /**
+     * Converts a Date to String representation.
+     * @param object the Date to convert
+     * @return String representation of the date
+     */
+    @Nullable
     public String convert(Date object) {
         return marshall(object);
     }
 
-    @Override
-    public String marshall(Date getterReturnResult) {
+    /**
+     * Marshalls a Date to String format.
+     * @param getterReturnResult the Date to marshall
+     * @return String representation of the date
+     */
+    @Nullable
+    public String marshall(@Nullable Date getterReturnResult) {
         if (getterReturnResult == null) {
             return null;
         } else {
@@ -42,14 +68,24 @@ public abstract class DateDynamoDBMarshaller implements DynamoDBTypeConverter<St
         }
     }
 
-    @Override
+    /**
+     * Converts a String back to Date.
+     * @param object the String to convert
+     * @return Date object
+     */
+    @Nullable
     public Date unconvert(String object) {
-        return unmarshall(Date.class, object);
+        return unmarshall(object);
     }
 
-    @Override
-    public Date unmarshall(Class<Date> clazz, String obj) {
-        if (StringUtils.isEmpty(obj)) {
+    /**
+     * Unmarshalls a String to Date.
+     * @param obj   the String to unmarshall
+     * @return Date object
+     */
+    @Nullable
+    public Date unmarshall(String obj) {
+        if (!StringUtils.hasLength(obj)) {
             return null;
         } else {
             try {

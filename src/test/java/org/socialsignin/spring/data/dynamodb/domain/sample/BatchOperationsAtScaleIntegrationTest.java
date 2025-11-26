@@ -1,11 +1,7 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.socialsignin.spring.data.dynamodb.domain.sample.User;
-import org.socialsignin.spring.data.dynamodb.domain.sample.UserRepository;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
 import org.socialsignin.spring.data.dynamodb.utils.DynamoDBLocalResource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,9 +11,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -54,9 +48,6 @@ public class BatchOperationsAtScaleIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;
-
-    @Autowired
-    private DynamoDBMapper dynamoDBMapper;
 
     @BeforeEach
     void setUp() {

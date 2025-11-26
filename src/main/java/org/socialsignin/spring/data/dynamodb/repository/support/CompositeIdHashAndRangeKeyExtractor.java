@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,22 +15,32 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Method;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * Implementation of hash and range key extractor for composite ID classes using reflection.
+ * @param <ID> the composite ID type
+ * @param <H> the hash key type
+ * @author Prasanna Kumar Ramachandran
  */
 public class CompositeIdHashAndRangeKeyExtractor<ID, H> implements HashAndRangeKeyExtractor<ID, H> {
 
-    private DynamoDBHashAndRangeKeyMethodExtractor<ID> hashAndRangeKeyMethodExtractor;
+    @NonNull
+    private final DynamoDBHashAndRangeKeyMethodExtractor<ID> hashAndRangeKeyMethodExtractor;
 
-    public CompositeIdHashAndRangeKeyExtractor(Class<ID> idClass) {
-        this.hashAndRangeKeyMethodExtractor = new DynamoDBHashAndRangeKeyMethodExtractorImpl<ID>(idClass);
+    /**
+     * Constructs a new CompositeIdHashAndRangeKeyExtractor for the given ID class.
+     * @param idClass the composite ID class to extract hash and range keys from
+     */
+    public CompositeIdHashAndRangeKeyExtractor(@NonNull Class<ID> idClass) {
+        this.hashAndRangeKeyMethodExtractor = new DynamoDBHashAndRangeKeyMethodExtractorImpl<>(idClass);
     }
 
+    @Nullable
     @SuppressWarnings("unchecked")
     @Override
     public H getHashKey(ID id) {
@@ -42,6 +52,7 @@ public class CompositeIdHashAndRangeKeyExtractor<ID, H> implements HashAndRangeK
         }
     }
 
+    @Nullable
     @Override
     public Object getRangeKey(ID id) {
         Method method = hashAndRangeKeyMethodExtractor.getRangeKeyMethod();

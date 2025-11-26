@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,19 +15,21 @@
  */
 package org.socialsignin.spring.data.dynamodb.mapping;
 
+import java.io.Serial;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * Default date marshaller that uses ISO 8601 format with UTC timezone.
  *
+ * @author Prasanna Kumar Ramachandran
  * @deprecated Consider using {@link org.socialsignin.spring.data.dynamodb.marshaller.Date2IsoDynamoDBMarshaller}
  */
 @Deprecated
 public class DefaultDynamoDBDateMarshaller extends AbstractDynamoDBDateMarshaller {
 
     private static final class UTCSimpleDateFormat extends SimpleDateFormat {
+        @Serial
         private static final long serialVersionUID = 1L;
 
         private UTCSimpleDateFormat() {
@@ -41,6 +43,9 @@ public class DefaultDynamoDBDateMarshaller extends AbstractDynamoDBDateMarshalle
         }
     }
 
+    /**
+     * Constructs a new DefaultDynamoDBDateMarshaller with UTC timezone.
+     */
     public DefaultDynamoDBDateMarshaller() {
         super(new UTCSimpleDateFormat());
     }

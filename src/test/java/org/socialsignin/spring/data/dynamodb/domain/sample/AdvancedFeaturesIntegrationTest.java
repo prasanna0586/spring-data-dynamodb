@@ -17,7 +17,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -45,7 +44,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class AdvancedFeaturesIntegrationTest {
 
     @Configuration
-    @EnableDynamoDBRepositories(basePackages = "org.socialsignin.spring.data.dynamodb.domain.sample")
+    @EnableDynamoDBRepositories(
+            basePackages = "org.socialsignin.spring.data.dynamodb.domain.sample",
+            marshallingMode = org.socialsignin.spring.data.dynamodb.core.MarshallingMode.SDK_V1_COMPATIBLE
+    )
     public static class TestAppConfig {
     }
 

@@ -1,6 +1,9 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.*;
+import software.amazon.awssdk.enhanced.dynamodb.extensions.annotations.DynamoDbVersionAttribute;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 
 import java.util.Objects;
 
@@ -8,7 +11,7 @@ import java.util.Objects;
  * Domain model for testing transactional operations.
  * Represents a bank account for testing ACID transactions.
  */
-@DynamoDBTable(tableName = "BankAccount")
+@DynamoDbBean
 public class BankAccount {
 
     private String accountId;
@@ -27,7 +30,8 @@ public class BankAccount {
         this.status = "ACTIVE";
     }
 
-    @DynamoDBHashKey(attributeName = "accountId")
+    @DynamoDbPartitionKey
+    @DynamoDbAttribute("accountId")
     public String getAccountId() {
         return accountId;
     }
@@ -36,7 +40,7 @@ public class BankAccount {
         this.accountId = accountId;
     }
 
-    @DynamoDBAttribute(attributeName = "accountHolder")
+    @DynamoDbAttribute("accountHolder")
     public String getAccountHolder() {
         return accountHolder;
     }
@@ -45,7 +49,7 @@ public class BankAccount {
         this.accountHolder = accountHolder;
     }
 
-    @DynamoDBAttribute(attributeName = "balance")
+    @DynamoDbAttribute("balance")
     public Double getBalance() {
         return balance;
     }
@@ -54,7 +58,7 @@ public class BankAccount {
         this.balance = balance;
     }
 
-    @DynamoDBAttribute(attributeName = "status")
+    @DynamoDbAttribute("status")
     public String getStatus() {
         return status;
     }
@@ -63,8 +67,7 @@ public class BankAccount {
         this.status = status;
     }
 
-    @DynamoDBVersionAttribute
-    @DynamoDBAttribute(attributeName = "version")
+    @DynamoDbVersionAttribute
     public Long getVersion() {
         return version;
     }

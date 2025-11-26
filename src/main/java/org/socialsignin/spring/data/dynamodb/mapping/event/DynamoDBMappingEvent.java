@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,16 +16,26 @@
 package org.socialsignin.spring.data.dynamodb.mapping.event;
 
 import org.springframework.context.ApplicationEvent;
+import org.springframework.lang.NonNull;
+
+import java.io.Serial;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * Base class for all DynamoDB mapping events.
+ * @param <T> the entity type
+ * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBMappingEvent<T> extends ApplicationEvent {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
-    public DynamoDBMappingEvent(T source) {
+    /**
+     * Creates a new DynamoDBMappingEvent.
+     *
+     * @param source the entity that triggered the event
+     */
+    public DynamoDBMappingEvent(@NonNull T source) {
         super(source);
     }
 

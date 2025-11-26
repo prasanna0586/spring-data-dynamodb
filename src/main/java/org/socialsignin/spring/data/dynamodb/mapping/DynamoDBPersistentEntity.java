@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,9 +19,8 @@ import org.springframework.data.mapping.PersistentEntity;
 
 /**
  * Interface for a DynamoDB-specific entity.
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @param <T> the entity type
+ * @author Prasanna Kumar Ramachandran
  */
 public interface DynamoDBPersistentEntity<T> extends PersistentEntity<T, DynamoDBPersistentProperty> {
 

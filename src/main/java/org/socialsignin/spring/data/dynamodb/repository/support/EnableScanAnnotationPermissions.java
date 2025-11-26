@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,13 +18,16 @@ package org.socialsignin.spring.data.dynamodb.repository.support;
 import org.socialsignin.spring.data.dynamodb.repository.EnableScan;
 import org.socialsignin.spring.data.dynamodb.repository.EnableScanCount;
 import org.springframework.data.domain.Pageable;
+import org.springframework.lang.NonNull;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Method;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * Manages scan operation permissions based on @EnableScan and @EnableScanCount annotations.
+ *
+ * Validates which scan operations are enabled at the repository interface level.
+ * @author Prasanna Kumar Ramachandran
  */
 public class EnableScanAnnotationPermissions implements EnableScanPermissions {
 
@@ -36,7 +39,11 @@ public class EnableScanAnnotationPermissions implements EnableScanPermissions {
     private boolean countUnpaginatedScanEnabled = false;
     private boolean deleteAllUnpaginatedScanEnabled = false;
 
-    public EnableScanAnnotationPermissions(Class<?> repositoryInterface) {
+    /**
+     * Creates a new EnableScanAnnotationPermissions for the given repository interface.
+     * @param repositoryInterface the repository interface to check for scan annotations
+     */
+    public EnableScanAnnotationPermissions(@NonNull Class<?> repositoryInterface) {
         // Check to see if global EnableScan is declared at interface level
         if (repositoryInterface.isAnnotationPresent(EnableScan.class)) {
             this.findAllUnpaginatedScanEnabled = true;
@@ -44,67 +51,50 @@ public class EnableScanAnnotationPermissions implements EnableScanPermissions {
             this.deleteAllUnpaginatedScanEnabled = true;
             this.findAllPaginatedScanEnabled = true;
         } else {
-            // Check declared methods for EnableScan annotation
+            // Process all method annotations in a single iteration for efficiency
+            // This consolidates three separate loops into one, reducing iteration overhead from O(3n) to O(n)
             Method[] methods = ReflectionUtils.getAllDeclaredMethods(repositoryInterface);
             for (Method method : methods) {
+                String methodName = method.getName();
+                Class<?>[] paramTypes = method.getParameterTypes();
+                int paramCount = paramTypes.length;
 
-                if (!method.isAnnotationPresent(EnableScan.class) || method.getParameterTypes().length > 0) {
-                    // Only consider methods which have the EnableScan
-                    // annotation and which accept no parameters
-                    continue;
+                // Check for @EnableScan annotation
+                if (method.isAnnotationPresent(EnableScan.class)) {
+                    if (paramCount == 0) {
+                        // Methods with no parameters: findAll(), deleteAll(), count()
+                        switch (methodName) {
+                            case "findAll" -> findAllUnpaginatedScanEnabled = true;
+                            case "deleteAll" -> deleteAllUnpaginatedScanEnabled = true;
+                            case "count" -> countUnpaginatedScanEnabled = true;
+                        }
+                    } else if (paramCount == 1 && "findAll".equals(methodName)) {
+                        // Methods with single Pageable parameter: findAll(Pageable)
+                        // Cache paramTypes array to avoid multiple getParameterTypes() calls
+                        // Check array bounds defensively before accessing [0]
+                        if (Pageable.class.isAssignableFrom(paramTypes[0])) {
+                            findAllPaginatedScanEnabled = true;
+                        }
+                    }
                 }
 
-                if (method.getName().equals("findAll")) {
-                    findAllUnpaginatedScanEnabled = true;
-                    continue;
+                // Check for @EnableScanCount annotation
+                if (method.isAnnotationPresent(EnableScanCount.class)) {
+                    if (paramCount == 1 && "findAll".equals(methodName)) {
+                        // Use cached paramTypes array from above
+                        // paramCount == 1 guarantees paramTypes[0] exists
+                        if (Pageable.class.isAssignableFrom(paramTypes[0])) {
+                            findAllUnpaginatedScanCountEnabled = true;
+                        }
+                    }
                 }
-
-                if (method.getName().equals("deleteAll")) {
-                    deleteAllUnpaginatedScanEnabled = true;
-                    continue;
-                }
-
-                if (method.getName().equals("count")) {
-                    countUnpaginatedScanEnabled = true;
-                    continue;
-                }
-
-            }
-            for (Method method : methods) {
-
-                if (!method.isAnnotationPresent(EnableScanCount.class) || method.getParameterTypes().length != 1) {
-                    // Only consider methods which have the EnableScanCount
-                    // annotation and which have a single pageable parameter
-                    continue;
-                }
-
-                if (method.getName().equals("findAll")
-                        && Pageable.class.isAssignableFrom(method.getParameterTypes()[0])) {
-                    findAllUnpaginatedScanCountEnabled = true;
-                    continue;
-                }
-
-            }
-            for (Method method : methods) {
-
-                if (!method.isAnnotationPresent(EnableScan.class) || method.getParameterTypes().length != 1) {
-                    // Only consider methods which have the EnableScan
-                    // annotation and which have a single pageable parameter
-                    continue;
-                }
-
-                if (method.getName().equals("findAll")
-                        && Pageable.class.isAssignableFrom(method.getParameterTypes()[0])) {
-                    findAllPaginatedScanEnabled = true;
-                    continue;
-                }
-
             }
         }
+
+        // Check for class-level @EnableScanCount annotation
         if (!findAllUnpaginatedScanCountEnabled && repositoryInterface.isAnnotationPresent(EnableScanCount.class)) {
             findAllUnpaginatedScanCountEnabled = true;
         }
-
     }
 
     @Override

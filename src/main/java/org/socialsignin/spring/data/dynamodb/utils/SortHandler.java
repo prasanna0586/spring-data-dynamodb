@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,27 +17,30 @@ package org.socialsignin.spring.data.dynamodb.utils;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.lang.NonNull;
 
 /**
  * Some helper methods to deal with {@link Sort}.
- *
- * @author derjust
+ * @author Prasanna Kumar Ramachandran
  */
 public interface SortHandler {
 
     /**
+     * Ensures that the given pageable has no sort specified.
      * @param pageable
      *            The {@link Pageable} to check that no sort is specified
+     * @throws UnsupportedOperationException
+     *             if a sort is initialized (non-null &amp;&amp; not {@link Sort#unsorted()}
      */
-    default void ensureNoSort(Pageable pageable) {
+    default void ensureNoSort(@NonNull Pageable pageable) {
         Sort sort = pageable.getSort();
         ensureNoSort(sort);
     }
 
     /**
+     * Ensures that the given sort is not specified.
      * @param sort
      *            The {@link Sort} to check that no sort is specified
-     *
      * @throws UnsupportedOperationException
      *             if a {@code sort} is initialized (non-null &amp;&amp; not {@link Sort#unsorted()}
      */
@@ -47,6 +50,12 @@ public interface SortHandler {
         }
     }
 
+    /**
+     * Throws an UnsupportedOperationException for sort operations.
+     * @param <T> the return type (for method chaining)
+     * @return never returns, always throws
+     * @throws UnsupportedOperationException always
+     */
     default <T> T throwUnsupportedSortOperationException() {
         throw new UnsupportedOperationException("Sorting not supported for scan expressions");
     }

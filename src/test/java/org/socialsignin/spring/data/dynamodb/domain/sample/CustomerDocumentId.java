@@ -15,10 +15,11 @@
  */
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ public class CustomerDocumentId implements Serializable {
 
     private String customerId;
     private String documentType;
+    private String version;
 
     public CustomerDocumentId() {
 
@@ -44,10 +46,8 @@ public class CustomerDocumentId implements Serializable {
         this.version = version;
     }
 
-    @DynamoDBRangeKey
-    private String version;
-
-    @DynamoDBHashKey(attributeName = "customerId|documentType")
+    @DynamoDbPartitionKey
+    @DynamoDbAttribute("customerId|documentType")
     public String getCustomerDocumentKey() {
         return buildCustomerDocumentKey(customerId, documentType);
     }
@@ -88,6 +88,7 @@ public class CustomerDocumentId implements Serializable {
         this.documentType = documentType;
     }
 
+    @DynamoDbSortKey
     public String getVersion() {
         return version;
     }

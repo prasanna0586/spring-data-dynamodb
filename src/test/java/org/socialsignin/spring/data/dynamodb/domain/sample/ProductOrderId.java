@@ -1,7 +1,7 @@
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -23,7 +23,7 @@ public class ProductOrderId implements Serializable {
         this.orderId = orderId;
     }
 
-    @DynamoDBHashKey
+    @DynamoDbPartitionKey
     public String getCustomerId() {
         return customerId;
     }
@@ -32,7 +32,7 @@ public class ProductOrderId implements Serializable {
         this.customerId = customerId;
     }
 
-    @DynamoDBRangeKey
+    @DynamoDbSortKey
     public String getOrderId() {
         return orderId;
     }

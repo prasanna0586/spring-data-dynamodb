@@ -66,8 +66,8 @@ public class UnpagedPageImplTest {
         assertFalse(underTest.hasPrevious());
         assertTrue(underTest.isLast());
         assertFalse(underTest.hasNext());
-        assertNull(underTest.nextPageable());
-        assertNull(underTest.previousPageable());
+        assertEquals(Pageable.unpaged(), underTest.nextPageable());
+        assertEquals(Pageable.unpaged(), underTest.previousPageable());
     }
 
     @Test

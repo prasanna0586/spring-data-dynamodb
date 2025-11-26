@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,27 +22,24 @@ import org.springframework.util.Assert;
 /**
  * Event listener to populate auditing related fields on an entity about to be saved.
  *
- * @author Vito Limandibhrata
+ * NOTE: This listener is registered for backward compatibility with XML-based configurations,
+ * but auditing is handled by {@link AuditingEntityCallback} in modern annotation-based configurations.
+ * The callback-based approach is triggered automatically during repository.save() operations.
+ * @author Prasanna Kumar Ramachandran
  */
 public class AuditingEventListener extends AbstractDynamoDBEventListener<Object> {
-
-    private final ObjectFactory<IsNewAwareAuditingHandler> auditingHandlerFactory;
 
     /**
      * Creates a new {@link AuditingEventListener} using the given
      * {@link org.springframework.data.mapping.context.MappingContext} and
      * {@link org.springframework.data.auditing.AuditingHandler} provided by the given {@link ObjectFactory}.
-     *
-     * @param auditingHandlerFactory
-     *            must not be {@literal null}.
+     * @param auditingHandlerFactory must not be {@literal null}.
      */
     public AuditingEventListener(ObjectFactory<IsNewAwareAuditingHandler> auditingHandlerFactory) {
         Assert.notNull(auditingHandlerFactory, "IsNewAwareAuditingHandler must not be null!");
-        this.auditingHandlerFactory = auditingHandlerFactory;
     }
 
-    @Override
-    public void onBeforeSave(Object source) {
-        auditingHandlerFactory.getObject().markAudited(source);
-    }
+    // Note: onBeforeSave() is not implemented here.
+    // Modern auditing uses AuditingEntityCallback which is triggered during repository.save().
+    // For legacy XML-based event publishing, extend this class and override onBeforeSave().
 }

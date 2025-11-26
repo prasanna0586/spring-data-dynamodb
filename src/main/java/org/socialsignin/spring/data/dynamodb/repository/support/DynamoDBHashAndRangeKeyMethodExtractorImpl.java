@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,22 +15,25 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey;
+import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 import org.springframework.util.ReflectionUtils;
-import org.springframework.util.ReflectionUtils.FieldCallback;
-import org.springframework.util.ReflectionUtils.MethodCallback;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * Extracts hash and range key methods and fields from a DynamoDB composite ID type using reflection.
+ *
+ * Validates that exactly one method or field is annotated with @DynamoDbPartitionKey and @DynamoDbSortKey.
+ * @param <T> the type for which to extract hash and range key methods/fields
+ * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBHashAndRangeKeyMethodExtractorImpl<T> implements DynamoDBHashAndRangeKeyMethodExtractor<T> {
 
+    @NonNull
     private final Class<T> idType;
     private Method hashKeyMethod;
     private Method rangeKeyMethod;
@@ -40,77 +43,65 @@ public class DynamoDBHashAndRangeKeyMethodExtractorImpl<T> implements DynamoDBHa
 
     /**
      * Creates a new {@link DynamoDBHashAndRangeKeyMethodExtractor} for the given domain type.
-     *
      * @param idType
      *            must not be {@literal null}.
      */
-    public DynamoDBHashAndRangeKeyMethodExtractorImpl(final Class<T> idType) {
+    public DynamoDBHashAndRangeKeyMethodExtractorImpl(@NonNull final Class<T> idType) {
 
         Assert.notNull(idType, "Id type must not be null!");
         this.idType = idType;
-        ReflectionUtils.doWithMethods(idType, new MethodCallback() {
-            @Override
-            public void doWith(Method method) {
-                if (method.getAnnotation(DynamoDBHashKey.class) != null) {
-                    Assert.isNull(hashKeyMethod,
-                            "Multiple methods annotated by @DynamoDBHashKey within type " + idType.getName() + "!");
-                    ReflectionUtils.makeAccessible(method);
-                    hashKeyMethod = method;
-                }
+        ReflectionUtils.doWithMethods(idType, method -> {
+            if (method.getAnnotation(DynamoDbPartitionKey.class) != null) {
+                Assert.isNull(hashKeyMethod,
+                        "Multiple methods annotated by @DynamoDbPartitionKey within type " + idType.getName() + "!");
+                ReflectionUtils.makeAccessible(method);
+                hashKeyMethod = method;
             }
         });
-        ReflectionUtils.doWithFields(idType, new FieldCallback() {
-            @Override
-            public void doWith(Field field) {
-                if (field.getAnnotation(DynamoDBHashKey.class) != null) {
-                    Assert.isNull(hashKeyField,
-                            "Multiple fields annotated by @DynamoDBHashKey within type " + idType.getName() + "!");
-                    ReflectionUtils.makeAccessible(field);
+        ReflectionUtils.doWithFields(idType, field -> {
+            if (field.getAnnotation(DynamoDbPartitionKey.class) != null) {
+                Assert.isNull(hashKeyField,
+                        "Multiple fields annotated by @DynamoDbPartitionKey within type " + idType.getName() + "!");
+                ReflectionUtils.makeAccessible(field);
 
-                    hashKeyField = field;
-                }
+                hashKeyField = field;
             }
         });
-        ReflectionUtils.doWithMethods(idType, new MethodCallback() {
-            @Override
-            public void doWith(Method method) {
-                if (method.getAnnotation(DynamoDBRangeKey.class) != null) {
-                    Assert.isNull(rangeKeyMethod,
-                            "Multiple methods annotated by @DynamoDBRangeKey within type " + idType.getName() + "!");
-                    ReflectionUtils.makeAccessible(method);
-                    rangeKeyMethod = method;
-                }
+        ReflectionUtils.doWithMethods(idType, method -> {
+            if (method.getAnnotation(DynamoDbSortKey.class) != null) {
+                Assert.isNull(rangeKeyMethod,
+                        "Multiple methods annotated by @DynamoDbSortKey within type " + idType.getName() + "!");
+                ReflectionUtils.makeAccessible(method);
+                rangeKeyMethod = method;
             }
         });
-        ReflectionUtils.doWithFields(idType, new FieldCallback() {
-            @Override
-            public void doWith(Field field) {
-                if (field.getAnnotation(DynamoDBRangeKey.class) != null) {
-                    Assert.isNull(rangeKeyField,
-                            "Multiple fields annotated by @DynamoDBRangeKey within type " + idType.getName() + "!");
-                    ReflectionUtils.makeAccessible(field);
-                    rangeKeyField = field;
-                }
+        ReflectionUtils.doWithFields(idType, field -> {
+            if (field.getAnnotation(DynamoDbSortKey.class) != null) {
+                Assert.isNull(rangeKeyField,
+                        "Multiple fields annotated by @DynamoDbSortKey within type " + idType.getName() + "!");
+                ReflectionUtils.makeAccessible(field);
+                rangeKeyField = field;
             }
         });
         if (hashKeyMethod == null && hashKeyField == null) {
             throw new IllegalArgumentException(
-                    "No method or field annotated by @DynamoDBHashKey within type " + idType.getName() + "!");
+                    "No method or field annotated by @DynamoDbPartitionKey within type " + idType.getName() + "!");
         }
         if (rangeKeyMethod == null && rangeKeyField == null) {
             throw new IllegalArgumentException(
-                    "No method or field annotated by @DynamoDBRangeKey within type " + idType.getName() + "!");
+                    "No method or field annotated by @DynamoDbSortKey within type " + idType.getName() + "!");
         }
         if (hashKeyMethod != null && hashKeyField != null) {
             throw new IllegalArgumentException(
-                    "Both method and field annotated by @DynamoDBHashKey within type " + idType.getName() + "!");
+                    "Both method and field annotated by @DynamoDbPartitionKey within type " + idType.getName() + "!");
         }
         if (rangeKeyMethod != null && rangeKeyField != null) {
             throw new IllegalArgumentException(
-                    "Both method and field annotated by @DynamoDBRangeKey within type " + idType.getName() + "!");
+                    "Both method and field annotated by @DynamoDbSortKey within type " + idType.getName() + "!");
         }
     }
 
+    @NonNull
     @Override
     public Class<T> getJavaType() {
         return idType;

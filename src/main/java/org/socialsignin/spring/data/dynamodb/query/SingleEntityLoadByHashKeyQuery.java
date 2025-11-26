@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,13 +18,20 @@ package org.socialsignin.spring.data.dynamodb.query;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * Loads a single entity from DynamoDB using only a hash key.
+ * @param <T> the entity type
+ * @author Prasanna Kumar Ramachandran
  */
 public class SingleEntityLoadByHashKeyQuery<T> extends AbstractSingleEntityQuery<T> implements Query<T> {
 
-    private Object hashKey;
+    private final Object hashKey;
 
+    /**
+     * Creates a new query for loading an entity by hash key.
+     * @param dynamoDBOperations the DynamoDB operations instance
+     * @param clazz the entity class
+     * @param hashKey the hash key value
+     */
     public SingleEntityLoadByHashKeyQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz, Object hashKey) {
         super(dynamoDBOperations, clazz);
         this.hashKey = hashKey;

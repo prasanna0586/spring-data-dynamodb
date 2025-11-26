@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,18 +23,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
+import org.springframework.lang.NonNull;
 
 import java.io.Serializable;
 
 /**
  * Special adapter for Springs {@link org.springframework.beans.factory.FactoryBean} interface to allow easy setup of
  * repository factories via Spring configuration.
- *
- * @author Michael Lavelle
- * @author Sebastian Just
- *
- * @param <T>
- *            the type of the repository
+ * @param <T> the type of the repository
+ * @param <S> the entity type
+ * @param <ID> the ID type
+ * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable>
         extends RepositoryFactoryBeanSupport<T, S, ID> {
@@ -43,10 +42,15 @@ public class DynamoDBRepositoryFactoryBean<T extends Repository<S, ID>, S, ID ex
     private Entity2DynamoDBTableSynchronizer<S, ID> tableSynchronizer;
     private DynamoDBMappingContextProcessor<S, ID> dynamoDBMappingContextProcessor;
 
-    public DynamoDBRepositoryFactoryBean(Class<? extends T> repositoryInterface) {
+    /**
+     * Creates a new DynamoDBRepositoryFactoryBean for the given repository interface.
+     * @param repositoryInterface the repository interface
+     */
+    public DynamoDBRepositoryFactoryBean(@NonNull Class<? extends T> repositoryInterface) {
         super(repositoryInterface);
     }
 
+    @NonNull
     @Override
     protected RepositoryFactorySupport createRepositoryFactory() {
         assert dynamoDBOperations != null;
@@ -58,24 +62,40 @@ public class DynamoDBRepositoryFactoryBean<T extends Repository<S, ID>, S, ID ex
         return dynamoDBRepositoryFactory;
     }
 
+    /**
+     * Sets the DynamoDB mapping context processor.
+     * @param dynamoDBMappingContextProcessor the mapping context processor
+     */
     @Autowired
     public void setDynamoDBMappingContextProcessor(
             DynamoDBMappingContextProcessor<S, ID> dynamoDBMappingContextProcessor) {
         this.dynamoDBMappingContextProcessor = dynamoDBMappingContextProcessor;
     }
 
+    /**
+     * Sets the entity to DynamoDB table synchronizer.
+     * @param tableSynchronizer the table synchronizer
+     */
     @Autowired
     public void setEntity2DynamoDBTableSynchronizer(Entity2DynamoDBTableSynchronizer<S, ID> tableSynchronizer) {
         this.tableSynchronizer = tableSynchronizer;
     }
 
+    /**
+     * Sets the DynamoDB operations.
+     * @param dynamoDBOperations the DynamoDB operations
+     */
     @Autowired
     public void setDynamoDBOperations(DynamoDBOperations dynamoDBOperations) {
         this.dynamoDBOperations = dynamoDBOperations;
     }
 
+    /**
+     * Sets the DynamoDB mapping context.
+     * @param dynamoDBMappingContext the mapping context
+     */
     @Autowired
-    public void setDynamoDBMappingContext(DynamoDBMappingContext dynamoDBMappingContext) {
+    public void setDynamoDBMappingContext(@NonNull DynamoDBMappingContext dynamoDBMappingContext) {
         setMappingContext(dynamoDBMappingContext);
     }
 }

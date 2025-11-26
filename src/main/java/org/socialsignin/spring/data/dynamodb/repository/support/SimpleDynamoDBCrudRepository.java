@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,9 +15,6 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper.FailedBatch;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
-import com.amazonaws.services.dynamodbv2.datamodeling.KeyPair;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.socialsignin.spring.data.dynamodb.exception.BatchWriteException;
 import org.socialsignin.spring.data.dynamodb.repository.DynamoDBCrudRepository;
@@ -26,17 +23,17 @@ import org.socialsignin.spring.data.dynamodb.utils.SortHandler;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
+import software.amazon.awssdk.enhanced.dynamodb.Key;
+import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteResult;
+import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.StreamSupport;
 
 /**
  * Default implementation of the {@link org.springframework.data.repository.CrudRepository} interface.
- *
  * @param <T>
  *            the type of the entity to handle
  * @param <ID>
@@ -45,16 +42,26 @@ import java.util.stream.StreamSupport;
 public class SimpleDynamoDBCrudRepository<T, ID>
         implements DynamoDBCrudRepository<T, ID>, SortHandler, ExceptionHandler {
 
-    protected DynamoDBEntityInformation<T, ID> entityInformation;
+    /** The entity information for this repository */
+    protected final DynamoDBEntityInformation<T, ID> entityInformation;
 
-    protected Class<T> domainType;
+    /** The domain class type */
+    protected final Class<T> domainType;
 
-    protected EnableScanPermissions enableScanPermissions;
+    /** The scan permissions configuration */
+    protected final EnableScanPermissions enableScanPermissions;
 
-    protected DynamoDBOperations dynamoDBOperations;
+    /** The DynamoDB operations instance */
+    protected final DynamoDBOperations dynamoDBOperations;
 
-    public SimpleDynamoDBCrudRepository(DynamoDBEntityInformation<T, ID> entityInformation,
-            DynamoDBOperations dynamoDBOperations, EnableScanPermissions enableScanPermissions) {
+    /**
+     * Creates a new SimpleDynamoDBCrudRepository.
+     * @param entityInformation the entity information
+     * @param dynamoDBOperations the DynamoDB operations
+     * @param enableScanPermissions the scan permissions configuration
+     */
+    public SimpleDynamoDBCrudRepository(@NonNull DynamoDBEntityInformation<T, ID> entityInformation,
+                                        DynamoDBOperations dynamoDBOperations, EnableScanPermissions enableScanPermissions) {
         Assert.notNull(entityInformation, "entityInformation must not be null");
         Assert.notNull(dynamoDBOperations, "dynamoDBOperations must not be null");
 
@@ -64,8 +71,25 @@ public class SimpleDynamoDBCrudRepository<T, ID>
         this.enableScanPermissions = enableScanPermissions;
     }
 
+    /**
+     * Converts a Java object to SDK v2 AttributeValue for Key construction.
+     * @param value The value to convert
+     * @return The AttributeValue representation
+     */
+    private AttributeValue toAttributeValue(@NonNull Object value) {
+        return switch (value) {
+            case String s -> AttributeValue.builder().s(s).build();
+            case Number number -> AttributeValue.builder().n(value.toString()).build();
+            default ->
+                // Fallback: convert to string
+                    AttributeValue.builder().s(value.toString()).build();
+        };
+
+    }
+
+    @NonNull
     @Override
-    public Optional<T> findById(ID id) {
+    public Optional<T> findById(@NonNull ID id) {
 
         Assert.notNull(id, "The given id must not be null!");
 
@@ -80,61 +104,81 @@ public class SimpleDynamoDBCrudRepository<T, ID>
         return Optional.ofNullable(result);
     }
 
+    @NonNull
     @Override
-    public List<T> findAllById(Iterable<ID> ids) {
+    public List<T> findAllById(@NonNull Iterable<ID> ids) {
 
         Assert.notNull(ids, "The given ids must not be null!");
 
         // Works only with non-parallel streams!
         AtomicInteger idx = new AtomicInteger();
-        List<KeyPair> keyPairs = StreamSupport.stream(ids.spliterator(), false).map(id -> {
+        List<Key> keys = StreamSupport.stream(ids.spliterator(), false).map(id -> {
 
             Assert.notNull(id, "The given id at position " + idx.getAndIncrement() + " must not be null!");
 
             if (entityInformation.isRangeKeyAware()) {
-                return new KeyPair().withHashKey(entityInformation.getHashKey(id))
-                        .withRangeKey(entityInformation.getRangeKey(id));
+                return Key.builder()
+                        .partitionValue(toAttributeValue(Objects.requireNonNull(entityInformation.getHashKey(id))))
+                        .sortValue(toAttributeValue(Objects.requireNonNull(entityInformation.getRangeKey(id))))
+                        .build();
             } else {
-                return new KeyPair().withHashKey(id);
+                return Key.builder()
+                        .partitionValue(toAttributeValue(id))
+                        .build();
             }
         }).toList();
 
-        Map<Class<?>, List<KeyPair>> keyPairsMap = Collections.<Class<?>, List<KeyPair>> singletonMap(domainType,
-                keyPairs);
-        return dynamoDBOperations.batchLoad(keyPairsMap);
+        Map<Class<?>, List<Key>> keysMap = Collections.singletonMap(domainType, keys);
+        return dynamoDBOperations.batchLoad(keysMap);
     }
 
+    @NonNull
     @Override
-    public <S extends T> S save(S entity) {
-
-        dynamoDBOperations.save(entity);
-        return entity;
+    public <S extends T> S save(@NonNull S entity) {
+        // Return the saved entity from DynamoDBOperations.save() to properly handle
+        // @DynamoDbVersionAttribute and other attributes that may be updated during save.
+        return dynamoDBOperations.save(entity);
     }
 
     /**
      * {@inheritDoc}
-     *
      * @throws BatchWriteException
      *             in case of an error during saving
      */
+    @NonNull
     @Override
-    public <S extends T> Iterable<S> saveAll(Iterable<S> entities)
+    public <S extends T> Iterable<S> saveAll(@NonNull Iterable<S> entities)
             throws BatchWriteException, IllegalArgumentException {
 
         Assert.notNull(entities, "The given Iterable of entities not be null!");
-        List<FailedBatch> failedBatches = dynamoDBOperations.batchSave(entities);
 
-        if (failedBatches.isEmpty()) {
-            // Happy path
+        // Group entities by class for extraction if needed
+        Map<Class<?>, List<Object>> entitiesByClass = new HashMap<>();
+        for (S entity : entities) {
+            entitiesByClass.computeIfAbsent(entity.getClass(), k -> new ArrayList<>()).add(entity);
+        }
+
+        List<BatchWriteResult> batchResults = dynamoDBOperations.batchSave(entities);
+
+        // Extract unprocessed entities using SDK v2 extraction
+        List<Object> unprocessedEntities = dynamoDBOperations.extractUnprocessedPutItems(
+                batchResults, entitiesByClass);
+
+        if (unprocessedEntities.isEmpty()) {
+            // Happy path - all entities were successfully saved
             return entities;
         } else {
-            // Error handling:
-            throw repackageToException(failedBatches, BatchWriteException.class);
+            // Throw exception with actual unprocessed entities
+            throw repackageToException(
+                    unprocessedEntities,
+                    0, // SDK v2 client handles retries internally
+                    null, // No exception, just unprocessed items
+                    BatchWriteException.class);
         }
     }
 
     @Override
-    public boolean existsById(ID id) {
+    public boolean existsById(@NonNull ID id) {
 
         Assert.notNull(id, "The given id must not be null!");
         return findById(id).isPresent();
@@ -147,23 +191,24 @@ public class SimpleDynamoDBCrudRepository<T, ID>
                 + "enable scanning for all repository methods by annotating your repository interface with @EnableScan");
     }
 
+    @NonNull
     @Override
     public List<T> findAll() {
 
         assertScanEnabled(enableScanPermissions.isFindAllUnpaginatedScanEnabled(), "findAll");
-        DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
-        return dynamoDBOperations.scan(domainType, scanExpression);
+        ScanEnhancedRequest scanRequest = ScanEnhancedRequest.builder().build();
+        return dynamoDBOperations.scan(domainType, scanRequest).items().stream().toList();
     }
 
     @Override
     public long count() {
         assertScanEnabled(enableScanPermissions.isCountUnpaginatedScanEnabled(), "count");
-        final DynamoDBScanExpression scanExpression = new DynamoDBScanExpression();
-        return dynamoDBOperations.count(domainType, scanExpression);
+        final ScanEnhancedRequest scanRequest = ScanEnhancedRequest.builder().build();
+        return dynamoDBOperations.count(domainType, scanRequest);
     }
 
     @Override
-    public void deleteById(ID id) {
+    public void deleteById(@NonNull ID id) {
 
         Assert.notNull(id, "The given id must not be null!");
 
@@ -179,19 +224,19 @@ public class SimpleDynamoDBCrudRepository<T, ID>
     }
 
     @Override
-    public void delete(T entity) {
+    public void delete(@NonNull T entity) {
         Assert.notNull(entity, "The entity must not be null!");
         dynamoDBOperations.delete(entity);
     }
 
     @Override
-    public void deleteAllById(Iterable<? extends ID> ids) {
+    public void deleteAllById(@NonNull Iterable<? extends ID> ids) {
         var bla = StreamSupport.stream(ids.spliterator(), false).map(id -> (ID) id).toList();
         deleteAll(findAllById(bla));
     }
 
     @Override
-    public void deleteAll(Iterable<? extends T> entities) {
+    public void deleteAll(@NonNull Iterable<? extends T> entities) {
 
         Assert.notNull(entities, "The given Iterable of entities not be null!");
         dynamoDBOperations.batchDelete(entities);
@@ -204,6 +249,10 @@ public class SimpleDynamoDBCrudRepository<T, ID>
         dynamoDBOperations.batchDelete(findAll());
     }
 
+    /**
+     * Gets the entity information for this repository.
+     * @return the entity information
+     */
     @NonNull
     public DynamoDBEntityInformation<T, ID> getEntityInformation() {
         return this.entityInformation;

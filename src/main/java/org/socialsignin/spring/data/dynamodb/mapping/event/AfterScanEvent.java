@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,17 +15,26 @@
  */
 package org.socialsignin.spring.data.dynamodb.mapping.event;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedScanList;
+import org.springframework.lang.NonNull;
+import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
+
+import java.io.Serial;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * Event published after a scan operation is completed on DynamoDB.
+ * @param <T> the entity type
+ * @author Prasanna Kumar Ramachandran
  */
-public class AfterScanEvent<T> extends DynamoDBMappingEvent<PaginatedScanList<T>> {
+public class AfterScanEvent<T> extends DynamoDBMappingEvent<PageIterable<T>> {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
-    public AfterScanEvent(PaginatedScanList<T> source) {
+    /**
+     * Constructs an AfterScanEvent.
+     * @param source the page iterable containing scan results
+     */
+    public AfterScanEvent(@NonNull PageIterable<T> source) {
         super(source);
     }
 

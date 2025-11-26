@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,25 +31,25 @@ package org.socialsignin.spring.data.dynamodb.mapping.event;
  * limitations under the License.
  */
 
-import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedQueryList;
-import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedScanList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.GenericTypeResolver;
+import org.springframework.lang.NonNull;
+import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 
-import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.StreamSupport;
 
 /**
  * Base class to implement domain class specific {@link ApplicationListener}s.
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @param <E> the entity type
+ * @author Prasanna Kumar Ramachandran
  */
 public abstract class AbstractDynamoDBEventListener<E> implements ApplicationListener<DynamoDBMappingEvent<?>> {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractDynamoDBEventListener.class);
+    @NonNull
     private final Class<?> domainClass;
 
     /**
@@ -61,17 +61,21 @@ public abstract class AbstractDynamoDBEventListener<E> implements ApplicationLis
         this.domainClass = typeArgument == null ? Object.class : typeArgument;
     }
 
+    /**
+     * Gets the domain class for this event listener.
+     * @return the domain class type
+     */
+    @NonNull
     protected Class<?> getDomainClass() {
         return this.domainClass;
     }
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.context.ApplicationListener#onApplicationEvent(org
-     * .springframework.context.ApplicationEvent)
+     * @see org.springframework.context.ApplicationListener#onApplicationEvent(org.springframework.context.ApplicationEvent)
      */
     @Override
-    public void onApplicationEvent(DynamoDBMappingEvent<?> event) {
+    public void onApplicationEvent(@NonNull DynamoDBMappingEvent<?> event) {
 
         @SuppressWarnings("unchecked")
         E source = (E) event.getSource();
@@ -82,30 +86,38 @@ public abstract class AbstractDynamoDBEventListener<E> implements ApplicationLis
 
         if (event instanceof AfterScanEvent) {
 
-            publishEachElement((PaginatedScanList<?>) source, this::onAfterScan);
+            publishEachElement((PageIterable<?>) source, this::onAfterScan);
             return;
         } else if (event instanceof AfterQueryEvent) {
 
-            publishEachElement((PaginatedQueryList<?>) source, this::onAfterQuery);
+            publishEachElement((PageIterable<?>) source, this::onAfterQuery);
             return;
         }
         // Check for matching domain type and invoke callbacks
         else if (domainClass.isAssignableFrom(source.getClass())) {
-            if (event instanceof BeforeSaveEvent) {
-                onBeforeSave(source);
-                return;
-            } else if (event instanceof AfterSaveEvent) {
-                onAfterSave(source);
-                return;
-            } else if (event instanceof BeforeDeleteEvent) {
-                onBeforeDelete(source);
-                return;
-            } else if (event instanceof AfterDeleteEvent) {
-                onAfterDelete(source);
-                return;
-            } else if (event instanceof AfterLoadEvent) {
-                onAfterLoad(source);
-                return;
+            switch (event) {
+                case BeforeSaveEvent<?> ignored -> {
+                    onBeforeSave(source);
+                    return;
+                }
+                case AfterSaveEvent<?> ignored -> {
+                    onAfterSave(source);
+                    return;
+                }
+                case BeforeDeleteEvent<?> ignored -> {
+                    onBeforeDelete(source);
+                    return;
+                }
+                case AfterDeleteEvent<?> ignored -> {
+                    onAfterDelete(source);
+                    return;
+                }
+                case AfterLoadEvent<?> ignored -> {
+                    onAfterLoad(source);
+                    return;
+                }
+                default -> {
+                }
             }
         }
         // we should never end up here
@@ -113,34 +125,65 @@ public abstract class AbstractDynamoDBEventListener<E> implements ApplicationLis
     }
 
     @SuppressWarnings("unchecked")
-    private void publishEachElement(List<?> list, Consumer<E> publishMethod) {
-        list.stream().filter(o -> domainClass.isAssignableFrom(o.getClass())).map(o -> (E) o).forEach(publishMethod);
+    private void publishEachElement(@NonNull PageIterable<?> pageIterable, Consumer<E> publishMethod) {
+        StreamSupport.stream(pageIterable.items().spliterator(), false)
+                .filter(o -> domainClass.isAssignableFrom(o.getClass()))
+                .map(o -> (E) o)
+                .forEach(publishMethod);
     }
 
+    /**
+     * Invoked before the entity is saved to DynamoDB.
+     * @param source the entity being saved
+     */
     public void onBeforeSave(E source) {
-        LOG.debug("onBeforeSave({}, {})", source);
+        LOG.debug("onBeforeSave({})", source);
     }
 
+    /**
+     * Invoked after the entity is saved to DynamoDB.
+     * @param source the entity that was saved
+     */
     public void onAfterSave(E source) {
-        LOG.debug("onAfterSave({}, {})", source);
+        LOG.debug("onAfterSave({})", source);
     }
 
+    /**
+     * Invoked after the entity is loaded from DynamoDB.
+     * @param source the entity that was loaded
+     */
     public void onAfterLoad(E source) {
         LOG.debug("onAfterLoad({})", source);
     }
 
+    /**
+     * Invoked after the entity is deleted from DynamoDB.
+     * @param source the entity that was deleted
+     */
     public void onAfterDelete(E source) {
         LOG.debug("onAfterDelete({})", source);
     }
 
+    /**
+     * Invoked before the entity is deleted from DynamoDB.
+     * @param source the entity being deleted
+     */
     public void onBeforeDelete(E source) {
         LOG.debug("onBeforeDelete({})", source);
     }
 
+    /**
+     * Invoked after scanning entities from DynamoDB.
+     * @param source the entity from the scan result
+     */
     public void onAfterScan(E source) {
         LOG.debug("onAfterScan({})", source);
     }
 
+    /**
+     * Invoked after querying entities from DynamoDB.
+     * @param source the entity from the query result
+     */
     public void onAfterQuery(E source) {
         LOG.debug("onAfterQuery({})", source);
     }

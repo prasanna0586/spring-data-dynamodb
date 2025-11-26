@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,9 +15,6 @@
  */
 package org.socialsignin.spring.data.dynamodb.mapping;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBIgnore;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBVersionAttribute;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Reference;
 import org.springframework.data.annotation.Transient;
@@ -25,41 +22,43 @@ import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.lang.NonNull;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbIgnore;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 
 import java.lang.annotation.Annotation;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 /**
  * {@link DynamoDBPersistentProperty} implementation
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * @author Prasanna Kumar Ramachandran
  */
 class DynamoDBPersistentPropertyImpl extends AnnotationBasedPersistentProperty<DynamoDBPersistentProperty>
         implements DynamoDBPersistentProperty {
 
+    @NonNull
     private static final Collection<Class<? extends Annotation>> ASSOCIATION_ANNOTATIONS;
+    @NonNull
     private static final Collection<Class<? extends Annotation>> ID_ANNOTATIONS;
 
     static {
 
-        Set<Class<? extends Annotation>> annotations = new HashSet<Class<? extends Annotation>>();
+        Set<Class<? extends Annotation>> annotations;
 
-        annotations.add(Reference.class); // Reference not yet supported
-        ASSOCIATION_ANNOTATIONS = Collections.unmodifiableSet(annotations);
+        // Reference not yet supported
+        ASSOCIATION_ANNOTATIONS = Set.of(Reference.class);
 
         annotations = new HashSet<>();
         annotations.add(Id.class);
-        annotations.add(DynamoDBHashKey.class);
+        annotations.add(DynamoDbPartitionKey.class);
         ID_ANNOTATIONS = annotations;
     }
 
     /**
      * Creates a new {@link DynamoDBPersistentPropertyImpl}
-     *
+     * <p>
      * @param property
      *            must not be {@literal null}.
      * @param owner
@@ -68,18 +67,18 @@ class DynamoDBPersistentPropertyImpl extends AnnotationBasedPersistentProperty<D
      *            must not be {@literal null}.
      */
 
-    public DynamoDBPersistentPropertyImpl(Property property, DynamoDBPersistentEntityImpl<?> owner,
-            SimpleTypeHolder simpleTypeHolder) {
+    public DynamoDBPersistentPropertyImpl(@NonNull Property property, @NonNull DynamoDBPersistentEntityImpl<?> owner,
+                                          @NonNull SimpleTypeHolder simpleTypeHolder) {
         super(property, owner, simpleTypeHolder);
     }
 
     @Override
     public boolean isWritable() {
-        return !isAnnotationPresent(DynamoDBIgnore.class);
+        return !isAnnotationPresent(DynamoDbIgnore.class);
     }
 
     public boolean isHashKeyProperty() {
-        return isAnnotationPresent(DynamoDBHashKey.class);
+        return isAnnotationPresent(DynamoDbPartitionKey.class);
     }
 
     public boolean isCompositeIdProperty() {
@@ -88,7 +87,7 @@ class DynamoDBPersistentPropertyImpl extends AnnotationBasedPersistentProperty<D
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.data.mapping.model.AnnotationBasedPersistentProperty #isIdProperty()
+     * @see org.springframework.data.mapping.model.AnnotationBasedPersistentProperty#isIdProperty()
      */
     @Override
     public boolean isIdProperty() {
@@ -104,25 +103,19 @@ class DynamoDBPersistentPropertyImpl extends AnnotationBasedPersistentProperty<D
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.data.mapping.model.AbstractPersistentProperty#isEntity ()
+     * @see org.springframework.data.mapping.model.AbstractPersistentProperty#isEntity()
      */
     // @Override
 
     public boolean isEntity() {
 
-        return isAnnotationPresent(Reference.class);// Reference not Yet
-        // Supported
-        // return propertyDescriptor != null
-        // && propertyDescriptor.getPropertyType().isAnnotationPresent(
-        // DynamoDBTable.class);
-
-        // return false;
+        return isAnnotationPresent(Reference.class);
 
     }
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.data.mapping.model.AnnotationBasedPersistentProperty #isAssociation()
+     * @see org.springframework.data.mapping.model.AnnotationBasedPersistentProperty#isAssociation()
      */
     @Override
     public boolean isAssociation() {
@@ -141,24 +134,24 @@ class DynamoDBPersistentPropertyImpl extends AnnotationBasedPersistentProperty<D
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.data.mapping.model.AnnotationBasedPersistentProperty #isTransient()
+     * @see org.springframework.data.mapping.model.AnnotationBasedPersistentProperty#isTransient()
      */
     @Override
     public boolean isTransient() {
-        return isAnnotationPresent(Transient.class) || super.isTransient() || isAnnotationPresent(DynamoDBIgnore.class);
+        return isAnnotationPresent(Transient.class) || super.isTransient() || isAnnotationPresent(DynamoDbIgnore.class);
     }
 
-    @Override
-    public boolean isVersionProperty() {
-        return super.isVersionProperty() || isAnnotationPresent(DynamoDBVersionAttribute.class);
-    }
+    // SDK v2 does not have a direct equivalent to DynamoDBVersionAttribute
+    // Version tracking is handled via Spring Data's @Version annotation
+    // The default implementation from the superclass is used
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.data.mapping.model.AbstractPersistentProperty# createAssociation()
+     * @see org.springframework.data.mapping.model.AbstractPersistentProperty#createAssociation()
      */
+    @NonNull
     @Override
     protected Association<DynamoDBPersistentProperty> createAssociation() {
-        return new Association<DynamoDBPersistentProperty>(this, null);
+        return new Association<>(this, null);
     }
 }

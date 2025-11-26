@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,14 +16,26 @@
 package org.socialsignin.spring.data.dynamodb.query;
 
 /**
- * {@link org.socialsignin.spring.data.dynamodb.mapping.DynamoDBPersistentProperty} implementation
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * Base abstract query class providing common query functionality for DynamoDB operations.
+ * @param <T> the entity type
+ * @author Prasanna Kumar Ramachandran
  */
 public abstract class AbstractQuery<T> implements Query<T> {
 
+    /**
+     * Default constructor for AbstractQuery.
+     */
+    protected AbstractQuery() {
+    }
+
+    /**
+     * Flag indicating whether scan operations are enabled for this query.
+     */
     protected boolean scanEnabled = false;
+
+    /**
+     * Flag indicating whether scan count operations are enabled for this query.
+     */
     protected boolean scanCountEnabled = false;
 
     @Override

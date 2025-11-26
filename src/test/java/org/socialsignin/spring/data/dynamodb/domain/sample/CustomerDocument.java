@@ -15,16 +15,16 @@
  */
 package org.socialsignin.spring.data.dynamodb.domain.sample;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.*;
 import org.springframework.data.annotation.Id;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.*;
 
-@DynamoDBTable(tableName = "CustomerDocuments")
+
+@DynamoDbBean
 public class CustomerDocument {
 
     @Id
     private CustomerDocumentId customerDocumentId;
 
-    @DynamoDBAttribute
     private String s3Location;
 
     public CustomerDocument() {
@@ -35,7 +35,8 @@ public class CustomerDocument {
         this.s3Location = s3Location;
     }
 
-    @DynamoDBHashKey(attributeName = "customerId|documentType")
+    @DynamoDbPartitionKey
+    @DynamoDbAttribute("customerId|documentType")
     public String getCustomerDocumentKey() {
 
         if (customerDocumentId == null) {
@@ -56,7 +57,8 @@ public class CustomerDocument {
 
     }
 
-    @DynamoDBRangeKey(attributeName = "version")
+    @DynamoDbSortKey
+    @DynamoDbAttribute("version")
     public String getVersion() {
 
         if (customerDocumentId == null) {
@@ -77,7 +79,7 @@ public class CustomerDocument {
 
     }
 
-    @DynamoDBIgnore
+    @DynamoDbIgnore
     public String getCustomerId() {
 
         if (customerDocumentId == null) {
@@ -88,7 +90,7 @@ public class CustomerDocument {
 
     }
 
-    @DynamoDBIgnore
+    @DynamoDbIgnore
     public String getDocumentType() {
 
         if (customerDocumentId == null) {
@@ -99,9 +101,17 @@ public class CustomerDocument {
 
     }
 
-    @DynamoDBIgnore
+    @DynamoDbIgnore
     public CustomerDocumentId getCustomerDocumentId() {
         return customerDocumentId;
+    }
+
+    public String getS3Location() {
+        return s3Location;
+    }
+
+    public void setS3Location(String s3Location) {
+        this.s3Location = s3Location;
     }
 
 }

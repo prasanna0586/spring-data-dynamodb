@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,18 +18,29 @@ package org.socialsignin.spring.data.dynamodb.repository.util;
 import org.socialsignin.spring.data.dynamodb.mapping.DynamoDBMappingContext;
 import org.socialsignin.spring.data.dynamodb.repository.support.DynamoDBEntityInformation;
 import org.springframework.data.repository.core.support.RepositoryProxyPostProcessor;
+import org.springframework.lang.NonNull;
 
+/**
+ * Repository proxy post processor that registers entities with the DynamoDB mapping context.
+ *
+ * @param <T> the entity type
+ * @param <ID> the entity ID type
+ */
 public class DynamoDBMappingContextProcessor<T, ID> extends EntityInformationProxyPostProcessor<T, ID>
         implements RepositoryProxyPostProcessor {
 
     private final DynamoDBMappingContext context;
 
+    /**
+     * Creates a new DynamoDBMappingContextProcessor.
+     * @param context the DynamoDB mapping context
+     */
     public DynamoDBMappingContextProcessor(DynamoDBMappingContext context) {
         this.context = context;
     }
 
     @Override
-    protected void registeredEntity(DynamoDBEntityInformation<T, ID> entityInformation) {
+    protected void registeredEntity(@NonNull DynamoDBEntityInformation<T, ID> entityInformation) {
         // register entities
         context.getPersistentEntity(entityInformation.getJavaType());
     }

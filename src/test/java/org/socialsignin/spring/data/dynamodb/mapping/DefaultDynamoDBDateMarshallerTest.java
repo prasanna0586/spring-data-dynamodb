@@ -19,10 +19,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SuppressWarnings("deprecation")
 public class DefaultDynamoDBDateMarshallerTest {
@@ -45,14 +42,14 @@ public class DefaultDynamoDBDateMarshallerTest {
 
     @Test
     public void testUnmarshall() {
-        Date actual = underTest.unmarshall(Date.class, "1970-01-01T00:00:00.000Z");
+        Date actual = underTest.unmarshall("1970-01-01T00:00:00.000Z");
 
         assertEquals(0L, actual.getTime());
     }
 
     @Test
     public void testUnmarshallNull() {
-        Date actual = underTest.unmarshall(Date.class, null);
+        Date actual = underTest.unmarshall(null);
 
         assertNull(actual);
     }
@@ -60,7 +57,7 @@ public class DefaultDynamoDBDateMarshallerTest {
     @Test
     public void testUnmarshallGarbage() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            underTest.unmarshall(Date.class, "garbage");
+            underTest.unmarshall("garbage");
         });
 
         assertTrue(exception.getMessage().contains("Could not unmarshall 'garbage' via yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"));

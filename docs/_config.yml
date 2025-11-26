@@ -1,0 +1,3 @@
+title: Spring Data DynamoDB
+description: A Spring Data module for DynamoDB, built on AWS SDK v2
+theme: jekyll-theme-cayman

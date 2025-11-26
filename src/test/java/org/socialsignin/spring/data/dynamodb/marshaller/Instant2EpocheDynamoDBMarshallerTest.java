@@ -20,9 +20,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class Instant2EpocheDynamoDBMarshallerTest {
 
@@ -48,21 +46,21 @@ public class Instant2EpocheDynamoDBMarshallerTest {
 
     @Test
     public void testUnmarshallNull() {
-        Instant actual = underTest.unmarshall(Instant.class, null);
+        Instant actual = underTest.unmarshall(null);
 
         assertNull(actual);
     }
 
     @Test
     public void testUnmarshall() {
-        assertEquals(Instant.ofEpochMilli(0), underTest.unmarshall(Instant.class, "0"));
+        assertEquals(Instant.ofEpochMilli(0), underTest.unmarshall("0"));
         assertEquals(Instant.ofEpochMilli(0), underTest.unconvert("0"));
     }
 
     @Test
     public void testUnmarshallGarbage() {
         assertThrows(NumberFormatException.class, () -> {
-            underTest.unmarshall(Instant.class, "something");
+            underTest.unmarshall("something");
         });
     }
 }

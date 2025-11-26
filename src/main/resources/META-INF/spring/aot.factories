@@ -1,0 +1,8 @@
+# Spring Data DynamoDB AOT Processors
+# These processors run during AOT compilation to generate GraalVM-compatible code
+
+org.springframework.beans.factory.aot.BeanFactoryInitializationAotProcessor=\
+org.socialsignin.spring.data.dynamodb.aot.DynamoDbRepositoryRegistrationAotProcessor
+
+org.springframework.aot.hint.RuntimeHintsRegistrar=\
+org.socialsignin.spring.data.dynamodb.aot.DynamoDbRuntimeHints

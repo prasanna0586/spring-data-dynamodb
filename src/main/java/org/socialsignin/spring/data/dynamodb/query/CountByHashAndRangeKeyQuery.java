@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,17 +16,26 @@
 package org.socialsignin.spring.data.dynamodb.query;
 
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
+import org.springframework.lang.NonNull;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * Counts entities in DynamoDB matching hash and range key query criteria.
+ * @param <T> the entity type
+ * @author Prasanna Kumar Ramachandran
  */
 public class CountByHashAndRangeKeyQuery<T> extends AbstractSingleEntityQuery<Long> implements Query<Long> {
 
-    private Object hashKey;
-    private Object rangeKey;
-    private Class<T> entityClass;
+    private final Object hashKey;
+    private final Object rangeKey;
+    private final Class<T> entityClass;
 
+    /**
+     * Constructs a new CountByHashAndRangeKeyQuery.
+     * @param dynamoDBOperations the DynamoDB operations instance
+     * @param clazz the entity class type to query
+     * @param hashKey the hash key value to match
+     * @param rangeKey the range key value to match
+     */
     public CountByHashAndRangeKeyQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz, Object hashKey,
             Object rangeKey) {
         super(dynamoDBOperations, Long.class);
@@ -35,9 +44,10 @@ public class CountByHashAndRangeKeyQuery<T> extends AbstractSingleEntityQuery<Lo
         this.entityClass = clazz;
     }
 
+    @NonNull
     @Override
     public Long getSingleResult() {
-        return dynamoDBOperations.load(entityClass, hashKey, rangeKey) == null ? 0l : 1l;
+        return dynamoDBOperations.load(entityClass, hashKey, rangeKey) == null ? 0L : 1L;
     }
 
 }

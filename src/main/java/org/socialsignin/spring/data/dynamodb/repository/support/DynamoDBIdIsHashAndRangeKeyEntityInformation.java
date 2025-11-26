@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,8 +16,10 @@
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * Provides entity information for DynamoDB entities with composite hash and range keys.
+ * @param <T> the entity type
+ * @param <ID> the ID type
+ * @author Prasanna Kumar Ramachandran
  */
 public interface DynamoDBIdIsHashAndRangeKeyEntityInformation<T, ID>
         extends DynamoDBHashAndRangeKeyExtractingEntityMetadata<T, ID>, DynamoDBEntityInformation<T, ID> {

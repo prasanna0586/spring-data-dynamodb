@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,6 @@
  */
 package org.socialsignin.spring.data.dynamodb.repository.support;
 
-import com.amazonaws.util.VersionInfoUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
@@ -27,8 +26,11 @@ import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.util.Version;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
+import software.amazon.awssdk.core.util.VersionInfo;
 
 import java.util.Optional;
 import java.util.StringTokenizer;
@@ -36,8 +38,9 @@ import java.util.StringTokenizer;
 import static org.springframework.data.querydsl.QuerydslUtils.QUERY_DSL_PRESENT;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * Repository factory for creating DynamoDB repository instances with support for entity information,
+ * query lookup strategies, and repository base classes.
+ * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBRepositoryFactory extends RepositoryFactorySupport {
     private static final Logger LOGGER = LoggerFactory.getLogger(DynamoDBRepositoryFactory.class);
@@ -45,7 +48,8 @@ public class DynamoDBRepositoryFactory extends RepositoryFactorySupport {
     static {
         final String DEVELOPMENT = "DEVELOPMENT";
 
-        String awsSdkVersion = VersionInfoUtils.getVersion();
+        // SDK v2: Get version from VersionInfo utility class
+        String awsSdkVersion = VersionInfo.SDK_VERSION;
         String springDataVersion = Version.class.getPackage().getImplementationVersion();
 
         String thisSpecVersion = DynamoDBRepositoryFactory.class.getPackage().getSpecificationVersion();
@@ -64,14 +68,17 @@ public class DynamoDBRepositoryFactory extends RepositoryFactorySupport {
                 System.getProperty("os.version"));
 
         if (!DEVELOPMENT.equals(thisImplVersion) && !isCompatible(springDataVersion, thisSpecVersion)) {
-            LOGGER.warn(
-                    "This Spring Data DynamoDB implementation might not be compatible with the available Spring Data classes on the classpath!"
-                            + System.getProperty("line.separator")
-                            + "NoDefClassFoundExceptions or similar might occur!");
+            LOGGER.warn("This Spring Data DynamoDB implementation might not be compatible with the available Spring Data classes on the classpath!{}NoDefClassFoundExceptions or similar might occur!", System.lineSeparator());
         }
     }
 
-    protected static boolean isCompatible(String spec, String impl) {
+    /**
+     * Checks if the specification version is compatible with the implementation version.
+     * @param spec the specification version
+     * @param impl the implementation version
+     * @return true if compatible, false otherwise
+     */
+    protected static boolean isCompatible(@Nullable String spec, @Nullable String impl) {
         if (spec == null && impl == null) {
             return false;
         } else if (spec == null) {
@@ -93,62 +100,71 @@ public class DynamoDBRepositoryFactory extends RepositoryFactorySupport {
 
     private final DynamoDBOperations dynamoDBOperations;
 
+    /**
+     * Creates a new DynamoDB repository factory.
+     * @param dynamoDBOperations the DynamoDB operations instance
+     */
     public DynamoDBRepositoryFactory(DynamoDBOperations dynamoDBOperations) {
         this.dynamoDBOperations = dynamoDBOperations;
     }
 
+    @NonNull
     @Override
-    public <T, ID> DynamoDBEntityInformation<T, ID> getEntityInformation(final Class<T> domainClass) {
+    public <T, ID> DynamoDBEntityInformation<T, ID> getEntityInformation(@NonNull final Class<T> domainClass) {
 
         final DynamoDBEntityMetadataSupport<T, ID> metadata = new DynamoDBEntityMetadataSupport<>(domainClass,
                 this.dynamoDBOperations);
         return metadata.getEntityInformation();
     }
 
+    @NonNull
     @Override
     protected Optional<QueryLookupStrategy> getQueryLookupStrategy(Key key,
-            QueryMethodEvaluationContextProvider evaluationContextProvider) {
+                                                                   @NonNull ValueExpressionDelegate valueExpressionDelegate) {
         return Optional.of(DynamoDBQueryLookupStrategy.create(dynamoDBOperations, key));
     }
 
     /**
-     * Callback to create a {@link DynamoDBCrudRepository} instance with the given {@link RepositoryMetadata}
-     *
-     * @param <T>
-     *            Type of the Entity
-     * @param <ID>
-     *            Type of the Hash (Primary) Key
-     * @param metadata
-     *            Metadata of the entity
-     *
+     * Callback to create a {@link DynamoDBCrudRepository} instance with the given {@link RepositoryMetadata}.
+     * @param <T> Type of the Entity
+     * @param <ID> Type of the Hash (Primary) Key
+     * @param metadata Metadata of the entity
      * @see #getTargetRepository(RepositoryInformation)
-     *
      * @return the created {@link DynamoDBCrudRepository} instance
      */
+    @NonNull
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    protected <T, ID> DynamoDBCrudRepository<?, ?> getDynamoDBRepository(RepositoryMetadata metadata) {
+    protected <T, ID> DynamoDBCrudRepository<?, ?> getDynamoDBRepository(@NonNull RepositoryMetadata metadata) {
         return new SimpleDynamoDBPagingAndSortingRepository(getEntityInformation(metadata.getDomainType()),
                 dynamoDBOperations, getEnableScanPermissions(metadata));
     }
 
-    protected EnableScanPermissions getEnableScanPermissions(RepositoryMetadata metadata) {
+    /**
+     * Gets the scan permissions for the given repository metadata.
+     * @param metadata the repository metadata
+     * @return the enable scan permissions
+     */
+    @NonNull
+    protected EnableScanPermissions getEnableScanPermissions(@NonNull RepositoryMetadata metadata) {
         return new EnableScanAnnotationPermissions(metadata.getRepositoryInterface());
     }
 
+    @NonNull
     @Override
-    protected Class<?> getRepositoryBaseClass(RepositoryMetadata metadata) {
+    protected Class<?> getRepositoryBaseClass(@NonNull RepositoryMetadata metadata) {
         if (isQueryDslRepository(metadata.getRepositoryInterface())) {
             throw new IllegalArgumentException("QueryDsl Support has not been implemented yet.");
         }
         return SimpleDynamoDBPagingAndSortingRepository.class;
     }
 
-    private static boolean isQueryDslRepository(Class<?> repositoryInterface) {
+    private static boolean isQueryDslRepository(@NonNull Class<?> repositoryInterface) {
         return QUERY_DSL_PRESENT && QuerydslPredicateExecutor.class.isAssignableFrom(repositoryInterface);
     }
 
+    @NonNull
     @Override
-    protected Object getTargetRepository(RepositoryInformation metadata) {
+    protected Object getTargetRepository(@NonNull RepositoryInformation metadata) {
         return getDynamoDBRepository(metadata);
     }
 

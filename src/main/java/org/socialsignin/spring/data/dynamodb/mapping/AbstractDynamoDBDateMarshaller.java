@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,35 +15,41 @@
  */
 package org.socialsignin.spring.data.dynamodb.mapping;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMarshaller;
+import org.springframework.lang.Nullable;
 
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Date;
 
 /**
- * @author Michael Lavelle
- * @author Sebastian Just
+ * Abstract base class for date marshalling in DynamoDB using DateFormat.
  *
- * @deprecated According to
- *             {@code com.amazonaws.services.dynamodbv2.datamodeling.marshallers.CustomMarshaller.marshall(Object)} at
- *             some point {@link DynamoDBMarshaller} might be cached - whereas {@link DateFormat} is not thread-safe.
+ * @author Prasanna Kumar Ramachandran
+ * @deprecated This class was created for SDK v1 compatibility. {@link DateFormat} is not thread-safe.
  *             <br>
- *             Use {@link org.socialsignin.spring.data.dynamodb.marshaller.DateDynamoDBMarshaller} instead.
- *
+ *             For new code using SDK v2, use {@link org.socialsignin.spring.data.dynamodb.marshaller.DateDynamoDBMarshaller} instead.
  * @see org.socialsignin.spring.data.dynamodb.marshaller.DateDynamoDBMarshaller
  */
 @Deprecated
-public class AbstractDynamoDBDateMarshaller implements DynamoDBMarshaller<Date> {
+public class AbstractDynamoDBDateMarshaller {
 
-    private DateFormat dateFormat;
+    private final DateFormat dateFormat;
 
+    /**
+     * Creates a new {@link AbstractDynamoDBDateMarshaller}.
+     * @param dateFormat the {@link DateFormat} to use for date marshalling and unmarshalling
+     */
     public AbstractDynamoDBDateMarshaller(DateFormat dateFormat) {
         this.dateFormat = dateFormat;
     }
 
-    @Override
-    public String marshall(Date getterReturnResult) {
+    /**
+     * Marshalls a Date to String format.
+     * @param getterReturnResult the Date to marshall
+     * @return String representation of the date
+     */
+    @Nullable
+    public String marshall(@Nullable Date getterReturnResult) {
         if (getterReturnResult == null) {
             return null;
         } else {
@@ -51,8 +57,14 @@ public class AbstractDynamoDBDateMarshaller implements DynamoDBMarshaller<Date> 
         }
     }
 
-    @Override
-    public Date unmarshall(Class<Date> clazz, String obj) throws IllegalArgumentException {
+    /**
+     * Unmarshalls a String to Date.
+     * @param obj   the String to unmarshall
+     * @return Date object
+     * @throws IllegalArgumentException if parsing fails
+     */
+    @Nullable
+    public Date unmarshall(@Nullable String obj) throws IllegalArgumentException {
         if (obj == null) {
             return null;
         } else {

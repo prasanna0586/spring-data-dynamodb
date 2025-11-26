@@ -3,10 +3,14 @@ name: "Run Tests"
 on:
   push:
   pull_request:
-    # The branches below must be a subset of the branches above
-    branches: [develop]
+    branches: [master, develop]
   schedule:
     - cron: '0 18 * * 0'
+
+# Prevent concurrent runs on the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   run-tests:
@@ -16,18 +20,80 @@ jobs:
     permissions:
       checks: write
       pull-requests: write
-      contents: read
 
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-java@v5
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
         with:
           java-version: '21'
           distribution: 'liberica'
+          cache: 'maven'
+
       - name: Run the Maven clean verify phase
         run: mvn --batch-mode clean verify
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        if: always()
+        with:
+          files: ./target/site/jacoco/jacoco.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+          verbose: true
+
+      - name: Upload coverage report as artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: target/site/jacoco/
+          retention-days: 30
+
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
           files: '**/target/surefire-reports/TEST-*.xml'
+
+  deploy-pages:
+    name: Deploy to GitHub Pages
+    needs: run-tests
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Download coverage report
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: _site/coverage
+
+      - name: Copy docs
+        run: |
+          mkdir -p _site/docs
+          cp -r docs/*.md docs/*.yml _site/docs/
+          echo '<html><head><meta http-equiv="refresh" content="0;url=docs/"></head></html>' > _site/index.html
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

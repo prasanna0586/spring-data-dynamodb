@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,28 +15,84 @@
  */
 package org.socialsignin.spring.data.dynamodb.query;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
+import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
+import software.amazon.awssdk.enhanced.dynamodb.model.Page;
+import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
+import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
+/**
+ * Executes a DynamoDB scan request with an expression filter that returns multiple entities.
+ * @param <T> the entity type
+ */
 public class MultipleEntityScanExpressionQuery<T> extends AbstractMultipleEntityQuery<T> {
 
-    private DynamoDBScanExpression scanExpression;
+    private final ScanEnhancedRequest scanRequest;
 
+    /**
+     * Creates a new query for executing a DynamoDB scan request.
+     * @param dynamoDBOperations the DynamoDB operations instance
+     * @param clazz the entity class
+     * @param scanRequest the scan request to execute
+     */
     public MultipleEntityScanExpressionQuery(DynamoDBOperations dynamoDBOperations, Class<T> clazz,
-            DynamoDBScanExpression scanExpression) {
+            ScanEnhancedRequest scanRequest) {
         super(dynamoDBOperations, clazz);
-        this.scanExpression = scanExpression;
+        this.scanRequest = scanRequest;
     }
 
+    @NonNull
     @Override
     public List<T> getResultList() {
         assertScanEnabled(isScanEnabled());
-        return dynamoDBOperations.scan(clazz, scanExpression);
+
+        // SDK v2 returns PageIterable, convert to List
+        PageIterable<T> pageIterable = dynamoDBOperations.scan(clazz, scanRequest);
+
+        // If a limit is specified in the scan request, we need to respect it when collecting results.
+        // DynamoDB's limit parameter specifies the max number of items to EXAMINE (before filtering),
+        // not the number to RETURN (after filtering). When a filterExpression is present, multiple
+        // pages may be returned, each with items that passed the filter. We need to stop collecting
+        // once we reach the user-specified limit.
+        Integer userLimit = scanRequest.limit();
+
+        if (userLimit == null) {
+            // No limit specified, collect all items
+            return StreamSupport.stream(pageIterable.items().spliterator(), false)
+                    .collect(Collectors.toList());
+        }
+
+        // Limit specified, collect up to the limit
+        List<T> results = new ArrayList<>();
+        for (Page<T> page : pageIterable) {
+            if (results.size() >= userLimit) {
+                break; // Stop collecting once we've reached the limit
+            }
+
+            // Add only as many items as needed to reach the limit
+            int remainingSlots = userLimit - results.size();
+            List<T> pageItems = page.items();
+            if (pageItems.size() <= remainingSlots) {
+                results.addAll(pageItems);
+            } else {
+                results.addAll(pageItems.subList(0, remainingSlots));
+                break;
+            }
+        }
+        return results;
     }
 
+    /**
+     * Validates that scan operations are enabled for this query.
+     * @param scanEnabled whether scan is enabled
+     * @throws IllegalArgumentException if scan is not enabled
+     */
     public void assertScanEnabled(boolean scanEnabled) {
         Assert.isTrue(scanEnabled, "Scanning for this query is not enabled.  "
                 + "To enable annotate your repository method with @EnableScan, or "

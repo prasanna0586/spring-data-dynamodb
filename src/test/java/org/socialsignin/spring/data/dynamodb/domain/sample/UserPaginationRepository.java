@@ -38,5 +38,10 @@ public interface UserPaginationRepository
     List<User> findAll();
 
     @EnableScan
+    @Override
+    long count();
+
+    @EnableScan
+    @Override
     void deleteAll();
 }

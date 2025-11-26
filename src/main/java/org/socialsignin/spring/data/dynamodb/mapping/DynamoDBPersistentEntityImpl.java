@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright © 2018 spring-data-dynamodb (https://github.com/prasanna0586/spring-data-dynamodb)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,19 +18,25 @@ package org.socialsignin.spring.data.dynamodb.mapping;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.lang.NonNull;
 
 import java.util.Comparator;
 
 /**
- * DynamoDB specific {@link DynamoDBPersistentEntity} implementation
- *
- * @author Michael Lavelle
- * @author Sebastian Just
+ * DynamoDB specific {@link DynamoDBPersistentEntity} implementation.
+ * @param <T> the entity type
+ * @author Prasanna Kumar Ramachandran
  */
 public class DynamoDBPersistentEntityImpl<T> extends BasicPersistentEntity<T, DynamoDBPersistentProperty>
         implements DynamoDBPersistentEntity<T> {
-    public DynamoDBPersistentEntityImpl(TypeInformation<T> information,
-            Comparator<DynamoDBPersistentProperty> comparator) {
+    /**
+     * Creates a new DynamoDBPersistentEntityImpl.
+     *
+     * @param information the type information
+     * @param comparator the comparator for sorting properties
+     */
+    public DynamoDBPersistentEntityImpl(@NonNull TypeInformation<T> information,
+                                        Comparator<DynamoDBPersistentProperty> comparator) {
         super(information, comparator);
     }
 
@@ -39,11 +45,10 @@ public class DynamoDBPersistentEntityImpl<T> extends BasicPersistentEntity<T, Dy
      *
      * @param property
      *            the new id property candidate, will never be {@literal null}.
-     *
      * @return the given id property or {@literal null} if the given property is not an id property.
      */
     protected DynamoDBPersistentProperty returnPropertyIfBetterIdPropertyCandidateOrNull(
-            DynamoDBPersistentProperty property) {
+            @NonNull DynamoDBPersistentProperty property) {
 
         if (!property.isIdProperty()) {
             return null;
