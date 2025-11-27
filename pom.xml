@@ -9,7 +9,7 @@
     </parent>
     <groupId>io.github.prasanna0586</groupId>
     <artifactId>spring-data-dynamodb</artifactId>
-    <version>7.0.0</version>
+    <version>7.0.1-SNAPSHOT</version>
     <name>Spring Data DynamoDB</name>
     <inceptionYear>2018</inceptionYear>
 
@@ -283,7 +283,7 @@
         <url>https://github.com/prasanna0586/spring-data-dynamodb</url>
         <connection>scm:git:https://github.com/prasanna0586/spring-data-dynamodb.git</connection>
         <developerConnection>scm:git:https://github.com/prasanna0586/spring-data-dynamodb.git</developerConnection>
-        <tag>v7.0.0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <developers>
