@@ -2,13 +2,17 @@
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.prasanna0586/spring-data-dynamodb)](https://central.sonatype.com/artifact/io.github.prasanna0586/spring-data-dynamodb)
 [![codecov](https://codecov.io/gh/prasanna0586/spring-data-dynamodb/branch/master/graph/badge.svg)](https://codecov.io/gh/prasanna0586/spring-data-dynamodb)
 [![Coverage Report](https://img.shields.io/badge/coverage-report-blue)](https://prasanna0586.github.io/spring-data-dynamodb/coverage/)
+[![User Guide](https://img.shields.io/badge/docs-user%20guide-green)](https://prasanna0586.github.io/spring-data-dynamodb/docs/)
 [![Last Commit](https://img.shields.io/github/last-commit/prasanna0586/spring-data-dynamodb)](https://github.com/prasanna0586/spring-data-dynamodb/commits/master)
+![analytics](https://static.scarf.sh/a.png?x-pxid=5bf914f4-1e68-4fe1-b514-464de3e9f8ae&page=README.md)
 
 # Spring Data DynamoDB #
 
 Spring Data DynamoDB makes it easy to build Spring-powered applications that use [AWS DynamoDB](https://aws.amazon.com/dynamodb/) for persistence, following the familiar patterns of the [Spring Data](https://projects.spring.io/spring-data/) family.
 
 This module is built on **AWS SDK v2**.
+
+> **📚 [User Guide](https://prasanna0586.github.io/spring-data-dynamodb/docs/)** — Comprehensive tutorials, real-world examples, and best practices to help you get the most out of this library!
 
 ## Supported Features ##
 
@@ -147,20 +151,6 @@ public class DynamoDBConfig {
 
 **Note:** You only need to define a `DynamoDbClient` bean. The library creates `DynamoDbEnhancedClient` internally.
 
-## Documentation ##
-
-For complete documentation, examples, and advanced topics, visit the [User Guide](https://prasanna0586.github.io/spring-data-dynamodb/docs/).
-
-Topics covered include:
-* [Configuration options](https://prasanna0586.github.io/spring-data-dynamodb/docs/#configuration)
-* [Entity mapping with Hash and Range keys](https://prasanna0586.github.io/spring-data-dynamodb/docs/#entities)
-* [Query methods and supported operators](https://prasanna0586.github.io/spring-data-dynamodb/docs/#query-methods)
-* [Global and Local Secondary Indexes](https://prasanna0586.github.io/spring-data-dynamodb/docs/#indexes-gsi--lsi)
-* [Batch operations](https://prasanna0586.github.io/spring-data-dynamodb/docs/#batch-operations)
-* [Type converters](https://prasanna0586.github.io/spring-data-dynamodb/docs/#type-converters)
-* [Event listeners](https://prasanna0586.github.io/spring-data-dynamodb/docs/#event-listeners)
-* [Pagination](https://prasanna0586.github.io/spring-data-dynamodb/docs/#pagination)
-
 ## Migration from SDK v1 ##
 
 If you are migrating from version 6.x (AWS SDK v1) to version 7.x (AWS SDK v2), please refer to the [Migration Guide](MIGRATION_GUIDE.md).
@@ -172,9 +162,7 @@ Key changes include:
 
 ## Example Project ##
 
-A complete working example is available at [validate-spring-data-dynamodb](https://github.com/prasanna0586/validate-spring-data-dynamodb/tree/spring-data-dynamodb-7.0.0-sdk-v2-migration).
-
-This example demonstrates GSI annotations, optimistic locking, custom converters, `@Query` annotations with filter expressions, and integration tests with Testcontainers.
+> **🚀 See it in action!** A complete working example is available at [**validate-spring-data-dynamodb**](https://github.com/prasanna0586/validate-spring-data-dynamodb/tree/spring-data-dynamodb-7.0.0-sdk-v2-migration) — featuring GSI annotations, optimistic locking, custom converters, `@Query` with filter expressions, and Testcontainers integration tests.
 
 ## Version & Spring Framework compatibility ##
 
