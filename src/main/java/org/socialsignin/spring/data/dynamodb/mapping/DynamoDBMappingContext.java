@@ -18,10 +18,10 @@ package org.socialsignin.spring.data.dynamodb.mapping;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.core.MarshallingMode;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.mapping.context.AbstractMappingContext;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
@@ -74,7 +74,7 @@ public class DynamoDBMappingContext
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.data.mapping.context.AbstractMappingContext#shouldCreatePersistentEntityFor(org.springframework.data.util.TypeInformation)
+     * @see org.springframework.data.mapping.context.AbstractMappingContext#shouldCreatePersistentEntityFor(org.springframework.data.core.TypeInformation)
      */
     @NonNull
     @Override
@@ -96,7 +96,7 @@ public class DynamoDBMappingContext
 
     /*
      * (non-Javadoc)
-     * @see org.springframework.data.mapping.context.AbstractMappingContext#shouldCreatePersistentEntityFor(org.springframework.data.util.TypeInformation)
+     * @see org.springframework.data.mapping.context.AbstractMappingContext#shouldCreatePersistentEntityFor(org.springframework.data.core.TypeInformation)
      */
     @Override
     protected boolean shouldCreatePersistentEntityFor(@NonNull TypeInformation<?> type) {

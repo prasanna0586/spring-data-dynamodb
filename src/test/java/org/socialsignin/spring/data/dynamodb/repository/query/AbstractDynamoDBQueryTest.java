@@ -30,7 +30,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.core.RepositoryMetadata;
-import org.springframework.data.util.TypeInformation;
+import org.springframework.data.core.TypeInformation;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
