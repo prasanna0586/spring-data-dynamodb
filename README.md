@@ -162,7 +162,7 @@ Key changes include:
 
 ## Example Project ##
 
-> **🚀 See it in action!** A complete working example is available at [**validate-spring-data-dynamodb**](https://github.com/prasanna0586/validate-spring-data-dynamodb/tree/spring-data-dynamodb-7.0.0-sdk-v2-migration) — featuring GSI annotations, optimistic locking, custom converters, `@Query` with filter expressions, and Testcontainers integration tests.
+> **🚀 See it in action!** A complete working example is available at [**validate-spring-data-dynamodb**](https://github.com/prasanna0586/validate-spring-data-dynamodb/tree/spring-data-dynamodb-8.0.0-spring-boot-4.0.1-upgrade) — featuring GSI annotations, optimistic locking, custom converters, `@Query` with filter expressions, and Testcontainers integration tests.
 
 ## Version & Spring Framework compatibility ##
 

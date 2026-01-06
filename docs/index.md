@@ -2617,7 +2617,7 @@ class DocumentRepositoryNativeTest {
 
 A complete working example demonstrating Spring Data DynamoDB with AWS SDK v2 is available:
 
-**[validate-spring-data-dynamodb](https://github.com/prasanna0586/validate-spring-data-dynamodb/tree/spring-data-dynamodb-7.0.0-sdk-v2-migration)**
+**[validate-spring-data-dynamodb](https://github.com/prasanna0586/validate-spring-data-dynamodb/tree/spring-data-dynamodb-8.0.0-spring-boot-4.0.1-upgrade)**
 
 This example project demonstrates:
 - Complete SDK v2 entity with multiple GSI annotations
