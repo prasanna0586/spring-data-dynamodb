@@ -2,6 +2,8 @@ package org.socialsignin.spring.data.dynamodb.domain.sample;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
 import org.socialsignin.spring.data.dynamodb.utils.DynamoDBLocalResource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +43,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @DisplayName("Performance Benchmark Integration Tests")
 public class PerformanceBenchmarkIntegrationTest {
+
+    private static final Logger logger = LoggerFactory.getLogger(PerformanceBenchmarkIntegrationTest.class);
 
     @Configuration
     @EnableDynamoDBRepositories(basePackages = "org.socialsignin.spring.data.dynamodb.domain.sample")
@@ -90,11 +94,11 @@ public class PerformanceBenchmarkIntegrationTest {
         assertThat(userRepository.count()).isEqualTo(itemCount);
 
         // Performance metrics
-        System.out.println("=== Single Save Performance ===");
-        System.out.println("Total items: " + itemCount);
-        System.out.println("Total time: " + durationMs + " ms");
-        System.out.println("Average latency: " + String.format("%.2f", avgLatencyMs) + " ms/item");
-        System.out.println("Throughput: " + String.format("%.2f", itemCount * 1000.0 / durationMs) + " items/sec");
+        logger.info("=== Single Save Performance ===");
+        logger.info("Total items: " + itemCount);
+        logger.info("Total time: " + durationMs + " ms");
+        logger.info("Average latency: " + String.format("%.2f", avgLatencyMs) + " ms/item");
+        logger.info("Throughput: " + String.format("%.2f", itemCount * 1000.0 / durationMs) + " items/sec");
     }
 
     @Test
@@ -124,11 +128,11 @@ public class PerformanceBenchmarkIntegrationTest {
         assertThat(userRepository.count()).isEqualTo(itemCount);
 
         // Performance metrics
-        System.out.println("=== Batch Save Performance ===");
-        System.out.println("Total items: " + itemCount);
-        System.out.println("Total time: " + durationMs + " ms");
-        System.out.println("Average latency: " + String.format("%.2f", avgLatencyMs) + " ms/item");
-        System.out.println("Throughput: " + String.format("%.2f", itemCount * 1000.0 / durationMs) + " items/sec");
+        logger.info("=== Batch Save Performance ===");
+        logger.info("Total items: " + itemCount);
+        logger.info("Total time: " + durationMs + " ms");
+        logger.info("Average latency: " + String.format("%.2f", avgLatencyMs) + " ms/item");
+        logger.info("Throughput: " + String.format("%.2f", itemCount * 1000.0 / durationMs) + " items/sec");
     }
 
     @Test
@@ -170,10 +174,10 @@ public class PerformanceBenchmarkIntegrationTest {
         // Performance comparison
         double speedup = singleDuration / (double) batchDuration;
 
-        System.out.println("=== Write Performance Comparison ===");
-        System.out.println("Single writes: " + singleDuration + " ms (" + String.format("%.2f", singleDuration / (double) itemCount) + " ms/item)");
-        System.out.println("Batch writes: " + batchDuration + " ms (" + String.format("%.2f", batchDuration / (double) itemCount) + " ms/item)");
-        System.out.println("Batch speedup: " + String.format("%.2fx", speedup) + " faster");
+        logger.info("=== Write Performance Comparison ===");
+        logger.info("Single writes: " + singleDuration + " ms (" + String.format("%.2f", singleDuration / (double) itemCount) + " ms/item)");
+        logger.info("Batch writes: " + batchDuration + " ms (" + String.format("%.2f", batchDuration / (double) itemCount) + " ms/item)");
+        logger.info("Batch speedup: " + String.format("%.2fx", speedup) + " faster");
 
         assertThat(speedup).isGreaterThan(1.0); // Batch should be faster
     }
@@ -207,11 +211,11 @@ public class PerformanceBenchmarkIntegrationTest {
         double avgLatencyMs = durationMs / (double) itemCount;
 
         // Performance metrics
-        System.out.println("=== Single Read Performance ===");
-        System.out.println("Total items: " + itemCount);
-        System.out.println("Total time: " + durationMs + " ms");
-        System.out.println("Average latency: " + String.format("%.2f", avgLatencyMs) + " ms/item");
-        System.out.println("Throughput: " + String.format("%.2f", itemCount * 1000.0 / durationMs) + " items/sec");
+        logger.info("=== Single Read Performance ===");
+        logger.info("Total items: " + itemCount);
+        logger.info("Total time: " + durationMs + " ms");
+        logger.info("Average latency: " + String.format("%.2f", avgLatencyMs) + " ms/item");
+        logger.info("Throughput: " + String.format("%.2f", itemCount * 1000.0 / durationMs) + " items/sec");
     }
 
     @Test
@@ -239,11 +243,11 @@ public class PerformanceBenchmarkIntegrationTest {
         double avgLatencyMs = durationMs / (double) itemCount;
 
         // Performance metrics
-        System.out.println("=== Batch Read Performance ===");
-        System.out.println("Total items: " + itemCount);
-        System.out.println("Total time: " + durationMs + " ms");
-        System.out.println("Average latency: " + String.format("%.2f", avgLatencyMs) + " ms/item");
-        System.out.println("Throughput: " + String.format("%.2f", itemCount * 1000.0 / durationMs) + " items/sec");
+        logger.info("=== Batch Read Performance ===");
+        logger.info("Total items: " + itemCount);
+        logger.info("Total time: " + durationMs + " ms");
+        logger.info("Average latency: " + String.format("%.2f", avgLatencyMs) + " ms/item");
+        logger.info("Throughput: " + String.format("%.2f", itemCount * 1000.0 / durationMs) + " items/sec");
 
         assertThat(users).hasSize(itemCount);
     }
@@ -275,9 +279,9 @@ public class PerformanceBenchmarkIntegrationTest {
         long durationMs = (endTime - startTime) / 1_000_000;
 
         // Performance metrics
-        System.out.println("=== Scan Performance ===");
-        System.out.println("Items found: " + results.size());
-        System.out.println("Scan time: " + durationMs + " ms");
+        logger.info("=== Scan Performance ===");
+        logger.info("Items found: " + results.size());
+        logger.info("Scan time: " + durationMs + " ms");
 
         assertThat(results).hasSize(100);
     }
@@ -303,9 +307,9 @@ public class PerformanceBenchmarkIntegrationTest {
         long durationMs = (endTime - startTime) / 1_000_000;
 
         // Performance metrics
-        System.out.println("=== Scan Performance ===");
-        System.out.println("Items found: " + results.size());
-        System.out.println("Scan time: " + durationMs + " ms");
+        logger.info("=== Scan Performance ===");
+        logger.info("Items found: " + results.size());
+        logger.info("Scan time: " + durationMs + " ms");
 
         assertThat(results.size()).isGreaterThanOrEqualTo(100);
     }
@@ -350,12 +354,12 @@ public class PerformanceBenchmarkIntegrationTest {
         int totalItems = threadCount * itemsPerThread;
 
         // Performance metrics
-        System.out.println("=== Concurrent Write Performance ===");
-        System.out.println("Threads: " + threadCount);
-        System.out.println("Items per thread: " + itemsPerThread);
-        System.out.println("Total items: " + totalItems);
-        System.out.println("Total time: " + durationMs + " ms");
-        System.out.println("Throughput: " + String.format("%.2f", totalItems * 1000.0 / durationMs) + " items/sec");
+        logger.info("=== Concurrent Write Performance ===");
+        logger.info("Threads: " + threadCount);
+        logger.info("Items per thread: " + itemsPerThread);
+        logger.info("Total items: " + totalItems);
+        logger.info("Total time: " + durationMs + " ms");
+        logger.info("Throughput: " + String.format("%.2f", totalItems * 1000.0 / durationMs) + " items/sec");
 
         assertThat(userRepository.count()).isEqualTo(totalItems);
     }
@@ -394,9 +398,9 @@ public class PerformanceBenchmarkIntegrationTest {
         long durationMs = (endTime - startTime) / 1_000_000;
 
         // Performance metrics
-        System.out.println("=== LSI Query Performance ===");
-        System.out.println("Items found: " + results.size());
-        System.out.println("Query time: " + durationMs + " ms");
+        logger.info("=== LSI Query Performance ===");
+        logger.info("Items found: " + results.size());
+        logger.info("Query time: " + durationMs + " ms");
 
         assertThat(results.size()).isLessThanOrEqualTo(50);
     }
@@ -434,11 +438,11 @@ public class PerformanceBenchmarkIntegrationTest {
         double avgLatencyMs = durationMs / (double) itemCount;
 
         // Performance metrics
-        System.out.println("=== Update Operations Performance ===");
-        System.out.println("Total items: " + itemCount);
-        System.out.println("Total time: " + durationMs + " ms");
-        System.out.println("Average latency: " + String.format("%.2f", avgLatencyMs) + " ms/item");
-        System.out.println("Throughput: " + String.format("%.2f", itemCount * 1000.0 / durationMs) + " items/sec");
+        logger.info("=== Update Operations Performance ===");
+        logger.info("Total items: " + itemCount);
+        logger.info("Total time: " + durationMs + " ms");
+        logger.info("Average latency: " + String.format("%.2f", avgLatencyMs) + " ms/item");
+        logger.info("Throughput: " + String.format("%.2f", itemCount * 1000.0 / durationMs) + " items/sec");
     }
 
     @Test
@@ -468,11 +472,11 @@ public class PerformanceBenchmarkIntegrationTest {
         double avgLatencyMs = durationMs / (double) itemCount;
 
         // Performance metrics
-        System.out.println("=== Delete Operations Performance ===");
-        System.out.println("Total items: " + itemCount);
-        System.out.println("Total time: " + durationMs + " ms");
-        System.out.println("Average latency: " + String.format("%.2f", avgLatencyMs) + " ms/item");
-        System.out.println("Throughput: " + String.format("%.2f", itemCount * 1000.0 / durationMs) + " items/sec");
+        logger.info("=== Delete Operations Performance ===");
+        logger.info("Total items: " + itemCount);
+        logger.info("Total time: " + durationMs + " ms");
+        logger.info("Average latency: " + String.format("%.2f", avgLatencyMs) + " ms/item");
+        logger.info("Throughput: " + String.format("%.2f", itemCount * 1000.0 / durationMs) + " items/sec");
 
         assertThat(userRepository.count()).isEqualTo(0);
     }
@@ -503,11 +507,11 @@ public class PerformanceBenchmarkIntegrationTest {
         long memoryUsedMB = (memoryAfter - memoryBefore) / (1024 * 1024);
         double memoryPerItemKB = (memoryAfter - memoryBefore) / (double) itemCount / 1024;
 
-        System.out.println("=== Memory Overhead ===");
-        System.out.println("Total items: " + itemCount);
-        System.out.println("Memory before: " + memoryBefore / (1024 * 1024) + " MB");
-        System.out.println("Memory after: " + memoryAfter / (1024 * 1024) + " MB");
-        System.out.println("Memory used: " + memoryUsedMB + " MB");
-        System.out.println("Memory per item: " + String.format("%.2f", memoryPerItemKB) + " KB");
+        logger.info("=== Memory Overhead ===");
+        logger.info("Total items: " + itemCount);
+        logger.info("Memory before: " + memoryBefore / (1024 * 1024) + " MB");
+        logger.info("Memory after: " + memoryAfter / (1024 * 1024) + " MB");
+        logger.info("Memory used: " + memoryUsedMB + " MB");
+        logger.info("Memory per item: " + String.format("%.2f", memoryPerItemKB) + " KB");
     }
 }

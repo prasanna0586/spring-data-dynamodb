@@ -2,6 +2,8 @@ package org.socialsignin.spring.data.dynamodb.domain.sample;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
 import org.socialsignin.spring.data.dynamodb.utils.DynamoDBLocalResource;
@@ -46,6 +48,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @DisplayName("DAX Integration Patterns Tests")
 public class DAXIntegrationPatternsTest {
+
+    private static final Logger logger = LoggerFactory.getLogger(DAXIntegrationPatternsTest.class);
 
     @Configuration
     @EnableDynamoDBRepositories(basePackages = "org.socialsignin.spring.data.dynamodb.domain.sample")
@@ -92,11 +96,11 @@ public class DAXIntegrationPatternsTest {
         }
 
         // Then - Multiple reads of same item (DAX would cache this)
-        System.out.println("=== DAX Hot Key Read Pattern ===");
-        System.out.println("Item: hot-key-user (frequently accessed)");
-        System.out.println("Read count: " + readCount);
-        System.out.println("Average read time: " + readTimes.stream().mapToLong(Long::longValue).average().orElse(0) + " ms");
-        System.out.println("Note: With DAX, subsequent reads would be served from cache (microseconds)");
+        logger.info("=== DAX Hot Key Read Pattern ===");
+        logger.info("Item: hot-key-user (frequently accessed)");
+        logger.info("Read count: " + readCount);
+        logger.info("Average read time: " + readTimes.stream().mapToLong(Long::longValue).average().orElse(0) + " ms");
+        logger.info("Note: With DAX, subsequent reads would be served from cache (microseconds)");
     }
 
     @Test
@@ -128,11 +132,11 @@ public class DAXIntegrationPatternsTest {
         }
 
         // Then - Query results (DAX would cache identical queries)
-        System.out.println("=== DAX Query Cache Pattern ===");
-        System.out.println("Query: numberOfPlaylists < 10");
-        System.out.println("Query execution count: " + queryCount);
-        System.out.println("Average query time: " + queryTimes.stream().mapToLong(Long::longValue).average().orElse(0) + " ms");
-        System.out.println("Note: With DAX, identical queries are cached");
+        logger.info("=== DAX Query Cache Pattern ===");
+        logger.info("Query: numberOfPlaylists < 10");
+        logger.info("Query execution count: " + queryCount);
+        logger.info("Average query time: " + queryTimes.stream().mapToLong(Long::longValue).average().orElse(0) + " ms");
+        logger.info("Note: With DAX, identical queries are cached");
     }
 
     @Test
@@ -158,10 +162,10 @@ public class DAXIntegrationPatternsTest {
         // Then
         assertThat(users).hasSize(25);
 
-        System.out.println("=== DAX Batch Get Pattern ===");
-        System.out.println("Items retrieved: " + users.size());
-        System.out.println("Batch get time: " + duration + " ms");
-        System.out.println("Note: DAX caches each item individually for future GetItem calls");
+        logger.info("=== DAX Batch Get Pattern ===");
+        logger.info("Items retrieved: " + users.size());
+        logger.info("Batch get time: " + duration + " ms");
+        logger.info("Note: DAX caches each item individually for future GetItem calls");
     }
 
     // ==================== Write Patterns with DAX ====================
@@ -189,10 +193,10 @@ public class DAXIntegrationPatternsTest {
         assertThat(retrieved).isPresent();
         assertThat(retrieved.get().getName()).isEqualTo("Write Through User");
 
-        System.out.println("=== DAX Write-Through Pattern ===");
-        System.out.println("Write time: " + writeDuration + " ms");
-        System.out.println("Immediate read time: " + readDuration + " ms");
-        System.out.println("Note: DAX write-through ensures cache is updated on writes");
+        logger.info("=== DAX Write-Through Pattern ===");
+        logger.info("Write time: " + writeDuration + " ms");
+        logger.info("Immediate read time: " + readDuration + " ms");
+        logger.info("Note: DAX write-through ensures cache is updated on writes");
     }
 
     @Test
@@ -222,9 +226,9 @@ public class DAXIntegrationPatternsTest {
         assertThat(updated.get().getName()).isEqualTo("Updated Name");
         assertThat(updated.get().getNumberOfPlaylists()).isEqualTo(20);
 
-        System.out.println("=== DAX Update Pattern ===");
-        System.out.println("Note: DAX automatically invalidates cache on updates");
-        System.out.println("Read after update returns: " + updated.get().getName());
+        logger.info("=== DAX Update Pattern ===");
+        logger.info("Note: DAX automatically invalidates cache on updates");
+        logger.info("Read after update returns: " + updated.get().getName());
     }
 
     @Test
@@ -249,8 +253,8 @@ public class DAXIntegrationPatternsTest {
         // Then - Should not find (cache cleared)
         assertThat(deleted).isEmpty();
 
-        System.out.println("=== DAX Delete Pattern ===");
-        System.out.println("Note: DAX removes deleted items from cache");
+        logger.info("=== DAX Delete Pattern ===");
+        logger.info("Note: DAX removes deleted items from cache");
     }
 
     // ==================== Consistency Considerations ====================
@@ -274,9 +278,9 @@ public class DAXIntegrationPatternsTest {
         assertThat(result.get().getId()).isEqualTo("eventual-user");
         assertThat(result.get().getName()).isEqualTo("Eventual User");
 
-        System.out.println("=== DAX Consistency: Eventually Consistent ===");
-        System.out.println("Repository reads (default) - DAX caches these reads");
-        System.out.println("Note: Eventually consistent reads benefit from DAX caching");
+        logger.info("=== DAX Consistency: Eventually Consistent ===");
+        logger.info("Repository reads (default) - DAX caches these reads");
+        logger.info("Note: Eventually consistent reads benefit from DAX caching");
     }
 
     @Test
@@ -298,9 +302,9 @@ public class DAXIntegrationPatternsTest {
         assertThat(result.get().getId()).isEqualTo("strong-user");
         assertThat(result.get().getName()).isEqualTo("Strong User");
 
-        System.out.println("=== DAX Consistency: Strongly Consistent ===");
-        System.out.println("Repository.findById (ConsistentRead=true) - Bypasses DAX, reads from DynamoDB");
-        System.out.println("Note: Use for latest data when cache might be stale");
+        logger.info("=== DAX Consistency: Strongly Consistent ===");
+        logger.info("Repository.findById (ConsistentRead=true) - Bypasses DAX, reads from DynamoDB");
+        logger.info("Note: Use for latest data when cache might be stale");
     }
 
     // ==================== Cache Performance Patterns ====================
@@ -335,12 +339,12 @@ public class DAXIntegrationPatternsTest {
         double avgReadTime = totalReadTime / (double) totalReads;
 
         // Then
-        System.out.println("=== DAX Read-Heavy Workload Pattern ===");
-        System.out.println("Items: " + itemCount);
-        System.out.println("Reads per item: " + readsPerItem);
-        System.out.println("Total reads: " + totalReads);
-        System.out.println("Average read time: " + String.format("%.2f", avgReadTime) + " ms");
-        System.out.println("Note: With DAX, repeated reads would be microseconds (100-200x faster)");
+        logger.info("=== DAX Read-Heavy Workload Pattern ===");
+        logger.info("Items: " + itemCount);
+        logger.info("Reads per item: " + readsPerItem);
+        logger.info("Total reads: " + totalReads);
+        logger.info("Average read time: " + String.format("%.2f", avgReadTime) + " ms");
+        logger.info("Note: With DAX, repeated reads would be microseconds (100-200x faster)");
     }
 
     @Test
@@ -372,13 +376,13 @@ public class DAXIntegrationPatternsTest {
         }
 
         // Then
-        System.out.println("=== DAX Query Cache Effectiveness ===");
-        System.out.println("Query: Id starts with 'cache-user-'");
-        System.out.println("Executions: " + queryExecutions);
+        logger.info("=== DAX Query Cache Effectiveness ===");
+        logger.info("Query: Id starts with 'cache-user-'");
+        logger.info("Executions: " + queryExecutions);
         for (int i = 0; i < executionTimes.size(); i++) {
-            System.out.println("  Execution " + (i + 1) + ": " + executionTimes.get(i) + " ms");
+            logger.info("  Execution " + (i + 1) + ": " + executionTimes.get(i) + " ms");
         }
-        System.out.println("Note: With DAX, executions 2-5 would be cached (much faster)");
+        logger.info("Note: With DAX, executions 2-5 would be cached (much faster)");
     }
 
     // ==================== DAX Configuration Patterns ====================
@@ -413,47 +417,47 @@ public class DAXIntegrationPatternsTest {
         List<User> batchGetResult = (List<User>) userRepository.findAllById(Arrays.asList("dax-compatible-1"));
         assertThat(batchGetResult).hasSize(1);
 
-        System.out.println("=== DAX-Compatible Library API Patterns ===");
-        System.out.println("repository.save() + findById(): Compatible ✓");
-        System.out.println("repository.findByProperty(): Compatible ✓");
-        System.out.println("repository.findAll(): Compatible ✓");
-        System.out.println("repository.findAllById(): Compatible ✓");
-        System.out.println("Note: All library APIs work seamlessly with DAX when configured");
+        logger.info("=== DAX-Compatible Library API Patterns ===");
+        logger.info("repository.save() + findById(): Compatible ✓");
+        logger.info("repository.findByProperty(): Compatible ✓");
+        logger.info("repository.findAll(): Compatible ✓");
+        logger.info("repository.findAllById(): Compatible ✓");
+        logger.info("Note: All library APIs work seamlessly with DAX when configured");
     }
 
     @Test
     @org.junit.jupiter.api.Order(12)
     @DisplayName("Test 12: DAX best practices demonstration")
     void testDAXBestPractices() {
-        System.out.println("=== DAX Best Practices ===");
-        System.out.println();
-        System.out.println("1. Use Eventually Consistent Reads:");
-        System.out.println("   - Set ConsistentRead=false in GetItem/Query requests");
-        System.out.println("   - Only use ConsistentRead=true when absolute latest data required");
-        System.out.println();
-        System.out.println("2. Optimize for Read-Heavy Workloads:");
-        System.out.println("   - DAX best for read:write ratios of 10:1 or higher");
-        System.out.println("   - Item cache: Frequently accessed individual items");
-        System.out.println("   - Query cache: Repeated queries with same parameters");
-        System.out.println();
-        System.out.println("3. Cache TTL Configuration:");
-        System.out.println("   - Item cache TTL: Default 5 minutes");
-        System.out.println("   - Query cache TTL: Default 5 minutes");
-        System.out.println("   - Configure based on data freshness requirements");
-        System.out.println();
-        System.out.println("4. Cluster Sizing:");
-        System.out.println("   - Start with 3-node cluster for HA");
-        System.out.println("   - Monitor cache hit rate (should be >80% for benefit)");
-        System.out.println("   - Scale horizontally based on request volume");
-        System.out.println();
-        System.out.println("5. Client Configuration:");
-        System.out.println("   - Use connection pooling");
-        System.out.println("   - Set appropriate timeouts");
-        System.out.println("   - Enable client-side metrics");
-        System.out.println();
-        System.out.println("6. Monitoring:");
-        System.out.println("   - Track cache hit rate");
-        System.out.println("   - Monitor query latencies (p50, p99)");
-        System.out.println("   - Watch for cache evictions");
+        logger.info("=== DAX Best Practices ===");
+        logger.info(System.lineSeparator());
+        logger.info("1. Use Eventually Consistent Reads:");
+        logger.info("   - Set ConsistentRead=false in GetItem/Query requests");
+        logger.info("   - Only use ConsistentRead=true when absolute latest data required");
+        logger.info(System.lineSeparator());
+        logger.info("2. Optimize for Read-Heavy Workloads:");
+        logger.info("   - DAX best for read:write ratios of 10:1 or higher");
+        logger.info("   - Item cache: Frequently accessed individual items");
+        logger.info("   - Query cache: Repeated queries with same parameters");
+        logger.info(System.lineSeparator());
+        logger.info("3. Cache TTL Configuration:");
+        logger.info("   - Item cache TTL: Default 5 minutes");
+        logger.info("   - Query cache TTL: Default 5 minutes");
+        logger.info("   - Configure based on data freshness requirements");
+        logger.info(System.lineSeparator());
+        logger.info("4. Cluster Sizing:");
+        logger.info("   - Start with 3-node cluster for HA");
+        logger.info("   - Monitor cache hit rate (should be >80% for benefit)");
+        logger.info("   - Scale horizontally based on request volume");
+        logger.info(System.lineSeparator());
+        logger.info("5. Client Configuration:");
+        logger.info("   - Use connection pooling");
+        logger.info("   - Set appropriate timeouts");
+        logger.info("   - Enable client-side metrics");
+        logger.info(System.lineSeparator());
+        logger.info("6. Monitoring:");
+        logger.info("   - Track cache hit rate");
+        logger.info("   - Monitor query latencies (p50, p99)");
+        logger.info("   - Watch for cache evictions");
     }
 }

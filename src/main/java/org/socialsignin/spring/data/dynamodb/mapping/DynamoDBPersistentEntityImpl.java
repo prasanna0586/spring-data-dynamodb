@@ -17,7 +17,7 @@ package org.socialsignin.spring.data.dynamodb.mapping;
 
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
-import org.springframework.data.util.TypeInformation;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.lang.NonNull;
 
 import java.util.Comparator;

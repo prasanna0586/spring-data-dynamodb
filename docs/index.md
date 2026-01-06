@@ -1,6 +1,6 @@
 # Spring Data DynamoDB - User Guide
 
-**Version 7.x - AWS SDK v2**
+**Version 8.x - AWS SDK v2**
 
 A Spring Data module for DynamoDB, built on AWS SDK v2.
 
@@ -68,7 +68,7 @@ A Spring Data module for DynamoDB, built on AWS SDK v2.
 ### Prerequisites
 
 - **Java 21+**
-- **Spring Boot 3.x** or **Spring Framework 6.x**
+- **Spring Boot 4.x** or **Spring Framework 7.x**
 - **AWS Account** with DynamoDB access
 
 ### Maven Dependencies
@@ -76,8 +76,8 @@ A Spring Data module for DynamoDB, built on AWS SDK v2.
 ```xml
 <properties>
     <java.version>21</java.version>
-    <aws-sdk.version>2.38.1</aws-sdk.version>
-    <spring.data.dynamodb.version>7.0.0</spring.data.dynamodb.version>
+    <aws-sdk.version>2.41.1</aws-sdk.version>
+    <spring.data.dynamodb.version>8.0.0</spring.data.dynamodb.version>
 </properties>
 
 <dependencyManagement>
@@ -112,8 +112,8 @@ A Spring Data module for DynamoDB, built on AWS SDK v2.
 
 ```gradle
 dependencies {
-    implementation platform('software.amazon.awssdk:bom:2.38.1')
-    implementation 'io.github.prasanna0586:spring-data-dynamodb:7.0.0'
+    implementation platform('software.amazon.awssdk:bom:2.41.1')
+    implementation 'io.github.prasanna0586:spring-data-dynamodb:8.0.0'
     implementation 'software.amazon.awssdk:dynamodb-enhanced'
 }
 ```
@@ -1834,7 +1834,7 @@ Regular releases are available via Maven Central with no additional setup requir
 <dependency>
     <groupId>io.github.prasanna0586</groupId>
     <artifactId>spring-data-dynamodb</artifactId>
-    <version>7.0.0</version>
+    <version>8.0.0</version>
 </dependency>
 ```
 
@@ -2024,7 +2024,6 @@ public DynamoDbClient amazonDynamoDB() {
 
 **docker-compose.yml:**
 ```yaml
-version: '3.8'
 services:
   dynamodb-local:
     image: amazon/dynamodb-local:latest
@@ -2056,9 +2055,13 @@ public class DynamoDBTestConfig {
 **Maven Dependency:**
 ```xml
 <dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-testcontainers</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
     <groupId>org.testcontainers</groupId>
-    <artifactId>testcontainers</artifactId>
-    <version>1.19.3</version>
+    <artifactId>testcontainers-junit-jupiter</artifactId>
     <scope>test</scope>
 </dependency>
 ```
@@ -2552,7 +2555,7 @@ logging:
 
 ## GraalVM Native Image Support
 
-Spring Data DynamoDB 7.x supports GraalVM native image compilation out of the box. The library automatically registers reflection hints for DynamoDB entities and repositories during AOT processing.
+Spring Data DynamoDB 8.x supports GraalVM native image compilation out of the box. The library automatically registers reflection hints for DynamoDB entities and repositories during AOT processing.
 
 ### How It Works
 

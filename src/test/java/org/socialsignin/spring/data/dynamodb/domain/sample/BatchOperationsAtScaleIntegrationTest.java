@@ -2,6 +2,8 @@ package org.socialsignin.spring.data.dynamodb.domain.sample;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
 import org.socialsignin.spring.data.dynamodb.utils.DynamoDBLocalResource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +43,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("Batch Operations At Scale Integration Tests")
 public class BatchOperationsAtScaleIntegrationTest {
 
+    private static final Logger logger = LoggerFactory.getLogger(BatchOperationsAtScaleIntegrationTest.class);
+
     @Configuration
     @EnableDynamoDBRepositories(basePackages = "org.socialsignin.spring.data.dynamodb.domain.sample")
     public static class TestAppConfig {
@@ -78,7 +82,7 @@ public class BatchOperationsAtScaleIntegrationTest {
         assertThat(allUsers).hasSize(25);
 
         // Performance check - batch should be faster than individual saves
-        System.out.println("Batch write 25 items took: " + duration + "ms");
+        logger.info("Batch write 25 items took: " + duration + "ms");
         assertThat(duration).isLessThan(5000); // Should complete in under 5 seconds
     }
 
@@ -117,7 +121,7 @@ public class BatchOperationsAtScaleIntegrationTest {
         assertThat(savedUsers).hasSize(50);
         assertThat(userRepository.count()).isEqualTo(50);
 
-        System.out.println("Batch write 50 items took: " + duration + "ms");
+        logger.info("Batch write 50 items took: " + duration + "ms");
         assertThat(duration).isLessThan(10000); // Should complete in under 10 seconds
     }
 
@@ -137,7 +141,7 @@ public class BatchOperationsAtScaleIntegrationTest {
         assertThat(savedUsers).hasSize(100);
         assertThat(userRepository.count()).isEqualTo(100);
 
-        System.out.println("Batch write 100 items took: " + duration + "ms");
+        logger.info("Batch write 100 items took: " + duration + "ms");
         assertThat(duration).isLessThan(15000); // Should complete in under 15 seconds
 
         // Verify data integrity - check specific users
@@ -166,7 +170,7 @@ public class BatchOperationsAtScaleIntegrationTest {
         assertThat(savedUsers).hasSize(250);
         assertThat(userRepository.count()).isEqualTo(250);
 
-        System.out.println("Batch write 250 items took: " + duration + "ms");
+        logger.info("Batch write 250 items took: " + duration + "ms");
 
         // Verify random samples
         User midUser = userRepository.findById("batch250-user-125").orElse(null);
@@ -196,7 +200,7 @@ public class BatchOperationsAtScaleIntegrationTest {
         // Then
         assertThat(foundUsers).hasSize(50);
 
-        System.out.println("Batch read 50 items took: " + duration + "ms");
+        logger.info("Batch read 50 items took: " + duration + "ms");
 
         // Verify all users were retrieved
         List<String> foundIds = ((List<User>) foundUsers).stream()
@@ -225,7 +229,7 @@ public class BatchOperationsAtScaleIntegrationTest {
         // Then
         assertThat(foundUsers).hasSize(100);
 
-        System.out.println("Batch read 100 items took: " + duration + "ms");
+        logger.info("Batch read 100 items took: " + duration + "ms");
     }
 
     @Test
@@ -248,7 +252,7 @@ public class BatchOperationsAtScaleIntegrationTest {
         // Then
         assertThat(foundUsers).hasSize(150);
 
-        System.out.println("Batch read 150 items took: " + duration + "ms");
+        logger.info("Batch read 150 items took: " + duration + "ms");
     }
 
     // ==================== Batch Delete Tests ====================
@@ -270,7 +274,7 @@ public class BatchOperationsAtScaleIntegrationTest {
         // Then
         assertThat(userRepository.count()).isEqualTo(0);
 
-        System.out.println("Batch delete 25 items took: " + duration + "ms");
+        logger.info("Batch delete 25 items took: " + duration + "ms");
     }
 
     @Test
@@ -290,7 +294,7 @@ public class BatchOperationsAtScaleIntegrationTest {
         // Then
         assertThat(userRepository.count()).isEqualTo(0);
 
-        System.out.println("Batch delete 50 items took: " + duration + "ms");
+        logger.info("Batch delete 50 items took: " + duration + "ms");
     }
 
     @Test
@@ -314,7 +318,7 @@ public class BatchOperationsAtScaleIntegrationTest {
         // Then
         assertThat(userRepository.count()).isEqualTo(0);
 
-        System.out.println("Batch delete by ID 100 items took: " + duration + "ms");
+        logger.info("Batch delete by ID 100 items took: " + duration + "ms");
     }
 
     // ==================== Mixed Batch Operations ====================
@@ -440,9 +444,9 @@ public class BatchOperationsAtScaleIntegrationTest {
         long batchDuration = System.currentTimeMillis() - batchStart;
 
         // Then - Batch should be significantly faster
-        System.out.println("Individual saves (20 items): " + individualDuration + "ms");
-        System.out.println("Batch save (20 items): " + batchDuration + "ms");
-        System.out.println("Speedup: " + ((double) individualDuration / batchDuration) + "x");
+        logger.info("Individual saves (20 items): " + individualDuration + "ms");
+        logger.info("Batch save (20 items): " + batchDuration + "ms");
+        logger.info("Speedup: " + ((double) individualDuration / batchDuration) + "x");
 
         // Batch should be at least faster (may not always be 2x due to local testing variance)
         assertThat(batchDuration).isLessThan(individualDuration);
@@ -466,7 +470,7 @@ public class BatchOperationsAtScaleIntegrationTest {
         long createDuration = System.currentTimeMillis() - createStart;
 
         assertThat(userRepository.count()).isEqualTo(500);
-        System.out.println("Create 500 items: " + createDuration + "ms");
+        logger.info("Create 500 items: " + createDuration + "ms");
 
         // Read all
         List<String> allIds = users.stream().map(User::getId).collect(Collectors.toList());
@@ -475,7 +479,7 @@ public class BatchOperationsAtScaleIntegrationTest {
         long readDuration = System.currentTimeMillis() - readStart;
 
         assertThat(foundUsers).hasSize(500);
-        System.out.println("Read 500 items: " + readDuration + "ms");
+        logger.info("Read 500 items: " + readDuration + "ms");
 
         // Update all
         List<User> usersToUpdate = ((List<User>) foundUsers).stream()
@@ -486,7 +490,7 @@ public class BatchOperationsAtScaleIntegrationTest {
         userRepository.saveAll(usersToUpdate);
         long updateDuration = System.currentTimeMillis() - updateStart;
 
-        System.out.println("Update 500 items: " + updateDuration + "ms");
+        logger.info("Update 500 items: " + updateDuration + "ms");
 
         // Delete all
         long deleteStart = System.currentTimeMillis();
@@ -494,11 +498,11 @@ public class BatchOperationsAtScaleIntegrationTest {
         long deleteDuration = System.currentTimeMillis() - deleteStart;
 
         assertThat(userRepository.count()).isEqualTo(0);
-        System.out.println("Delete 500 items: " + deleteDuration + "ms");
+        logger.info("Delete 500 items: " + deleteDuration + "ms");
 
         // Summary
         long totalDuration = createDuration + readDuration + updateDuration + deleteDuration;
-        System.out.println("Total time for 500-item lifecycle: " + totalDuration + "ms");
+        logger.info("Total time for 500-item lifecycle: " + totalDuration + "ms");
     }
 
     // ==================== Helper Methods ====================

@@ -18,6 +18,8 @@ package org.socialsignin.spring.data.dynamodb.domain.sample;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
 import org.socialsignin.spring.data.dynamodb.utils.DynamoDBLocalResource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +47,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestPropertySource(properties = {"spring.data.dynamodb.entity2ddl.auto=create"})
 @DisplayName("Type Converter Tests - V2_NATIVE Mode")
 public class TypeConverterV2NativeIntegrationTest {
+
+    private static final Logger logger = LoggerFactory.getLogger(TypeConverterV2NativeIntegrationTest.class);
 
     @Configuration
     @EnableDynamoDBRepositories(basePackages = "org.socialsignin.spring.data.dynamodb.domain.sample")
@@ -357,12 +361,12 @@ public class TypeConverterV2NativeIntegrationTest {
 
         java.util.Map<String, software.amazon.awssdk.services.dynamodb.model.AttributeValue> item = response.item();
 
-        System.out.println("\n=== V2_NATIVE: Raw Storage Format for ID: " + id + " ===");
+        logger.info("\n=== V2_NATIVE: Raw Storage Format for ID: " + id + " ===");
         for (String attrName : attributeNames) {
             software.amazon.awssdk.services.dynamodb.model.AttributeValue value = item.get(attrName);
-            System.out.println(attrName + ": " + value);
+            logger.info(attrName + ": " + value);
         }
-        System.out.println("========================================\n");
+        logger.info("========================================\n");
     }
 
     private TypeTestEntity createFullyPopulatedEntity(String id) {
