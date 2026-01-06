@@ -2,6 +2,8 @@ package org.socialsignin.spring.data.dynamodb.domain.sample;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
 import org.socialsignin.spring.data.dynamodb.utils.DynamoDBLocalResource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +36,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @DisplayName("Throttling and Retry Logic Integration Tests")
 public class ThrottlingAndRetryIntegrationTest {
+
+    private static final Logger logger = LoggerFactory.getLogger(ThrottlingAndRetryIntegrationTest.class);
 
     @Configuration
     @EnableDynamoDBRepositories(basePackages = "org.socialsignin.spring.data.dynamodb.domain.sample")
@@ -71,7 +75,7 @@ public class ThrottlingAndRetryIntegrationTest {
 
         // Then - All should be saved
         assertThat(userRepository.count()).isEqualTo(100);
-        System.out.println("Saved 100 items in " + duration + "ms");
+        logger.info("Saved 100 items in " + duration + "ms");
     }
 
     @Test
@@ -100,7 +104,7 @@ public class ThrottlingAndRetryIntegrationTest {
 
         // Then - All should be retrieved
         assertThat(retrieved).hasSize(100);
-        System.out.println("Retrieved 100 items in " + duration + "ms");
+        logger.info("Retrieved 100 items in " + duration + "ms");
     }
 
     @Test
@@ -122,8 +126,8 @@ public class ThrottlingAndRetryIntegrationTest {
 
         // Then - All should be saved
         assertThat(userRepository.count()).isEqualTo(itemCount);
-        System.out.println("Sequential write of " + itemCount + " items took " + duration + "ms");
-        System.out.println("Average: " + (duration / itemCount) + "ms per item");
+        logger.info("Sequential write of " + itemCount + " items took " + duration + "ms");
+        logger.info("Average: " + (duration / itemCount) + "ms per item");
     }
 
     // ==================== Error Handling Patterns ====================
@@ -203,7 +207,7 @@ public class ThrottlingAndRetryIntegrationTest {
 
         // Then - All should be saved
         assertThat(userRepository.count()).isEqualTo(totalItems);
-        System.out.println("Saved " + totalItems + " items in chunks of " + chunkSize + " in " + duration + "ms");
+        logger.info("Saved " + totalItems + " items in chunks of " + chunkSize + " in " + duration + "ms");
     }
 
     @Test
@@ -252,13 +256,13 @@ public class ThrottlingAndRetryIntegrationTest {
         int maxRetries = 5;
         int baseDelay = 100; // milliseconds
 
-        System.out.println("Exponential backoff schedule:");
+        logger.info("Exponential backoff schedule:");
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
             long delay = (long) (baseDelay * Math.pow(2, attempt - 1));
             long jitter = (long) (Math.random() * delay * 0.1); // Add 10% jitter
             long actualDelay = delay + jitter;
 
-            System.out.println("  Attempt " + attempt + ": " + actualDelay + "ms");
+            logger.info("  Attempt " + attempt + ": " + actualDelay + "ms");
             assertThat(actualDelay).isGreaterThan(0);
         }
     }
@@ -299,8 +303,8 @@ public class ThrottlingAndRetryIntegrationTest {
 
         // Then
         assertThat(userRepository.count()).isEqualTo(totalItems);
-        System.out.println("Rate-limited write of " + totalItems + " items took " + duration + "ms");
-        System.out.println("Target WCU: " + writeCapacityUnits + ", Actual rate: " + (totalItems * 1000.0 / duration) + " writes/sec");
+        logger.info("Rate-limited write of " + totalItems + " items took " + duration + "ms");
+        logger.info("Target WCU: " + writeCapacityUnits + ", Actual rate: " + (totalItems * 1000.0 / duration) + " writes/sec");
     }
 
     @Test
@@ -336,10 +340,10 @@ public class ThrottlingAndRetryIntegrationTest {
         durations.add((System.nanoTime() - start) / 1_000_000);
 
         // Then - Log performance metrics
-        System.out.println("Operation durations:");
-        System.out.println("  Single write: " + durations.get(0) + "ms");
-        System.out.println("  Single read: " + durations.get(1) + "ms");
-        System.out.println("  Batch write (25 items): " + durations.get(2) + "ms");
+        logger.info("Operation durations:");
+        logger.info("  Single write: " + durations.get(0) + "ms");
+        logger.info("  Single read: " + durations.get(1) + "ms");
+        logger.info("  Batch write (25 items): " + durations.get(2) + "ms");
 
         assertThat(durations).allMatch(d -> d >= 0);
     }

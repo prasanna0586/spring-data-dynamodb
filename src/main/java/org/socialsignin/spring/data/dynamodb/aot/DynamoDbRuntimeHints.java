@@ -121,8 +121,8 @@ public class DynamoDbRuntimeHints implements RuntimeHintsRegistrar {
                 MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
                 MemberCategory.INVOKE_DECLARED_METHODS,
                 MemberCategory.INVOKE_PUBLIC_METHODS,
-                MemberCategory.DECLARED_FIELDS,
-                MemberCategory.PUBLIC_FIELDS);
+                MemberCategory.ACCESS_DECLARED_FIELDS,
+                MemberCategory.ACCESS_PUBLIC_FIELDS);
 
         // If it's a nested class, register the enclosing class too
         Class<?> enclosingClass = entityClass.getEnclosingClass();
@@ -233,8 +233,8 @@ public class DynamoDbRuntimeHints implements RuntimeHintsRegistrar {
                         MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
                         MemberCategory.INVOKE_DECLARED_METHODS,
                         MemberCategory.INVOKE_PUBLIC_METHODS,
-                        MemberCategory.DECLARED_FIELDS,
-                        MemberCategory.PUBLIC_FIELDS);
+                        MemberCategory.ACCESS_DECLARED_FIELDS,
+                        MemberCategory.ACCESS_PUBLIC_FIELDS);
                 LOGGER.debug("Registered reflection hints for callback class: {}", className);
             } catch (Exception e) {
                 LOGGER.trace("Could not register hints for callback class: {}", className);
@@ -290,8 +290,8 @@ public class DynamoDbRuntimeHints implements RuntimeHintsRegistrar {
                         MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
                         MemberCategory.INVOKE_DECLARED_METHODS,
                         MemberCategory.INVOKE_PUBLIC_METHODS,
-                        MemberCategory.DECLARED_FIELDS,
-                        MemberCategory.PUBLIC_FIELDS);
+                        MemberCategory.ACCESS_DECLARED_FIELDS,
+                        MemberCategory.ACCESS_PUBLIC_FIELDS);
                 LOGGER.debug("Registered reflection hints for: {}", className);
             } catch (Exception e) {
                 LOGGER.trace("Could not register hints for class: {}", className);

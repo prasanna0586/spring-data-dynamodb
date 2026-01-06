@@ -2,6 +2,8 @@ package org.socialsignin.spring.data.dynamodb.core;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.domain.sample.Feed;
 import org.socialsignin.spring.data.dynamodb.domain.sample.FeedPagingRepository;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
@@ -20,6 +22,8 @@ import java.util.Random;
 @TestPropertySource(properties = { "spring.data.dynamodb.entity2ddl.auto=create" })
 public class SortPageableDebugTest {
     private final Random r = new Random();
+
+    private static final Logger logger = LoggerFactory.getLogger(SortPageableDebugTest.class);
 
     @Configuration
     @EnableDynamoDBRepositories(basePackages = "org.socialsignin.spring.data.dynamodb.domain.sample", marshallingMode = org.socialsignin.spring.data.dynamodb.core.MarshallingMode.SDK_V1_COMPATIBLE)
@@ -40,46 +44,46 @@ public class SortPageableDebugTest {
 
     @Test
     public void test_save_only() {
-        System.out.println("DEBUG: Starting save test");
+        logger.info("DEBUG: Starting save test");
         feedPagingRepository.save(createFeed("test1"));
-        System.out.println("DEBUG: Saved first feed");
+        logger.info("DEBUG: Saved first feed");
         feedPagingRepository.save(createFeed("test2"));
-        System.out.println("DEBUG: Saved second feed");
-        System.out.println("DEBUG: Save test completed");
+        logger.info("DEBUG: Saved second feed");
+        logger.info("DEBUG: Save test completed");
     }
 
     @Test
     public void test_query_without_pagination() {
-        System.out.println("DEBUG: Starting query test");
+        logger.info("DEBUG: Starting query test");
         feedPagingRepository.save(createFeed("me"));
-        System.out.println("DEBUG: Saved feed");
+        logger.info("DEBUG: Saved feed");
 
-        System.out.println("DEBUG: About to execute findAllByMessage without pagination");
+        logger.info("DEBUG: About to execute findAllByMessage without pagination");
         // Try a simple query first
         long count = feedPagingRepository.count();
-        System.out.println("DEBUG: Total count: " + count);
-        System.out.println("DEBUG: Query test completed");
+        logger.info("DEBUG: Total count: " + count);
+        logger.info("DEBUG: Query test completed");
     }
 
     @Test
     public void test_query_with_pagination() {
-        System.out.println("DEBUG: Starting paginated query test");
+        logger.info("DEBUG: Starting paginated query test");
         feedPagingRepository.save(createFeed("not yet me"));
-        System.out.println("DEBUG: Saved feed 1");
+        logger.info("DEBUG: Saved feed 1");
         feedPagingRepository.save(createFeed("me"));
-        System.out.println("DEBUG: Saved feed 2");
+        logger.info("DEBUG: Saved feed 2");
 
-        System.out.println("DEBUG: About to execute findAllByMessageOrderByRegDateDesc with pagination");
+        logger.info("DEBUG: About to execute findAllByMessageOrderByRegDateDesc with pagination");
         org.springframework.data.domain.PageRequest pageable = org.springframework.data.domain.PageRequest.of(0, 10);
-        System.out.println("DEBUG: Created PageRequest");
+        logger.info("DEBUG: Created PageRequest");
 
-        System.out.println("DEBUG: Calling findAllByMessageOrderByRegDateDesc...");
+        logger.info("DEBUG: Calling findAllByMessageOrderByRegDateDesc...");
         org.springframework.data.domain.Page<Feed> actuals = feedPagingRepository.findAllByMessageOrderByRegDateDesc("me", pageable);
-        System.out.println("DEBUG: Query returned");
+        logger.info("DEBUG: Query returned");
 
-        System.out.println("DEBUG: Getting total elements...");
+        logger.info("DEBUG: Getting total elements...");
         long totalElements = actuals.getTotalElements();
-        System.out.println("DEBUG: Total elements: " + totalElements);
-        System.out.println("DEBUG: Paginated query test completed");
+        logger.info("DEBUG: Total elements: " + totalElements);
+        logger.info("DEBUG: Paginated query test completed");
     }
 }

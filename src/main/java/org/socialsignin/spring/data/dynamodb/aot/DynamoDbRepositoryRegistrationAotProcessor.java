@@ -226,15 +226,15 @@ public class DynamoDbRepositoryRegistrationAotProcessor implements BeanFactoryIn
                 MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
                 MemberCategory.INVOKE_DECLARED_METHODS,
                 MemberCategory.INVOKE_PUBLIC_METHODS,
-                MemberCategory.DECLARED_FIELDS,
-                MemberCategory.PUBLIC_FIELDS);
+                MemberCategory.ACCESS_DECLARED_FIELDS,
+                MemberCategory.ACCESS_PUBLIC_FIELDS);
 
         // Register any nested classes (for composite keys, etc.)
         for (Class<?> nestedClass : entityClass.getDeclaredClasses()) {
             hints.reflection().registerType(nestedClass,
                     MemberCategory.INVOKE_DECLARED_CONSTRUCTORS,
                     MemberCategory.INVOKE_DECLARED_METHODS,
-                    MemberCategory.DECLARED_FIELDS);
+                    MemberCategory.ACCESS_DECLARED_FIELDS);
         }
     }
 

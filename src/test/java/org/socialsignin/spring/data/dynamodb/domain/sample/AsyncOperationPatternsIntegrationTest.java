@@ -2,6 +2,8 @@ package org.socialsignin.spring.data.dynamodb.domain.sample;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
 import org.socialsignin.spring.data.dynamodb.utils.DynamoDBLocalResource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +42,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @DisplayName("Async Operation Patterns Integration Tests")
 public class AsyncOperationPatternsIntegrationTest {
+
+    private static final Logger logger = LoggerFactory.getLogger(AsyncOperationPatternsIntegrationTest.class);
 
     @Configuration
     @EnableDynamoDBRepositories(basePackages = "org.socialsignin.spring.data.dynamodb.domain.sample")
@@ -100,7 +104,7 @@ public class AsyncOperationPatternsIntegrationTest {
             assertThat(future.get()).isNotNull();
         }
 
-        System.out.println("Completed " + operationCount + " async write operations");
+        logger.info("Completed " + operationCount + " async write operations");
     }
 
     @Test
@@ -141,7 +145,7 @@ public class AsyncOperationPatternsIntegrationTest {
             assertThat(future.get()).isPresent();
         }
 
-        System.out.println("Completed " + itemCount + " async read operations");
+        logger.info("Completed " + itemCount + " async read operations");
     }
 
     @Test
@@ -188,7 +192,7 @@ public class AsyncOperationPatternsIntegrationTest {
 
         // Then
         assertThat(userRepository.count()).isEqualTo(10);
-        System.out.println("Completed mixed async operations: " + futures.size());
+        logger.info("Completed mixed async operations: " + futures.size());
     }
 
     // ==================== Async Composition ====================
@@ -224,7 +228,7 @@ public class AsyncOperationPatternsIntegrationTest {
         User persisted = userRepository.findById("compose-user").orElseThrow();
         assertThat(persisted.getName()).isEqualTo("Updated Name");
 
-        System.out.println("Async composition completed: read -> update");
+        logger.info("Async composition completed: read -> update");
     }
 
     @Test
@@ -267,7 +271,7 @@ public class AsyncOperationPatternsIntegrationTest {
 
         // Then - Total should be 0 + 10 + 20 = 30
         assertThat(totalPlaylists).isEqualTo(30);
-        System.out.println("Combined async results: total playlists = " + totalPlaylists);
+        logger.info("Combined async results: total playlists = " + totalPlaylists);
     }
 
     // ==================== Error Handling in Async Context ====================
@@ -284,7 +288,7 @@ public class AsyncOperationPatternsIntegrationTest {
             }
             return userOpt.get();
         }, executorService).exceptionally(throwable -> {
-            System.out.println("Handled exception: " + throwable.getMessage());
+            logger.info("Handled exception: " + throwable.getMessage());
             // Return default user
             User defaultUser = new User();
             defaultUser.setId("default-user");
@@ -320,7 +324,7 @@ public class AsyncOperationPatternsIntegrationTest {
 
         // Then
         assertThat(result).contains("Error");
-        System.out.println("Handled result: " + result);
+        logger.info("Handled result: " + result);
     }
 
     // ==================== Timeout Handling ====================
@@ -345,7 +349,7 @@ public class AsyncOperationPatternsIntegrationTest {
 
         // Then - Should complete within timeout
         assertThat(future).succeedsWithin(5, TimeUnit.SECONDS);
-        System.out.println("Async operation completed within timeout");
+        logger.info("Async operation completed within timeout");
     }
 
     // ==================== Async Batch Operations ====================
@@ -372,7 +376,7 @@ public class AsyncOperationPatternsIntegrationTest {
 
         // Then
         assertThat(userRepository.count()).isEqualTo(100);
-        System.out.println("Async batch write completed: 100 items");
+        logger.info("Async batch write completed: 100 items");
     }
 
     @Test
@@ -410,7 +414,7 @@ public class AsyncOperationPatternsIntegrationTest {
 
         // Then
         assertThat(userRepository.count()).isEqualTo(batchCount * itemsPerBatch);
-        System.out.println("Parallel batch operations completed: " + batchCount + " batches, " +
+        logger.info("Parallel batch operations completed: " + batchCount + " batches, " +
                 (batchCount * itemsPerBatch) + " total items");
     }
 
@@ -457,7 +461,7 @@ public class AsyncOperationPatternsIntegrationTest {
         assertThat(result1).hasSize(10);
         assertThat(result2).hasSize(10);
 
-        System.out.println("Parallel queries completed: Query1=" + result1.size() +
+        logger.info("Parallel queries completed: Query1=" + result1.size() +
                 " items, Query2=" + result2.size() + " items");
     }
 
@@ -485,6 +489,6 @@ public class AsyncOperationPatternsIntegrationTest {
 
         // Then - Should eventually be saved
         assertThat(userRepository.count()).isGreaterThanOrEqualTo(10);
-        System.out.println("Fire and forget operations completed");
+        logger.info("Fire and forget operations completed");
     }
 }

@@ -58,7 +58,7 @@ public class DynamoDBRepositoryFactoryBeanTest {
 
     @Test
     public void testDynamoDBOperations() {
-        assertThrows(NullPointerException.class, () -> {
+        assertThrows(IllegalStateException.class, () -> {
             underTest.getPersistentEntity();
         });
 
@@ -70,7 +70,7 @@ public class DynamoDBRepositoryFactoryBeanTest {
 
     @Test
     public void testAmazonDynamoDB() {
-        assertThrows(NullPointerException.class, () -> {
+        assertThrows(IllegalStateException.class, () -> {
             underTest.getPersistentEntity();
         });
 
