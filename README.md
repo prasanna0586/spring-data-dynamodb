@@ -43,7 +43,7 @@ Download the JAR through [Maven Central](https://mvnrepository.com/artifact/io.g
 <dependency>
   <groupId>io.github.prasanna0586</groupId>
   <artifactId>spring-data-dynamodb</artifactId>
-  <version>8.0.0</version>
+  <version>8.1.0</version>
 </dependency>
 ```
 
@@ -55,7 +55,7 @@ You also need AWS SDK v2 DynamoDB Enhanced Client:
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>bom</artifactId>
-            <version>2.41.1</version>
+            <version>2.55.12</version>
             <type>pom</type>
             <scope>import</scope>
         </dependency>
@@ -174,6 +174,7 @@ The major and minor number of this library refers to the compatible Spring frame
 | 6.0.4                          | >= 3.5.6                  | >= 6.2.11                      | 2025.0.4                  | v1        |
 | 7.0.0                          | >= 3.5.6                  | >= 6.2.11                      | 2025.0.4                  | v2        |
 | 8.0.0                          | >= 4.0.1                  | >= 7.0.2                       | 2025.1.1                  | v2        |
+| 8.1.0                          | >= 4.1.1                  | >= 7.0.9                       | 2026.0.1                  | v2        |
 
 `spring-data-dynamodb` depends directly on `spring-data` as well as `spring-tx`.
 
